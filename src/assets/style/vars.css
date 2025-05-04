@@ -1,0 +1,90 @@
+:root {
+    --signal: black;
+    --signal-active: #ef5d09;
+    --signal-hover: #f7a41d;
+    --default-border-radius: 0.375rem;
+
+    --pathThickness: 0.125rem;
+    --arrowLineThickness: 0.125rem;
+    
+    --lineHeadThickness: 0.125rem;
+    --lineHeadLength: 0.5rem;
+    --lineHeadMargin: 0.125rem;
+    --arrowHeadSize: 0.25rem;
+}
+body, body.lightMode {
+    --backgroundColor: #fff;
+    --fontColor: #111;
+
+    --panelOutlineColor: #111;
+    --panelBackgroundColor: #f8f8f8;
+
+    --scrollBackground: #f8f8f8;
+    --scrollThumb: #ccc;
+
+    --buttonBackgroundColor: #eee;
+    --buttonHoverColor: #fff;
+    --buttonActiveColor: #c1c4c5;
+    --buttonTextColor: #111;
+}
+body.darkMode {
+    --signal: #4d4f57;
+    --signalText: #d5d6db;
+
+    --backgroundColor: #15161a;;
+    --fontColor: #eee;
+
+    --panelOutlineColor: #282a30;
+    --panelBackgroundColor: #1e1f24;
+
+    --scrollBackground: #1e1f24;
+    --scrollThumb: #282a30;
+
+    --buttonBackgroundColor: #373a41;
+    --buttonHoverColor: #676b75;
+    --buttonActiveColor: #181a1f;
+    --buttonTextColor: #d5d6db;
+}
+
+
+
+
+
+
+
+body {
+    background-color: var(--backgroundColor);
+    color: var(--fontColor);
+
+    transition: 0.25s;
+}
+
+
+
+
+
+
+
+
+
+
+::-webkit-scrollbar-track
+{
+	background-color: var(--scrollBackground);
+}
+
+::-webkit-scrollbar
+{
+    width: 0.25rem;
+    height: 0.25rem;
+	background-color: var(--scrollBackground);
+}
+
+::-webkit-scrollbar-thumb
+{
+	border-radius: 10px;
+	background-color: var(--scrollThumb);
+}
+::-webkit-scrollbar-corner { 
+    background: var(--scrollBackground);
+}

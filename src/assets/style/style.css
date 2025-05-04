@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap');
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Lato', 'Roboto', sans-serif;
+    background-color: #0a0a0b;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color-scheme: dark;
+}
+
+input, select{
+    font-family: 'Lato', 'Roboto', sans-serif;
+}
+input {
+
+    all: unset;
+    background: transparent;
+    border-bottom: 2px solid rgba(222, 221, 255, 0.247);
+    text-align: left;
+    padding-left: 0.5rem;
+}
+
+select {
+    background: transparent;
+    outline: none;
+    border: none;
+        border-bottom: 2px solid rgba(222, 221, 255, 0.247);
+    text-align: left;
+    padding-left: 0.5rem;
+    color-scheme: dark;
+}
+
+
+
+select::-ms-expand {
+  display: none;
+}
+
+input:active {
+    border-bottom: 2px solid rgba(170, 168, 255, 0.247);
+}
+
+#settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+
+    border-radius: 10px;
+
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+    min-width: 25rem;
+    padding: 1rem;
+    background-color: #1e1f24;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+    border: 2px solid #282a30;
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+gap: 1rem;
+}
+
+
+#settings div {
+        display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    justify-content: left;
+            padding: .5rem;
+        border-radius: 0.5rem;
+        transition: box-shadow 0.3s;
+
+}
+
+label {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+    opacity: .6;
+    padding-left: .5rem;
+}
+
+#W {
+    min-width: 25rem;
+    padding: 1rem;
+    background-color: #1e1f24;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+    border: 2px solid #282a30;
+}
+
+.button-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+}
+
+input[type="radio"] {
+    display: none;
+}
+
+.button-grid > label {
+    all: unset;
+    display: block;
+    padding: .25rem;
+    font-size: .8rem;
+    border: 2px solid #282a30;
+
+    text-align: center;
+    cursor: pointer;
+    border-inline: none;
+    padding: 0.25rem 0.5rem;
+}
+
+.button-grid > label:nth-child(2){
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+    border-left: 2px solid #282a30;
+}
+
+.button-grid > label:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    border-right: 2px solid #282a30;
+}
+
+input[type="radio"]:checked + label {
+    background-color: #3e4149;
+    color: white;
+}

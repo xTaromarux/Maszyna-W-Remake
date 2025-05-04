@@ -298,10 +298,10 @@
     <div id="program" v-if="!manualMode">
       <textarea v-model="program" placeholder="program" :disabled="manualMode" />
       <div class="flexRow">
-        <button @click="compileProgram" v-if="!programCompiled" :disabled="manualMode || program == ''">
+        <button @click="compileProgram" v-if="!programCompiled" :disabled="manualMode || !program.trim()">
           Compile
         </button>
-        <button @click="uncompileProgram" v-if="programCompiled" :disabled="manualMode && programCompiled">
+        <button @click="uncompileProgram" v-if="programCompiled" :disabled="manualMode">
           Edit
         </button>
         <button @click="executeProgramLine" :disabled="!manualMode && !programCompiled">
@@ -312,6 +312,7 @@
         </button>
       </div>
     </div>
+
 
     <div v-if="!manualMode" id="console">
       <div v-for="(log, index) in logs" :key="index" :class="log.class.toLowerCase()">

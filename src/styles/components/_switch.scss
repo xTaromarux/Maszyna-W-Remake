@@ -1,0 +1,45 @@
+.switchDiv {
+    --width: 2rem;
+    --height: 1.125rem;
+    --padding: 0.125rem;
+  
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    gap: 0.25rem
+  }
+  
+  .switchDiv input[type="checkbox"] {
+    all: unset;
+    cursor: pointer;
+    display: inline-block;
+    width: var(--width);
+    height: var(--height);
+    background-color: var(--buttonBackgroundColor, white);
+    border-radius: calc(var(--height) / 2);
+    position: relative;
+    transition: 0.15s ease-in-out;
+    /* Animacja zmiany koloru */
+  }
+  
+  .switchDiv input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: var(--padding);
+    left: var(--padding);
+    width: calc(var(--height) - 2 * var(--padding));
+    height: calc(var(--height) - 2 * var(--padding));
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.15s ease-in-out;
+    /* Animacja przesuwania kulki */
+  }
+  
+  .switchDiv input[type="checkbox"]:checked {
+    background-color: #00aaff;
+    /* Kolor włączonego przełącznika */
+  }
+  
+  .switchDiv input[type="checkbox"]:checked::after {
+    left: calc(var(--width) - var(--height) + var(--padding));
+  }

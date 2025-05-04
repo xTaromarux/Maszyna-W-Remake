@@ -1,0 +1,14 @@
+#topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  width: 100%;
+  background-color: #003c7d;
+}
+#topBar .flexRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}

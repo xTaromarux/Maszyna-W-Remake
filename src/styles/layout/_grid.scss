@@ -1,0 +1,33 @@
+#W {
+  display: flex;
+  flex-direction: column;
+}
+.layer {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+#wLayout {
+  display: grid;
+  gap: 1rem;
+  grid-template-areas:
+    "w i p"
+    "w i p"
+    "c c c";
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 1fr auto auto;
+}
+#wLayout > #console { grid-area: c; }
+#wLayout > #W       { grid-area: w; }
+#wLayout > #inputs  { grid-area: i; }
+
+.register {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  padding: 0.125rem 0.5rem;
+}
+.register > span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

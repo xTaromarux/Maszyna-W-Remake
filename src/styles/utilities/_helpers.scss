@@ -1,0 +1,11 @@
+.flexRow { display: flex; flex-direction: row; gap: 1rem; }
+.flexColumn { display: flex; flex-direction: column; gap: 1rem; }
+
+.switchDiv {
+  --width: 2rem;
+  --height: 1.125rem;
+  --padding: 0.125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}

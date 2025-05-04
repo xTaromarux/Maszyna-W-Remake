@@ -9,18 +9,21 @@
               <circle cx="12" cy="12" r="9"/>
             </g>
           </svg>
+          <span>Dodaj</span>
         </button>
         <button @click="loadCommandList" title="Wgraj listę rozkazów">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746"/>
           </svg>
+          <span>Wgraj</span>
         </button>
         <button @click="downloadCommandList" title="Pobierz listę rozkazów">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2"/>
           </svg>
+          <span>Pobierz</span>
         </button>
       </div>
   
@@ -83,7 +86,7 @@
     data() {
       return {
         localList: JSON.parse(JSON.stringify(this.commandList)),
-        selectedCommand: null,
+        selectedCommand: 0,
         editCommandEnabled: false,
         EditCommandField: '',
       };
@@ -166,69 +169,119 @@
   
   <style scoped>
   #commandList {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 100;
-    display: grid;
-    grid-template-areas:
-      "fr fr"
-      "list details";
-    grid-template-columns: auto 2fr;
-    grid-template-rows: auto 1fr;
-    gap: 0.5rem;
-    padding: 1rem;
-    background-color: var(--panelBackgroundColor, white);
-    border: 1px solid var(--panelOutlineColor, black);
-    border-radius: var(--default-border-radius, 0.25rem);
-    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
-    resize: both;
-    overflow: hidden;
-  }
-  #commandList .flexRow {
-    grid-area: fr;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  #commandList #commandListTable {
-    grid-area: list;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    overflow-y: auto;
-  }
-  #commandList #commandListTable > button {
-    all: unset;
-    display: flex;
-    justify-content: space-between;
-    padding: 0.25rem 1rem;
-    cursor: pointer;
-    border-bottom: 1px solid var(--panelOutlineColor, black);
-  }
-  #commandList #commandListTable > button:hover {
-    background-color: #fff8;
-  }
-  #commandList #commandDetails {
-    grid-area: details;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 0.5rem;
-    overflow-y: auto;
-  }
-  #commandList .buttons {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  #commandList .roskazCode textarea {
-    width: 100%;
-    height: 100px;
-    resize: none;
-    padding: 0.5rem;
-    border: 1px solid var(--panelOutlineColor, black);
-    background-color: var(--panelBackgroundColor, white);
-  }
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  z-index: 100;
+
+  display: grid;
+  grid-template-areas:
+    "fr fr"
+    "list details";
+  grid-template-columns: auto 2fr;
+  grid-template-rows: auto 1fr;
+  gap: 0.5rem;
+  justify-content: stretch;
+  align-content: stretch;
+
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+
+  border-radius: var(--default-border-radius, 0.25rem);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+
+  padding: 1rem;
+
+  overflow: hidden;
+  resize: both;
+}
+
+#commandList button {
+  padding: 0.25rem;
+}
+
+#commandList button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+#commandList .flexRow {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+
+  grid-area: fr;
+}
+
+#commandList #commandListTable {
+  grid-area: list;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+#commandList #commandListTable>button {
+  all: unset;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 1rem 0.25rem 0.25rem;
+  cursor: pointer;
+}
+
+#commandList #commandListTable>button:not(:last-child) {
+  border-bottom: 1px solid var(--panelOutlineColor, black);
+}
+
+#commandList #commandListTable>button:hover {
+  background-color: #fff8;
+}
+
+#commandList #commandListTable>button:active {
+  background-color: #00aaff;
+  color: white;
+}
+
+#commandList #commandDetails {
+  grid-area: details;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  justify-content: stretch;
+  align-content: stretch;
+  overflow-y: auto;
+}
+
+#commandList #commandDetails>.buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding: 0.25rem;
+}
+
+#commandList #commandDetails .roskazCode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  justify-content: stretch;
+  align-items: stretch;
+}
+
+#commandList #commandDetails .roskazCode textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  padding: 0.5rem;
+
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+}
   </style>
   

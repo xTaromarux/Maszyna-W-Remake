@@ -1,0 +1,119 @@
+.simpleSvgButton {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.5s;
+  color: #ddd;
+}
+.simpleSvgButton svg {
+  color: #ddd;
+}
+.simpleSvgButton:hover {
+  transform: scale(1.1);
+  transition: 0.25s;
+}
+.simpleSvgButton:active {
+  transform: scale(0.9);
+  transition: 0.1s;
+}
+
+button {
+  padding: 0.5rem;
+  border: 0.0625rem solid #8888;
+  outline: 0.0625rem solid #8888;
+  cursor: pointer;
+  border-radius: 10rem;
+  background-color: var(--buttonBackgroundColor, white);
+  color: var(--buttonTextColor, black);
+  transition:
+    all 1s ease-out,
+    filter 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+button:hover {
+  transform: translateY(-0.05rem) scale(1.05);
+}
+button:active {
+  transform: translateY(0) scale(0.98);
+}
+button:disabled {
+  cursor: not-allowed;
+  filter: contrast(0.5);
+}
+button:has(span) {
+  gap: 0.25rem;
+  padding-right: 1rem !important;
+}
+
+button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
+  background-color: var(--buttonHoverColor, #fff);
+  transform: translateY(-0.05rem) scale(1.05);
+  transition: 0.1s ease-out;
+}
+
+button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
+  background-color: var(--buttonActiveColor, #aaa);
+  transform: translateY(0.01rem) scale(0.98);
+  transition: 0.01s ease-out;
+}
+
+button svg {
+  width: 2rem;
+  height: 2rem;
+
+  stroke: 888;
+  color: #888;
+}
+
+.SvgAndTextButton {
+  all: unset;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 10rem;
+  background-color: #00aaff;
+  color: white;
+  width: 100%;
+  white-space: nowrap;
+  transition: 0.5s ease-in-out;
+}
+.SvgAndTextButton:hover {
+  background-color: #00bbff;
+}
+.SvgAndTextButton:active {
+  background-color: #0088cc;
+}
+
+.SvgAndTextButton svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  transform: rotate(-360deg);
+  transition: transform 0.6s ease;
+  animation: spin 2.5s forwards;
+  color: white;
+}
+
+.SvgAndTextButton:hover svg {
+  transform: rotate(-380deg);
+  transition: transform 0.6s ease;
+}
+
+.SvgAndTextButton:hover:active svg {
+  transform: rotate(-20deg);
+  transition: transform 0s ease;
+}
+
+.SvgAndTextButton:active svg {
+  transform: rotate(0deg);
+  transition: transform 0s ease;
+}

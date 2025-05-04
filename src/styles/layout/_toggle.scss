@@ -1,0 +1,57 @@
+@use "../abstracts/mixins" as mixins;
+
+.toggleButtonDiv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: stretch;
+  align-items: stretch;
+  background-color: var(--buttonBackgroundColor, white);
+  border-radius: 2rem;
+  position: relative;
+}
+.toggleButtonDiv > span {
+  z-index: 3;
+  @include mixins.flex-row(0);
+  justify-content: center;
+  align-items: center;
+  min-width: 7rem;
+  overflow: clip;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  user-select: none;
+  transition: 0.25s;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.toggleButtonDiv>span:first-child {
+  color: var(--buttonTextColor, black);
+}
+
+.toggleButtonDiv.active>span:first-child {
+  color: #eee;
+}
+
+.toggleButtonDiv>span:not(:first-child) {
+  color: #eee;
+}
+
+.toggleButtonDiv.active>span:not(:first-child) {
+  color: var(--buttonTextColor, black);
+}
+
+.toggleButtonDiv::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  background-color: #00aaff;
+  border-radius: 2rem;
+  transition: 0.25s ease-in-out;
+}
+
+.toggleButtonDiv.active::after {
+  left: 0;
+}

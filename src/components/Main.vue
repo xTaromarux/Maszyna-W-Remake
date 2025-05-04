@@ -1,18 +1,18 @@
 <template>
-    <div id="topBar">
-      <polslLogoLongWhite/>
+  <div id="topBar">
+    <polslLogoLongWhite />
 
-      <div class="flexRow">
-        <button @click="openChat" class="simpleSvgButton" id="openChatButton">
-          <AiChatIcon/>
-        </button>
-        <button @click="openSettings" class="simpleSvgButton" id="openSettingsButton">
-          <KogWheelIcon/>
-        </button>
-        <button @click="openCommandList" class="simpleSvgButton" id="openCommandListButton">
-          <ListIcon/>
-        </button>
-      </div>
+    <div class="flexRow">
+      <button @click="openChat" class="simpleSvgButton" id="openChatButton">
+        <AiChatIcon />
+      </button>
+      <button @click="openSettings" class="simpleSvgButton" id="openSettingsButton">
+        <KogWheelIcon />
+      </button>
+      <button @click="openCommandList" class="simpleSvgButton" id="openCommandListButton">
+        <ListIcon />
+      </button>
+    </div>
   </div>
   <div id="wLayout">
 
@@ -147,10 +147,12 @@
             <span class="arrowRightOnBottom">wyak</span>
           </div>
         </div>
-        <div v-if="extras.busConnectors" id="sa" @click="saClick" class="signal long pathUpOnRight" :class="{ active: signals.sa }">
+        <div v-if="extras.busConnectors" id="sa" @click="saClick" class="signal long pathUpOnRight"
+          :class="{ active: signals.sa }">
           <span class="lineRightOnBottom">sa</span>
         </div>
-        <div v-if="extras.busConnectors" id="as" @click="asClick" class="signal long pathDownOnLeft" :class="{ active: signals.as }">
+        <div v-if="extras.busConnectors" id="as" @click="asClick" class="signal long pathDownOnLeft"
+          :class="{ active: signals.as }">
           <span class="lineLeftOnBottom">as</span>
         </div>
         <div id="memory">
@@ -175,7 +177,7 @@
                 <input type="number" v-model="mem[index]">
               </div>
               <span :class="{ selected: A === index }">{{ decToCommand(value) ? decToCommand(value).name : "EMPTY"
-                }}</span>
+              }}</span>
               <span :class="{ selected: A === index }">{{ formatNumber(decToArgument(value)) }}</span>
             </template>
           </div>
@@ -258,7 +260,7 @@
         <span @click="manualModeUncheck">Program</span>
       </div>
       <div class="chooseProgram">
-        
+
       </div>
       <textarea v-model="code" placeholder="rozkaz" :disabled="manualMode" v-if="!codeCompiled" />
       <div class="compiledCode" v-else>
@@ -337,10 +339,10 @@
       <div class="flexColumn">
         <div class="toggleButtonDiv" :class="{ active: lightMode }">
           <span @click="lightModeCheck">
-            <SunIcon/> Light
+            <SunIcon /> Light
           </span>
           <span @click="darkModeUncheck">
-            <MoonIcon/> Dark
+            <MoonIcon /> Dark
           </span>
         </div>
       </div>
@@ -395,91 +397,22 @@
       <div class="flexColumn">
         <div class="flexRow">
           <button class="SvgAndTextButton" id="emptyLS" @click="emptyLS">
-            <RefreshIcon/>
+            <RefreshIcon />
             <span>Reset <u>EVERYTHING</u></span>
           </button>
         </div>
       </div>
     </div>
 
-    <div id="commandList" v-if="commandListOpen">
-      <div class="flexRow">
-        <span>Lista Rozkazów</span>
-        <button @click="addCommand">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24"
-            viewBox="0 0 24 24" class="humbleicons hi-plus-circle">
-            <g xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" d="M12 16V8m4 4H8" />
-              <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </g>
-          </svg>
-          <span>
-            Dodaj
-          </span>
-        </button>
-        <button @click="loadCommandList">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24"
-            viewBox="0 0 24 24" class="humbleicons hi-upload">
-            <path xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-linecap="round"
-              stroke-linejoin="round" stroke-width="2"
-              d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746" />
-          </svg>
-          <span>
-            Wgraj
-          </span>
-        </button>
-        <button @click="downloadCommandList">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24"
-            viewBox="0 0 24 24" class="humbleicons hi-download-alt">
-            <path xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-linecap="round"
-              stroke-linejoin="round" stroke-width="2"
-              d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2" />
-          </svg>
-          <span>
-            Download
-          </span>
-        </button>
-      </div>
-      <div id="commandListTable">
-        <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
-        <button v-for="(command, index) in commandList" :key="index" @click="editCommand(index)" class="command">
-          <span>{{ command.name }}</span>
-        </button>
-      </div>
-      <div id="commandDetails" v-if="selectedCommand != null">
-        <div class="buttons">
-          <input type="text" v-model="commandList[selectedCommand].name" />
-          <button @click="deleteCommand">
-            <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M9 3H15M3 6H21M19 6L18.2987 16.5193C18.1935 18.0975 18.1409 18.8867 17.8 19.485C17.4999 20.0118 17.0472 20.4353 16.5017 20.6997C15.882 21 15.0911 21 13.5093 21H10.4907C8.90891 21 8.11803 21 7.49834 20.6997C6.95276 20.4353 6.50009 20.0118 6.19998 19.485C5.85911 18.8867 5.8065 18.0975 5.70129 16.5193L5 6"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <span>
-              Usuń
-            </span>
-          </button>
-          <div class="switchDiv">
-            <input id="busConnectors" type="checkbox" v-model="editCommandEnabled" />
-            <label for="busConnectors"> {{ editCommandEnabled ? "Zapisz" : "Edytuj" }}</label>
-          </div>
-        </div>
-        <div class="roskazCode">
-          <textarea v-if="!editCommandEnabled" v-model="commandList[selectedCommand].lines" placeholder="rozkaz" disabled/>
-          <textarea v-else v-model="EditCommandField" placeholder="rozkaz" />
-        </div>
-      </div>
-    </div>
+    <CommandList :visible="commandListOpen" :commandList="commandList" :codeBits="codeBits"
+      @update:commandList="commandList = $event" />
 
     <div id="aiChat" v-if="aiChatOpen">
       <h1>Ai Chat</h1>
       <div id="conversation">
-        <div 
-          v-for="(message, index) in aiConversation" 
-          :key="index" 
-          class="message"
+        <div v-for="(message, index) in aiConversation" :key="index" class="message"
           :class="{ 'user': message.sender === 'user', 'ai': message.sender === 'ai' }">
-          
+
           <div class="icon">i</div>
           <span class="sender">{{ message.sender }}</span>
           <span class="time">{{ formatTimestampForConsole(message.timestamp) }}</span>
@@ -517,6 +450,7 @@ import ListIcon from '@/assets/svg/ListLinesIcon.vue';
 import SunIcon from '@/assets/svg/SunIcon.vue';
 import MoonIcon from '@/assets/svg/MoonIcon.vue';
 import AiChatIcon from '@/assets/svg/AiChatIcon.vue';
+import CommandList from './CommandList.vue';
 
 export default {
   name: "MainComponent",
@@ -529,6 +463,7 @@ export default {
     SunIcon,
     MoonIcon,
     AiChatIcon,
+    CommandList,
   },
 
   data() {
@@ -564,7 +499,6 @@ export default {
 
       oddDelay: 1000,
 
-      EditCommandField: "",
       commandList: [
         // [stp]
         // Linie=5
@@ -753,8 +687,6 @@ export default {
           lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
         },
       ],
-      selectedCommand: null,
-      editCommandEnabled: false,
       numberFormat: "dec",
 
       avaiableSignals: {
@@ -997,60 +929,6 @@ export default {
     openCommandList() {
       this.commandListOpen = true;
     },
-    deleteCommand() {
-      this.commandList.splice(this.selectedCommand, 1);
-      this.selectedCommand--;
-      if (this.selectedCommand < 0) {
-        this.selectedCommand = null;
-      }
-    },
-    addCommand() {
-      if (this.commandList.length >= Math.pow(2, this.codeBits)) {
-        this.addLog("Cannot add more commands! Increase the value of code bits to alow more commands.", "Error");
-        return;
-      }
-      this.commandList.push({
-        name: "new",
-        args: 0,
-        description: "new command",
-        lines: "",
-      });
-      this.selectedCommand = this.commandList.length - 1;
-    },
-    loadCommandList() {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".lst";
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target.result;
-          this.commandList = JSON.parse(content);
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-
-      this.selectedCommand = null;
-      this.addLog("Command list loaded", "IO");
-    },
-    downloadCommandList() {
-      const data = JSON.stringify(this.commandList);
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "commandList.lst";
-      a.click();
-      URL.revokeObjectURL(url);
-      this.addLog("Command list saved", "IO");
-    },
-    modifyCommand()
-    {
-      // if command dobra to nadpisz, if zła nie nadpisuj
-    },
-
 
     compileCode() {
 
@@ -1154,7 +1032,7 @@ export default {
             this.nextLine.add(command);
           }
         }
-      } 
+      }
     },
     runCode() {
       this.manualMode = false;
@@ -1162,12 +1040,6 @@ export default {
         this.executeLine();
       }
     },
-
-    editCommand(index) {
-      this.selectedCommand = index;
-    },
-
-
 
     compileProgram() {
       // divide program into lines and then each line put in the memory
@@ -1178,7 +1050,7 @@ export default {
 
     },
     uncompileProgram() {
-
+      this.programCompiled = false;
     },
     executeProgramLine() {
 
@@ -1813,9 +1685,9 @@ export default {
     sendAiMessage() {
       console.log("AI message sent:", this.aiInput);
       if (this.aiInput.trim() === "") return;
-      this.aiConversation.push({ 
-        sender: "user", 
-        message: this.aiInput, 
+      this.aiConversation.push({
+        sender: "user",
+        message: this.aiInput,
         timestamp: new Date(),
       });
       this.aiInput = "";
@@ -1841,12 +1713,6 @@ export default {
     memoryAddresBits() {
       this.resizeMemory();
     },
-    editCommandEnabled() {
-      if (this.editCommandEnabled) 
-        modifyCommand();
-      else
-        this.EditCommandField = this.commandList[this.selectedCommand].lines;
-    },
     lightMode() {
       // add lightMode or darkMode class to body
       if (this.lightMode) {
@@ -1855,7 +1721,7 @@ export default {
       } else {
         document.body.classList.add("darkMode");
         document.body.classList.remove("lightMode");
-      } 
+      }
     },
 
   },
@@ -1886,39 +1752,6 @@ export default {
   --signalText: var(--signal-active) !important;
 }
 
-#W {
-  display: flex;
-  flex-direction: column;
-}
-
-.layer {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-}
-
-#wLayout {
-  display: grid;
-  gap: 1rem;
-  grid-template-areas:
-    "w i p"
-    "w i p"
-    "c c c";
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: 1fr auto auto;
-}
-
-#wLayout>#console {
-  grid-area: c;
-}
-
-#wLayout>#W {
-  grid-area: w;
-}
-
-#wLayout>#inputs {
-  grid-area: i;
-}
 
 .register {
   display: grid;
@@ -1936,31 +1769,6 @@ export default {
 
 /* #endregion BASE */
 
-/* #region TOPBAR */
-
-#topBar {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-
-  width: 100%;
-
-  background-color: #003c7d;
-}
-
-#topBar .flexRow {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  align-items: center;
-}
-
-
-/* #endregion TOPBAR */
-
 /* #region SETTINGS */
 
 .simpleSvgButton {
@@ -1976,6 +1784,7 @@ export default {
   transition: 0.5s ease-in-out;
   color: #ddd;
 }
+
 .simpleSvgButton svg {
   color: #ddd;
 }
@@ -1990,17 +1799,6 @@ export default {
   transform: scale(0.9);
 
   transition: 0.1s ease-in-out;
-}
-
-#popupsBackdrop {
-  position: fixed;
-  z-index: 99;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(0.25rem);
-  background-color: rgba(0, 0, 0, 0.25);
 }
 
 #settings {
@@ -2282,6 +2080,7 @@ export default {
 #memory #wes {
   margin-right: 0.25rem;
 }
+
 #memory #wys {
   margin-left: 0.25rem;
 }
@@ -2457,6 +2256,7 @@ export default {
   background-color: var(--panelBackgroundColor, white);
   height: 3rem;
 }
+
 #calc #flags div {
   display: flex;
   justify-content: center;
@@ -2475,21 +2275,26 @@ export default {
   grid-area: jamlSignals;
 }
 
-#calc .accSignals, #calc .jamlSignals  {
+#calc .accSignals,
+#calc .jamlSignals {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   justify-content: space-evenly;
   align-items: stretch;
 }
-#calc .accSignals > *, #calc .jamlSignals > * {
+
+#calc .accSignals>*,
+#calc .jamlSignals>* {
   flex-grow: 1;
   width: 100%;
   display: flex;
   justify-content: stretch;
   align-items: center;
 }
-#calc .accSignals > * > *, #calc .jamlSignals > * > * {
+
+#calc .accSignals>*>*,
+#calc .jamlSignals>*>* {
   flex-grow: 1;
   width: 100%;
 }
@@ -2530,6 +2335,7 @@ export default {
   border-radius: 0 var(--default-border-radius, 0.25rem) 0 0;
   padding-left: 0.5rem !important;
 }
+
 /* #endregion CALC */
 
 /* #region EXTRA REGISTERS */
@@ -2597,168 +2403,6 @@ export default {
 
 /* #endregion UI BUTTONS LEFT BOTTOM */
 
-/* #region SWITCH CHECKMARK */
-
-.switchDiv {
-  --width: 2rem;
-  --height: 1.125rem;
-  --padding: 0.125rem;
-
-  display: flex;
-  align-items: center;
-  justify-items: center;
-  gap: 0.25rem
-}
-
-.switchDiv input[type="checkbox"] {
-  all: unset;
-  cursor: pointer;
-  display: inline-block;
-  width: var(--width);
-  height: var(--height);
-  background-color: var(--buttonBackgroundColor, white);
-  border-radius: calc(var(--height) / 2);
-  position: relative;
-  transition: 0.15s ease-in-out;
-  /* Animacja zmiany koloru */
-}
-
-.switchDiv input[type="checkbox"]::after {
-  content: '';
-  position: absolute;
-  top: var(--padding);
-  left: var(--padding);
-  width: calc(var(--height) - 2 * var(--padding));
-  height: calc(var(--height) - 2 * var(--padding));
-  background-color: white;
-  border-radius: 50%;
-  transition: 0.15s ease-in-out;
-  /* Animacja przesuwania kulki */
-}
-
-.switchDiv input[type="checkbox"]:checked {
-  background-color: #00aaff;
-  /* Kolor włączonego przełącznika */
-}
-
-.switchDiv input[type="checkbox"]:checked::after {
-  left: calc(var(--width) - var(--height) + var(--padding));
-}
-
-/* #endregion SWITCH */
-
-/* #region BUTTONS */
-
-button {
-  padding: 0.5rem;
-  border: 0.0625rem solid #8888;
-  outline: 0.0625rem solid #8888;
-  cursor: pointer;
-
-  border-radius: 10rem;
-
-  background-color: var(--buttonBackgroundColor, white);
-  color: var(--buttonTextColor, black);
-
-  transition: all 1s ease-out, filter 0.2s;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-button:has(span) {
-  gap: 0.25rem;
-  padding-right: 1rem !important;
-}
-
-button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
-  background-color: var(--buttonHoverColor, #fff);
-  transform: translateY(-0.05rem) scale(1.05);
-  transition: 0.1s ease-out;
-}
-
-button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
-  background-color: var(--buttonActiveColor, #aaa);
-  transform: translateY(0.01rem) scale(0.98);
-  transition: 0.01s ease-out;
-}
-
-button svg {
-  width: 2rem;
-  height: 2rem;
-
-  stroke: white;
-  color: #888;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  filter: contrast(0.5);
-}
-
-
-.SvgAndTextButton {
-  all: unset;
-
-  cursor: pointer;
-  user-select: none;
-
-  display: flex;
-  flex-direction: row;
-
-  align-items: center;
-  justify-content: flex-start;
-  
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 10rem;
-
-  background-color: #00aaff;
-  color: white;
-
-  width: 100%;
-  white-space: nowrap;
-
-  transition: 0.5s ease-in-out;
-}
-.SvgAndTextButton:hover {
-  background-color: #00bbff;
-  transform: translateY(-0.05rem) scale(1.05);
-  transition: 0.1s ease-out;
-}
-.SvgAndTextButton:active {
-  background-color: #0088cc;
-  transform: translateY(0.01rem) scale(0.98);
-  transition: 0.01s ease-out;
-}
-
-.SvgAndTextButton svg {
-    width: 1.5rem;
-    height: 1.5rem;
-    object-fit: contain;
-    transform: rotate(-360deg); 
-    transition: transform 0.6s ease;
-
-    animation: spin 2.5s forwards;
-
-    color: white;
-}
-.SvgAndTextButton:hover svg {
-    transform: rotate(-380deg); 
-    transition: transform 0.6s ease;
-}
-.SvgAndTextButton:hover:active svg {
-    transform: rotate(-20deg); 
-    transition: transform 0.0s ease;
-}
-.SvgAndTextButton:active svg {
-    transform: rotate(0deg); 
-    transition: transform 0.0s ease;
-}
-
-
-/* #endregion BUTTONS */
 
 /* #region INPUT WRAPPERS */
 
@@ -2842,190 +2486,10 @@ button:disabled {
 
 /* #endregion PROGRAM */
 
-/* #region TOGGLE BUTTON */
-
-.toggleButtonDiv {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  justify-content: stretch;
-  align-items: stretch;
-
-  background-color: var(--buttonBackgroundColor, white);
-
-  border-radius: 2rem;
-
-  position: relative;
-}
-
-.toggleButtonDiv>span {
-  z-index: 3;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 7rem;
-
-  overflow: clip;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-
-  user-select: none;
-  transition: 0.25s ease-in-out;
-
-  padding: 0.25rem 0.5rem;
-
-  cursor: pointer;
-}
-
-.toggleButtonDiv>span:first-child {
-  color: var(--buttonTextColor, black);
-}
-.toggleButtonDiv.active>span:first-child {
-  color: #eee;
-}
-.toggleButtonDiv>span:not(:first-child) {
-  color: #eee;
-}
-.toggleButtonDiv.active>span:not(:first-child) {
-  color: var(--buttonTextColor, black);
-}
-
-.toggleButtonDiv::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  left: 50%;
-  width: 50%;
-  height: 100%;
-  background-color: #00aaff;
-  border-radius: 2rem;
-  transition: 0.25s ease-in-out;
-}
-
-.toggleButtonDiv.active::after {
-  left: 0;
-}
 
 /* #endregion TOGGLE BUTTON */
 
 /* #region LISTA ROZKAZOW */
-
-#commandList {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  z-index: 100;
-
-  display: grid;
-  grid-template-areas:
-    "fr fr"
-    "list details";
-  grid-template-columns: auto 2fr;
-  grid-template-rows: auto 1fr;
-  gap: 0.5rem;
-  justify-content: stretch;
-  align-content: stretch;
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  
-  border-radius: var(--default-border-radius, 0.25rem);
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
-
-  padding: 1rem;
-
-  overflow: hidden;
-  resize: both;
-}
-
-#commandList button {
-  padding: 0.25rem;
-}
-
-#commandList button svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-#commandList .flexRow {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-
-  grid-area: fr;
-}
-
-#commandList #commandListTable {
-  grid-area: list;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-}
-
-#commandList #commandListTable>button {
-  all: unset;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.25rem 1rem 0.25rem 0.25rem;
-  cursor: pointer;
-}
-
-#commandList #commandListTable>button:not(:last-child) {
-  border-bottom: 1px solid var(--panelOutlineColor, black);
-}
-
-#commandList #commandListTable>button:hover {
-  background-color: #fff8;
-}
-
-#commandList #commandListTable>button:active {
-  background-color: #00aaff;
-  color: white;
-}
-
-#commandList #commandDetails {
-  grid-area: details;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
-  justify-content: stretch;
-  align-content: stretch;
-  overflow-y: auto;
-}
-
-#commandList #commandDetails>.buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  padding: 0.25rem;
-}
-
-#commandList #commandDetails .roskazCode {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.25rem;
-  justify-content: stretch;
-  align-items: stretch;
-}
-
-#commandList #commandDetails .roskazCode textarea {
-  width: 100%;
-  height: 100%;
-  resize: none;
-  padding: 0.5rem;
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-}
 
 
 /* #endregion LISTA ROZKAZOW */
@@ -3145,6 +2609,7 @@ ol {
   margin-left: var(--arrowHeadSize, 0.25rem);
   min-height: 2rem;
 }
+
 .pathDownOnLeft:after {
   content: "";
   position: absolute;
@@ -3166,6 +2631,7 @@ ol {
   margin-bottom: var(--arrowHeadSize, 0.25rem);
   padding-top: var(--arrowHeadSize, 0.25rem);
 }
+
 .pathDownOnRight:after {
   content: "";
   position: absolute;
@@ -3186,6 +2652,7 @@ ol {
   margin-top: var(--arrowHeadSize, 0.25rem);
   padding-bottom: var(--arrowHeadSize, 0.25rem);
 }
+
 .pathUpOnLeft:after {
   content: "";
   position: absolute;
@@ -3205,6 +2672,7 @@ ol {
   margin-top: var(--arrowHeadSize, 0.25rem);
   padding-bottom: var(--arrowHeadSize, 0.25rem);
 }
+
 .pathUpOnRight:after {
   content: "";
   position: absolute;
@@ -3262,6 +2730,7 @@ ol {
   padding-right: 0.5rem;
   position: relative;
 }
+
 .lineRightOnBottom:after {
   content: "";
   position: absolute;
@@ -3280,6 +2749,7 @@ ol {
   padding-left: 0.5rem;
   position: relative;
 }
+
 .lineLeftOnBottom:after {
   content: "";
   position: absolute;
@@ -3312,7 +2782,7 @@ ol {
 
   border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
-  
+
   border-radius: var(--default-border-radius, 0.25rem);
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
 
@@ -3321,6 +2791,7 @@ ol {
   overflow: hidden;
   resize: both;
 }
+
 #aiChat #conversation {
   flex-grow: 1;
   display: flex;
@@ -3332,6 +2803,7 @@ ol {
   overflow-y: auto;
 
 }
+
 #aiChat #inputArea {
   display: flex;
   flex-direction: row;
@@ -3341,6 +2813,7 @@ ol {
 
   width: 100%;
 }
+
 #aiChat #inputArea input {
   flex-grow: 1;
   padding: 0.5rem;
@@ -3351,6 +2824,7 @@ ol {
   color: var(--fontColor, black);
   font-family: monospace;
 }
+
 #aiChat #conversation>div {
   display: grid;
   grid-template-areas: ". sender time" "icon message message";
@@ -3361,6 +2835,7 @@ ol {
   padding: 0.25rem;
   border-radius: 0.25rem;
 }
+
 #aiChat #conversation>div>div.icon {
   grid-area: icon;
   width: 2rem;
@@ -3372,6 +2847,7 @@ ol {
   justify-content: center;
   align-items: center;
 }
+
 #aiChat #conversation>div>span.sender {
   grid-area: sender;
   font-size: 0.625rem;
@@ -3384,6 +2860,7 @@ ol {
   justify-content: center;
   align-items: center;
 }
+
 #aiChat #conversation>div>span.time {
   grid-area: time;
   font-size: 0.625rem;
@@ -3394,6 +2871,7 @@ ol {
   justify-content: center;
   align-items: center;
 }
+
 #aiChat #conversation>div>span.message {
   grid-area: message;
   font-size: 1rem;

@@ -1,0 +1,13 @@
+.register {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    justify-content: stretch;
+    align-items: stretch;
+    padding: 0.125rem 0.5rem;
+}
+
+.register > span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

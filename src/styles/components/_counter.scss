@@ -1,0 +1,39 @@
+#counter {
+    display: grid;
+    grid-template-areas:
+        "il c c dl"
+        ". wel wyl .";
+    grid-template-rows: auto 2.5rem;
+    grid-template-columns: auto 1fr 1fr auto;
+    justify-content: stretch;
+    align-items: stretch;
+}
+
+#counter #il {
+    grid-area: il;
+    justify-self: right;
+    align-self: center;
+}
+
+#counter #dl {
+    grid-area: dl;
+    justify-self: left;
+    align-self: center;
+}
+
+#counter .register {
+    grid-area: c;
+    border: 1px solid var(--panelOutlineColor, black);
+    background-color: var(--panelBackgroundColor, white);
+    border-radius: var(--default-border-radius, 0.25rem);
+}
+
+#counter #wel {
+    grid-area: wel;
+    margin-right: 0.25rem;
+}
+
+#counter #wyl {
+    grid-area: wyl;
+    margin-left: 0.25rem;
+}

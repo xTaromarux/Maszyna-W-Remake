@@ -18,27 +18,9 @@
 
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
-        <div id="counter">
-          <div @click="ilClick" id="il" class="signal impulse arrowRightOnBottom" :class="{ active: signals.il }">
-            <span>il</span>
-          </div>
-          <span class="register"> <span>L</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(programCounter) }}</span>
-              <input type="number" v-model="programCounter">
-            </div>
-          </span>
-          <div @click="dlClick" id="dl" v-if="extras.dl" class="signal impulse arrowLeftOnBottom"
-            :class="{ active: signals.dl }">
-            <span>dl</span>
-          </div>
-          <div @click="wylClick" id="wyl" class="signal long pathDownOnLeft" :class="{ active: signals.wyl }">
-            <span class="arrowLeftOnBottom">wyl</span>
-          </div>
-          <div @click="welClick" id="wel" class="signal impulse pathUpOnRight" :class="{ active: signals.wel }">
-            <span class="arrowRightOnBottom">wel</span>
-          </div>
-        </div>
+        <CounterComponent :signals="signals" :programCounter="programCounter" :extras="extras"
+          @update:programCounter="programCounter = $event" />
+
         <!-- <div id="stack" class="register">
           S : {{ formatNumber(stackPointer) }}
         </div> -->
@@ -296,7 +278,7 @@
     </div>
 
     <ProgramSection :manualMode="manualMode" :commandList="commandList" @update:code="code = $event"
-      @log="addLog($event.message, $event.class)"/>
+      @log="addLog($event.message, $event.class)" />
 
     <div v-if="!manualMode" id="console">
       <div v-for="(log, index) in logs" :key="index" :class="log.class.toLowerCase()">
@@ -437,6 +419,7 @@ import MoonIcon from '@/assets/svg/MoonIcon.vue';
 import AiChatIcon from '@/assets/svg/AiChatIcon.vue';
 import CommandList from './CommandList.vue';
 import ProgramSection from './ProgramSection.vue';
+import CounterComponent from '@/components/CounterComponent.vue';
 
 export default {
   name: "MainComponent",
@@ -451,6 +434,7 @@ export default {
     AiChatIcon,
     CommandList,
     ProgramSection,
+    CounterComponent,
   },
 
   data() {
@@ -1713,36 +1697,6 @@ export default {
 <style scoped>
 /* #region BASE */
 
-.signal:not(.bus) {
-  cursor: pointer;
-  user-select: none;
-}
-
-.signal:hover:not(.bus) {
-  --signal: var(--signal-hover) !important;
-  --signalText: var(--signal-hover) !important;
-}
-
-.signal.active {
-  --signal: var(--signal-active) !important;
-  --signalText: var(--signal-active) !important;
-}
-
-
-.register {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  justify-content: stretch;
-  align-items: stretch;
-  padding: 0.125rem 0.5rem;
-}
-
-.register>span {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 /* #endregion BASE */
 
 /* #region SETTINGS */
@@ -2111,50 +2065,6 @@ export default {
 
 /* #endregion BUS */
 
-/* #region COUNTER */
-
-#counter {
-  display: grid;
-  grid-template-areas:
-    "il c c dl"
-    ". wel wyl .";
-  grid-template-rows: auto 2.5rem;
-  grid-template-columns: auto 1fr 1fr auto;
-  justify-content: stretch;
-  align-items: stretch;
-}
-
-#counter #il {
-  grid-area: il;
-  justify-self: right;
-  align-self: center;
-}
-
-#counter #dl {
-  grid-area: dl;
-  justify-self: left;
-  align-self: center;
-}
-
-#counter .register {
-  grid-area: c;
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  border-radius: var(--default-border-radius, 0.25rem);
-}
-
-#counter #wel {
-  grid-area: wel;
-  margin-right: 0.25rem;
-}
-
-#counter #wyl {
-  grid-area: wyl;
-  margin-left: 0.25rem;
-}
-
-/* #endregion COUNTER */
-
 /* #region BUS CONNECITON */
 
 #sa {
@@ -2374,66 +2284,6 @@ export default {
   transform: translateY(0.01rem) scale(0.98);
   transition: 0.01s ease-out;
 }
-
-
-
-/* #endregion UI BUTTONS LEFT BOTTOM */
-
-
-/* #region INPUT WRAPPERS */
-
-.inputWrapper {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-  justify-content: stretch;
-  align-content: stretch;
-  gap: 0rem;
-  width: 100%;
-  position: relative;
-}
-
-.inputWrapper>* {
-  grid-area: 1 / 1 / 2 / 2;
-  width: 100%;
-}
-
-.inputWrapper input {
-  opacity: 0;
-
-  width: 100%;
-}
-
-.inputWrapper span {
-  opacity: 1;
-
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-
-  pointer-events: none;
-}
-
-.inputWrapper:hover input {
-  opacity: 1;
-  width: 100%;
-}
-
-.inputWrapper:hover span {
-  opacity: 0;
-}
-
-/* #endregion INPUT WRAPPERS */
-
-/* #endregion TOGGLE BUTTON */
-
-/* #region LISTA ROZKAZOW */
-
-
-/* #endregion LISTA ROZKAZOW */
-
 /* #region CONSOLE */
 
 #console {
@@ -2533,176 +2383,6 @@ ol {
 }
 
 /* #endregion OL */
-
-/* #region PATHS AND ARROWS */
-
-.pathDownOnLeft {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: left;
-  position: relative;
-
-  border-left: var(--pathThickness, 0.125rem) solid var(--signal, black);
-  margin-bottom: var(--arrowHeadSize, 0.25rem);
-  padding-top: var(--arrowHeadSize, 0.25rem);
-  margin-left: var(--arrowHeadSize, 0.25rem);
-  min-height: 2rem;
-}
-
-.pathDownOnLeft:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: var(--signal, black) transparent transparent transparent;
-  bottom: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  left: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
-}
-
-
-.pathDownOnRight {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: right;
-  position: relative;
-
-  border-right: var(--pathThickness, 0.125rem) solid var(--signal, black);
-  margin-bottom: var(--arrowHeadSize, 0.25rem);
-  padding-top: var(--arrowHeadSize, 0.25rem);
-}
-
-.pathDownOnRight:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: var(--signal, black) transparent transparent transparent;
-  bottom: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  right: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
-}
-
-
-.pathUpOnLeft {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-
-  border-left: var(--pathThickness, 0.125rem) solid var(--signal, black);
-  margin-top: var(--arrowHeadSize, 0.25rem);
-  padding-bottom: var(--arrowHeadSize, 0.25rem);
-}
-
-.pathUpOnLeft:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: transparent transparent var(--signal, black) transparent;
-  top: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  left: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
-}
-
-.pathUpOnRight {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  position: relative;
-
-  border-right: var(--pathThickness, 0.125rem) solid var(--signal, black);
-  margin-top: var(--arrowHeadSize, 0.25rem);
-  padding-bottom: var(--arrowHeadSize, 0.25rem);
-}
-
-.pathUpOnRight:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: transparent transparent var(--signal, black) transparent;
-  top: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  right: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
-}
-
-
-
-
-.arrowRightOnBottom {
-  color: var(--signalText, black);
-  border-bottom: var(--arrowLineThickness, 0.125rem) solid var(--signal, black);
-  padding-right: 0.5rem;
-  position: relative;
-  margin-right: var(--arrowHeadSize, 0.25rem);
-}
-
-.arrowRightOnBottom:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: transparent transparent transparent var(--signal, black);
-  right: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  bottom: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
-}
-
-.arrowLeftOnBottom {
-  color: var(--signalText, black);
-  border-bottom: var(--arrowLineThickness, 0.125rem) solid var(--signal, black);
-  padding-left: 0.5rem;
-  position: relative;
-  margin-left: var(--arrowHeadSize, 0.25rem);
-}
-
-.arrowLeftOnBottom:after {
-  content: "";
-  position: absolute;
-  border: var(--arrowHeadSize, 0.25rem) solid var(--signal, black);
-  border-color: transparent var(--signal, black) transparent transparent;
-  left: calc(-2 * var(--arrowHeadSize, 0.25rem));
-  bottom: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
-}
-
-
-
-
-
-
-.lineRightOnBottom {
-  color: var(--signalText, black);
-  border-bottom: var(--arrowLineThickness, 0.125rem) dashed var(--signal, black);
-  padding-right: 0.5rem;
-  position: relative;
-}
-
-.lineRightOnBottom:after {
-  content: "";
-  position: absolute;
-
-  width: var(--lineHeadThickness, 0.125rem);
-  height: var(--lineHeadLength, 0.125rem);
-  background-color: var(--signal, black);
-
-  right: var(--lineHeadMargin, 0.125rem);
-  bottom: calc(-0.5 * var(--lineHeadLength, 0.5rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
-}
-
-.lineLeftOnBottom {
-  color: var(--signalText, black);
-  border-bottom: var(--arrowLineThickness, 0.125rem) dashed var(--signal, black);
-  padding-left: 0.5rem;
-  position: relative;
-}
-
-.lineLeftOnBottom:after {
-  content: "";
-  position: absolute;
-
-  width: var(--lineHeadThickness, 0.125rem);
-  height: var(--lineHeadLength, 0.125rem);
-  background-color: var(--signal, black);
-
-  left: var(--lineHeadMargin, 0.125rem);
-  bottom: calc(-0.5 * var(--lineHeadLength, 0.5rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
-}
-
-/* #endregion PATHS AND ARROWS */
 
 /* #region AI CHAT */
 

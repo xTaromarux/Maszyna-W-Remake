@@ -1,0 +1,42 @@
+.inputWrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    justify-content: stretch;
+    align-content: stretch;
+    gap: 0rem;
+    width: 100%;
+    position: relative;
+}
+
+.inputWrapper > * {
+    grid-area: 1 / 1 / 2 / 2;
+    width: 100%;
+}
+
+.inputWrapper input {
+    opacity: 0;
+
+    width: 100%;
+}
+
+.inputWrapper span {
+    opacity: 1;
+
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+
+    pointer-events: none;
+}
+
+.inputWrapper:hover input {
+    opacity: 1;
+    width: 100%;
+}
+
+.inputWrapper:hover span {
+    opacity: 0;
+}

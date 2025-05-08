@@ -85,7 +85,7 @@
               <span class="arrowRightOnBottom">dak</span>
             </div>
           </div>
-          <div id="accumulator">ACC:
+          <div id="accumulator">AK:
             <div class="inputWrapper">
               <span>{{ formatNumber(ACC) }}</span>
               <input type="number" v-model="ACC">
@@ -295,24 +295,8 @@
       </div>
     </div>
 
-    <div id="program" v-if="!manualMode">
-      <textarea v-model="program" placeholder="program" :disabled="manualMode" />
-      <div class="flexRow">
-        <button @click="compileProgram" v-if="!programCompiled" :disabled="manualMode || !program.trim()">
-          Compile
-        </button>
-        <button @click="uncompileProgram" v-if="programCompiled" :disabled="manualMode">
-          Edit
-        </button>
-        <button @click="executeProgramLine" :disabled="!manualMode && !programCompiled">
-          Next line
-        </button>
-        <button @click="runProgram" :disabled="manualMode || !programCompiled">
-          Run
-        </button>
-      </div>
-    </div>
-
+    <ProgramSection :manualMode="manualMode" :commandList="commandList" @update:code="code = $event"
+      @log="addLog($event.message, $event.class)"/>
 
     <div v-if="!manualMode" id="console">
       <div v-for="(log, index) in logs" :key="index" :class="log.class.toLowerCase()">
@@ -452,6 +436,7 @@ import SunIcon from '@/assets/svg/SunIcon.vue';
 import MoonIcon from '@/assets/svg/MoonIcon.vue';
 import AiChatIcon from '@/assets/svg/AiChatIcon.vue';
 import CommandList from './CommandList.vue';
+import ProgramSection from './ProgramSection.vue';
 
 export default {
   name: "MainComponent",
@@ -465,6 +450,7 @@ export default {
     MoonIcon,
     AiChatIcon,
     CommandList,
+    ProgramSection,
   },
 
   data() {
@@ -695,7 +681,7 @@ export default {
           "il", "wyl", "wel",
           "wyad", "wei",
           "wea", "wes", "wys", "czyt", "pisz",
-          "weja", "weak", "dod", "ode", "przp", "wyak"],
+          "weja", "weak", "dod", "ode", "przp", "wyak", "stop"],
         busConnectors: ["as", "sa"],
         dl: ["dl"],
         jamlExtras: ["iak", "dak", "mno", "dziel", "shr", "shl", "neg", "lub", "i"],
@@ -769,6 +755,7 @@ export default {
       codeCompiled: false,
 
       programCompiled: false,
+      compiledProgramLines: [],
       compiledProgram: [],
 
       settingsOpen: false,
@@ -947,6 +934,7 @@ export default {
         ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
       ]);
 
+      console.log(signalslist);
       for (let [index, command] of this.code.split(/[\s;]+/).entries()) {
         if (!command) continue; // Skip empty commands
 
@@ -982,6 +970,7 @@ export default {
       if (this.nextLine.has("czyt")) this.czyt(); // only czyt or pisz active at the same time
       if (this.nextLine.has("pisz")) this.pisz();
       if (this.nextLine.has("wys")) this.wys();
+      if (this.nextLine.has("stop")) this.stop();
       if (this.nextLine.has("wyad")) this.wyad();
       if (this.nextLine.has("wyak")) this.wyak();
       if (this.nextLine.has("wyx")) this.wyx();
@@ -1040,24 +1029,6 @@ export default {
       while (this.activeLine < this.compiledCode.length) {
         this.executeLine();
       }
-    },
-
-    compileProgram() {
-      // divide program into lines and then each line put in the memory
-      let programLines = this.program.split("\n");
-
-
-      this.programCompiled = true;
-
-    },
-    uncompileProgram() {
-      this.programCompiled = false;
-    },
-    executeProgramLine() {
-
-    },
-    runProgram() {
-
     },
 
     /* #region COMMANDS */
@@ -1284,6 +1255,10 @@ export default {
         this.signals.wys = false;
         this.signals.busS = false;
       }, this.oddDelay);
+    },
+    stop() {
+      this.codeCompiled = false;
+      this.nextLine.clear();
     },
     as() {
       this.signals.as = true;
@@ -2451,42 +2426,6 @@ export default {
 }
 
 /* #endregion INPUT WRAPPERS */
-
-/* #region PROGRAM */
-
-#program {
-  grid-area: p;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  justify-content: stretch;
-  align-items: stretch;
-}
-
-#program textarea {
-  flex-grow: 1;
-  padding: 0.5rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  color: var(--fontColor, black);
-  font-family: monospace;
-}
-
-#program textarea:focus {
-  border: 1px solid #00aaff;
-}
-
-#program .flexRow {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* #endregion PROGRAM */
-
 
 /* #endregion TOGGLE BUTTON */
 

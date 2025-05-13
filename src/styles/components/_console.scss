@@ -1,0 +1,85 @@
+
+#console {
+  scroll-behavior: smooth;
+
+  grid-area: c;
+
+  overflow: auto;
+  resize: vertical;
+
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.125rem;
+  padding: 0.5rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  border-radius: var(--default-border-radius, 0.25rem);
+
+  height: 10rem;
+  min-height: 5rem;
+  width: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+#console>div {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+#console>div>span.time {
+  font-size: 0.625rem;
+
+  background-color: #2228;
+  padding: 0.25rem 0.5rem;
+  color: white;
+  border-radius: 0.25rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#console>div>span.class {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+
+  background-color: #2228;
+  padding: 0.25rem;
+  color: white;
+  border-radius: 0.25rem;
+  width: 5rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#console>div>span.message {
+  font-size: 1rem;
+}
+
+#console>div.error {
+  background-color: #f7514ba8;
+}
+
+#console>div.io {
+  background-color: #f7fa52a8;
+}
+
+#console>div.command.compiler {
+  background-color: #92f144a8;
+}
+
+#console>div.program.compiler {
+  background-color: #00aaff88;
+}
+

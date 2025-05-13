@@ -1,0 +1,118 @@
+.simpleSvgButton {
+  all: unset;
+  cursor: pointer;
+  user-select: none;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  transition: 0.5s ease-in-out;
+  color: #ddd;
+}
+
+.simpleSvgButton svg {
+  color: #ddd;
+}
+
+.simpleSvgButton:hover {
+  transform: scale(1.1);
+
+  transition: 0.25s ease-in-out;
+}
+
+.simpleSvgButton:active {
+  transform: scale(0.9);
+
+  transition: 0.1s ease-in-out;
+}
+
+#settings {
+
+  position: absolute;
+  z-index: 100;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 80vh;
+  overflow-y: auto;
+
+  display: grid;
+  justify-content: stretch;
+  align-content: stretch;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  text-align: left;
+  outline: 1px solid var(--panelOutlineColor, white);
+  background-color: var(--panelBackgroundColor, white);
+
+  border-radius: var(--default-border-radius, 0.25rem);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+}
+
+#settings>.titleSpan {
+  grid-column: 1 / -1;
+  height: 2rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+
+#settings .flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+#settings .flexRow {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* #settings:not(.open) > *:not(#openCloseSettings):not(.titleSpan) {
+    display: none !important;
+  } */
+#settings .extras {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#settings>#openCloseSettings {
+  align-self: flex-start;
+  justify-self: flex-end;
+
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+
+  height: 2rem;
+  width: 2rem;
+}
+
+#settings>#openCloseSettings svg {
+  width: 100%;
+  height: 100%;
+}
+
+#settings input[type="number"] {
+  padding: 0.25rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--backgroundColor, white);
+  color: var(--fontColor, black);
+}
+
+#settings select {
+  padding: 0.25rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--backgroundColor, white);
+  color: var(--fontColor, black);
+}

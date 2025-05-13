@@ -13,6 +13,70 @@
 }
 
 
+#xRegister,
+#yRegister {
+  display: grid;
+  grid-template-areas:
+    "in out"
+    "r r";
+  gap: 0 0.5rem;
+}
+
+#xRegister .register,
+#yRegister .register {
+  grid-area: r;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  display: flex;
+  justify-content: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+}
+
+
+#iRegister {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+}
+
+#iRegister .register {
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  display: flex;
+  justify-content: center;
+  padding: 0.125rem 0.5rem;
+  width: 100%;
+  border-radius: var(--default-border-radius, 0.25rem);
+}
+
+#iRegister .signal {
+  flex-grow: 1;
+  height: 0.125rem;
+}
+
+#iRegister #wyad {
+  margin-right: 0.5rem;
+}
+
+#iRegister #wei {
+  margin-left: 0.5rem;
+}
+
+#sa {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+}
+
+#as {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+}
+
 #memory {
   display: grid;
   align-items: stretch;

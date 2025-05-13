@@ -1,0 +1,116 @@
+
+#aiChat {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: stretch;
+  align-content: stretch;
+
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+
+  border-radius: var(--default-border-radius, 0.25rem);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+
+  padding: 1rem;
+
+  overflow: hidden;
+  resize: both;
+}
+
+#aiChat #conversation {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: stretch;
+  align-content: stretch;
+
+  overflow-y: auto;
+
+}
+
+#aiChat #inputArea {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  justify-content: stretch;
+  align-content: stretch;
+
+  width: 100%;
+}
+
+#aiChat #inputArea input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  font-family: monospace;
+}
+
+#aiChat #conversation>div {
+  display: grid;
+  grid-template-areas: ". sender time" "icon message message";
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+#aiChat #conversation>div>div.icon {
+  grid-area: icon;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: #00aaff;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#aiChat #conversation>div>span.sender {
+  grid-area: sender;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+
+  border-radius: 0.25rem;
+  width: 5rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#aiChat #conversation>div>span.time {
+  grid-area: time;
+  font-size: 0.625rem;
+
+  border-radius: 0.25rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#aiChat #conversation>div>span.message {
+  grid-area: message;
+  font-size: 1rem;
+  padding: 0.75rem;
+  background-color: #8888;
+  border-radius: var(--default-border-radius, 0.25rem);
+  width: 100%;
+}
+

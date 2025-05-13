@@ -22,91 +22,22 @@
           :extras="extras" @update:programCounter="programCounter = $event" @ilClick="ilClick" @dlClick="dlClick"
           @wylClick="wylClick" @welClick="welClick" />
       </div>
+
       <BusSignal :signalStatus="signals.busA" :busValue="BusA" :busName="'A'"
         :showInvisibleRegisters="extras.showInvisibleRegisters" :formatNumber="formatNumber" />
+
       <div id="layer2" class="layer">
-        <div id="iRegister">
-          <SignalButton id="wyad" :signal="signals.wyad" label="wyad" divClassNames="long pathUpOnRight"
-            spanClassNames="arrowRightOnBottom" @wyadClick="wyadClick" />
-          <RegisterComponent label="I" :model="I" @update:model="I = $event" :formatNumber="formatNumber" />
-          <SignalButton id="wei" :signal="signals.wei" label="wei" divClassNames="impulse pathUpOnLeft"
-            spanClassNames="arrowLeftOnBottom" @weiClick="weiClick" />
-        </div>
+        <RegisterISection :I="I" :signals="signals" :formatNumber="formatNumber" @update:I="I = $event"
+          @wyadClick="wyadClick" @weiClick="weiClick" />
 
-        <div id="calc">
-          <div v-if="extras.jamlExtras" id="flags">
-            FLAGS:
-            <div title="Negative number in Acc" v-if="ACC < 0">
-              N
-            </div>
-            <div title="Zero in Acc" v-if="ACC === 0">
-              Z
-            </div>
-          </div>
-          <div class="accSignals">
-            <SignalButton v-if="extras.jamlExtras" id="iak" :signal="signals.iak" label="wei"
-              spanClassNames="arrowRightOnBottom" @iakClick="iakClick" />
-            <SignalButton v-if="extras.jamlExtras" id="dak" :signal="signals.dak" label="dak"
-              spanClassNames="arrowRightOnBottom" @dakClick="dakClick" />
-          </div>
-          <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="ACC = $event"
-            :formatNumber="formatNumber" />
+        <CalcSection :signals="signals" :extras="extras" :ACC="ACC" :JAML="JAML" :formatNumber="formatNumber"
+          @update:ACC="ACC = $event" @iakClick="iakClick" @dakClick="dakClick" @weakClick="weakClick"
+          @dodClick="dodClick" @odeClick="odeClick" @przepClick="przepClick" @mnoClick="mnoClick"
+          @dzielClick="dzielClick" @shrClick="shrClick" @shlClick="shlClick" @negClick="negClick" @lubClick="lubClick"
+          @iClick="iClick" @wejaClick="wejaClick" @wyakClick="wyakClick" />
 
-          <div class="jamlSignals">
-            <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom"
-              @weakClick="weakClick" />
-
-            <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom"
-              @dodClick="dodClick" />
-
-            <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom"
-              @odeClick="odeClick" />
-
-            <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom"
-              @przepClick="przepClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="mno" :signal="signals.mno" label="mno"
-              spanClassNames="lineRightOnBottom" @mnoClick="mnoClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="dziel" :signal="signals.dziel" label="dziel"
-              spanClassNames="lineRightOnBottom" @dzielClick="dzielClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="shr" :signal="signals.shr" label="shr"
-              spanClassNames="lineRightOnBottom" @shrClick="shrClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="shl" :signal="signals.shl" label="shl"
-              spanClassNames="lineRightOnBottom" @shlClick="shlClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="neg" :signal="signals.neg" label="neg"
-              spanClassNames="lineRightOnBottom" @negClick="negClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="lub" :signal="signals.lub" label="lub"
-              spanClassNames="lineRightOnBottom" @lubClick="lubClick" />
-
-            <SignalButton v-if="extras.jamlExtras" id="i" :signal="signals.i" label="i"
-              spanClassNames="lineRightOnBottom" @iClick="iClick" />
-
-          </div>
-          <div id="jaml" class="register">
-            <span>JAML</span>
-
-            <!-- ??? PO CO TO JEST ??? -->
-
-            <!-- <div v-if="extras.showInvisibleRegisters" class="inputWrapper">
-              <span>{{ formatNumber(JAML) }}</span>
-              <input type="number" v-model="JAML">
-            </div> -->
-          </div>
-          <SignalButton id="weja" :signal="signals.weja" label="weja" divClassNames="pathUpOnRight"
-            spanClassNames="arrowRightOnBottom" @wejaClick="wejaClick" />
-
-          <SignalButton id="wyak" :signal="signals.wyak" label="wyak" divClassNames="pathDownOnRight"
-            spanClassNames="arrowLeftOnBottom" @wyakClick="wyakClick" />
-
-        </div>
-
-        <SignalButton v-if="extras.busConnectors" id="sa" :signal="signals.sa" label="sa"
-          divClassNames="pathDownOnRight" spanClassNames="lineRightOnBottom" @saClick="saClick" />
+        <SignalButton v-if="extras.busConnectors" id="sa" :signal="signals.sa" label="sa" divClassNames="pathUpOnRight"
+          spanClassNames="lineRightOnBottom" @saClick="saClick" />
 
         <SignalButton v-if="extras.busConnectors" id="as" :signal="signals.as" label="as" divClassNames="pathDownOnLeft"
           spanClassNames="lineLeftOnBottom" @asClick="asClick" />
@@ -117,30 +48,16 @@
           @wysClick="wysClick" />
 
       </div>
+
       <BusSignal :signalStatus="signals.busS" :busValue="BusS" :busName="'S'"
         :showInvisibleRegisters="extras.showInvisibleRegisters" :formatNumber="formatNumber" />
+
       <div id="layer3" class="layer">
+        <XRegisterSection :visible="extras.xRegister" :X="X" :signals="signals" :formatNumber="formatNumber"
+          @update:X="X = $event" @wyxClick="wyxClick" @wexClick="wexClick" />
 
-
-        <div v-if="extras.xRegister" id="xRegister">
-          <SignalButton id="wyx" :signal="signals.wyx" label="wyx" divClassNames="pathUpOnRight"
-            spanClassNames="arrowRightOnBottom" @wyxClick="wyxClick" />
-
-          <RegisterComponent label="X" :model="X" @update:model="X = $event" :formatNumber="formatNumber" />
-
-          <SignalButton id="wex" :signal="signals.wex" label="wex" divClassNames="pathDownOnLeft"
-            spanClassNames="lineLeftOnBottom" @wyxClick="wexClick" />
-
-        </div>
-        <div v-if="extras.yRegister" id="yRegister">
-          <SignalButton id="wyy" :signal="signals.wyy" label="wyy" divClassNames="pathUpOnRight"
-            spanClassNames="arrowRightOnBottom" @wyyClick="wyyClick" />
-
-          <RegisterComponent label="Y" :model="Y" @update:model="Y = $event" :formatNumber="formatNumber" />
-
-          <SignalButton id="wey" :signal="signals.wey" label="wey" divClassNames="pathDownOnLeft"
-            spanClassNames="lineLeftOnBottom" @weyClick="weyClick" />
-        </div>
+        <YRegisterSection :visible="extras.yRegister" :Y="Y" :signals="signals" :formatNumber="formatNumber"
+          @update:Y="Y = $event" @wyyClick="wyyClick" @weyClick="weyClick" />
 
         <!-- ??? PO CO TO JEST ??? -->
 
@@ -346,6 +263,10 @@ import BusSignal from '@/components/BusSignal.vue';
 import SignalButton from '@/components/SignalButton.vue';
 import RegisterComponent from '@/components/RegisterComponent.vue';
 import MemorySection from '@/components/MemorySection.vue';
+import CalcSection from '@/components/CalcSection.vue';
+import RegisterISection from '@/components/RegisterISection.vue';
+import XRegisterSection from '@/components/XRegisterSection.vue';
+import YRegisterSection from '@/components/YRegisterSection.vue';
 
 export default {
   name: "MainComponent",
@@ -364,7 +285,11 @@ export default {
     BusSignal,
     SignalButton,
     RegisterComponent,
-    MemorySection
+    MemorySection,
+    CalcSection,
+    RegisterISection,
+    XRegisterSection,
+    YRegisterSection,
   },
 
   data() {
@@ -687,6 +612,17 @@ export default {
     };
   },
   methods: {
+
+    handleSignalToggle(signalName) {
+      if (!this.manualMode) return;
+      if (this.nextLine.has(signalName)) {
+        this.nextLine.delete(signalName);
+        this.signals[signalName] = false;
+      } else {
+        this.nextLine.add(signalName);
+        this.signals[signalName] = true;
+      }
+    },
 
     loadFromLS() {
       const data = localStorage.getItem("W");

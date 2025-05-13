@@ -11,14 +11,16 @@
 @use "layout/popups";
 @use "layout/toggle";
 
-@use "components/buttons";
-@use "components/counter";
-@use "components/arrows";
-@use "components/switch";
-@use "components/signals";
+@use "components/aiChat";
 @use "components/bus";
+@use "components/buttons";
+@use "components/calc";
+@use "components/console";
+@use "components/counter";
 @use "components/inputs";
 @use "components/memory";
-@use "components/console";
-@use "components/calc";
-@use "components/aiChat";
+@use "components/settings";
+@use "components/signals";
+@use "components/switch";
+@use "components/ui";
+@use "components/arrows";

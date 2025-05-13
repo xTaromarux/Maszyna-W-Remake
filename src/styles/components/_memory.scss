@@ -11,3 +11,134 @@
     justify-content: center;
     align-items: center;
 }
+
+
+#memory {
+  display: grid;
+  align-items: stretch;
+  justify-items: center;
+  grid-template-areas:
+    "wea ."
+    "aRegister operations"
+    "memoryTable operations"
+    "sRegister operations"
+    "signals .";
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr auto auto;
+}
+
+#memory #aRegister {
+  grid-area: aRegister;
+  border-radius: var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem) 0 0;
+}
+
+
+#memory #sRegister {
+  grid-area: sRegister;
+  border-radius: 0 0 var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem);
+}
+
+#memory>.register {
+  border: 1px solid var(--panelOutlineColor, black);
+  background: var(--panelBackgroundColor, black);
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
+
+  justify-content: center;
+  padding: 0.125rem 0.5rem;
+  width: 100%;
+}
+
+#memoryTable {
+  grid-area: memoryTable;
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  border: 1px solid var(--panelOutlineColor, black);
+  background: var(--panelBackgroundColor, black);
+  width: 100%;
+  overflow-y: auto;
+
+  position: relative;
+
+  resize: both;
+  overflow: auto;
+  min-width: 15rem;
+  min-height: 15rem;
+  height: 20rem;
+  width: 25rem;
+}
+
+#memoryTable>div {
+  min-width: 5rem;
+  text-align: right;
+  border: 1px solid var(--panelOutlineColor, black);
+}
+
+#memoryTable>span,
+#memoryTable>input {
+  border: 1px solid var(--panelOutlineColor, black);
+  padding: 0.125rem;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
+#memoryTable>.label {
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  background-color: var(--panelBackgroundColor, black);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  z-index: 10;
+}
+
+#memoryTable>.selected {
+  border-top: 4px solid var(--signal-active) !important;
+  border-bottom: 4px solid var(--signal-active) !important;
+  background-color: color-mix(in srgb, transparent, var(--signal-active) 25%);
+}
+
+#memory .signals {
+  grid-area: signals;
+  display: flex;
+  flex-direction: row;
+  gap: 0.125rem;
+  justify-content: center;
+  align-items: center;
+}
+
+#memory .signal {
+  height: 0.125rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 3rem;
+}
+
+#memory #wea {
+  grid-area: wea;
+  position: relative;
+}
+
+#memory #wes {
+  margin-right: 0.25rem;
+}
+
+#memory #wys {
+  margin-left: 0.25rem;
+}
+
+#memory #operations {
+  grid-area: operations;
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: flex-start;
+}

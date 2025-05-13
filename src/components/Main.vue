@@ -31,21 +31,6 @@
           <RegisterComponent label="I" :model="I" @update:model="I = $event" :formatNumber="formatNumber" />
           <SignalButton id="wei" :signal="signals.wei" label="wei" divClassNames="impulse pathUpOnLeft"
             spanClassNames="arrowLeftOnBottom" @weiClick="weiClick" />
-
-          <!-- <div @click="wyadClick" id="wyad" class="signal long pathUpOnRight" :class="{ active: signals.wyad }">
-            <span class="arrowRightOnBottom">wyad</span>
-          </div>
-          <div class="register">
-            <span>I</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(I) }}</span>
-              <input type="number" v-model="I">
-            </div>
-          </div>
-          <div @click="weiClick" id="wei" class="signal impulse pathUpOnLeft" :class="{ active: signals.wei }">
-            <span class="arrowLeftOnBottom">wei</span>
-          </div> -->
-
         </div>
 
         <div id="calc">
@@ -64,12 +49,9 @@
             <SignalButton v-if="extras.jamlExtras" id="dak" :signal="signals.dak" label="dak"
               spanClassNames="arrowRightOnBottom" @dakClick="dakClick" />
           </div>
-          <div id="accumulator">AK:
-            <div class="inputWrapper">
-              <span>{{ formatNumber(ACC) }}</span>
-              <input type="number" v-model="ACC">
-            </div>
-          </div>
+          <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="ACC = $event"
+            :formatNumber="formatNumber" />
+
           <div class="jamlSignals">
             <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom"
               @weakClick="weakClick" />
@@ -83,133 +65,85 @@
             <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom"
               @przepClick="przepClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="mno" :signal="signals.mno" label="mno" spanClassNames="lineRightOnBottom"
-              @mnoClick="mnoClick" />
+            <SignalButton v-if="extras.jamlExtras" id="mno" :signal="signals.mno" label="mno"
+              spanClassNames="lineRightOnBottom" @mnoClick="mnoClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="dziel" :signal="signals.dziel" label="dziel" spanClassNames="lineRightOnBottom"
-              @dzielClick="dzielClick" />
+            <SignalButton v-if="extras.jamlExtras" id="dziel" :signal="signals.dziel" label="dziel"
+              spanClassNames="lineRightOnBottom" @dzielClick="dzielClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="shr" :signal="signals.shr" label="shr" spanClassNames="lineRightOnBottom"
-              @shrClick="shrClick" />
+            <SignalButton v-if="extras.jamlExtras" id="shr" :signal="signals.shr" label="shr"
+              spanClassNames="lineRightOnBottom" @shrClick="shrClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="shl" :signal="signals.shl" label="shl" spanClassNames="lineRightOnBottom"
-              @shlClick="shlClick" />
+            <SignalButton v-if="extras.jamlExtras" id="shl" :signal="signals.shl" label="shl"
+              spanClassNames="lineRightOnBottom" @shlClick="shlClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="neg" :signal="signals.neg" label="neg" spanClassNames="lineRightOnBottom"
-              @negClick="negClick" />
+            <SignalButton v-if="extras.jamlExtras" id="neg" :signal="signals.neg" label="neg"
+              spanClassNames="lineRightOnBottom" @negClick="negClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="lub" :signal="signals.lub" label="lub" spanClassNames="lineRightOnBottom"
-              @lubClick="lubClick" />
+            <SignalButton v-if="extras.jamlExtras" id="lub" :signal="signals.lub" label="lub"
+              spanClassNames="lineRightOnBottom" @lubClick="lubClick" />
 
-            <SignalButton v-if="extras.jamlExtras" id="i" :signal="signals.i" label="i" spanClassNames="lineRightOnBottom"
-              @iClick="iClick" />
+            <SignalButton v-if="extras.jamlExtras" id="i" :signal="signals.i" label="i"
+              spanClassNames="lineRightOnBottom" @iClick="iClick" />
 
           </div>
           <div id="jaml" class="register">
             <span>JAML</span>
-            <span v-if="extras.showInvisibleRegisters">:</span>
-            <div v-if="extras.showInvisibleRegisters" class="inputWrapper">
+
+            <!-- ??? PO CO TO JEST ??? -->
+
+            <!-- <div v-if="extras.showInvisibleRegisters" class="inputWrapper">
               <span>{{ formatNumber(JAML) }}</span>
               <input type="number" v-model="JAML">
-            </div>
+            </div> -->
           </div>
-          <div id="weja" @click="wejaClick" class="signal long pathUpOnRight" :class="{ active: signals.weja }">
-            <span class="arrowRightOnBottom">weja</span>
-          </div>
-          <div id="wyak" @click="wyakClick" class="signal long pathDownOnRight" :class="{ active: signals.wyak }">
-            <span class="arrowRightOnBottom">wyak</span>
-          </div>
+          <SignalButton id="weja" :signal="signals.weja" label="weja" divClassNames="pathUpOnRight"
+            spanClassNames="arrowRightOnBottom" @wejaClick="wejaClick" />
+
+          <SignalButton id="wyak" :signal="signals.wyak" label="wyak" divClassNames="pathDownOnRight"
+            spanClassNames="arrowLeftOnBottom" @wyakClick="wyakClick" />
+
         </div>
-        <div v-if="extras.busConnectors" id="sa" @click="saClick" class="signal long pathUpOnRight"
-          :class="{ active: signals.sa }">
-          <span class="lineRightOnBottom">sa</span>
-        </div>
-        <div v-if="extras.busConnectors" id="as" @click="asClick" class="signal long pathDownOnLeft"
-          :class="{ active: signals.as }">
-          <span class="lineLeftOnBottom">as</span>
-        </div>
-        <div id="memory">
-          <div id="wea" @click="weaClick" class="signal long pathDownOnRight" :class="{ active: signals.wea }">
-            <span class="arrowRightOnBottom">wea</span>
-          </div>
-          <div class="register" id="aRegister"><span>A</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(A) }}</span>
-              <input type="number" v-model="A">
-            </div>
-          </div>
-          <div id="memoryTable">
-            <span class="label">Mem Address</span>
-            <span class="label">Value</span>
-            <span class="label">Code</span>
-            <span class="label">Address</span>
-            <template v-for="(value, index) in mem" :key="index">
-              <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
-              <div :class="{ selected: A === index }" class="inputWrapper">
-                <span>{{ formatNumber(mem[index]) }}</span>
-                <input type="number" v-model="mem[index]">
-              </div>
-              <span :class="{ selected: A === index }">{{ decToCommand(value) ? decToCommand(value).name : "EMPTY"
-              }}</span>
-              <span :class="{ selected: A === index }">{{ formatNumber(decToArgument(value)) }}</span>
-            </template>
-          </div>
-          <div id="operations">
-            <div id="czyt" @click="czytClick" class="signal long" :class="{ active: signals.czyt }">
-              <span class="lineLeftOnBottom">czyt</span>
-            </div>
-            <div id="pisz" @click="piszClick" class="signal long" :class="{ active: signals.pisz }">
-              <span class="lineLeftOnBottom">pisz</span>
-            </div>
-          </div>
-          <div class="register" id="sRegister"><span>S</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(S) }}</span>
-              <input type="number" v-model="S">
-            </div>
-          </div>
-          <div class="signals">
-            <div id="wes" @click="wesClick" class="signal long pathUpOnRight" :class="{ active: signals.wes }">
-              <span class="arrowRightOnBottom">wes</span>
-            </div>
-            <div id="wys" @click="wysClick" class="signal long pathDownOnLeft" :class="{ active: signals.wys }">
-              <span class="lineLeftOnBottom">wys</span>
-            </div>
-          </div>
-        </div>
+
+        <SignalButton v-if="extras.busConnectors" id="sa" :signal="signals.sa" label="sa"
+          divClassNames="pathDownOnRight" spanClassNames="lineRightOnBottom" @saClick="saClick" />
+
+        <SignalButton v-if="extras.busConnectors" id="as" :signal="signals.as" label="as" divClassNames="pathDownOnLeft"
+          spanClassNames="lineLeftOnBottom" @asClick="asClick" />
+
+        <MemorySection :A="A" :S="S" :mem="mem" :signals="signals" :formatNumber="formatNumber"
+          :decToCommand="decToCommand" :decToArgument="decToArgument" @update:A="A = $event" @update:S="S = $event"
+          @weaClick="weaClick" @czytClick="czytClick" @piszClick="piszClick" @wesClick="wesClick"
+          @wysClick="wysClick" />
+
       </div>
       <BusSignal :signalStatus="signals.busS" :busValue="BusS" :busName="'S'"
         :showInvisibleRegisters="extras.showInvisibleRegisters" :formatNumber="formatNumber" />
       <div id="layer3" class="layer">
+
+
         <div v-if="extras.xRegister" id="xRegister">
-          <div id="wyx" @click="wyxClick" class="signal long pathUpOnRight" :class="{ active: signals.wyx }">
-            <span class="arrowRightOnBottom">wyx</span>
-          </div>
-          <div class="register">
-            <span>X</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(X) }}</span>
-              <input type="number" v-model="X">
-            </div>
-          </div>
-          <div id="wex" @click="wexClick" class="signal impulse pathDownOnLeft" :class="{ active: signals.wex }">
-            <span class="lineLeftOnBottom">wex</span>
-          </div>
+          <SignalButton id="wyx" :signal="signals.wyx" label="wyx" divClassNames="pathUpOnRight"
+            spanClassNames="arrowRightOnBottom" @wyxClick="wyxClick" />
+
+          <RegisterComponent label="X" :model="X" @update:model="X = $event" :formatNumber="formatNumber" />
+
+          <SignalButton id="wex" :signal="signals.wex" label="wex" divClassNames="pathDownOnLeft"
+            spanClassNames="lineLeftOnBottom" @wyxClick="wexClick" />
+
         </div>
         <div v-if="extras.yRegister" id="yRegister">
-          <div id="wyy" @click="wyyClick" class="signal long pathUpOnRight" :class="{ active: signals.wyy }">
-            <span class="arrowRightOnBottom">wyy</span>
-          </div>
-          <div class="register"><span>Y</span><span>:</span>
-            <div class="inputWrapper">
-              <span>{{ formatNumber(Y) }}</span>
-              <input type="number" v-model="Y">
-            </div>
-          </div>
-          <div id="wey" @click="weyClick" class="signal impulse pathDownOnLeft" :class="{ active: signals.wey }">
-            <span class="lineLeftOnBottom">wey</span>
-          </div>
+          <SignalButton id="wyy" :signal="signals.wyy" label="wyy" divClassNames="pathUpOnRight"
+            spanClassNames="arrowRightOnBottom" @wyyClick="wyyClick" />
+
+          <RegisterComponent label="Y" :model="Y" @update:model="Y = $event" :formatNumber="formatNumber" />
+
+          <SignalButton id="wey" :signal="signals.wey" label="wey" divClassNames="pathDownOnLeft"
+            spanClassNames="lineLeftOnBottom" @weyClick="weyClick" />
         </div>
+
+        <!-- ??? PO CO TO JEST ??? -->
+
         <!-- <div id="registersS">
           <div v-for="(value, index) in V" :key="index" class="register">
             <span>{{ index }}</span>
@@ -411,6 +345,7 @@ import CounterComponent from '@/components/CounterComponent.vue';
 import BusSignal from '@/components/BusSignal.vue';
 import SignalButton from '@/components/SignalButton.vue';
 import RegisterComponent from '@/components/RegisterComponent.vue';
+import MemorySection from '@/components/MemorySection.vue';
 
 export default {
   name: "MainComponent",
@@ -428,7 +363,8 @@ export default {
     CounterComponent,
     BusSignal,
     SignalButton,
-    RegisterComponent
+    RegisterComponent,
+    MemorySection
   },
 
   data() {
@@ -717,6 +653,10 @@ export default {
         wyy: false,
         wey: false,
 
+        as: false,
+        sa: false,
+
+        przep: false,
 
       },
       extras: {
@@ -776,7 +716,7 @@ export default {
       // scroll to bottom of the console
       this.$nextTick(() => {
         const console = document.getElementById("console");
-        console.scrollTop = -console.scrollHeight;
+        // console.scrollTop = -console.scrollHeight;
       });
     },
 
@@ -1886,145 +1826,6 @@ export default {
 
 /* #endregion INPUTS CODE */
 
-/* #region MEMORY */
-
-#memory {
-  display: grid;
-  align-items: stretch;
-  justify-items: center;
-  grid-template-areas:
-    "wea ."
-    "aRegister operations"
-    "memoryTable operations"
-    "sRegister operations"
-    "signals .";
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto 1fr auto auto;
-}
-
-#memory #aRegister {
-  grid-area: aRegister;
-  border-radius: var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem) 0 0;
-}
-
-
-#memory #sRegister {
-  grid-area: sRegister;
-  border-radius: 0 0 var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem);
-}
-
-#memory>.register {
-  border: 1px solid var(--panelOutlineColor, black);
-  background: var(--panelBackgroundColor, black);
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  justify-content: center;
-  align-items: center;
-  white-space: nowrap;
-
-  justify-content: center;
-  padding: 0.125rem 0.5rem;
-  width: 100%;
-}
-
-#memoryTable {
-  grid-area: memoryTable;
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  border: 1px solid var(--panelOutlineColor, black);
-  background: var(--panelBackgroundColor, black);
-  width: 100%;
-  overflow-y: auto;
-
-  position: relative;
-
-  resize: both;
-  overflow: auto;
-  min-width: 15rem;
-  min-height: 15rem;
-  height: 20rem;
-  width: 25rem;
-}
-
-#memoryTable>div {
-  min-width: 5rem;
-  text-align: right;
-  border: 1px solid var(--panelOutlineColor, black);
-}
-
-#memoryTable>span,
-#memoryTable>input {
-  border: 1px solid var(--panelOutlineColor, black);
-  padding: 0.125rem;
-  display: flex;
-  justify-content: end;
-  align-items: center;
-}
-
-#memoryTable>.label {
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  background-color: var(--panelBackgroundColor, black);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  z-index: 10;
-}
-
-#memoryTable>.selected {
-  border-top: 4px solid var(--signal-active) !important;
-  border-bottom: 4px solid var(--signal-active) !important;
-  background-color: color-mix(in srgb, transparent, var(--signal-active) 25%);
-}
-
-#memory .signals {
-  grid-area: signals;
-  display: flex;
-  flex-direction: row;
-  gap: 0.125rem;
-  justify-content: center;
-  align-items: center;
-}
-
-#memory .signal {
-  height: 0.125rem;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  height: 3rem;
-}
-
-#memory #wea {
-  grid-area: wea;
-  position: relative;
-}
-
-#memory #wes {
-  margin-right: 0.25rem;
-}
-
-#memory #wys {
-  margin-left: 0.25rem;
-}
-
-#memory #operations {
-  grid-area: operations;
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
-  align-items: flex-start;
-}
-
-
-/* #endregion MEMORY */
-
-/* #region BUS */
-
-
-/* #endregion BUS */
 
 /* #region BUS CONNECITON */
 

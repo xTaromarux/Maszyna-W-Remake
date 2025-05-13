@@ -1,5 +1,5 @@
 <template>
-    <div class="register">
+    <div :id="id" :class="[classNames]">
         <span>{{ label }}</span><span>:</span>
         <div class="inputWrapper">
             <span>{{ formatNumber(model) }}</span>
@@ -13,6 +13,11 @@ export default {
     name: "RegisterComponent",
     props: {
         label: String,
+        id: String,
+        classNames: { 
+            type: String, 
+            default: 'register' 
+        },
         model: [Number],
         formatNumber: {
             type: Function,
@@ -21,7 +26,7 @@ export default {
     },
     methods: {
         updateValue(event) {
-            this.$emit('update:model', event.target.value);
+            this.$emit('update:model', Number(event.target.value));
         }
     },
 };

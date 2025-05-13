@@ -1,6 +1,5 @@
 <template>
     <div
-      @click="handleClick"
       :id="id"
       :class="['signal', 'impulse', divClassNames, { active: signal }]">
       <span :class="[spanClassNames]">{{ label }}</span>
@@ -32,11 +31,6 @@
         default: ''
       }
     },
-    methods: {
-      handleClick() {
-        this.$emit(`${this.id}Click`);
-      }
-    }
   };
   </script>
   

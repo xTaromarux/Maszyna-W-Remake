@@ -19,8 +19,7 @@
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
         <CounterComponent :signals="signals" :programCounter="programCounter" :formatNumber="formatNumber"
-          :extras="extras" @update:programCounter="programCounter = $event" @ilClick="ilClick" @dlClick="dlClick"
-          @wylClick="wylClick" @welClick="welClick" />
+          :extras="extras" @update:programCounter="programCounter = $event" @clickItem="handleSignalToggle" />
       </div>
 
       <BusSignal :signalStatus="signals.busA" :busValue="BusA" :busName="'A'"
@@ -28,24 +27,20 @@
 
       <div id="layer2" class="layer">
         <RegisterISection :I="I" :signals="signals" :formatNumber="formatNumber" @update:I="I = $event"
-          @wyadClick="wyadClick" @weiClick="weiClick" />
+          @clickItem="handleSignalToggle" />
 
         <CalcSection :signals="signals" :extras="extras" :ACC="ACC" :JAML="JAML" :formatNumber="formatNumber"
-          @update:ACC="ACC = $event" @iakClick="iakClick" @dakClick="dakClick" @weakClick="weakClick"
-          @dodClick="dodClick" @odeClick="odeClick" @przepClick="przepClick" @mnoClick="mnoClick"
-          @dzielClick="dzielClick" @shrClick="shrClick" @shlClick="shlClick" @negClick="negClick" @lubClick="lubClick"
-          @iClick="iClick" @wejaClick="wejaClick" @wyakClick="wyakClick" />
+          @update:ACC="ACC = $event" @clickItem="handleSignalToggle" />
 
         <SignalButton v-if="extras.busConnectors" id="sa" :signal="signals.sa" label="sa" divClassNames="pathUpOnRight"
-          spanClassNames="lineRightOnBottom" @saClick="saClick" />
+          spanClassNames="lineRightOnBottom" @click="handleSignalToggle('sa')" />
 
         <SignalButton v-if="extras.busConnectors" id="as" :signal="signals.as" label="as" divClassNames="pathDownOnLeft"
-          spanClassNames="lineLeftOnBottom" @asClick="asClick" />
+          spanClassNames="lineLeftOnBottom" @click="handleSignalToggle('as')" />
 
         <MemorySection :A="A" :S="S" :mem="mem" :signals="signals" :formatNumber="formatNumber"
           :decToCommand="decToCommand" :decToArgument="decToArgument" @update:A="A = $event" @update:S="S = $event"
-          @weaClick="weaClick" @czytClick="czytClick" @piszClick="piszClick" @wesClick="wesClick"
-          @wysClick="wysClick" />
+          @clickItem="handleSignalToggle" />
 
       </div>
 
@@ -54,10 +49,10 @@
 
       <div id="layer3" class="layer">
         <XRegisterSection :visible="extras.xRegister" :X="X" :signals="signals" :formatNumber="formatNumber"
-          @update:X="X = $event" @wyxClick="wyxClick" @wexClick="wexClick" />
+          @update:X="X = $event" @clickItem="handleSignalToggle" />
 
         <YRegisterSection :visible="extras.yRegister" :Y="Y" :signals="signals" :formatNumber="formatNumber"
-          @update:Y="Y = $event" @wyyClick="wyyClick" @weyClick="weyClick" />
+          @update:Y="Y = $event" @clickItem="handleSignalToggle" />
 
         <!-- ??? PO CO TO JEST ??? -->
 
@@ -267,6 +262,7 @@ import CalcSection from '@/components/CalcSection.vue';
 import RegisterISection from '@/components/RegisterISection.vue';
 import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
+import { commandList } from '@/utils/data/commands.js'
 
 export default {
   name: "MainComponent",
@@ -325,194 +321,8 @@ export default {
 
       oddDelay: 1000,
 
-      commandList: [
-        // [stp]
-        // Linie=5
-        // Linia1=// zakończenie programu
-        // Linia2=ROZKAZ STP;
-        // Linia3=Argumenty 0;
-        // Linia4=czyt wys wei il;
-        // Linia5=stop;
-        {
-          name: "stp",
-          args: 0,
-          description: "zakończenie programu",
-          lines: "czyt wys wei il;\nstop;",
-        },
-        // [dod]
-        // Linie=5
-        // Linia1=// (Ak)+((Ad))->Ak
-        // Linia2=ROZKAZ DOD;
-        // Linia3=czyt wys wei il;
-        // Linia4=wyad wea;
-        // Linia5=czyt wys weja dod weak wyl wea;
-        {
-          name: "dod",
-          args: 0,
-          description: "(Ak) + ((Ad)) -> Ak",
-          lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;",
-        },
-        // [pob]
-        // Linie=5
-        // Linia1=// ((Ad))->Ak
-        // Linia2=ROZKAZ POB;
-        // Linia3=czyt wys wei il;
-        // Linia4=wyad wea;
-        // Linia5=czyt wys weja przep weak wyl wea;
-        {
-          name: "pob",
-          args: 0,
-          description: "((Ad)) -> Ak",
-          lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja przep weak wyl wea;",
-        },
-        // [lad]
-        // Linie=5
-        // Linia1=// (Ak)->(Ad)
-        // Linia2=ROZKAZ lAD;
-        // Linia3=czyt wys wei il;
-        // Linia4=wyad wea wyak wes;
-        // Linia5=pisz wyl wea;
-        {
-          name: "lad",
-          args: 0,
-          description: "(Ak) -> (Ad)",
-          lines: "czyt wys wei il;\nwyad wea wyak wes;\npisz wyl wea;",
-        },
-        // [sob]
-        // Linie=5
-        // Linia1=// skok bezwarunkowy
-        // Linia2=ROZKAZ SOB;
-        // Linia3=Argumenty 1;
-        // Linia4=czyt wys wei il;
-        // Linia5=wyad wea wel;
-        {
-          name: "sob",
-          args: 1,
-          description: "skok bezwarunkowy",
-          lines: "czyt wys wei il;\nwyad wea wel;",
-        },
+      commandList,
 
-        /* [som]
-        Linie=6
-        Linia1=skok gdy (AK) < 0
-        Linia2=ROZKAZ SOM;
-        Linia3=czyt wys wei il;
-        Linia4=IF Z THEN @ujemne ELSE @dodatnie;
-        Linia5=@ujemne wyad wea wel KONIEC;
-        Linia6=@dodatnie wyl wea; */
-        {
-          name: "som",
-          args: 0,
-          description: "skok gdy (AK) < 0",
-          lines: `czyt wys wei il;\nIF N THEN @ujemne ELSE @dodatnie;\n@ujemne wyad wea wel KONIEC;\n@dodatnie wyl wea;`,
-        },
-        // },
-        // [soz]
-        // Linie=6
-        // Linia1=// skok gdy (AK) = 0
-        // Linia2=ROZKAZ SOZ;
-        // Linia3=czyt wys wei il;
-        // Linia4=IF zak THEN @zero ELSE @niezero;
-        // Linia5=@zero wyad wea wel KONIEC;
-        // Linia6=@niezero wyl wea;
-        {
-          name: "soz",
-          args: 0,
-          description: "skok gdy (AK) = 0",
-          lines: `czyt wys wei il;\nIF Z THEN @zero ELSE @niezero;\n@zero wyad wea wel KONIEC;\n@niezero wyl wea;`,
-        },
-        // [dns]
-        // Linie=6
-        // Linia1=rozkaz dns;
-        // Linia2=argumenty 0;
-        // Linia3=czyt wys wei il;
-        // Linia4=dws;
-        // Linia5=wyws wea wyak wes;
-        // Linia6=pisz wyl wea;
-        {
-          name: "dns",
-          args: 0,
-          description: "rozkaz dns",
-          lines: `czyt wys wei il;\ndws;\nwyws wea wyak wes;\npisz wyl wea;`,
-        },
-        // [pwr]
-        // Linie=5
-        // Linia1=rozkaz pwr;
-        // Linia2=argumenty 0;
-        // Linia3=czyt wys wei il;
-        // Linia4=wyws wea iws;
-        // Linia5=czyt wys as wea wel;
-        {
-          name: "pwr",
-          args: 0,
-          description: "rozkaz pwr",
-          lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys as wea wel;`,
-        },
-        // [pzs]
-        // Linie=5
-        // Linia1=rozkaz pzs;
-        // Linia2=argumenty 0;
-        // Linia3=czyt wys wei il;
-        // Linia4=wyws wea iws;
-        // Linia5=czyt wys weja przep weak wyl wea;
-        {
-          name: "pzs",
-          args: 0,
-          description: "rozkaz pzs",
-          lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys weja przep weak wyl wea;`,
-        },
-        // [sdp]
-        // Linie=6
-        // Linia1=rozkaz sdp;
-        // Linia2=argumenty 1;
-        // Linia3=czyt wys wei il;
-        // Linia4=dws;
-        // Linia5=wyws wea wyls wes;
-        // Linia6=pisz wyad wel wea;
-        {
-          name: "sdp",
-          args: 1,
-          description: "rozkaz sdp",
-          lines: `czyt wys wei il;\ndws;\nwyws wea wyls wes;\npisz wyad wel wea;`,
-        },
-        // [dzi]
-        // Linie=4
-        // Linia1=ROZKAZ DZI;
-        // Linia2=czyt wys wei il;
-        // Linia3=wyad wea;
-        // Linia4=czyt wys weja dziel weak wyl wea;
-        {
-          name: "dzi",
-          args: 0,
-          description: "ROZKAZ DZI",
-          lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja dziel weak wyl wea;`,
-        },
-        // [mno]
-        // Linie=5
-        // Linia1=ROZKAZ MNO;
-        // Linia2=czyt wys wei il;
-        // Linia3=wyad wea;
-        // Linia4=czyt wys weja mno weak wyl wea;
-        // Linia5=
-        {
-          name: "mno",
-          args: 0,
-          description: "ROZKAZ MNO",
-          lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja mno weak wyl wea;`,
-        },
-        {
-          name: "wpr",
-          args: 0,
-          description: "wczytaj znak z urządzenia zewnętrznego",
-          lines: `czyt wys wei il;\nwyak weja ode weak start;\n@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;\n@gotowe wyrb weja przep weak wyl wea;`,
-        },
-        {
-          name: "wyp",
-          args: 0,
-          description: "wyprowadź znak na urządzenie zewnętrzne",
-          lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
-        },
-      ],
       numberFormat: "dec",
 
       avaiableSignals: {
@@ -529,6 +339,10 @@ export default {
       },
 
       signals: {
+        as: false,
+        sa: false,
+
+        przep: false,
 
         // PROGRAM COUNTER
         il: false,
@@ -577,12 +391,6 @@ export default {
         // Y
         wyy: false,
         wey: false,
-
-        as: false,
-        sa: false,
-
-        przep: false,
-
       },
       extras: {
         xRegister: false,
@@ -614,6 +422,8 @@ export default {
   methods: {
 
     handleSignalToggle(signalName) {
+      console.log(signalName);
+      
       if (!this.manualMode) return;
       if (this.nextLine.has(signalName)) {
         this.nextLine.delete(signalName);
@@ -1153,363 +963,6 @@ export default {
 
 
     /* #endregion COMMANDS */
-
-    /* #region COMMAND CLICKS */
-
-    ilClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("il")) {
-          this.nextLine.delete("il");
-          this.signals.il = false;
-        } else {
-          this.nextLine.add("il");
-          this.signals.il = true;
-        }
-      }
-    },
-    dlClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("dl")) {
-          this.nextLine.delete("dl");
-          this.signals.dl = false;
-        } else {
-          this.nextLine.add("dl");
-          this.signals.dl = true;
-        }
-      }
-    },
-    wylClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wyl")) {
-          this.nextLine.delete("wyl");
-          this.signals.wyl = false;
-        } else {
-          this.nextLine.add("wyl");
-          this.signals.wyl = true;
-        }
-      }
-    },
-    welClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wel")) {
-          this.nextLine.delete("wel");
-          this.signals.wel = false;
-        } else {
-          this.nextLine.add("wel");
-          this.signals.wel = true;
-        }
-      }
-    },
-    wyadClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wyad")) {
-          this.nextLine.delete("wyad");
-          this.signals.wyad = false;
-        } else {
-          this.nextLine.add("wyad");
-          this.signals.wyad = true;
-        }
-      }
-    },
-    weiClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wei")) {
-          this.nextLine.delete("wei");
-          this.signals.wei = false;
-        } else {
-          this.nextLine.add("wei");
-          this.signals.wei = true;
-        }
-      }
-    },
-    iakClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("iak")) {
-          this.nextLine.delete("iak");
-          this.signals.iak = false;
-        } else {
-          this.nextLine.add("iak");
-          this.signals.iak = true;
-        }
-      }
-    },
-    dakClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("dak")) {
-          this.nextLine.delete("dak");
-          this.signals.dak = false;
-        } else {
-          this.nextLine.add("dak");
-          this.signals.dak = true;
-        }
-      }
-    },
-    weakClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("weak")) {
-          this.nextLine.delete("weak");
-          this.signals.weak = false;
-        } else {
-          this.nextLine.add("weak");
-          this.signals.weak = true;
-        }
-      }
-    },
-    wejaClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("weja")) {
-          this.nextLine.delete("weja");
-          this.signals.weja = false;
-        } else {
-          this.nextLine.add("weja");
-          this.signals.weja = true;
-        }
-      }
-    },
-    wyakClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wyak")) {
-          this.nextLine.delete("wyak");
-          this.signals.wyak = false;
-        } else {
-          this.nextLine.add("wyak");
-          this.signals.wyak = true;
-        }
-      }
-    },
-    dodClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("dod")) {
-          this.nextLine.delete("dod");
-          this.signals.dod = false;
-        } else {
-          this.nextLine.add("dod");
-          this.signals.dod = true;
-        }
-      }
-    },
-    odeClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("ode")) {
-          this.nextLine.delete("ode");
-          this.signals.ode = false;
-        } else {
-          this.nextLine.add("ode");
-          this.signals.ode = true;
-        }
-      }
-    },
-    przepClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("przep")) {
-          this.nextLine.delete("przep");
-          this.signals.przep = false;
-        } else {
-          this.nextLine.add("przep");
-          this.signals.przep = true;
-        }
-      }
-    },
-    mnoClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("mno")) {
-          this.nextLine.delete("mno");
-          this.signals.mno = false;
-        } else {
-          this.nextLine.add("mno");
-          this.signals.mno = true;
-        }
-      }
-    },
-    dzielClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("dziel")) {
-          this.nextLine.delete("dziel");
-          this.signals.dziel = false;
-        } else {
-          this.nextLine.add("dziel");
-          this.signals.dziel = true;
-        }
-      }
-    },
-    shrClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("shr")) {
-          this.nextLine.delete("shr");
-          this.signals.shr = false;
-        } else {
-          this.nextLine.add("shr");
-          this.signals.shr = true;
-        }
-      }
-    },
-    shlClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("shl")) {
-          this.nextLine.delete("shl");
-          this.signals.shl = false;
-        } else {
-          this.nextLine.add("shl");
-          this.signals.shl = true;
-        }
-      }
-    },
-    negClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("neg")) {
-          this.nextLine.delete("neg");
-          this.signals.neg = false;
-        } else {
-          this.nextLine.add("neg");
-          this.signals.neg = true;
-        }
-      }
-    },
-    lubClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("lub")) {
-          this.nextLine.delete("lub");
-          this.signals.lub = false;
-        } else {
-          this.nextLine.add("lub");
-          this.signals.lub = true;
-        }
-      }
-    },
-    iClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("i")) {
-          this.nextLine.delete("i");
-          this.signals.i = false;
-        } else {
-          this.nextLine.add("i");
-          this.signals.i = true;
-        }
-      }
-    },
-    wyxClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wyx")) {
-          this.nextLine.delete("wyx");
-          this.signals.wyx = false;
-        } else {
-          this.nextLine.add("wyx");
-          this.signals.wyx = true;
-        }
-      }
-    },
-    wexClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wex")) {
-          this.nextLine.delete("wex");
-          this.signals.wex = false;
-        } else {
-          this.nextLine.add("wex");
-          this.signals.wex = true;
-        }
-      }
-    },
-    wyyClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wyy")) {
-          this.nextLine.delete("wyy");
-          this.signals.wyy = false;
-        } else {
-          this.nextLine.add("wyy");
-          this.signals.wyy = true;
-        }
-      }
-    },
-    weyClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wey")) {
-          this.nextLine.delete("wey");
-          this.signals.wey = false;
-        } else {
-          this.nextLine.add("wey");
-          this.signals.wey = true;
-        }
-      }
-    },
-    weaClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wea")) {
-          this.nextLine.delete("wea");
-          this.signals.wea = false;
-        } else {
-          this.nextLine.add("wea");
-          this.signals.wea = true;
-        }
-      }
-    },
-    wesClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wes")) {
-          this.nextLine.delete("wes");
-          this.signals.wes = false;
-        } else {
-          this.nextLine.add("wes");
-          this.signals.wes = true;
-        }
-      }
-    },
-    wysClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("wys")) {
-          this.nextLine.delete("wys");
-          this.signals.wys = false;
-        } else {
-          this.nextLine.add("wys");
-          this.signals.wys = true;
-        }
-      }
-    },
-    asClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("as")) {
-          this.nextLine.delete("as");
-          this.signals.as = false;
-        } else {
-          this.nextLine.add("as");
-          this.signals.as = true;
-        }
-      }
-    },
-    saClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("sa")) {
-          this.nextLine.delete("sa");
-          this.signals.sa = false;
-        } else {
-          this.nextLine.add("sa");
-          this.signals.sa = true;
-        }
-      }
-    },
-    czytClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("czyt")) {
-          this.nextLine.delete("czyt");
-          this.signals.czyt = false;
-        } else {
-          this.nextLine.add("czyt");
-          this.signals.czyt = true;
-        }
-      }
-    },
-    piszClick() {
-      if (this.manualMode) {
-        if (this.nextLine.has("pisz")) {
-          this.nextLine.delete("pisz");
-          this.signals.pisz = false;
-        } else {
-          this.nextLine.add("pisz");
-          this.signals.pisz = true;
-        }
-      }
-    },
-    /* #endregion COMMAND CLICKS */
-
 
     /* #region AI CHAT */
     sendAiMessage() {

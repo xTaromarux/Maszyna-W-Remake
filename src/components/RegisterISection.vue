@@ -1,27 +1,10 @@
 <template>
   <div id="iRegister">
-    <SignalButton
-      id="wyad"
-      :signal="signals.wyad"
-      label="wyad"
-      divClassNames="long pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
-      @wyadClick="$emit('wyadClick')"
-    />
-    <RegisterComponent
-      label="I"
-      :model="I"
-      @update:model="$emit('update:I', $event)"
-      :formatNumber="formatNumber"
-    />
-    <SignalButton
-      id="wei"
-      :signal="signals.wei"
-      label="wei"
-      divClassNames="impulse pathUpOnLeft"
-      spanClassNames="arrowLeftOnBottom"
-      @weiClick="$emit('weiClick')"
-    />
+    <SignalButton id="wyad" :signal="signals.wyad" label="wyad" divClassNames="long pathUpOnRight"
+      spanClassNames="arrowRightOnBottom" @click="handleClick('wyad')" />
+    <RegisterComponent label="I" :model="I" @update:model="$emit('update:I', $event)" :formatNumber="formatNumber" />
+    <SignalButton id="wei" :signal="signals.wei" label="wei" divClassNames="impulse pathUpOnLeft"
+      spanClassNames="arrowLeftOnBottom" @click="handleClick('wyad')" />
   </div>
 </template>
 
@@ -40,5 +23,10 @@ export default {
     SignalButton,
     RegisterComponent,
   },
+  methods: {
+    handleClick(id) {
+      this.$emit('clickItem', id);
+    }
+  }
 };
 </script>

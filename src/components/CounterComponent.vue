@@ -1,7 +1,8 @@
 <template>
     <div id="counter">
         <!-- Signal Button Component -->
-        <SignalButton id="il" :signal="signals.il" @click="handleSignalClick('il')" label="il" spanClassNames="arrowRightOnBottom" />
+        <SignalButton id="il" :signal="signals.il" @click="handleClick('il')" label="il"
+            spanClassNames="arrowRightOnBottom" />
 
         <span class="register">
             <span>L</span><span>:</span>
@@ -11,12 +12,13 @@
             </div>
         </span>
 
-        <SignalButton id="dl" v-if="extras.dl" :signal="signals.dl" @click="handleSignalClick('dl')" label="dl" spanClassNames="arrowLeftOnBottom" />
+        <SignalButton id="dl" v-if="extras.dl" :signal="signals.dl" @click="handleClick('dl')" label="dl"
+            spanClassNames="arrowLeftOnBottom" />
 
-        <SignalButton id="wyl" :signal="signals.wyl" @click="handleSignalClick('wyl')" label="wyl"
+        <SignalButton id="wyl" :signal="signals.wyl" @click="handleClick('wyl')" label="wyl"
             class="long pathDownOnLeft" spanClassNames="arrowLeftOnBottom" />
 
-        <SignalButton id="wel" :signal="signals.wel" @click="handleSignalClick('wel')" label="wel"
+        <SignalButton id="wel" :signal="signals.wel" @click="handleClick('wel')" label="wel"
             class="impulse pathUpOnRight" spanClassNames="arrowRightOnBottom" />
     </div>
 </template>
@@ -49,9 +51,10 @@ export default {
         }
     },
     methods: {
-        handleSignalClick(signal) {
-            this.$emit(`${signal}Click`);
+        handleClick(id) {
+            this.$emit('clickItem', id);
         },
+
         updateProgramCounter(value) {
             this.$emit("update:programCounter", Number(value));
         }
@@ -59,5 +62,4 @@ export default {
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

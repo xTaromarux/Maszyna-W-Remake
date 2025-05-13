@@ -8,9 +8,9 @@
 
         <div class="accSignals">
             <SignalButton v-if="extras.jamlExtras" id="iak" :signal="signals.iak" label="wei"
-                spanClassNames="arrowRightOnBottom" @iakClick="$emit('iakClick')" />
+                spanClassNames="arrowRightOnBottom" @click="handleClick('iak')" />
             <SignalButton v-if="extras.jamlExtras" id="dak" :signal="signals.dak" label="dak"
-                spanClassNames="arrowRightOnBottom" @dakClick="$emit('dakClick')" />
+                spanClassNames="arrowRightOnBottom" @click="handleClick('dak')" />
         </div>
 
         <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="$emit('update:ACC', $event)"
@@ -18,27 +18,27 @@
 
         <div class="jamlSignals">
             <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom"
-                @weakClick="$emit('weakClick')" />
+                @click="handleClick('weak')" />
             <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom"
-                @dodClick="$emit('dodClick')" />
+                @click="handleClick('dod')" />
             <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom"
-                @odeClick="$emit('odeClick')" />
+                @click="handleClick('ode')" />
             <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom"
-                @przepClick="$emit('przepClick')" />
+                @click="handleClick('przep')" />
             <SignalButton v-if="extras.jamlExtras" id="mno" :signal="signals.mno" label="mno"
-                spanClassNames="lineRightOnBottom" @mnoClick="$emit('mnoClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('mno')" />
             <SignalButton v-if="extras.jamlExtras" id="dziel" :signal="signals.dziel" label="dziel"
-                spanClassNames="lineRightOnBottom" @dzielClick="$emit('dzielClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('dziel')" />
             <SignalButton v-if="extras.jamlExtras" id="shr" :signal="signals.shr" label="shr"
-                spanClassNames="lineRightOnBottom" @shrClick="$emit('shrClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('shr')" />
             <SignalButton v-if="extras.jamlExtras" id="shl" :signal="signals.shl" label="shl"
-                spanClassNames="lineRightOnBottom" @shlClick="$emit('shlClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('shl')" />
             <SignalButton v-if="extras.jamlExtras" id="neg" :signal="signals.neg" label="neg"
-                spanClassNames="lineRightOnBottom" @negClick="$emit('negClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('neg')" />
             <SignalButton v-if="extras.jamlExtras" id="lub" :signal="signals.lub" label="lub"
-                spanClassNames="lineRightOnBottom" @lubClick="$emit('lubClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('lub')" />
             <SignalButton v-if="extras.jamlExtras" id="i" :signal="signals.i" label="i"
-                spanClassNames="lineRightOnBottom" @iClick="$emit('iClick')" />
+                spanClassNames="lineRightOnBottom" @click="handleClick('i')" />
         </div>
 
         <div id="jaml" class="register">
@@ -53,10 +53,10 @@
             </div> -->
 
         <SignalButton id="weja" :signal="signals.weja" label="weja" divClassNames="pathUpOnRight"
-            spanClassNames="arrowRightOnBottom" @wejaClick="$emit('wejaClick')" />
+            spanClassNames="arrowRightOnBottom" @click="handleClick('weja')" />
 
         <SignalButton id="wyak" :signal="signals.wyak" label="wyak" divClassNames="pathDownOnRight"
-            spanClassNames="arrowLeftOnBottom" @wyakClick="$emit('wyakClick')" />
+            spanClassNames="arrowLeftOnBottom" @click="handleClick('wyak')" />
     </div>
 </template>
 
@@ -76,6 +76,11 @@ export default {
     components: {
         SignalButton,
         RegisterComponent
+    },
+    methods: {
+        handleClick(id) {
+            this.$emit('clickItem', id);
+        }
     }
 }
 </script>

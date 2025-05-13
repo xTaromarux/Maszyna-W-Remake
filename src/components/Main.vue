@@ -18,21 +18,21 @@
 
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
-        <CounterComponent :signals="signals" :programCounter="programCounter" :extras="extras"
-          @update:programCounter="programCounter = $event" />
-
-        <!-- <div id="stack" class="register">
-          S : {{ formatNumber(stackPointer) }}
-        </div> -->
+        <CounterComponent :signals="signals" :programCounter="programCounter" :formatNumber="formatNumber"
+          :extras="extras" @update:programCounter="programCounter = $event" @ilClick="ilClick" @dlClick="dlClick"
+          @wylClick="wylClick" @welClick="welClick" />
       </div>
-      <div id="busA" class="bus signal" :class="{ active: signals.busA }">
-        <div class="line" />
-        <span v-if="extras.showInvisibleRegisters">BusA : {{ formatNumber(BusA) }}</span>
-        <span>a</span>
-      </div>
+      <BusSignal :signalStatus="signals.busA" :busValue="BusA" :busName="'A'"
+        :showInvisibleRegisters="extras.showInvisibleRegisters" :formatNumber="formatNumber" />
       <div id="layer2" class="layer">
         <div id="iRegister">
-          <div @click="wyadClick" id="wyad" class="signal long pathUpOnRight" :class="{ active: signals.wyad }">
+          <SignalButton id="wyad" :signal="signals.wyad" label="wyad" divClassNames="long pathUpOnRight"
+            spanClassNames="arrowRightOnBottom" @wyadClick="wyadClick" />
+          <RegisterComponent label="I" :model="I" @update:model="I = $event" :formatNumber="formatNumber" />
+          <SignalButton id="wei" :signal="signals.wei" label="wei" divClassNames="impulse pathUpOnLeft"
+            spanClassNames="arrowLeftOnBottom" @weiClick="weiClick" />
+
+          <!-- <div @click="wyadClick" id="wyad" class="signal long pathUpOnRight" :class="{ active: signals.wyad }">
             <span class="arrowRightOnBottom">wyad</span>
           </div>
           <div class="register">
@@ -44,7 +44,8 @@
           </div>
           <div @click="weiClick" id="wei" class="signal impulse pathUpOnLeft" :class="{ active: signals.wei }">
             <span class="arrowLeftOnBottom">wei</span>
-          </div>
+          </div> -->
+
         </div>
 
         <div id="calc">
@@ -58,14 +59,10 @@
             </div>
           </div>
           <div class="accSignals">
-            <div @click="iakClick" v-if="extras.jamlExtras" id="iak" class="signal impulse"
-              :class="{ active: signals.iak }">
-              <span class="arrowRightOnBottom">iak</span>
-            </div>
-            <div @click="dakClick" v-if="extras.jamlExtras" id="dak" class="signal impulse"
-              :class="{ active: signals.dak }">
-              <span class="arrowRightOnBottom">dak</span>
-            </div>
+            <SignalButton v-if="extras.jamlExtras" id="iak" :signal="signals.iak" label="wei"
+              spanClassNames="arrowRightOnBottom" @iakClick="iakClick" />
+            <SignalButton v-if="extras.jamlExtras" id="dak" :signal="signals.dak" label="dak"
+              spanClassNames="arrowRightOnBottom" @dakClick="dakClick" />
           </div>
           <div id="accumulator">AK:
             <div class="inputWrapper">
@@ -74,45 +71,39 @@
             </div>
           </div>
           <div class="jamlSignals">
-            <div @click="weakClick" id="weak" class="signal impulse" :class="{ active: signals.weak }">
-              <span class="arrowRightOnBottom">weak</span>
-            </div>
-            <div id="dod" @click="dodClick" class="signal long" :class="{ active: signals.dod }">
-              <span class="lineRightOnBottom">dod</span>
-            </div>
-            <div id="ode" @click="odeClick" class="signal long" :class="{ active: signals.ode }">
-              <span class="lineRightOnBottom">ode</span>
-            </div>
-            <div id="przep" @click="przepClick" class="signal long" :class="{ active: signals.przep }">
-              <span class="lineRightOnBottom">przep</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="mno" @click="mnoClick" class="signal long"
-              :class="{ active: signals.mno }">
-              <span class="lineRightOnBottom">mno</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="dziel" @click="dzielClick" class="signal long"
-              :class="{ active: signals.dziel }">
-              <span class="lineRightOnBottom">dziel</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="shr" @click="shrClick" class="signal long"
-              :class="{ active: signals.shr }">
-              <span class="lineRightOnBottom">shr</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="shl" @click="shlClick" class="signal long"
-              :class="{ active: signals.shl }">
-              <span class="lineRightOnBottom">shl</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="neg" @click="negClick" class="signal long"
-              :class="{ active: signals.neg }">
-              <span class="lineRightOnBottom">neg</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="lub" @click="lubClick" class="signal long"
-              :class="{ active: signals.lub }">
-              <span class="lineRightOnBottom">lub</span>
-            </div>
-            <div v-if="extras.jamlExtras" id="i" @click="iClick" class="signal long" :class="{ active: signals.i }">
-              <span class="lineRightOnBottom">i</span>
-            </div>
+            <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom"
+              @weakClick="weakClick" />
+
+            <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom"
+              @dodClick="dodClick" />
+
+            <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom"
+              @odeClick="odeClick" />
+
+            <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom"
+              @przepClick="przepClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="mno" :signal="signals.mno" label="mno" spanClassNames="lineRightOnBottom"
+              @mnoClick="mnoClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="dziel" :signal="signals.dziel" label="dziel" spanClassNames="lineRightOnBottom"
+              @dzielClick="dzielClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="shr" :signal="signals.shr" label="shr" spanClassNames="lineRightOnBottom"
+              @shrClick="shrClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="shl" :signal="signals.shl" label="shl" spanClassNames="lineRightOnBottom"
+              @shlClick="shlClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="neg" :signal="signals.neg" label="neg" spanClassNames="lineRightOnBottom"
+              @negClick="negClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="lub" :signal="signals.lub" label="lub" spanClassNames="lineRightOnBottom"
+              @lubClick="lubClick" />
+
+            <SignalButton v-if="extras.jamlExtras" id="i" :signal="signals.i" label="i" spanClassNames="lineRightOnBottom"
+              @iClick="iClick" />
+
           </div>
           <div id="jaml" class="register">
             <span>JAML</span>
@@ -187,11 +178,8 @@
           </div>
         </div>
       </div>
-      <div id="busS" class="bus signal" :class="{ active: signals.busS }">
-        <div class="line" />
-        <span v-if="extras.showInvisibleRegisters">BusS : {{ formatNumber(BusS) }}</span>
-        <span>s</span>
-      </div>
+      <BusSignal :signalStatus="signals.busS" :busValue="BusS" :busName="'S'"
+        :showInvisibleRegisters="extras.showInvisibleRegisters" :formatNumber="formatNumber" />
       <div id="layer3" class="layer">
         <div v-if="extras.xRegister" id="xRegister">
           <div id="wyx" @click="wyxClick" class="signal long pathUpOnRight" :class="{ active: signals.wyx }">
@@ -420,6 +408,9 @@ import AiChatIcon from '@/assets/svg/AiChatIcon.vue';
 import CommandList from './CommandList.vue';
 import ProgramSection from './ProgramSection.vue';
 import CounterComponent from '@/components/CounterComponent.vue';
+import BusSignal from '@/components/BusSignal.vue';
+import SignalButton from '@/components/SignalButton.vue';
+import RegisterComponent from '@/components/RegisterComponent.vue';
 
 export default {
   name: "MainComponent",
@@ -435,6 +426,9 @@ export default {
     CommandList,
     ProgramSection,
     CounterComponent,
+    BusSignal,
+    SignalButton,
+    RegisterComponent
   },
 
   data() {
@@ -2029,39 +2023,6 @@ export default {
 
 /* #region BUS */
 
-.bus {
-  height: 0.125rem;
-
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-
-  position: relative;
-}
-
-.bus .line {
-  height: 0.125rem;
-
-  border: 1px solid var(--signal, black);
-  background-color: var(--signal, black);
-  flex-grow: 1;
-}
-
-/* .bus span {
-  outline: 1px solid var(--signal, black);
-  left: 100%;
-  width: min-content;
-  white-space: nowrap;
-  padding: 0.25rem 0.5rem;
-} */
-.bus span {
-  display: flex;
-  left: 100%;
-  width: min-content;
-  white-space: nowrap;
-  padding: 0.25rem 0.5rem;
-}
 
 /* #endregion BUS */
 
@@ -2284,6 +2245,7 @@ export default {
   transform: translateY(0.01rem) scale(0.98);
   transition: 0.01s ease-out;
 }
+
 /* #region CONSOLE */
 
 #console {

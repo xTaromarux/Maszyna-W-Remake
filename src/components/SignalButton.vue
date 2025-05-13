@@ -2,8 +2,8 @@
     <div
       @click="handleClick"
       :id="id"
-      :class="['signal', 'impulse', classNames, { active: signal }]">
-      <span>{{ label }}</span>
+      :class="['signal', 'impulse', divClassNames, { active: signal }]">
+      <span :class="[spanClassNames]">{{ label }}</span>
     </div>
   </template>
   
@@ -23,7 +23,11 @@
         type: String,
         required: true
       },
-      classNames: {
+      divClassNames: {
+        type: String,
+        default: ''
+      },
+      spanClassNames: {
         type: String,
         default: ''
       }

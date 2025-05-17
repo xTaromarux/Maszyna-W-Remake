@@ -1,0 +1,104 @@
+
+#calc {
+  padding-top: 2rem;
+  display: grid;
+  grid-template-areas:
+    ". . ."
+    "accSignals accumulator ."
+    "accSignals accumulator wyak"
+    ". flags wyak"
+    "jamlSignals jaml wyak"
+    ". weja wyak";
+  grid-template-rows: auto auto auto auto 1fr auto;
+}
+
+#calc #flags {
+  grid-area: flags;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0.5rem;
+  gap: 1rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  height: 3rem;
+}
+
+#calc #flags div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+}
+
+#calc .accSignals {
+  grid-area: accSignals;
+}
+
+#calc .jamlSignals {
+  grid-area: jamlSignals;
+}
+
+#calc .accSignals,
+#calc .jamlSignals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: space-evenly;
+  align-items: stretch;
+}
+
+#calc .accSignals>*,
+#calc .jamlSignals>* {
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  justify-content: stretch;
+  align-items: center;
+}
+
+#calc .accSignals>*>*,
+#calc .jamlSignals>*>* {
+  flex-grow: 1;
+  width: 100%;
+}
+
+#calc #accumulator {
+  grid-area: accumulator;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  padding: 0.5rem;
+
+  border-radius: var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem) 0 0;
+}
+
+#calc #jaml {
+  grid-area: jaml;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  padding: 0.5rem;
+
+  border-radius: 0 0 var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem);
+}
+
+#calc #weja {
+  grid-area: weja;
+  margin-right: 0.5rem;
+  min-height: 3rem;
+}
+
+#calc #wyak {
+  grid-area: wyak;
+  border-top: var(--pathThickness, 0.125rem) solid var(--signal, black);
+  border-radius: 0 var(--default-border-radius, 0.25rem) 0 0;
+  padding-left: 0.5rem !important;
+}

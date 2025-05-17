@@ -1,0 +1,33 @@
+.bus {
+  height: 0.125rem;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  position: relative;
+}
+
+.bus .line {
+  height: 0.125rem;
+
+  border: 1px solid var(--signal, black);
+  background-color: var(--signal, black);
+  flex-grow: 1;
+}
+
+/* .bus span {
+  outline: 1px solid var(--signal, black);
+  left: 100%;
+  width: min-content;
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+} */
+.bus span {
+  display: flex;
+  left: 100%;
+  width: min-content;
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+}

@@ -1,0 +1,14 @@
+.signal:not(.bus) {
+    cursor: pointer;
+    user-select: none;
+}
+
+.signal:hover:not(.bus) {
+    --signal: var(--signal-hover) !important;
+    --signalText: var(--signal-hover) !important;
+}
+
+.signal.active {
+    --signal: var(--signal-active) !important;
+    --signalText: var(--signal-active) !important;
+}

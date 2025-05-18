@@ -104,14 +104,7 @@
     <ProgramSection :manualMode="manualMode" :commandList="commandList" @update:code="code = $event"
       @log="addLog($event.message, $event.class)" />
 
-    <div v-if="!manualMode" id="console">
-      <div v-for="(log, index) in logs" :key="index" :class="log.class.toLowerCase()">
-        <span class="time">{{ formatTimestampForConsole(log.timestamp) }}</span>
-        <span class="class">{{ log.class }}</span>
-        <span class="symbol">>_</span>
-        <span class="message">{{ log.message }}</span>
-      </div>
-    </div>
+    <Console v-if="!manualMode" :logs="logs" />
 
     <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" > </div>
 
@@ -234,6 +227,7 @@ import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
+import Console from '@/components/Console.vue';
 import { commandList } from '@/utils/data/commands.js'
 
 export default {
@@ -260,6 +254,7 @@ export default {
     YRegisterSection,
     TopBar,
     AiChat,
+    Console
   },
 
 
@@ -927,29 +922,6 @@ export default {
       }, this.oddDelay);
     },
 
-
-    /* #endregion COMMANDS */
-
-    /* #region AI CHAT */
-    sendAiMessage() {
-      console.log("AI message sent:", this.aiInput);
-      if (this.aiInput.trim() === "") return;
-      this.aiConversation.push({
-        sender: "user",
-        message: this.aiInput,
-        timestamp: new Date(),
-      });
-      this.aiInput = "";
-
-      // Simulate AI response
-      setTimeout(() => {
-        this.aiConversation.push({
-          sender: "ai",
-          message: "This is a simulated AI response.",
-          timestamp: new Date(),
-        });
-      }, 1000);
-    },
 
   },
   watch: {

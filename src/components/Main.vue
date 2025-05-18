@@ -113,10 +113,6 @@
       </div>
     </div>
 
-    <div id="ui">
-
-    </div>
-
     <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" > </div>
 
     <div id="settings" v-if="settingsOpen">
@@ -198,23 +194,7 @@
     <CommandList :visible="commandListOpen" :commandList="commandList" :codeBits="codeBits"
       @update:commandList="commandList = $event" />
 
-    <div id="aiChat" v-if="aiChatOpen">
-      <h1>Ai Chat</h1>
-      <div id="conversation">
-        <div v-for="(message, index) in aiConversation" :key="index" class="message"
-          :class="{ 'user': message.sender === 'user', 'ai': message.sender === 'ai' }">
-
-          <div class="icon">i</div>
-          <span class="sender">{{ message.sender }}</span>
-          <span class="time">{{ formatTimestampForConsole(message.timestamp) }}</span>
-          <span class="message">{{ message.message }}</span>
-        </div>
-      </div>
-      <div id="inputArea">
-        <input type="text" v-model="aiInput" placeholder="Type your message..." @keyup.enter="sendAiMessage" />
-        <button @click="sendAiMessage">Send</button>
-      </div>
-    </div>
+    <AiChat v-if="aiChatOpen" @close="aiChatOpen = false" />
 
   </div>
   <!-- <ol>
@@ -253,6 +233,7 @@ import RegisterISection from '@/components/RegisterISection.vue';
 import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
+import AiChat from '@/components/AiChat.vue';
 import { commandList } from '@/utils/data/commands.js'
 
 export default {
@@ -277,7 +258,8 @@ export default {
     RegisterISection,
     XRegisterSection,
     YRegisterSection,
-    TopBar
+    TopBar,
+    AiChat,
   },
 
 

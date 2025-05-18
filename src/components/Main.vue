@@ -1,19 +1,9 @@
 <template>
-  <div id="topBar">
-    <polslLogoLongWhite />
-
-    <div class="flexRow">
-      <button @click="openChat" class="simpleSvgButton" id="openChatButton">
-        <AiChatIcon />
-      </button>
-      <button @click="openSettings" class="simpleSvgButton" id="openSettingsButton">
-        <KogWheelIcon />
-      </button>
-      <button @click="openCommandList" class="simpleSvgButton" id="openCommandListButton">
-        <ListIcon />
-      </button>
-    </div>
-  </div>
+  <TopBar
+    @open-chat="aiChatOpen = true"
+    @open-settings="settingsOpen = true"
+    @open-command-list="commandListOpen = true"
+  />
   <div id="wLayout">
 
     <div id="W" :class="{ manualMode: manualMode }">
@@ -127,7 +117,7 @@
 
     </div>
 
-    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" />
+    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" > </div>
 
     <div id="settings" v-if="settingsOpen">
       <span class="titleSpan">Settings</span>
@@ -262,6 +252,7 @@ import CalcSection from '@/components/CalcSection.vue';
 import RegisterISection from '@/components/RegisterISection.vue';
 import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
+import TopBar from '@/components/UI/TopBar.vue';
 import { commandList } from '@/utils/data/commands.js'
 
 export default {
@@ -286,7 +277,9 @@ export default {
     RegisterISection,
     XRegisterSection,
     YRegisterSection,
+    TopBar
   },
+
 
   data() {
     return {
@@ -572,16 +565,7 @@ export default {
       this.commandListOpen = false;
       this.aiChatOpen = false;
     },
-    openChat() {
-      this.aiChatOpen = true;
-    },
-    openSettings() {
-      this.settingsOpen = true;
-    },
-    openCommandList() {
-      this.commandListOpen = true;
-    },
-
+    
     compileCode() {
 
       if (!this.code) {

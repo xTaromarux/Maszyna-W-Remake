@@ -1,19 +1,9 @@
 <template>
-  <div id="topBar">
-    <polslLogoLongWhite />
-
-    <div class="flexRow">
-      <button @click="openChat" class="simpleSvgButton" id="openChatButton">
-        <AiChatIcon />
-      </button>
-      <button @click="openSettings" class="simpleSvgButton" id="openSettingsButton">
-        <KogWheelIcon />
-      </button>
-      <button @click="openCommandList" class="simpleSvgButton" id="openCommandListButton">
-        <ListIcon />
-      </button>
-    </div>
-  </div>
+  <TopBar
+    @open-chat="aiChatOpen = true"
+    @open-settings="settingsOpen = true"
+    @open-command-list="commandListOpen = true"
+  />
   <div id="wLayout">
 
     <div id="W" :class="{ manualMode: manualMode }">
@@ -114,20 +104,9 @@
     <ProgramSection :manualMode="manualMode" :commandList="commandList" @update:code="code = $event"
       @log="addLog($event.message, $event.class)" />
 
-    <div v-if="!manualMode" id="console">
-      <div v-for="(log, index) in logs" :key="index" :class="log.class.toLowerCase()">
-        <span class="time">{{ formatTimestampForConsole(log.timestamp) }}</span>
-        <span class="class">{{ log.class }}</span>
-        <span class="symbol">>_</span>
-        <span class="message">{{ log.message }}</span>
-      </div>
-    </div>
+    <Console v-if="!manualMode" :logs="logs" />
 
-    <div id="ui">
-
-    </div>
-
-    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" />
+    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" > </div>
 
     <div id="settings" v-if="settingsOpen">
       <span class="titleSpan">Settings</span>
@@ -208,23 +187,7 @@
     <CommandList :visible="commandListOpen" :commandList="commandList" :codeBits="codeBits"
       @update:commandList="commandList = $event" />
 
-    <div id="aiChat" v-if="aiChatOpen">
-      <h1>Ai Chat</h1>
-      <div id="conversation">
-        <div v-for="(message, index) in aiConversation" :key="index" class="message"
-          :class="{ 'user': message.sender === 'user', 'ai': message.sender === 'ai' }">
-
-          <div class="icon">i</div>
-          <span class="sender">{{ message.sender }}</span>
-          <span class="time">{{ formatTimestampForConsole(message.timestamp) }}</span>
-          <span class="message">{{ message.message }}</span>
-        </div>
-      </div>
-      <div id="inputArea">
-        <input type="text" v-model="aiInput" placeholder="Type your message..." @keyup.enter="sendAiMessage" />
-        <button @click="sendAiMessage">Send</button>
-      </div>
-    </div>
+    <AiChat v-if="aiChatOpen" @close="aiChatOpen = false" />
 
   </div>
   <!-- <ol>
@@ -262,6 +225,9 @@ import CalcSection from '@/components/CalcSection.vue';
 import RegisterISection from '@/components/RegisterISection.vue';
 import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
+import TopBar from '@/components/UI/TopBar.vue';
+import AiChat from '@/components/AiChat.vue';
+import Console from '@/components/Console.vue';
 import { commandList } from '@/utils/data/commands.js'
 
 export default {
@@ -286,7 +252,11 @@ export default {
     RegisterISection,
     XRegisterSection,
     YRegisterSection,
+    TopBar,
+    AiChat,
+    Console
   },
+
 
   data() {
     return {
@@ -572,16 +542,7 @@ export default {
       this.commandListOpen = false;
       this.aiChatOpen = false;
     },
-    openChat() {
-      this.aiChatOpen = true;
-    },
-    openSettings() {
-      this.settingsOpen = true;
-    },
-    openCommandList() {
-      this.commandListOpen = true;
-    },
-
+    
     compileCode() {
 
       if (!this.code) {
@@ -961,29 +922,6 @@ export default {
       }, this.oddDelay);
     },
 
-
-    /* #endregion COMMANDS */
-
-    /* #region AI CHAT */
-    sendAiMessage() {
-      console.log("AI message sent:", this.aiInput);
-      if (this.aiInput.trim() === "") return;
-      this.aiConversation.push({
-        sender: "user",
-        message: this.aiInput,
-        timestamp: new Date(),
-      });
-      this.aiInput = "";
-
-      // Simulate AI response
-      setTimeout(() => {
-        this.aiConversation.push({
-          sender: "ai",
-          message: "This is a simulated AI response.",
-          timestamp: new Date(),
-        });
-      }, 1000);
-    },
 
   },
   watch: {

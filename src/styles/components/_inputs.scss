@@ -1,46 +1,45 @@
 .inputWrapper {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
-    justify-content: stretch;
-    align-content: stretch;
-    gap: 0rem;
-    width: 100%;
-    position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  justify-content: stretch;
+  align-content: stretch;
+  gap: 0rem;
+  width: 100%;
+  position: relative;
 }
 
 .inputWrapper > * {
-    grid-area: 1 / 1 / 2 / 2;
-    width: 100%;
+  grid-area: 1 / 1 / 2 / 2;
+  width: 100%;
 }
 
 .inputWrapper input {
-    opacity: 0;
+  opacity: 0;
 
-    width: 100%;
+  width: 100%;
 }
 
 .inputWrapper span {
-    opacity: 1;
+  opacity: 1;
 
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
 
-    pointer-events: none;
+  pointer-events: none;
 }
 
 .inputWrapper:hover input {
-    opacity: 1;
-    width: 100%;
+  opacity: 1;
+  width: 100%;
 }
 
 .inputWrapper:hover span {
-    opacity: 0;
+  opacity: 0;
 }
-
 
 #inputs {
   display: flex;
@@ -48,61 +47,4 @@
   gap: 1rem;
   justify-content: stretch;
   align-items: stretch;
-}
-
-#inputs .flexRow {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  align-items: center;
-}
-
-#inputs textarea {
-  flex-grow: 1;
-  padding: 0.5rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  color: var(--fontColor, black);
-  font-family: monospace;
-}
-
-#inputs textarea:disabled {
-  filter: contrast(0.5);
-}
-
-#inputs .compiledCode {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: 0.5rem;
-
-  flex-grow: 1;
-}
-
-#inputs .compiledCode .active {
-  color: var(--signal-active);
-}
-
-#inputs .codeLine {
-  flex-grow: 1;
-  text-align: left;
-  white-space: pre;
-}
-
-#inputs .nextLine {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-#inputs .nextLine span {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-}
-
-#inputs .nextLine span span {
-  white-space: pre;
 }

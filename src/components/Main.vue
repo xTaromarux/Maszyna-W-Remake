@@ -104,24 +104,10 @@
           @update:Y="Y = $event"
           @clickItem="handleSignalToggle"
         />
-
-        <!-- ??? PO CO TO JEST ??? -->
-
-        <!-- <div id="registersS">
-          <div v-for="(value, index) in V" :key="index" class="register">
-            <span>{{ index }}</span>
-            <span>:</span>
-            <span>{{ value }}</span>
-          </div>
-        </div> -->
       </div>
     </div>
 
     <div id="inputs">
-      <!-- <div class="switchDiv">
-          <input id="manualMode" type="checkbox" v-model="manualMode" @input="manualModeChanged"/>
-          <label for="manualMode">Manual mode</label>
-      </div> -->
       <ProgramEditor
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
@@ -187,35 +173,14 @@
 
     <AiChat v-if="aiChatOpen" @close="aiChatOpen = false" />
   </div>
-  <!-- <ol>
-    <h1>TO DO:</h1>
-    <li><+-s>Tryb ciemny</s></li>
-    <li><s>Pogrubić ścieżki żeby to jakoś bardziej zjadliwie wyglądało</s></li>
-    <li>Parser</li>
-    <li><s>Konsola</s></li>
-    <li>Brak możliwości dodania błędnego rozkazu</li>
-    <li><s>W ustawieniach możliwość konfigurowania ilości komórek pamięci</s></li>
-    <li>Możliwość ustawienie widoku pamięci: domyślnie adres, wartość ???</li>
-    <li>Custom type number pole</li>
-    <li>Słownik z Polskim, Angielskim, i językiem użytkownika</li>
-    <li></li>
-  </ol> -->
 </template>
 
 <script>
-import polslLogoLongWhite from "@/assets/svg/polslLogoLongWhite.vue";
-import KogWheelIcon from "@/assets/svg/KogWheelIcon.vue";
-import RefreshIcon from "@/assets/svg/RefreshIcon.vue";
-import ListIcon from "@/assets/svg/ListLinesIcon.vue";
-import SunIcon from "@/assets/svg/SunIcon.vue";
-import MoonIcon from "@/assets/svg/MoonIcon.vue";
-import AiChatIcon from "@/assets/svg/AiChatIcon.vue";
 import CommandList from "./CommandList.vue";
 import ProgramSection from "./ProgramSection.vue";
 import CounterComponent from "@/components/CounterComponent.vue";
 import BusSignal from "@/components/BusSignal.vue";
 import SignalButton from "@/components/SignalButton.vue";
-import RegisterComponent from "@/components/RegisterComponent.vue";
 import MemorySection from "@/components/MemorySection.vue";
 import CalcSection from "@/components/CalcSection.vue";
 import RegisterISection from "@/components/RegisterISection.vue";
@@ -233,19 +198,11 @@ export default {
   name: "MainComponent",
 
   components: {
-    polslLogoLongWhite,
-    KogWheelIcon,
-    ListIcon,
-    RefreshIcon,
-    SunIcon,
-    MoonIcon,
-    AiChatIcon,
     CommandList,
     ProgramSection,
     CounterComponent,
     BusSignal,
     SignalButton,
-    RegisterComponent,
     MemorySection,
     CalcSection,
     RegisterISection,
@@ -264,7 +221,6 @@ export default {
       addresBits: 4,
       codeBits: 6,
       memoryAddresBits: 6,
-      C: 0,
       A: 0,
       ACC: 0,
       JAML: 0,
@@ -272,10 +228,8 @@ export default {
         0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100,
         0b111000,
       ],
-      registers: [],
 
       programCounter: 0,
-      stackPointer: 0,
       I: 0,
       X: 0,
       Y: 0,
@@ -284,7 +238,6 @@ export default {
       BusA: 0,
       BusS: 0,
 
-      program: "DOD ",
       code: "czyt wys wei il;\nwyl wea;",
       compiledCode: [],
       activeLine: 0,
@@ -336,8 +289,6 @@ export default {
       signals: {
         as: false,
         sa: false,
-
-        przep: false,
 
         // PROGRAM COUNTER
         il: false,
@@ -400,18 +351,11 @@ export default {
       manualMode: true,
       codeCompiled: false,
 
-      programCompiled: false,
-      compiledProgramLines: [],
-      compiledProgram: [],
-
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
 
       lightMode: true,
-
-      aiConversation: [],
-      aiInput: "",
     };
   },
   methods: {
@@ -453,42 +397,8 @@ export default {
     addLog(message, classification = "info") {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
-      // scroll to bottom of the console
-      this.$nextTick(() => {
-        const console = document.getElementById("console");
-        // console.scrollTop = -console.scrollHeight;
-      });
     },
 
-    formatTimestampForConsole(timestamp) {
-      const date = new Date(timestamp);
-
-      // Extract date and time components
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensure 2-digit month
-      const day = String(date.getDate()).padStart(2, "0"); // Ensure 2-digit day
-
-      const hours = String(date.getHours()).padStart(2, "0"); // Ensure 2-digit hours
-      const minutes = String(date.getMinutes()).padStart(2, "0"); // Ensure 2-digit minutes
-      const seconds = String(date.getSeconds()).padStart(2, "0"); // Ensure 2-digit seconds
-
-      return new Date().toDateString() === date.toDateString()
-        ? `${hours}:${minutes}:${seconds}` // If today, return HH:MM:SS
-        : `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`; // If not today, return YYYY-MM-DD HH:MM:SS
-    },
-
-    decToHex(dec) {
-      if (typeof dec !== "number" || isNaN(dec)) {
-        return "Error: Invalid number for hexadecimal conversion.";
-      }
-      return "0x" + Math.floor(dec).toString(16).toUpperCase();
-    },
-    decToBinary(dec) {
-      if (typeof dec !== "number" || isNaN(dec)) {
-        return "Error: Invalid number for binary conversion.";
-      }
-      return "0b" + Math.floor(dec).toString(2);
-    },
     formatNumber(number) {
       if (typeof number !== "number" || isNaN(number)) {
         return "Error: Invalid number.";
@@ -496,8 +406,8 @@ export default {
 
       const formatters = {
         dec: () => number,
-        hex: () => this.decToHex(number),
-        bin: () => this.decToBinary(number),
+        hex: () => "0x" + Math.floor(number).toString(16).toUpperCase(),
+        bin: () => "0b" + Math.floor(number).toString(2),
       };
 
       return formatters[this.numberFormat]?.() ?? `EE${number}`;
@@ -513,26 +423,13 @@ export default {
       const newSize = 1 << this.memoryAddresBits;
       const newMem = new Array(newSize).fill(0);
 
-      for (let i = 0; i < Math.min(this.mem.length, newSize); i++) {
-        // newMem[i] = this.mem[i];
-        newMem[i] = 0;
-      }
-
       // DEBUG PURPOSES
       newMem[0] = 0;
       for (let i = 1; i < newMem.length; i++) {
-        //newMem[i] = (i << (this.memoryAddresBits)) + i;
         newMem[i] = 0;
       }
 
       this.mem = newMem;
-    },
-
-    lightModeCheck() {
-      this.lightMode = true;
-    },
-    darkModeUncheck() {
-      this.lightMode = false;
     },
 
     manualModeCheck() {
@@ -544,8 +441,6 @@ export default {
       this.manualModeChanged();
     },
     manualModeChanged() {
-      //this.manualMode = !this.manualMode;
-
       for (const key in this.signals) {
         this.signals[key] = false;
       }
@@ -555,9 +450,6 @@ export default {
       if (!this.manualMode) {
         this.uncompileCode();
       }
-    },
-    toggleSettings() {
-      this.settingsOpen = !this.settingsOpen;
     },
     closePopups() {
       this.settingsOpen = false;
@@ -679,7 +571,7 @@ export default {
       }
     },
 
-    /* #region COMMANDS */
+    /* COMMANDS */
 
     il() {
       this.signals.il = true;
@@ -976,16 +868,10 @@ export default {
 </script>
 
 <style scoped>
-/* #region OL */
-
 ol {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   text-align: left;
 }
-
-/* #endregion OL */
-
-/* @import "@/assets/style/style.css"; */
 </style>

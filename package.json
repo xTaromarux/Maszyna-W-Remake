@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "serve:ws": "node server.cjs",
-    "dev:client": "vite",
-    "dev": "concurrently -k \"npm:serve:ws\" \"npm:dev:client\"",
+    "dev:ws": "concurrently -k \"npm:serve:ws\" \"npm:dev\"",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },

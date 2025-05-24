@@ -396,9 +396,9 @@ export default {
 
     initWebsocket() {
       // Local Test
-      this.ws = new WebSocket('ws://localhost:8080');
+      // this.ws = new WebSocket('ws://localhost:8080');
       // ESP32
-      // this.ws = new WebSocket('ws://192.168.4.1:80/ws');
+      this.ws = new WebSocket('ws://192.168.4.1:80/ws');
       this.ws.binaryType = 'arraybuffer';
       this.ws.addEventListener('open', () => {
         console.log('[WS] Connected to server');

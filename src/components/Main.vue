@@ -1,9 +1,6 @@
 <template>
-  <TopBar
-    @open-chat="aiChatOpen = true"
-    @open-settings="settingsOpen = true"
-    @open-command-list="commandListOpen = true"
-  />
+  <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
+    @open-command-list="commandListOpen = true" />
   <div id="wLayout">
 
     <div id="W" :class="{ manualMode: manualMode }">
@@ -106,7 +103,7 @@
 
     <Console v-if="!manualMode" :logs="logs" />
 
-    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen" > </div>
+    <div @click="closePopups" id="popupsBackdrop" v-if="settingsOpen || commandListOpen || aiChatOpen"> </div>
 
     <div id="settings" v-if="settingsOpen">
       <span class="titleSpan">Settings</span>
@@ -257,9 +254,13 @@ export default {
     Console
   },
 
+  created() {
+    this.ws = null;
+  },
 
   data() {
     return {
+      prevSignals: {},
       addresBits: 4,
       codeBits: 6,
       memoryAddresBits: 6,
@@ -391,9 +392,56 @@ export default {
   },
   methods: {
 
+    initWebsocket() {
+      // Local Test
+      // this.ws = new WebSocket('ws://localhost:8080');
+      // ESP32
+      this.ws = new WebSocket('ws://192.168.4.1:80/ws');
+      this.ws.binaryType = 'arraybuffer';
+      this.ws.addEventListener('open', () => {
+        console.log('[WS] Connected to server');
+      });
+
+      this.ws.addEventListener('error', err => {
+        console.error('[WS] Connection error', err);
+      });
+
+      this.ws.addEventListener('message', async ({ data }) => {
+        let text;
+        if (data instanceof Blob) {
+          text = await data.text();
+        } else if (data instanceof ArrayBuffer) {
+          text = new TextDecoder().decode(data);
+        } else {
+          text = data;
+        }
+
+        console.log('[WS] Text received:', text);
+        let msg;
+        try {
+          msg = JSON.parse(text);
+        } catch (e) {
+          console.warn('[WS] Invalid JSON:', text);
+          return;
+        }
+
+        if (msg.type === 'signal-toggle') {
+          console.log('[WS] Received toggle:', msg.id, msg.value);
+          this.handleRemoteToggle(msg.id, msg.value);
+        }
+      });
+    },
+
+    handleRemoteToggle(id, value) {
+      if (value) {
+        this.nextLine.add(id);
+      } else {
+        this.nextLine.delete(id);
+      }
+      this.signals[id] = value;
+    },
+
     handleSignalToggle(signalName) {
-      console.log(signalName);
-      
       if (!this.manualMode) return;
       if (this.nextLine.has(signalName)) {
         this.nextLine.delete(signalName);
@@ -401,6 +449,16 @@ export default {
       } else {
         this.nextLine.add(signalName);
         this.signals[signalName] = true;
+      }
+    },
+
+    sendSignalToggle(id, value) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          type: 'signal-toggle',
+          id,
+          value
+        }));
       }
     },
 
@@ -542,7 +600,7 @@ export default {
       this.commandListOpen = false;
       this.aiChatOpen = false;
     },
-    
+
     compileCode() {
 
       if (!this.code) {
@@ -945,12 +1003,27 @@ export default {
       }
     },
 
+    signals: {
+      deep: true,
+      handler() {
+        const curr = { ...this.signals };
+        for (const key in curr) {
+          if (curr[key] !== this.prevSignals[key]) {            
+            this.sendSignalToggle(key, curr[key]);
+          }
+        }
+        this.prevSignals = curr;
+      }
+    }
   },
+
   mounted() {
+    this.initWebsocket();
     this.loadFromLS();
     this.resizeMemory();
 
     this.addLog("System initialized.", "System");
+    this.prevSignals = { ...this.signals };
   },
 };
 </script>

@@ -260,7 +260,9 @@ export default {
 
   data() {
     return {
+      suppressBroadcast: false,
       prevSignals: {},
+      prevMem: [],
       addresBits: 4,
       codeBits: 6,
       memoryAddresBits: 6,
@@ -394,9 +396,9 @@ export default {
 
     initWebsocket() {
       // Local Test
-      // this.ws = new WebSocket('ws://localhost:8080');
+      this.ws = new WebSocket('ws://localhost:8080');
       // ESP32
-      this.ws = new WebSocket('ws://192.168.4.1:80/ws');
+      // this.ws = new WebSocket('ws://192.168.4.1:80/ws');
       this.ws.binaryType = 'arraybuffer';
       this.ws.addEventListener('open', () => {
         console.log('[WS] Connected to server');
@@ -428,17 +430,21 @@ export default {
         if (msg.type === 'signal-toggle') {
           console.log('[WS] Received toggle:', msg.id, msg.value);
           this.handleRemoteToggle(msg.id, msg.value);
+        } else if (msg.type === 'mem-update') {
+          this.handleRemoteMemUpdate(msg.index, msg.value);
         }
       });
     },
 
     handleRemoteToggle(id, value) {
+      this.suppressBroadcast = true;
       if (value) {
         this.nextLine.add(id);
       } else {
         this.nextLine.delete(id);
       }
       this.signals[id] = value;
+      this.suppressBroadcast = false;
     },
 
     handleSignalToggle(signalName) {
@@ -460,6 +466,22 @@ export default {
           value
         }));
       }
+    },
+
+    sendMemUpdate(idx, value) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          type: 'mem-update',
+          index: idx,
+          value
+        }));
+      }
+    },
+
+    handleRemoteMemUpdate(idx, value) {
+      this.suppressBroadcast = true;
+      this.$set(this.mem, idx, value);
+      this.suppressBroadcast = false;
     },
 
     loadFromLS() {
@@ -1006,13 +1028,28 @@ export default {
     signals: {
       deep: true,
       handler() {
+        if (this.suppressBroadcast) return;
         const curr = { ...this.signals };
         for (const key in curr) {
-          if (curr[key] !== this.prevSignals[key]) {            
+          if (curr[key] !== this.prevSignals[key]) {
             this.sendSignalToggle(key, curr[key]);
           }
         }
         this.prevSignals = curr;
+      }
+    },
+
+    mem: {
+      deep: true,
+      handler() {
+        if (this.suppressBroadcast) return;
+        const curr = [...this.mem];
+        curr.forEach((v, i) => {
+          if (v !== this.prevMem[i]) {
+            this.sendMemUpdate(i, v);
+          }
+        });
+        this.prevMem = curr;
       }
     }
   },
@@ -1024,6 +1061,7 @@ export default {
 
     this.addLog("System initialized.", "System");
     this.prevSignals = { ...this.signals };
+    this.prevMem = [...this.mem];
   },
 };
 </script>

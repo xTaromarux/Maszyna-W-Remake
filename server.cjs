@@ -13,13 +13,14 @@ wss.on('connection', (ws) => {
     } catch {
       return;
     }
-    if (msg.type === 'signal-toggle') {
+    if (msg.type === 'signal-toggle' || msg.type === 'mem-update') {
       wss.clients.forEach((client) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(raw);
         }
       });
     }
+
   });
 
   ws.on('close', () => console.log('◀ Client disconnected'));

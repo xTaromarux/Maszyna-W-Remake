@@ -10,10 +10,9 @@
       >
         <AiChatIcon 
         fillColor="#ddd"
-      strokeColor="#ddd"
-      :strokeWidth="250"
-      width="14"
-      height="14"/>
+        strokeColor="#ddd"
+        strokeWidth="250"
+        />
       </button>
 
       <button

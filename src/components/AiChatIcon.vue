@@ -1,8 +1,6 @@
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    :width="width"
-    :height="height"
     viewBox="0 0 475 439"
     preserveAspectRatio="xMidYMid meet"
     class="customIcon"
@@ -34,14 +32,6 @@
 
 <script setup>
 const props = defineProps({
-  width: {
-    type: [Number, String],
-    default: 48
-  },
-  height: {
-    type: [Number, String],
-    default: 48
-  },
   fillColor: {
     type: String,
     default: 'currentColor'
@@ -63,5 +53,8 @@ const viewBoxHeight = 439
 .customIcon {
   display: inline-block;
   vertical-align: middle;
+  margin-top: 2px;
+  width: 35px;
+  height: 30px;
 }
 </style>

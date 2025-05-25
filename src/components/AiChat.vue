@@ -15,7 +15,7 @@
         </header>
 
         <div id="conversation" ref="conversationEl">
-          <transition-group name="messageEnter" tag="div">
+          <transition-group name="messageEnter" tag="div" class="conversationBox">
             <div
               v-for="(msg, i) in messages"
               :key="i"
@@ -43,8 +43,9 @@
               v-model="text"
               :placeholder="placeholder"
               type="text"
+              :disabled="aiTyping"
             />
-            <button type="submit">Send</button>
+            <button type="submit" :disabled="aiTyping">Send</button>
           </form>
         </div>
       </div>
@@ -53,9 +54,8 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 
-// Props
 const props = defineProps({
   title: {
     type: String,
@@ -70,26 +70,41 @@ const props = defineProps({
     default: 'Describe the operation to get the machine code:'
   }
 })
-
-// Emits
 const emit = defineEmits(['close'])
 
-// State
+const STORAGE_KEY = 'aiChatMessages'
+
 const messages = ref([])
 const text = ref('')
+const aiTyping = ref(false)
 
-// Reset rozmowy
+onMounted(() => {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    try {
+      messages.value = JSON.parse(saved)
+    } catch {
+      messages.value = []
+    }
+  }
+})
+
+watch(
+  messages,
+  (msgs) => localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs)),
+  { deep: true }
+)
+
 const resetConversation = () => {
   messages.value = []
+  localStorage.removeItem(STORAGE_KEY)
 }
 
-// Format czasu
 const formatTime = ts => new Date(ts).toLocaleTimeString()
 
-// Wysyłanie wiadomości użytkownika + symulacja strumienia
 const sendUserMessage = () => {
-  if (!text.value.trim()) return
-  // dodaj user
+  if (aiTyping.value || !text.value.trim()) return
+
   messages.value.push({
     sender: 'user',
     text: text.value,
@@ -98,23 +113,26 @@ const sendUserMessage = () => {
   const userText = text.value
   text.value = ''
 
-  // przygotuj puste AI, potem dopisuj literka po literce
+  aiTyping.value = true
   messages.value.push({
     sender: 'ai',
     text: '',
     timestamp: Date.now()
   })
   const aiIndex = messages.value.length - 1
-  // TUTAJ w przyszłości wstaw swoje dane z WebSocketa
-  const full = 'To jest symulowana odpowiedź AI...' // zamień na realny stream
+
+  const full = 'To jest symulowana odpowiedź AI...' 
   let pos = 0
   const timer = setInterval(() => {
-    if (pos >= full.length) return clearInterval(timer)
+    if (pos >= full.length) {
+      clearInterval(timer)
+      aiTyping.value = false
+      return
+    }
     messages.value[aiIndex].text += full[pos++]
   }, 40)
 }
 
-// Auto-scroll
 const conversationEl = ref(null)
 watch(
   () => messages.value.length,

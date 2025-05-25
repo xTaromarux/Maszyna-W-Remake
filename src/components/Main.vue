@@ -136,12 +136,14 @@
     />
 
     <Console v-if="!manualMode" :logs="logs" />
-
-    <div
-      @click="closePopups"
-      id="popupsBackdrop"
-      v-if="settingsOpen || commandListOpen || aiChatOpen"
-    ></div>
+    
+    <transition name="fade-backdrop" appear>
+      <div
+        v-if="settingsOpen || commandListOpen || aiChatOpen"
+        @click="closePopups"
+        id="popupsBackdrop"
+      />
+    </transition>
 
     <Settings
       :open="settingsOpen"
@@ -168,7 +170,15 @@
       @update:commandList="commandList = $event"
     />
 
-    <AiChat v-if="aiChatOpen" @close="aiChatOpen = false" />
+    <transition name="slide">
+      <AiChat
+        v-if="aiChatOpen"
+        @close="aiChatOpen = false"
+        title="AI Assistant 🤖"
+        placeholder="Type a message…"
+        instruction="Describe the operation to get the machine code:"
+      />
+    </transition>
   </div>
 </template>
 
@@ -315,6 +325,7 @@ export default {
         weak: false,
         weja: false,
         wyak: false,
+        przep: false,
 
         dod: false,
         ode: false,

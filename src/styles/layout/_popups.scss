@@ -1,3 +1,20 @@
+.fade-backdrop-enter-active {
+  transition: opacity 0.15s ease 0.1s;
+}
+.fade-backdrop-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-backdrop-enter-from,
+.fade-backdrop-leave-to {
+  opacity: 0;
+}
+
+.fade-backdrop-enter-to,
+.fade-backdrop-leave-from {
+  opacity: 1;
+}
+
 #popupsBackdrop {
   position: fixed;
   z-index: 99;

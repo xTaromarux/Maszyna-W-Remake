@@ -28,7 +28,7 @@
         aria-label="Open Command List"
         @click="$emit('open-command-list')"
       >
-        <ListIcon />
+        <CommandListIcon />
       </button>
     </div>
   </header>
@@ -38,7 +38,7 @@
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
 import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
-import ListIcon           from '@/assets/svg/ListLinesIcon.vue'
+import CommandListIcon    from '@/assets/svg/CommandListIcon.vue'
 
 defineEmits(['open-chat', 'open-settings', 'open-command-list'])
 </script>

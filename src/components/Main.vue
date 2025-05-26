@@ -169,6 +169,7 @@
       :commandList="commandList"
       :codeBits="codeBits"
       @update:commandList="commandList = $event"
+      @close="closePopups"
     />
 
       <AiChat

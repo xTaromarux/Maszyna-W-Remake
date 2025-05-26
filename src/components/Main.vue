@@ -151,6 +151,7 @@
       :memory-addres-bits="memoryAddresBits"
       :code-bits="codeBits"
       :addres-bits="addresBits"
+      :odd-delay="oddDelay"
       :extras="extras"
       @close="closePopups"
       @emptyLS="emptyLS"
@@ -159,6 +160,7 @@
       @update:memoryAddresBits="memoryAddresBits = $event"
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
+      @update:oddDelay="oddDelay = $event"
       @update:extras="extras = $event"
     />
 
@@ -260,7 +262,8 @@ export default {
       activeLine: 0,
       nextLine: new Set(),
 
-      oddDelay: 1000,
+      // DEFAULT IS 2000ms
+      oddDelay: 2000, // Delay for odd commands in ms
 
       commandList,
 

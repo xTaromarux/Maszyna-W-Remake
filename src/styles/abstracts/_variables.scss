@@ -1,16 +1,16 @@
 :root {
     --signal: black;
-    --signal-active: #ef5d09;
-    --signal-hover: #f7a41d;
+    --signal-active: #0066cc;
+    --signal-hover: #0099ff;
     --default-border-radius: 0.375rem;
   
-    --pathThickness: 0.125rem;
-    --arrowLineThickness: 0.125rem;
+    --pathThickness: 0.20rem;
+    --arrowLineThickness: 0.20rem;
   
-    --lineHeadThickness: 0.125rem;
-    --lineHeadLength: 0.5rem;
-    --lineHeadMargin: 0.125rem;
-    --arrowHeadSize: 0.25rem;
+    --lineHeadThickness: 0.20rem;
+    --lineHeadLength: 0.75rem;
+    --lineHeadMargin: 0.20rem;
+    --arrowHeadSize: 0.5rem;
   }
   
   body, body.lightMode {

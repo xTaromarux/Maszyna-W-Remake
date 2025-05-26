@@ -1,29 +1,11 @@
 <template>
     <div id="commandList" v-if="visible">
-      <div class="flexRow">
-        <span>Lista Rozkazów</span>
-        <button @click="addCommand" title="Dodaj rozkaz">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
-            <g stroke-width="2" stroke-linecap="round">
-              <path d="M12 16V8m4 4H8"/>
-              <circle cx="12" cy="12" r="9"/>
-            </g>
+      <div class="header">
+        <h1>Lista Rozkazów</h1>
+        <button @click="$emit('close')" class="closeButton" title="Zamknij">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
-          <span>Dodaj</span>
-        </button>
-        <button @click="loadCommandList" title="Wgraj listę rozkazów">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746"/>
-          </svg>
-          <span>Wgraj</span>
-        </button>
-        <button @click="downloadCommandList" title="Pobierz listę rozkazów">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2"/>
-          </svg>
-          <span>Pobierz</span>
         </button>
       </div>
   
@@ -34,6 +16,7 @@
           :key="idx"
           @click="editCommand(idx)"
           class="command"
+          :class="{ selected: selectedCommand === idx }"
         >
           <span>{{ cmd.name }}</span>
         </button>
@@ -71,6 +54,32 @@
           />
         </div>
       </div>
+
+      <div class="actionButtons">
+        <button @click="addCommand" title="Dodaj rozkaz">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
+            <g stroke-width="2" stroke-linecap="round">
+              <path d="M12 16V8m4 4H8"/>
+              <circle cx="12" cy="12" r="9"/>
+            </g>
+          </svg>
+          <span>Dodaj</span>
+        </button>
+        <button @click="loadCommandList" title="Wgraj listę rozkazów">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746"/>
+          </svg>
+          <span>Wgraj</span>
+        </button>
+        <button @click="downloadCommandList" title="Pobierz listę rozkazów">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2"/>
+          </svg>
+          <span>Pobierz</span>
+        </button>
+      </div>
     </div>
   </template>
   
@@ -82,7 +91,7 @@
       commandList: { type: Array, required: true },
       codeBits: { type: Number, default: 6 },
     },
-    emits: ['update:commandList'],
+    emits: ['update:commandList', 'close'],
     data() {
       return {
         localList: JSON.parse(JSON.stringify(this.commandList)),
@@ -169,119 +178,148 @@
   
   <style scoped>
   #commandList {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    display: grid;
+    grid-template-areas:
+      "header"
+      "list"
+      "details"
+      "actions";
+    grid-template-rows: auto 1fr auto auto;
+    gap: 0.5rem;
+    border: 1px solid var(--panelOutlineColor, black);
+    background-color: var(--panelBackgroundColor, white);
+    border-radius: var(--default-border-radius, 0.25rem);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+    overflow: hidden;
+    resize: both;
+  }
 
-  z-index: 100;
+  .header {
+    grid-area: header;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 1rem 0;
+  }
 
-  display: grid;
-  grid-template-areas:
-    "fr fr"
-    "list details";
-  grid-template-columns: auto 2fr;
-  grid-template-rows: auto 1fr;
-  gap: 0.5rem;
-  justify-content: stretch;
-  align-content: stretch;
+  .header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    text-align: center;
+  }
 
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
+  .closeButton {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
 
-  border-radius: var(--default-border-radius, 0.25rem);
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  .closeButton:hover {
+    color: var(--accentColor, #00aaff);
+  }
 
-  padding: 1rem;
+  #commandListTable {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+  }
 
-  overflow: hidden;
-  resize: both;
-}
+  #commandListTable > button {
+    all: unset;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 1rem 0.25rem 0.25rem;
+    cursor: pointer;
+  }
 
-#commandList button {
-  padding: 0.25rem;
-}
+  #commandListTable > button:not(:last-child) {
+    border-bottom: 1px solid var(--panelOutlineColor, black);
+  }
 
-#commandList button svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
+  #commandListTable > button:hover {
+    background-color: #fff8;
+  }
 
-#commandList .flexRow {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
+  #commandListTable > button.selected {
+    background-color: #00aaff;
+    color: white;
+  }
 
-  grid-area: fr;
-}
+  #commandDetails {
+    grid-area: details;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    justify-content: stretch;
+    align-content: stretch;
+    overflow-y: auto;
+  }
 
-#commandList #commandListTable {
-  grid-area: list;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-}
+  #commandDetails > .buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
 
-#commandList #commandListTable>button {
-  all: unset;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.25rem 1rem 0.25rem 0.25rem;
-  cursor: pointer;
-}
+  #commandDetails .roskazCode {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    justify-content: stretch;
+    align-items: stretch;
+  }
 
-#commandList #commandListTable>button:not(:last-child) {
-  border-bottom: 1px solid var(--panelOutlineColor, black);
-}
+  #commandDetails .roskazCode textarea {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    padding: 0.5rem;
+    border: 1px solid var(--panelOutlineColor, black);
+    background-color: var(--panelBackgroundColor, white);
+  }
 
-#commandList #commandListTable>button:hover {
-  background-color: #fff8;
-}
+  .actionButtons {
+    grid-area: actions;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--panelOutlineColor, black);
+  }
 
-#commandList #commandListTable>button:active {
-  background-color: #00aaff;
-  color: white;
-}
+  .actionButtons button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--panelOutlineColor, black);
+    border-radius: var(--default-border-radius, 0.25rem);
+    background: var(--panelBackgroundColor, white);
+    cursor: pointer;
+  }
 
-#commandList #commandDetails {
-  grid-area: details;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
-  justify-content: stretch;
-  align-content: stretch;
-  overflow-y: auto;
-}
-
-#commandList #commandDetails>.buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  padding: 0.25rem;
-}
-
-#commandList #commandDetails .roskazCode {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.25rem;
-  justify-content: stretch;
-  align-items: stretch;
-}
-
-#commandList #commandDetails .roskazCode textarea {
-  width: 100%;
-  height: 100%;
-  resize: none;
-  padding: 0.5rem;
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-}
+  .actionButtons button:hover {
+    background: var(--accentColor, #00aaff);
+    color: white;
+  }
   </style>
   

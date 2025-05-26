@@ -1,6 +1,8 @@
 <template>
   <header id="topBar">
-    <polsl-logo-long-white class="logo" />
+    <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer">
+      <polsl-logo-long-white class="logo" />
+    </a>
 
     <div class="flexRow">
       <button
@@ -28,7 +30,7 @@
         aria-label="Open Command List"
         @click="$emit('open-command-list')"
       >
-        <ListIcon />
+        <CommandListIcon />
       </button>
     </div>
   </header>
@@ -38,7 +40,7 @@
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
 import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
-import ListIcon           from '@/assets/svg/ListLinesIcon.vue'
+import CommandListIcon    from '@/assets/svg/CommandListIcon.vue'
 
 defineEmits(['open-chat', 'open-settings', 'open-command-list'])
 </script>

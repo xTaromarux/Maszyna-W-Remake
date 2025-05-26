@@ -1,14 +1,18 @@
 <template>
-  <transition name="slide">
-    <div v-if="true" class="chatOverlay" @click.self="$emit('close')">
-      <div id="aiChat" class="chatPanel" @click.stop>
+    <div
+      v-if="isHide"
+      class="chatOverlay"
+      @click.self="startClose"
+      :class="{ show: isHide, isHide: !isHide }"
+    >
+      <div id="aiChat" class="chatPanel" @click.stop :class="{show: visible, hide: !visible }">
         <header class="chatHeader">
           <h1>{{ title }}</h1>
           <div class="headerBtns">
             <button class="resetBtn" @click="resetConversation" aria-label="Reset chat">
               🗑️
             </button>
-            <button class="closeBtn" @click="$emit('close')" aria-label="Close chat">
+            <button class="closeBtn" @click="startClose" aria-label="Close chat">
               &times;
             </button>
           </div>
@@ -50,13 +54,27 @@
         </div>
       </div>
     </div>
-  </transition>
 </template>
 
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue'
 
+const isHide = ref(false)
+
+function startClose() {
+  emit('close')
+
+  setTimeout(() => {
+    isHide.value = false;
+  }, 1000);
+}
+
+
 const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false
+  },
   title: {
     type: String,
     default: 'AI Assistant'
@@ -90,6 +108,13 @@ onMounted(() => {
 })
 
 watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      isHide.value = true
+    }
+  },
+
   messages,
   (msgs) => localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs)),
   { deep: true }

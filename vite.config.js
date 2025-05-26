@@ -10,6 +10,20 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+    cors: true,
+    hmr: {
+      protocol: 'wss',
+      host: 'maszynaw.loca.lt',
+      port: 443
+    },
+    allowedHosts: [
+      'maszynaw.loca.lt'
+    ]
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

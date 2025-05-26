@@ -20,9 +20,7 @@ export default defineConfig({
       host: 'maszynaw.loca.lt',
       port: 443
     },
-    allowedHosts: [
-      'maszynaw.loca.lt'
-    ]
+    allowedHosts: 'all'
   },
   resolve: {
     alias: {

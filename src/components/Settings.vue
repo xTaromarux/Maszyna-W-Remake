@@ -93,12 +93,16 @@
       </template>
     </div>
 
-    <!-- RESET BUTTON -->
+    <!-- RESET BUTTONS -->
     <div class="flexColumn">
       <div class="flexRow">
-        <button class="SvgAndTextButton" id="emptyLS" @click="$emit('emptyLS')">
+        <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
           <RefreshIcon />
-          <span>Reset <u>EVERYTHING</u></span>
+          <span>Reset <u>Register Values</u></span>
+        </button>
+        <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
+          <RefreshIcon />
+          <span>Default <u>Settings</u></span>
         </button>
       </div>
     </div>
@@ -140,14 +144,15 @@ export default {
 
   emits: [
     "close",
-    "emptyLS",
     "update:lightMode",
     "update:numberFormat",
     "update:memoryAddresBits",
     "update:codeBits",
     "update:addresBits",
     "update:oddDelay",
-    "update:extras"
+    "update:extras",
+    "resetValues",
+    "defaultSettings"
   ],
 
   computed: {

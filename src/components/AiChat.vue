@@ -140,7 +140,7 @@ const sendUserMessage = async () => {
   .map(msg => ({ role: msg.sender, message: msg.text }))    
 
   try {
-    const resp = await fetch('https://a643-2a02-a313-29f-6080-8fb-9d55-bbe0-5022.ngrok-free.app/chat', {
+    const resp = await fetch('https://real-large-cricket.ngrok-free.app/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ history })

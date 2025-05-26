@@ -5,10 +5,10 @@
   justify-content: center;
   align-items: center;
   transition: 0.5s;
-  color: #ddd;
+  color: #0066cc;
 }
 .simpleSvgButton svg {
-  color: #ddd;
+  color: #0066cc;
 }
 .simpleSvgButton:hover {
   transform: scale(1.1);
@@ -80,17 +80,17 @@ button svg {
   gap: 0.5rem;
   padding: 0.5rem;
   border-radius: 10rem;
-  background-color: #00aaff;
+  background-color: #0066cc;
   color: white;
   width: 100%;
   white-space: nowrap;
   transition: 0.5s ease-in-out;
 }
 .SvgAndTextButton:hover {
-  background-color: #00bbff;
+  background-color: #0099ff;
 }
 .SvgAndTextButton:active {
-  background-color: #0088cc;
+  background-color: #004c99;
 }
 
 .SvgAndTextButton svg {

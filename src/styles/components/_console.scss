@@ -1,4 +1,3 @@
-
 #console {
   scroll-behavior: smooth;
 
@@ -68,15 +67,15 @@
 }
 
 #console>div.error {
-  background-color: #f7514ba8;
+  background-color: #0066cc88;
 }
 
 #console>div.io {
-  background-color: #f7fa52a8;
+  background-color: #0099ff88;
 }
 
 #console>div.command.compiler {
-  background-color: #92f144a8;
+  background-color: #00ccff88;
 }
 
 #console>div.program.compiler {

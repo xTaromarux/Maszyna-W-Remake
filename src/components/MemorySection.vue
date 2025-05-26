@@ -72,3 +72,9 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+#memoryTable .label {
+    font-weight: normal;
+}
+</style>

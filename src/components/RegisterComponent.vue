@@ -31,3 +31,9 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.register span:first-child {
+    font-weight: bold;
+}
+</style>

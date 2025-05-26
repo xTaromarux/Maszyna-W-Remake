@@ -44,6 +44,7 @@
           <p class="inputInstruction">{{ instruction }}</p>
           <form @submit.prevent="sendUserMessage">
             <input
+              ref="textInput"
               v-model="text"
               :placeholder="placeholder"
               type="text"
@@ -93,6 +94,7 @@ const emit = defineEmits(['close'])
 const STORAGE_KEY = 'aiChatMessages'
 
 const messages = ref([])
+const textInput = ref(null)
 const text = ref('')
 const aiTyping = ref(false)
 
@@ -112,6 +114,11 @@ watch(
   (newVal) => {
     if (newVal) {
       isHide.value = true
+      nextTick(() => {
+        setTimeout(() => {
+          textInput.value?.focus()
+        }, 1000)
+      })
     }
   },
 

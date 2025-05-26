@@ -1,59 +1,170 @@
 <template>
-  <div id="aiChat">
-    <header class="chat-header">
-      <h1>AI Chat</h1>
-      <button class="close-btn" @click="$emit('close')" aria-label="Close chat">
-        &times;
-      </button>
-    </header>
+    <div
+      v-if="isHide"
+      class="chatOverlay"
+      @click.self="startClose"
+      :class="{ show: isHide, isHide: !isHide }"
+    >
+      <div id="aiChat" class="chatPanel" @click.stop :class="{show: visible, hide: !visible }">
+        <header class="chatHeader">
+          <h1>{{ title }}</h1>
+          <div class="headerBtns">
+            <button class="resetBtn" @click="resetConversation" aria-label="Reset chat">
+              🗑️
+            </button>
+            <button class="closeBtn" @click="startClose" aria-label="Close chat">
+              &times;
+            </button>
+          </div>
+        </header>
 
-    <div id="conversation" ref="conversationEl">
-      <div
-        v-for="(msg, i) in messages"
-        :key="i"
-        class="message"
-        :class="{ user: msg.sender === 'user', ai: msg.sender === 'ai' }"
-      >
-        <div class="icon">i</div>
-        <span class="sender">{{ msg.sender }}</span>
-        <span class="time">{{ formatTime(msg.timestamp) }}</span>
-        <span class="message">{{ msg.text }}</span>
+        <div id="conversation" ref="conversationEl">
+          <transition-group name="messageEnter" tag="div" class="conversationBox">
+            <div
+              v-for="(msg, i) in messages"
+              :key="i"
+              class="messageBubble"
+              :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'ai' }"
+            >
+              <div class="iconWrapper">
+                {{ msg.sender === 'ai' ? '🤖' : '👤' }}
+              </div>
+              <div class="messageContent">
+                <div class="messageHeader">
+                  <span class="senderName">{{ msg.sender }}</span>
+                  <span class="timestamp">{{ formatTime(msg.timestamp) }}</span>
+                </div>
+                <p class="messageText">{{ msg.text }}</p>
+              </div>
+            </div>
+          </transition-group>
+        </div>
+
+        <div class="inputArea">
+          <p class="inputInstruction">{{ instruction }}</p>
+          <form @submit.prevent="sendUserMessage">
+            <input
+              ref="textInput"
+              v-model="text"
+              :placeholder="placeholder"
+              type="text"
+              :disabled="aiTyping"
+            />
+            <button type="submit" :disabled="aiTyping">Send</button>
+          </form>
+        </div>
       </div>
     </div>
-
-    <form id="inputArea" @submit.prevent="send">
-      <input v-model="text" type="text" placeholder="Type your message…" />
-      <button type="submit">Send</button>
-    </form>
-  </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 
-// local state
+const isHide = ref(false)
+
+function startClose() {
+  emit('close')
+
+  setTimeout(() => {
+    isHide.value = false;
+  }, 1000);
+}
+
+
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false
+  },
+  title: {
+    type: String,
+    default: 'AI Assistant'
+  },
+  placeholder: {
+    type: String,
+    default: 'Type a message…'
+  },
+  instruction: {
+    type: String,
+    default: 'Describe the operation to get the machine code:'
+  }
+})
+const emit = defineEmits(['close'])
+
+const STORAGE_KEY = 'aiChatMessages'
+
 const messages = ref([])
-const text      = ref('')
+const textInput = ref(null)
+const text = ref('')
+const aiTyping = ref(false)
+
+onMounted(() => {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    try {
+      messages.value = JSON.parse(saved)
+    } catch {
+      messages.value = []
+    }
+  }
+})
+
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      isHide.value = true
+      nextTick(() => {
+        setTimeout(() => {
+          textInput.value?.focus()
+        }, 1000)
+      })
+    }
+  },
+
+  messages,
+  (msgs) => localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs)),
+  { deep: true }
+)
+
+const resetConversation = () => {
+  messages.value = []
+  localStorage.removeItem(STORAGE_KEY)
+}
 
 const formatTime = ts => new Date(ts).toLocaleTimeString()
 
-// send fake message
-const send = () => {
-  if (!text.value.trim()) return
-  messages.value.push({ sender: 'user', text: text.value, timestamp: Date.now() })
+const sendUserMessage = () => {
+  if (aiTyping.value || !text.value.trim()) return
+
+  messages.value.push({
+    sender: 'user',
+    text: text.value,
+    timestamp: Date.now()
+  })
+  const userText = text.value
   text.value = ''
 
-  // simulate AI response
-  setTimeout(() => {
-    messages.value.push({
-      sender: 'ai',
-      text:   'This is a simulated AI response.',
-      timestamp: Date.now()
-    })
-  }, 800)
+  aiTyping.value = true
+  messages.value.push({
+    sender: 'ai',
+    text: '',
+    timestamp: Date.now()
+  })
+  const aiIndex = messages.value.length - 1
+
+  const full = 'To jest symulowana odpowiedź AI...' 
+  let pos = 0
+  const timer = setInterval(() => {
+    if (pos >= full.length) {
+      clearInterval(timer)
+      aiTyping.value = false
+      return
+    }
+    messages.value[aiIndex].text += full[pos++]
+  }, 40)
 }
 
-// auto scroll to bottom
 const conversationEl = ref(null)
 watch(
   () => messages.value.length,
@@ -61,37 +172,4 @@ watch(
     conversationEl.value?.scrollTo(0, conversationEl.value.scrollHeight)
   })
 )
-
-defineEmits(['close'])
 </script>
-
-
-<style scoped>
-.chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: .5rem 1rem;
-  background: #003c7d;
-  color: #fff;
-}
-
-.close-btn {
-  all: unset;
-  cursor: pointer;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.message { display: flex; gap: .5rem; margin-bottom: .25rem; }
-.message.user .icon { color: #0b5ed7; } 
-.message.ai   .icon { color: #28a745; }
-
-#inputArea {
-  display: flex;
-  gap: .5rem;
-  padding: .5rem 1rem;
-  border-top: 1px solid #e0e0e0;
-}
-#inputArea input { flex: 1; }
-</style>

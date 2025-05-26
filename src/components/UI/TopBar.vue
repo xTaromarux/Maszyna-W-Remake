@@ -8,7 +8,11 @@
         aria-label="Open AI Chat"
         @click="$emit('open-chat')"
       >
-        <AiChatIcon />
+        <AiChatIcon 
+        fillColor="#ddd"
+        strokeColor="#ddd"
+        strokeWidth="250"
+        />
       </button>
 
       <button
@@ -32,7 +36,7 @@
 
 <script setup>
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
-import AiChatIcon         from '@/assets/svg/AiChatIcon.vue'
+import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
 import ListIcon           from '@/assets/svg/ListLinesIcon.vue'
 

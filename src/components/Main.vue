@@ -136,12 +136,13 @@
     />
 
     <Console v-if="!manualMode" :logs="logs" />
-
+    
     <div
+      v-if="disappearBlour"
       @click="closePopups"
+      :class="{ show: anyPopupOpen, hide: !anyPopupOpen }"
       id="popupsBackdrop"
-      v-if="settingsOpen || commandListOpen || aiChatOpen"
-    ></div>
+    />
 
     <Settings
       :open="settingsOpen"
@@ -170,7 +171,13 @@
       @update:commandList="commandList = $event"
     />
 
-    <AiChat v-if="aiChatOpen" @close="aiChatOpen = false" />
+      <AiChat
+        :visible="aiChatOpen"
+        @close="closePopups"
+        title="AI Assistant 🤖"
+        placeholder="Type a message…"
+        instruction="Describe the operation to get the machine code:"
+      />
   </div>
 </template>
 
@@ -213,6 +220,12 @@ export default {
     Settings,
     ExecutionControls,
     ProgramEditor,
+  },
+
+  computed: {
+    anyPopupOpen() {
+      return this.settingsOpen || this.commandListOpen || this.aiChatOpen;
+    },
   },
 
   created() {
@@ -318,6 +331,7 @@ export default {
         weak: false,
         weja: false,
         wyak: false,
+        przep: false,
 
         dod: false,
         ode: false,
@@ -358,6 +372,7 @@ export default {
       manualMode: true,
       codeCompiled: false,
 
+      disappearBlour: false,
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
@@ -540,6 +555,9 @@ export default {
       this.settingsOpen = false;
       this.commandListOpen = false;
       this.aiChatOpen = false;
+      setTimeout(() => {
+        this.disappearBlour = false;
+      }, 1000);
     },
 
     compileCode() {
@@ -969,8 +987,16 @@ export default {
         });
         this.prevMem = curr;
       }
-    }
+    },
 
+    anyPopupOpen: {
+      handler(val) {
+        if(val){
+          this.disappearBlour = val;
+        }
+      },
+      immediate: true
+    }
   },
 
   mounted() {

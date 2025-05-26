@@ -1,115 +1,213 @@
-#aiChat {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 
-  z-index: 100;
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
 
+#aiChat.chatPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  justify-content: stretch;
-  align-content: stretch;
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-
-  border-radius: var(--default-border-radius, 0.25rem);
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
-
-  padding: 1rem;
-
+  background-color: var(--panelBackgroundColor, #ffffff);
+  border-left: 1px solid var(--panelOutlineColor, #ddd);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  resize: both;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  z-index: 100;
+}
+.chatPanel.show {
+  animation: slideIn 1s ease-out forwards;
+}
+.chatPanel.hide {
+  animation: slideOut 1s ease-in forwards;
 }
 
-#aiChat #conversation {
-  flex-grow: 1;
+.chatHeader {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  justify-content: stretch;
-  align-content: stretch;
-
-  overflow-y: auto;
-
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--primaryColor, #003c7d);
+  color: #fff;
+}
+.chatHeader h1 {
+  font-size: 1.25rem;
+  margin: 0;
 }
 
-#aiChat #inputArea {
+.headerBtns {
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
-  justify-content: stretch;
-  align-content: stretch;
-
-  width: 100%;
+  gap: 10px;
 }
 
-#aiChat #inputArea input {
-  flex-grow: 1;
-  padding: 0.5rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  color: var(--fontColor, black);
-  font-family: monospace;
-}
-
-#aiChat #conversation>div {
-  display: grid;
-  grid-template-areas: ". sender time" "icon message message";
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
+.resetBtn,
+.closeBtn {
+  background: none;
+  width: 50px;
+  border: none;
+  color: inherit;
+  font-size: 1.25rem;
+  cursor: pointer;
   padding: 0.25rem;
-  border-radius: 0.25rem;
+  transition: opacity 0.2s;
+}
+.resetBtn:hover,
+.closeBtn:hover {
+  opacity: 0.75;
 }
 
-#aiChat #conversation>div>div.icon {
-  grid-area: icon;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background-color: #0066cc;
-  color: white;
+#conversation {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
   display: flex;
-  justify-content: center;
   align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-#aiChat #conversation>div>span.sender {
-  grid-area: sender;
-  font-size: 0.625rem;
-  text-transform: uppercase;
-
-  border-radius: 0.25rem;
-  width: 5rem;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#aiChat #conversation>div>span.time {
-  grid-area: time;
-  font-size: 0.625rem;
-
-  border-radius: 0.25rem;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#aiChat #conversation>div>span.message {
-  grid-area: message;
-  font-size: 1rem;
-  padding: 0.75rem;
-  background-color: #8888;
-  border-radius: var(--default-border-radius, 0.25rem);
+.conversationBox {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+.messageBubble {
+  display: flex;
+  align-items: flex-start;
+  max-width: 95%;
+  margin: 10px 0;
+  animation: fadeInUp 0.3s ease forwards;
+}
+.messageUser {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+.messageAi {
+  align-self: flex-start;
+}
+
+.messageAi .messageContent {
+  color: #000;
+}
+
+.iconWrapper {
+  flex-shrink: 0;
+  margin: 0 0.5rem;
+  font-size: 1.5rem;
+}
+.messageContent {
+  background: var(--messageBg, #f1f1f1);
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  position: relative;
+}
+.messageUser .messageContent {
+  background: var(--primaryColor, #0066cc);
+  color: #fff;
+}
+
+.messageUser .messageHeader {
+  color: #fff;
+}
+.messageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--secondaryText, #666);
+}
+.senderName {
+  font-weight: bold;
+}
+.timestamp {
+  margin-left: 0.5rem;
+}
+.messageText {
+  white-space: pre-wrap;
+  text-align: left;
+  margin: 0;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.messageEnter-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.messageEnter-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+.messageEnter-enter-active {
+  transition: all 0.3s ease;
+}
+
+.inputArea {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+}
+.inputInstruction {
+  text-align: left;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--secondaryText, #666);
+}
+.inputArea form {
+  display: flex;
+  gap: 0.5rem;
+}
+.inputArea input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 1.5rem;
+  outline: none;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+.inputArea input:focus {
+  border-color: var(--primaryColor, #0066cc);
+}
+.inputArea button {
+  padding: 0 1.5rem;
+  border: none;
+  background: var(--primaryColor, #0066cc);
+  border-radius: 1.5rem;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.inputArea button:hover {
+  background: #005bb5;
+}
+
+#conversation::-webkit-scrollbar {
+  width: 6px;
+}
+#conversation::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}

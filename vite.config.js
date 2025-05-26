@@ -20,7 +20,15 @@ export default defineConfig({
       host: 'maszynaw.loca.lt',
       port: 443
     },
-    allowedHosts: 'all'
+    allowedHosts: 'all',
+    proxy: {
+      '/api': {
+        target: 'real-large-cricket.ngrok-free.app',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   resolve: {
     alias: {

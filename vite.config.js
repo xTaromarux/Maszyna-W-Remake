@@ -20,7 +20,15 @@ export default defineConfig({
       host: 'maszynaw.loca.lt',
       port: 443
     },
-    allowedHosts: 'all'
+    allowedHosts: 'all',
+    proxy: {
+      '/api': {
+        target: 'https://a643-2a02-a313-29f-6080-8fb-9d55-bbe0-5022.ngrok-free.app',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   resolve: {
     alias: {

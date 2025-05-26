@@ -154,7 +154,8 @@
       :odd-delay="oddDelay"
       :extras="extras"
       @close="closePopups"
-      @emptyLS="emptyLS"
+      @resetValues="resetValues"
+      @defaultSettings="defaultSettings"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
       @update:memoryAddresBits="memoryAddresBits = $event"
@@ -488,17 +489,10 @@ export default {
     saveToLS() {
       localStorage.setItem("W", JSON.stringify(this.$data));
     },
-    emptyLS() {
-      localStorage.removeItem("W");
-      location.reload();
-      this.addLog("Local storage cleared", "system");
-    },
-
     addLog(message, classification = "info") {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
     },
-
     formatNumber(number) {
       if (typeof number !== "number" || isNaN(number)) {
         return "Error: Invalid number.";
@@ -938,6 +932,53 @@ export default {
       setTimeout(() => {
         this.signals.pisz = false;
       }, this.oddDelay);
+    },
+
+    resetValues() {
+      // Reset all register values to 0
+      this.A = 0;
+      this.ACC = 0;
+      this.JAML = 0;
+      this.programCounter = 0;
+      this.I = 0;
+      this.X = 0;
+      this.Y = 0;
+      this.S = 0;
+      this.BusA = 0;
+      this.BusS = 0;
+      
+      // Reset memory to all zeros
+      this.mem = new Array(1 << this.memoryAddresBits).fill(0);
+      
+      // Reset all signals to false
+      for (const key in this.signals) {
+        this.signals[key] = false;
+      }
+      
+      this.nextLine.clear();
+      this.addLog("All register values have been reset", "system");
+    },
+
+    defaultSettings() {
+      // Reset to default settings
+      this.memoryAddresBits = 6;
+      this.codeBits = 6;
+      this.addresBits = 4;
+      this.oddDelay = 2000;
+      this.numberFormat = "dec";
+      this.extras = {
+        xRegister: false,
+        yRegister: false,
+        dl: false,
+        jamlExtras: false,
+        busConnectors: false,
+        showInvisibleRegisters: false
+      };
+      
+      // Resize memory according to new settings
+      this.resizeMemory();
+      
+      this.addLog("Settings have been reset to default values", "system");
     },
   },
   watch: {

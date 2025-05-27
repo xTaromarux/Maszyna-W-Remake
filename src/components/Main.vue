@@ -1042,6 +1042,7 @@ export default {
   },
 
   mounted() {
+    localStorage.clear();
     this.initWebsocket();
     this.loadFromLS();
     this.resizeMemory();

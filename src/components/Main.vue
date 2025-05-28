@@ -135,7 +135,7 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console v-if="!manualMode" :logs="logs" />
+    <Console v-if="!manualMode" :logs="logs.slice().reverse()" />
     
     <div
       v-if="disappearBlour"

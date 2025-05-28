@@ -30,7 +30,3 @@ const fmt = ts => {
   return today ? HMS : `${YMD} ${HMS}`
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -42,7 +42,7 @@
                   aria-label="Cancel response"
                 >×</button>
               </div>
-              <p class="messageText">
+              <p class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
                 <template v-if="msg.sender === 'assistant' && aiTyping && i === currentAiIndex && !msg.text">
                   <span class="typing"><span></span><span></span><span></span></span>
                 </template>

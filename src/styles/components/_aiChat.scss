@@ -167,12 +167,17 @@
   margin-left: 0.5rem;
 }
 .messageText {
+  color: #FFFFFF;
   white-space: pre-wrap;
   text-align: left;
   margin: 10px 0 0 0;
   line-height: 17px;
   font-family: "Helvetica Neue", monospace;
   font-size: 0.9rem;
+}
+
+.messageTextAssistant {
+  color: #000000 !important;
 }
 
 @keyframes fadeInUp {

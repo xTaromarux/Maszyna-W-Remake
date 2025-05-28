@@ -4,9 +4,9 @@
     <!-- Title & Close -->
     <span class="titleSpan">Settings</span>
     <button @click="$emit('close')" id="openCloseSettings">
-      <!-- SVG Close Icon -->
+      <!-- SVG Close Icon - Changed to X -->
       <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
-        <path d="M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3"
+        <path d="M18 6L6 18M6 6L18 18"
               stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -38,43 +38,51 @@
 
     <!-- MEMORY SIZE -->
     <div class="flexColumn">
-      <label for="argBits">Memory Size Bits:</label>
-      <input id="argBits"
-             type="number"
-             :value="memoryAddresBits"
-             @input="updateNumber('memoryAddresBits', $event.target.value)"/>
-      <p>Tyle bitów będzie mieć adres pamięci</p>
+      <div class="flexRow">
+        <label for="argBits">Memory Size Bits:</label>
+        <input id="argBits"
+               type="number"
+               :value="memoryAddresBits"
+               @input="updateNumber('memoryAddresBits', $event.target.value)"/>
+      </div>
+      <p>Number of bits for memory address</p>
     </div>
 
     <!-- CODE BITS -->
     <div class="flexColumn">
-      <label for="commandBits">Code Bits:</label>
-      <input id="commandBits"
-             type="number"
-             :value="codeBits"
-             @input="updateNumber('codeBits', $event.target.value)"/>
-      <p>Tyle bitów będzie kod rozkazu</p>
+      <div class="flexRow">
+        <label for="commandBits">Code Bits:</label>
+        <input id="commandBits"
+               type="number"
+               :value="codeBits"
+               @input="updateNumber('codeBits', $event.target.value)"/>
+      </div>
+      <p>Number of bits for instruction code</p>
     </div>
 
     <!-- ADDRESS BITS -->
     <div class="flexColumn">
-      <label for="addresBits">Address Bits:</label>
-      <input id="addresBits"
-             type="number"
-             :value="addresBits"
-             @input="updateNumber('addresBits', $event.target.value)"/>
-      <p>Tyle bitów będzie mieć argument</p>
+      <div class="flexRow">
+        <label for="addresBits">Address Bits:</label>
+        <input id="addresBits"
+               type="number"
+               :value="addresBits"
+               @input="updateNumber('addresBits', $event.target.value)"/>
+      </div>
+      <p>Number of bits for argument</p>
     </div>
 
     <!-- MICRO-STEP DELAY -->
     <div class="flexColumn">
-      <label for="oddDelay">Micro-step delay (ms):</label>
-      <input id="oddDelay"
-             type="number"
-             :value="oddDelay"
-             min="0"
-             @input="updateNumber('oddDelay', $event.target.value)"/>
-      <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
+      <div class="flexRow">
+        <label for="oddDelay">Micro-step delay (ms):</label>
+        <input id="oddDelay"
+               type="number"
+               :value="oddDelay"
+               min="0"
+               @input="updateNumber('oddDelay', $event.target.value)"/>
+      </div>
+      <p>Delay between micro-operations in milliseconds</p>
     </div>
 
     <!-- EXTRAS SWITCHES -->

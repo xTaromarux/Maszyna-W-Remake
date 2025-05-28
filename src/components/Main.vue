@@ -1,6 +1,7 @@
 <template>
   <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
-    @open-command-list="commandListOpen = true" />
+    @open-command-list="commandListOpen = true" @toggle-console="toggleConsole"
+    :hasConsoleErrors="hasConsoleErrors" />
   <div id="wLayout">
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
@@ -135,8 +136,21 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console v-if="!manualMode" :logs="logs.slice().reverse()" />
+    <Console 
+      :logs="logs.slice().reverse()" 
+      :class="{ 'console-collapsed': !consoleOpen }"
+      @click="consoleOpen ? null : toggleConsole()"
+    />
     
+    <!-- Console indicator - visible only when console is collapsed -->
+    <div 
+      v-if="!consoleOpen"
+      class="console-indicator"
+      :class="{ 'has-errors': hasConsoleErrors }"
+      @click="toggleConsole"
+      title="Click to open console"
+    />
+
     <div
       v-if="disappearBlour"
       @click="closePopups"
@@ -380,6 +394,9 @@ export default {
       aiChatOpen: false,
 
       lightMode: true,
+
+      consoleOpen: true,
+      hasConsoleErrors: false,
     };
   },
   methods: {
@@ -493,6 +510,12 @@ export default {
     addLog(message, classification = "info") {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
+      
+      // Check if this is an error and set the error flag
+      const errorTypes = ['error', 'code parser error', 'Error', 'Code Parser Error'];
+      if (errorTypes.some(type => classification.toLowerCase().includes(type.toLowerCase()))) {
+        this.hasConsoleErrors = true;
+      }
     },
     formatNumber(number) {
       if (typeof number !== "number" || isNaN(number)) {
@@ -981,6 +1004,22 @@ export default {
       
       this.addLog("Settings have been reset to default values", "system");
     },
+
+    toggleConsole() {
+      this.consoleOpen = !this.consoleOpen;
+      
+      // Reset error flag when console is opened
+      if (this.consoleOpen) {
+        this.hasConsoleErrors = false;
+      }
+    },
+
+    handleKeyPress(event) {
+      // Close console with Escape key
+      if (event.key === 'Escape' && this.consoleOpen) {
+        this.consoleOpen = false;
+      }
+    },
   },
   watch: {
     $data: {
@@ -1049,6 +1088,14 @@ export default {
     this.addLog("System initialized.", "System");
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
+
+    // Add event listener for key presses
+    window.addEventListener('keydown', this.handleKeyPress);
+  },
+
+  beforeDestroy() {
+    // Remove event listener for key presses
+    window.removeEventListener('keydown', this.handleKeyPress);
   },
 };
 </script>

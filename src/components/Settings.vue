@@ -93,6 +93,7 @@
       </template>
     </div>
 
+
     <!-- RESET BUTTONS -->
     <div class="flexColumn">
       <div class="flexRow">
@@ -106,6 +107,136 @@
         </button>
       </div>
     </div>
+
+
+    <!-- CREATOR INFO -->
+    <div class="flexColumn">
+      <label>Created by:</label>
+      <div class="creators-list">
+        <div class="creator-item">
+          <span class="creator-name">Paweł Linek</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Sławomir Put</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Maja Kucab</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Bartek Faruga</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Kacper Sikorski</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Marcin Ryt</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Michał Kostrzewski</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Oskar Forreiter</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Paweł Janus</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Sebastian Legierski</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+        <div class="creator-item">
+          <span class="creator-name">Szymon Woźnica</span>
+          <div class="creator-links">
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <LinkedInIcon />
+            </a>
+            <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer" class="icon-link">
+              <GitHubIcon />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -113,10 +244,12 @@
 import SunIcon from "@/assets/svg/SunIcon.vue";
 import MoonIcon from "@/assets/svg/MoonIcon.vue";
 import RefreshIcon from "@/assets/svg/RefreshIcon.vue";
+import LinkedInIcon from "@/assets/svg/LinkedInIcon.vue";
+import GitHubIcon from "@/assets/svg/GitHubIcon.vue";
 
 export default {
   name: "Settings",
-  components: { SunIcon, MoonIcon, RefreshIcon },
+  components: { SunIcon, MoonIcon, RefreshIcon, LinkedInIcon, GitHubIcon },
 
   props: {
     open: { type: Boolean, default: false },
@@ -187,4 +320,62 @@ export default {
 </script>
 
 <style scoped>
+.creators-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.creator-item {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-align: center;
+  color: #ddd;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.creator-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.creator-name {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.creator-links {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #aaa;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.icon-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
 </style>

@@ -1,8 +1,6 @@
 <template>
   <header id="topBar">
-    <a href="https://www.polsl.pl" target="_blank" rel="noopener noreferrer">
-      <polsl-logo-long-white class="logo" />
-    </a>
+    <polsl-logo-long-white class="logo" />
 
     <div class="flexRow">
       <button

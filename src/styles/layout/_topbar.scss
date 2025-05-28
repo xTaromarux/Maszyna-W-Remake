@@ -1,7 +1,7 @@
 #topBar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem;
   width: 100%;
@@ -10,5 +10,9 @@
 #topBar .flexRow {
   display: flex;
   gap: 1rem;
+  align-items: center;
+}
+.logo{
+  display: flex;
   align-items: center;
 }

@@ -5,12 +5,13 @@
     @click.self="startClose"
     :class="{ show: isHide, isHide: !isHide }"
   >
-    <div id="aiChat" class="chatPanel" @click.stop :class="{show: visible, hide: !visible }">
+    <div id="aiChat" class="chatPanel" @click.stop :class="{ show: visible, hide: !visible }" :style="{ width: panelWidth + 'px' }" >
+      <div class="resizer" @mousedown="startResize"></div>
       <header class="chatHeader">
         <h1>{{ title }}</h1>
         <div class="headerBtns">
           <button class="resetBtn" @click="resetConversation" aria-label="Reset chat">
-            <AiChatTrashIcon width="22" height="22 !important" fill="#ffffff" />
+            <AiChatTrashIcon width="22" height="22" class="trashIcon" />
           </button>
           <button class="closeBtn" @click="startClose" aria-label="Close chat">
             &times;
@@ -27,14 +28,28 @@
             :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'ai' }"
           >
             <div class="iconWrapper">
-              {{ msg.sender === 'assistant' ? '🤖' : '👤' }}
+              {{ msg.sender === 'assistant' ? '🤖' : '' }}
             </div>
             <div class="messageContent">
               <div class="messageHeader">
                 <span class="senderName">{{ msg.sender === 'assistant' ? 'AI' : msg.sender }}</span>
-                <span class="timestamp">{{ formatTime(msg.timestamp) }}</span>
+                <span class="timestamp" :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && i===currentAiIndex }">{{ formatTime(msg.timestamp) }}</span>
+                <!-- przycisk do anulowania odpowiedzi -->
+                <button
+                  v-if="msg.sender==='assistant' && aiTyping && i===currentAiIndex"
+                  class="cancelBtn"
+                  @click="cancelResponse"
+                  aria-label="Cancel response"
+                >×</button>
               </div>
-              <p class="messageText">{{ msg.text }}</p>
+              <p class="messageText">
+                <template v-if="msg.sender === 'assistant' && aiTyping && i === currentAiIndex && !msg.text">
+                  <span class="typing"><span></span><span></span><span></span></span>
+                </template>
+                <template v-else>
+                  {{ msg.text }}
+                </template>
+              </p>
             </div>
           </div>
         </transition-group>
@@ -58,8 +73,27 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AiChatTrashIcon from '@/components/AiChatTrashIcon.vue'
+
+const chatWorker = new Worker(
+  new URL('@/workers/chat.worker.js', import.meta.url),
+  { type: 'module' }
+)
+
+chatWorker.onmessage = (e) => {
+  const { aiIndex, char, done } = e.data
+  const msg = messages.value[aiIndex]
+  if (!msg) return
+
+  if (char) {
+    msg.text += char
+  }
+  if (done) {
+    aiTyping.value = false
+    currentAiIndex.value = null
+  }
+}
 
 const isHide = ref(false)
 const props = defineProps({
@@ -82,6 +116,8 @@ const text = ref('')
 const aiTyping = ref(false)
 const conversationEl = ref(null)
 const requestTimestamps = ref([])
+const typingTimer = ref(null)
+const currentAiIndex = ref(null)
 
 onMounted(() => {
   const saved = localStorage.getItem(STORAGE_KEY)
@@ -110,13 +146,15 @@ watch(
 const resetConversation = () => {
   messages.value = []
   localStorage.removeItem(STORAGE_KEY)
-  requestTimestamps.value = [] 
+  requestTimestamps.value = []
+  // wyczyść ewentualną przerwaną odpowiedź
+  cancelResponse()
 }
 
-const formatTime = ts => new Date(ts).toLocaleTimeString()
+const formatTime = ts =>
+  new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-const sendUserMessage = async () => {
-
+async function sendUserMessage() {
   const now = Date.now()
   requestTimestamps.value = requestTimestamps.value.filter(ts => now - ts < 60000)
   if (requestTimestamps.value.length >= 20) {
@@ -124,61 +162,74 @@ const sendUserMessage = async () => {
     return
   }
   requestTimestamps.value.push(now)
-
   if (aiTyping.value || !text.value.trim()) return
 
-  messages.value.push({ sender: 'user', text: text.value, timestamp: Date.now() })
-  const userText = text.value.trim()
+  // dodajemy wiadomość użytkownika
+  messages.value.push({ sender: 'user', text: text.value, timestamp: now })
   text.value = ''
 
+  // przygotowujemy AI
   aiTyping.value = true
   messages.value.push({ sender: 'assistant', text: '', timestamp: Date.now() })
   const aiIndex = messages.value.length - 1
+  currentAiIndex.value = aiIndex
 
   const history = messages.value
-  .filter(msg => msg.text.trim() !== '')
-  .map(msg => ({ role: msg.sender, message: msg.text }))    
+    .filter(m => m.text.trim() !== '')
+    .map(m => ({ role: m.sender, message: m.text }))
 
-  try {
-    const resp = await fetch('https://real-large-cricket.ngrok-free.app/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history })
-    })
+  chatWorker.postMessage({ history, aiIndex })
+}
 
-    const data = await resp.json()
-    
-    const full = data.response || '[AI did not return a response]'
-    let pos = 0
-    const timer = setInterval(() => {
-      if (pos >= full.length) {
-        clearInterval(timer)
-        aiTyping.value = false
-        return
-      }
-      messages.value[aiIndex].text += full[pos++]
-    }, 40)
-
-  } catch (err) {
-    const full = '⚠️ Failed to get response from AI.'
-    let pos = 0
-    const timer = setInterval(() => {
-      if (pos >= full.length) {
-        clearInterval(timer)
-        aiTyping.value = false
-        return
-      }
-      messages.value[aiIndex].text += full[pos++]
-    }, 40)
-    console.error('AI request error:', err)
-  } finally {
-    aiTyping.value = false
-    nextTick(() => conversationEl.value?.scrollTo(0, conversationEl.value.scrollHeight))
+function cancelResponse() {
+  if (typingTimer.value) {
+    clearInterval(typingTimer.value)
+    typingTimer.value = null
   }
+  if (currentAiIndex.value !== null) {
+    messages.value.splice(currentAiIndex.value, 1)
+    currentAiIndex.value = null
+  }
+  chatWorker.terminate()
+  aiTyping.value = false
+
 }
 
 watch(
   () => messages.value.length,
   () => nextTick(() => conversationEl.value?.scrollTo(0, conversationEl.value.scrollHeight))
 )
+
+
+const panelWidth = ref(500)       // startowa szerokość
+let startX = 0
+let startWidth = 0
+
+function startResize(e) {
+  // zapamiętaj punkt startowy
+  startX = e.clientX
+  startWidth = panelWidth.value
+
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup',   stopResize)
+}
+
+function onMouseMove(e) {
+  const delta = startX - e.clientX
+  let newWidth = startWidth + delta
+  // ograniczenia
+  newWidth = Math.min(Math.max(newWidth, 500), 1000)
+  panelWidth.value = newWidth
+}
+
+function stopResize() {
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup',   stopResize)
+}
+
+// posprzątaj, gdy komponent się zniszczy
+onBeforeUnmount(() => {
+  stopResize()
+  chatWorker.terminate()
+})
 </script>

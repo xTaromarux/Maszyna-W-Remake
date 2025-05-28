@@ -5,9 +5,10 @@
 
   overflow: auto;
   resize: vertical;
-
+  overflow-y: auto;
+  max-height: 300px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
   gap: 0.125rem;

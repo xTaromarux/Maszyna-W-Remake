@@ -13,14 +13,14 @@
 
     <!-- Code editor or compiled listing -->
     <textarea
-      v-if="!codeCompiled"
+      v-if="!codeCompiled && !manualMode"
       :value="code"
       placeholder="rozkaz"
       :disabled="manualMode"
       @input="$emit('update:code', $event.target.value)"
     />
 
-    <div v-else class="compiledCode">
+    <div v-else-if="!manualMode" class="compiledCode">
       <span
         v-for="(line, index) in compiledCode"
         :key="index"
@@ -61,9 +61,15 @@ export default {
 </script>
 
 <style scoped>
+.programEditor{
+    height: 100%;
+}
+
 .flexRow {
+  max-width: 230px;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
 }
@@ -71,6 +77,7 @@ export default {
 textarea {
   flex-grow: 1;
   margin: 0.5rem;
+  height: 94%;
   padding: 0.5rem;
   border-radius: var(--default-border-radius, 0.25rem);
   border: 1px solid var(--panelOutlineColor, black);
@@ -102,6 +109,7 @@ textarea:disabled {
 }
 
 .nextLine {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

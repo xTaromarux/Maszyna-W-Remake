@@ -153,7 +153,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="closePopups"
+      @close="closeSettings"
       @resetValues="resetValues"
       @defaultSettings="defaultSettings"
       @update:lightMode="lightMode = $event"
@@ -226,7 +226,7 @@ export default {
 
   computed: {
     anyPopupOpen() {
-      return this.settingsOpen || this.commandListOpen || this.aiChatOpen;
+      return this.commandListOpen || this.aiChatOpen;
     },
   },
 
@@ -547,7 +547,6 @@ export default {
       }
     },
     closePopups() {
-      this.settingsOpen = false;
       this.commandListOpen = false;
       this.aiChatOpen = false;
       setTimeout(() => {
@@ -980,6 +979,10 @@ export default {
       this.resizeMemory();
       
       this.addLog("Settings have been reset to default values", "system");
+    },
+
+    closeSettings() {
+      this.settingsOpen = false;
     },
   },
   watch: {

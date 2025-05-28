@@ -30,6 +30,7 @@ export default defineConfig({
       }
     }
   },
+  optimizeDeps: { include: ['@/workers/chat.worker.js'] },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

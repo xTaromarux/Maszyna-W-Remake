@@ -480,6 +480,12 @@ export default {
         const parsed = JSON.parse(data);
         Object.assign(this, parsed);
 
+        // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
+        if (this.memoryAddresBits > 10) {
+          this.memoryAddresBits = 10;
+          this.addLog("Memory size was limited to maximum 1024 cells (10 bits)", "system");
+        }
+
         this.nextLine = new Set();
 
         for (const key in this.signals) {

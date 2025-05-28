@@ -2,7 +2,7 @@
     <div id="program" v-if="!manualMode">
       <textarea
         v-model="program"
-        placeholder="program"
+        placeholder="Wpisz swój program tutaj, np: &#13;&#10;&#13;&#10;POB &#13;&#10;DOD"
         :disabled="manualMode || programCompiled"
       />
       <div class="flexRow">
@@ -44,6 +44,8 @@
           .map(l => l.trim())
           .filter(l => l !== '');
   
+          console.log(lines);
+          
         let codeFragments = [];
         for (const [i, name] of lines.entries()) {
           const cmd = this.commandList.find(

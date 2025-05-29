@@ -1057,7 +1057,7 @@ export default {
 
     closeSettings() {
       this.settingsOpen = false;
-
+    },
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
       

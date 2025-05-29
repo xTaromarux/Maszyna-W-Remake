@@ -134,7 +134,7 @@
 
 
     <!-- CREATOR INFO -->
-    <div class="flexColumn">
+    <div class="flexColumn" v-if="false">
       <label>Created by:</label>
       <div class="creators-list">
         <div class="creator-item">

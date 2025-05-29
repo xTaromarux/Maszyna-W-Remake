@@ -30,7 +30,7 @@
   display: flex;
   justify-content: center;
   padding: 0.125rem 0.5rem;
-  border-radius: 1.5rem;
+  border-radius: 0.5rem;
 }
 
 
@@ -47,7 +47,7 @@
   justify-content: center;
   padding: 0.125rem 0.5rem;
   width: 100%;
-  border-radius: 1.5rem;
+  border-radius: 0.5rem;
 }
 
 #iRegister .signal {
@@ -93,13 +93,13 @@
 
 #memory #aRegister {
   grid-area: aRegister;
-  border-radius: 1.5rem;
+  border-radius: 0.5rem 0.5rem 0 0;
 }
 
 
 #memory #sRegister {
   grid-area: sRegister;
-  border-radius: 1.5rem;
+  border-radius: 0 0 0.5rem 0.5rem ;
 }
 
 #memory>.register {
@@ -114,36 +114,44 @@
   justify-content: center;
   padding: 0.125rem 0.5rem;
   width: 100%;
-  border-radius: 1.5rem;
+  border-radius: 0.5rem;
 }
 
 #memoryTable {
   grid-area: memoryTable;
-  display: grid;
-  grid-template-columns: repeat(4, auto);
   border: 1px solid var(--panelOutlineColor, black);
   background: var(--panelBackgroundColor, black);
-  width: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
 
   position: relative;
-
   resize: both;
-  overflow: auto;
+  overflow: hidden;
   min-width: 15rem;
   min-height: 15rem;
   height: 20rem;
   width: 25rem;
 }
 
-#memoryTable>div {
+.scrollWrapper {
+  border-radius:  0.5rem;
+  display: grid;
+  overflow-y: auto;
+  overflow: auto;
+  grid-template-columns: repeat(4, auto);
+  overflow-y: auto;
+  height: 90%;
+  width: 95%;
+  margin: 10px 10px; 
+}
+
+.scrollWrapper>div {
   min-width: 5rem;
   text-align: right;
   border: 1px solid var(--panelOutlineColor, black);
 }
 
-#memoryTable>span,
-#memoryTable>input {
+.scrollWrapper>span,
+.scrollWrapper>input {
   border: 1px solid var(--panelOutlineColor, black);
   padding: 0.125rem;
   display: flex;
@@ -151,7 +159,7 @@
   align-items: center;
 }
 
-#memoryTable>.label {
+.scrollWrapper>.label {
   font-weight: bold;
   position: sticky;
   top: 0;
@@ -161,7 +169,7 @@
   z-index: 10;
 }
 
-#memoryTable>.selected {
+.scrollWrapper>.selected {
   border-top: 4px solid var(--signal-active) !important;
   border-bottom: 4px solid var(--signal-active) !important;
   background-color: color-mix(in srgb, transparent, var(--signal-active) 25%);

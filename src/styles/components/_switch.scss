@@ -40,6 +40,3 @@
     /* Kolor włączonego przełącznika */
   }
   
-  .switchDiv input[type="checkbox"]:checked::after {
-    left: calc(var(--width) - var(--height) + var(--padding));
-  }

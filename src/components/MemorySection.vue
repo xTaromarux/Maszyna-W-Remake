@@ -7,23 +7,25 @@
             @update:model="$emit('update:A', $event)" :formatNumber="formatNumber" />
 
         <div id="memoryTable">
-            <span class="label">Mem Address</span>
-            <span class="label">Value</span>
-            <span class="label">Code</span>
-            <span class="label">Address</span>
-            <template v-for="(value, index) in mem" :key="index">
-                <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
-                <div :class="{ selected: A === index }" class="inputWrapper">
-                    <span>{{ formatNumber(mem[index]) }}</span>
-                    <input type="number" v-model="mem[index]" />
-                </div>
-                <span :class="{ selected: A === index }">
-                    {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}
-                </span>
-                <span :class="{ selected: A === index }">
-                    {{ formatNumber(decToArgument(value)) }}
-                </span>
-            </template>
+            <div class="scrollWrapper">
+                <span class="label">Mem Address</span>
+                <span class="label">Value</span>
+                <span class="label">Code</span>
+                <span class="label">Address</span>
+                <template v-for="(value, index) in mem" :key="index">
+                    <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
+                    <div :class="{ selected: A === index }" class="inputWrapper">
+                        <span>{{ formatNumber(mem[index]) }}</span>
+                        <input type="number" class="hoverInput" v-model="mem[index]" />
+                    </div>
+                    <span :class="{ selected: A === index }">
+                        {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}
+                    </span>
+                    <span :class="{ selected: A === index }">
+                        {{ formatNumber(decToArgument(value)) }}
+                    </span>
+                </template>
+            </div>
         </div>
 
         <div id="operations">

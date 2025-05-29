@@ -3,7 +3,7 @@
         <span :title="fullName">{{ label }}</span><span>:</span> 
         <div class="inputWrapper">
             <span>{{ formatNumber(model) }}</span>
-            <input type="number" :value="model" @input="updateValue" />
+            <input type="number" class="hoverInput" :value="model" @input="updateValue" />
         </div>
     </div>
 </template>

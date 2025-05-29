@@ -478,13 +478,51 @@ export default {
       const data = localStorage.getItem("W");
       if (data) {
         const parsed = JSON.parse(data);
-        Object.assign(this, parsed);
+        
+        // Only restore settings, not register values or code
+        const settingsToRestore = [
+          'addresBits',
+          'codeBits', 
+          'memoryAddresBits',
+          'oddDelay',
+          'numberFormat',
+          'extras',
+          'lightMode'
+        ];
+        
+        settingsToRestore.forEach(setting => {
+          if (parsed[setting] !== undefined) {
+            this[setting] = parsed[setting];
+          }
+        });
 
+        // Always reset to default values for registers and program state
+        this.A = 0;
+        this.ACC = 0;
+        this.JAML = 0;
+        this.programCounter = 0;
+        this.I = 0;
+        this.X = 0;
+        this.Y = 0;
+        this.S = 0;
+        this.BusA = 0;
+        this.BusS = 0;
+        
+        // Reset code to default
+        this.code = "czyt wys wei il;\nwyl wea;";
+        this.compiledCode = [];
+        this.activeLine = 0;
         this.nextLine = new Set();
-
+        this.codeCompiled = false;
+        this.manualMode = true;
+        
+        // Reset all signals to false
         for (const key in this.signals) {
           this.signals[key] = false;
         }
+        
+        // Reset logs
+        this.logs = [];
       }
     },
     saveToLS() {
@@ -518,10 +556,14 @@ export default {
       const newSize = 1 << this.memoryAddresBits;
       const newMem = new Array(newSize).fill(0);
 
-      // DEBUG PURPOSES
-      newMem[0] = 0;
-      for (let i = 1; i < newMem.length; i++) {
-        newMem[i] = 0;
+      // Set default values for the first 8 memory locations if memory is large enough
+      const defaultValues = [
+        0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100,
+        0b111000,
+      ];
+      
+      for (let i = 0; i < Math.min(defaultValues.length, newSize); i++) {
+        newMem[i] = defaultValues[i];
       }
 
       this.mem = newMem;

@@ -1,40 +1,43 @@
 <!-- Settings.vue -->
 <template>
-  <div id="settings" v-if="open">
-    <!-- Title & Close -->
-    <span class="titleSpan">Settings</span>
-    <button @click="$emit('close')" id="openCloseSettings">
-      <!-- SVG Close Icon -->
-      <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
-        <path d="M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3"
-              stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-
-    <!-- LIGHT/DARK THEME -->
-    <div class="flexColumn">
-      <div class="toggleButtonDiv" :class="{ active: lightMode }">
-        <span @click="setLightMode(true)">
-          <SunIcon /> Light
-        </span>
-        <span @click="setLightMode(false)">
-          <MoonIcon /> Dark
-        </span>
+  <div id="settings-overlay" v-if="open" @click="closeIfClickingOverlay">
+    <div id="settings" :class="{ 'slide-in': isAnimated }" @click.stop>
+      <!-- Title & Close -->
+      <div class="settings-header">
+        <span class="titleSpan">Settings</span>
+        <button @click="$emit('close')" id="openCloseSettings">
+          <!-- SVG Close Icon -->
+          <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
+            <path d="M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
-    </div>
+      <div class="settings-content">
+        <!-- LIGHT/DARK THEME -->
+        <div class="flexColumn">
+          <div class="toggleButtonDiv" :class="{ active: lightMode }">
+            <span @click="setLightMode(true)">
+              <SunIcon /> Light
+            </span>
+            <span @click="setLightMode(false)">
+              <MoonIcon /> Dark
+            </span>
+          </div>
+        </div>
 
-    <!-- NUMBER FORMAT -->
-    <div class="flexColumn">
-      <label for="numberFormat">Number Format:</label>
-      <select id="numberFormat"
-              :value="numberFormat"
-              @change="update('numberFormat', $event.target.value)">
-        <option value="dec">Decimal</option>
-        <option value="hex">Hexadecimal</option>
-        <option value="bin">Binary</option>
-      </select>
-    </div>
+        <!-- NUMBER FORMAT -->
+        <div class="flexColumn">
+          <label for="numberFormat">Number Format:</label>
+          <select id="numberFormat"
+                  :value="numberFormat"
+                  @change="update('numberFormat', $event.target.value)">
+            <option value="dec">Decimal</option>
+            <option value="hex">Hexadecimal</option>
+            <option value="bin">Binary</option>
+          </select>
+        </div>
 
     <!-- MEMORY SIZE -->
     <div class="flexColumn">
@@ -84,33 +87,47 @@
       <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
     </div>
 
-    <!-- EXTRAS SWITCHES -->
-    <div class="extras">
-      <label>Extras:</label>
-      <template v-for="(label, key) in extrasLabels" :key="key">
-        <div class="switchDiv">
-          <input
-            :id="key"
-            type="checkbox"
-            :checked="extras[key]"
-            @change="updateExtras(key, $event.target.checked)"
-          />
-          <label :for="key">{{ label }}</label>
-        </div>
-      </template>
-    </div>
 
-    <!-- RESET BUTTONS -->
-    <div class="flexColumn">
-      <div class="flexRow">
-        <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
-          <RefreshIcon />
-          <span>Reset <u>Register Values</u></span>
-        </button>
-        <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
-          <RefreshIcon />
-          <span>Default <u>Settings</u></span>
-        </button>
+        <!-- MICRO-STEP DELAY -->
+        <div class="flexColumn">
+          <label for="oddDelay">Micro-step delay (ms):</label>
+          <input id="oddDelay"
+                 type="number"
+                 :value="oddDelay"
+                 min="0"
+                 @input="updateNumber('oddDelay', $event.target.value)"/>
+          <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
+        </div>
+
+        <!-- EXTRAS SWITCHES -->
+        <div class="extras">
+          <label>Extras:</label>
+          <template v-for="(label, key) in extrasLabels" :key="key">
+            <div class="switchDiv">
+              <input
+                :id="key"
+                type="checkbox"
+                :checked="extras[key]"
+                @change="updateExtras(key, $event.target.checked)"
+              />
+              <label :for="key">{{ label }}</label>
+            </div>
+          </template>
+        </div>
+
+        <!-- RESET BUTTONS -->
+        <div class="flexColumn">
+          <div class="flexRow">
+            <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
+              <RefreshIcon />
+              <span>Reset <u>Register Values</u></span>
+            </button>
+            <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
+              <RefreshIcon />
+              <span>Default <u>Settings</u></span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -149,6 +166,12 @@ export default {
     }
   },
 
+  data() {
+    return {
+      isAnimated: false
+    };
+  },
+
   emits: [
     "close",
     "update:lightMode",
@@ -172,6 +195,21 @@ export default {
         busConnectors: "Bus Connectors",
         showInvisibleRegisters: "Show Invisible Registers"
       };
+    }
+  },
+
+  watch: {
+    open(newVal) {
+      if (newVal) {
+        // Small delay to ensure DOM is ready, then trigger animation
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.isAnimated = true;
+          }, 10);
+        });
+      } else {
+        this.isAnimated = false;
+      }
     }
   },
 
@@ -208,6 +246,12 @@ export default {
     },
     updateExtras(key, value) {
       this.$emit("update:extras", { ...this.extras, [key]: value });
+    },
+    closeIfClickingOverlay(event) {
+      // Only close if clicking on the overlay, not the panel itself
+      if (event.target.id === 'settings-overlay') {
+        this.$emit('close');
+      }
     }
   }
 };

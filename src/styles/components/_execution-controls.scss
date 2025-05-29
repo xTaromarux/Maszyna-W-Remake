@@ -1,0 +1,308 @@
+.execution-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.execution-btn {
+  all: unset;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    z-index: -1;
+    transition: opacity 0.3s ease;
+  }
+
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    transition: transform 0.3s ease;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  span {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.15),
+      0 4px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    
+    svg {
+      transform: scale(1.1);
+    }
+
+    &::before {
+      opacity: 1.2;
+    }
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    transform: none;
+    filter: grayscale(0.5);
+    
+    &:hover {
+      transform: none;
+      box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      
+      svg {
+        transform: none;
+      }
+    }
+  }
+}
+
+// Dark mode styles (default)
+body.darkMode, body:not(.lightMode) {
+  .execution-btn {
+    border: 1px solid #282a30;
+    box-shadow: 
+      0 4px 15px rgba(0, 0, 0, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    svg {
+      stroke-width: 2.5;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+    }
+
+    span {
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    &:hover {
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  // Dark mode button variants using app's color scheme
+  .execution-btn--compile {
+    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
+    color: #d5d6db;
+    border: 1px solid rgba(170, 168, 255, 0.3);
+    
+    svg {
+      color: rgba(170, 168, 255, 0.9);
+      stroke: rgba(170, 168, 255, 0.9);
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
+      border: 1px solid rgba(170, 168, 255, 0.5);
+      
+      svg {
+        color: rgba(170, 168, 255, 1);
+        stroke: rgba(170, 168, 255, 1);
+      }
+    }
+  }
+
+  .execution-btn--edit {
+    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
+    color: #d5d6db;
+    border: 1px solid rgba(222, 221, 255, 0.3);
+    
+    svg {
+      color: rgba(222, 221, 255, 0.9);
+      stroke: rgba(222, 221, 255, 0.9);
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
+      border: 1px solid rgba(222, 221, 255, 0.5);
+      
+      svg {
+        color: rgba(222, 221, 255, 1);
+        stroke: rgba(222, 221, 255, 1);
+      }
+    }
+  }
+
+  .execution-btn--step {
+    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
+    color: #d5d6db;
+    border: 1px solid rgba(0, 102, 204, 0.5);
+    
+    svg {
+      color: #0099ff;
+      stroke: #0099ff;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
+      border: 1px solid rgba(0, 102, 204, 0.7);
+      
+      svg {
+        color: #00aaff;
+        stroke: #00aaff;
+      }
+    }
+  }
+
+  .execution-btn--run {
+    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
+    color: #d5d6db;
+    border: 1px solid rgba(0, 153, 255, 0.4);
+    
+    svg {
+      color: #0066cc;
+      stroke: #0066cc;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
+      border: 1px solid rgba(0, 153, 255, 0.6);
+      
+      svg {
+        color: #0099ff;
+        stroke: #0099ff;
+      }
+    }
+  }
+}
+
+// Light mode styles
+body.lightMode {
+  .execution-btn {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 
+      0 4px 15px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    
+    svg {
+      stroke-width: 2.5;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    }
+
+    span {
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    &:hover {
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.12),
+        0 4px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  // Light mode button variants
+  .execution-btn--compile {
+    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+    color: #111;
+    border: 1px solid rgba(170, 168, 255, 0.4);
+    
+    svg {
+      color: #6b46c1;
+      stroke: #6b46c1;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+      border: 1px solid rgba(170, 168, 255, 0.6);
+    }
+  }
+
+  .execution-btn--edit {
+    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+    color: #111;
+    border: 1px solid rgba(222, 221, 255, 0.4);
+    
+    svg {
+      color: #7c3aed;
+      stroke: #7c3aed;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+      border: 1px solid rgba(222, 221, 255, 0.6);
+    }
+  }
+
+  .execution-btn--step {
+    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+    color: #111;
+    border: 1px solid rgba(0, 102, 204, 0.4);
+    
+    svg {
+      color: #0066cc;
+      stroke: #0066cc;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+      border: 1px solid rgba(0, 102, 204, 0.6);
+    }
+  }
+
+  .execution-btn--run {
+    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
+    color: #111;
+    border: 1px solid rgba(0, 153, 255, 0.4);
+    
+    svg {
+      color: #0099ff;
+      stroke: #0099ff;
+    }
+    
+    &:hover {
+      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+      border: 1px solid rgba(0, 153, 255, 0.6);
+    }
+  }
+}
+
+// Animation for icon rotation on hover
+@keyframes iconPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.execution-btn:hover svg {
+  animation: iconPulse 0.6s ease-in-out;
+} 

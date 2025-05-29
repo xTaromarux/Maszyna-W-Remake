@@ -22,6 +22,22 @@
   width: 100%;
   justify-self: stretch;
   align-self: stretch;
+  
+  transition: height 0.3s ease, min-height 0.3s ease, opacity 0.3s ease;
+}
+
+#console.console-collapsed {
+  height: 0;
+  min-height: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0;
+  border: none;
+}
+
+#console.console-collapsed:hover {
+  opacity: 1;
 }
 
 #console>div {
@@ -81,5 +97,41 @@
 
 #console>div.program.compiler {
   background-color: #00aaff88;
+}
+
+.console-indicator {
+  grid-area: c;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--panelOutlineColor, #ccc), transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: height 0.2s ease, background 0.2s ease;
+  position: relative;
+  justify-self: stretch;
+  align-self: end;
+}
+
+.console-indicator:hover {
+  height: 6px;
+  background: linear-gradient(90deg, transparent, var(--accentColor, #0066cc), transparent);
+}
+
+.console-indicator.has-errors {
+  background: linear-gradient(90deg, transparent, #ff4444, transparent);
+  animation: pulse-indicator 1s infinite;
+}
+
+.console-indicator.has-errors:hover {
+  background: linear-gradient(90deg, transparent, #ff6666, transparent);
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 

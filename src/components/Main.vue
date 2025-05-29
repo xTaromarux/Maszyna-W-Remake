@@ -1,6 +1,7 @@
 <template>
   <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
-    @open-command-list="commandListOpen = true" />
+    @open-command-list="commandListOpen = true" @toggle-console="toggleConsole"
+    :hasConsoleErrors="hasConsoleErrors" />
   <div id="wLayout">
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
@@ -135,8 +136,21 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console v-if="!manualMode" :logs="logs.slice().reverse()" />
+    <Console 
+      :logs="logs.slice().reverse()" 
+      :class="{ 'console-collapsed': !consoleOpen }"
+      @click="consoleOpen ? null : toggleConsole()"
+    />
     
+    <!-- Console indicator - visible only when console is collapsed -->
+    <div 
+      v-if="!consoleOpen"
+      class="console-indicator"
+      :class="{ 'has-errors': hasConsoleErrors }"
+      @click="toggleConsole"
+      title="Click to open console"
+    />
+
     <div
       v-if="disappearBlour"
       @click="closePopups"
@@ -153,7 +167,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="closePopups"
+      @close="closeSettings"
       @resetValues="resetValues"
       @defaultSettings="defaultSettings"
       @update:lightMode="lightMode = $event"
@@ -226,7 +240,7 @@ export default {
 
   computed: {
     anyPopupOpen() {
-      return this.settingsOpen || this.commandListOpen || this.aiChatOpen;
+      return this.commandListOpen || this.aiChatOpen;
     },
   },
 
@@ -380,6 +394,9 @@ export default {
       aiChatOpen: false,
 
       lightMode: true,
+
+      consoleOpen: true,
+      hasConsoleErrors: false,
     };
   },
   methods: {
@@ -478,13 +495,60 @@ export default {
       const data = localStorage.getItem("W");
       if (data) {
         const parsed = JSON.parse(data);
-        Object.assign(this, parsed);
+        
+        // Only restore settings, not register values or code
+        const settingsToRestore = [
+          'addresBits',
+          'codeBits', 
+          'memoryAddresBits',
+          'oddDelay',
+          'numberFormat',
+          'extras',
+          'lightMode'
+        ];
+        
+        settingsToRestore.forEach(setting => {
+          if (parsed[setting] !== undefined) {
+            this[setting] = parsed[setting];
+          }
+        });
+
+
+        // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
+        if (this.memoryAddresBits > 10) {
+          this.memoryAddresBits = 10;
+          this.addLog("Memory size was limited to maximum 1024 cells (10 bits)", "system");
+        }
+
+
+        // Always reset to default values for registers and program state
+        this.A = 0;
+        this.ACC = 0;
+        this.JAML = 0;
+        this.programCounter = 0;
+        this.I = 0;
+        this.X = 0;
+        this.Y = 0;
+        this.S = 0;
+        this.BusA = 0;
+        this.BusS = 0;
+        
+        // Reset code to default
+        this.code = "czyt wys wei il;\nwyl wea;";
+        this.compiledCode = [];
+        this.activeLine = 0;
 
         this.nextLine = new Set();
-
+        this.codeCompiled = false;
+        this.manualMode = true;
+        
+        // Reset all signals to false
         for (const key in this.signals) {
           this.signals[key] = false;
         }
+        
+        // Reset logs
+        this.logs = [];
       }
     },
     saveToLS() {
@@ -493,6 +557,12 @@ export default {
     addLog(message, classification = "info") {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
+      
+      // Check if this is an error and set the error flag
+      const errorTypes = ['error', 'code parser error', 'Error', 'Code Parser Error'];
+      if (errorTypes.some(type => classification.toLowerCase().includes(type.toLowerCase()))) {
+        this.hasConsoleErrors = true;
+      }
     },
     formatNumber(number) {
       if (typeof number !== "number" || isNaN(number)) {
@@ -502,7 +572,7 @@ export default {
       const formatters = {
         dec: () => number,
         hex: () => "0x" + Math.floor(number).toString(16).toUpperCase(),
-        bin: () => "0b" + Math.floor(number).toString(2),
+        bin: () => Math.floor(number).toString(2),
       };
 
       return formatters[this.numberFormat]?.() ?? `EE${number}`;
@@ -518,10 +588,14 @@ export default {
       const newSize = 1 << this.memoryAddresBits;
       const newMem = new Array(newSize).fill(0);
 
-      // DEBUG PURPOSES
-      newMem[0] = 0;
-      for (let i = 1; i < newMem.length; i++) {
-        newMem[i] = 0;
+      // Set default values for the first 8 memory locations if memory is large enough
+      const defaultValues = [
+        0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100,
+        0b111000,
+      ];
+      
+      for (let i = 0; i < Math.min(defaultValues.length, newSize); i++) {
+        newMem[i] = defaultValues[i];
       }
 
       this.mem = newMem;
@@ -547,7 +621,6 @@ export default {
       }
     },
     closePopups() {
-      this.settingsOpen = false;
       this.commandListOpen = false;
       this.aiChatOpen = false;
       setTimeout(() => {
@@ -981,6 +1054,25 @@ export default {
       
       this.addLog("Settings have been reset to default values", "system");
     },
+
+    closeSettings() {
+      this.settingsOpen = false;
+
+    toggleConsole() {
+      this.consoleOpen = !this.consoleOpen;
+      
+      // Reset error flag when console is opened
+      if (this.consoleOpen) {
+        this.hasConsoleErrors = false;
+      }
+    },
+
+    handleKeyPress(event) {
+      // Close console with Escape key
+      if (event.key === 'Escape' && this.consoleOpen) {
+        this.consoleOpen = false;
+      }
+    },
   },
   watch: {
     $data: {
@@ -1049,6 +1141,14 @@ export default {
     this.addLog("System initialized.", "System");
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
+
+    // Add event listener for key presses
+    window.addEventListener('keydown', this.handleKeyPress);
+  },
+
+  beforeDestroy() {
+    // Remove event listener for key presses
+    window.removeEventListener('keydown', this.handleKeyPress);
   },
 };
 </script>

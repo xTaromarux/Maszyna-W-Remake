@@ -45,32 +45,48 @@
       <input id="argBits"
              type="number"
              :value="memoryAddresBits"
-             @input="updateNumber('memoryAddresBits', $event.target.value)"
              min="1"
-             max="10"/>
-      <p>Tyle bitów będzie mieć adres pamięci (max 10 bitów = 1024 komórki)</p>
+             max="32"
+             @input="updateNumber('memoryAddresBits', $event.target.value)"/>
+      <p>Tyle bitów będzie mieć adres pamięci</p>
     </div>
 
+    <!-- CODE BITS -->
+    <div class="flexColumn">
+      <label for="commandBits">Code Bits:</label>
+      <input id="commandBits"
+             type="number"
+             :value="codeBits"
+             min="1"
+             max="16"
+             @input="updateNumber('codeBits', $event.target.value)"/>
+      <p>Tyle bitów będzie kod rozkazu</p>
+    </div>
 
-        <!-- CODE BITS -->
-        <div class="flexColumn">
-          <label for="commandBits">Code Bits:</label>
-          <input id="commandBits"
-                 type="number"
-                 :value="codeBits"
-                 @input="updateNumber('codeBits', $event.target.value)"/>
-          <p>Tyle bitów będzie kod rozkazu</p>
-        </div>
+    <!-- ADDRESS BITS -->
+    <div class="flexColumn">
+      <label for="addresBits">Address Bits:</label>
+      <input id="addresBits"
+             type="number"
+             :value="addresBits"
+             min="1"
+             max="32"
+             @input="updateNumber('addresBits', $event.target.value)"/>
+      <p>Tyle bitów będzie mieć argument</p>
+    </div>
 
-        <!-- ADDRESS BITS -->
-        <div class="flexColumn">
-          <label for="addresBits">Address Bits:</label>
-          <input id="addresBits"
-                 type="number"
-                 :value="addresBits"
-                 @input="updateNumber('addresBits', $event.target.value)"/>
-          <p>Tyle bitów będzie mieć argument</p>
-        </div>
+    <!-- MICRO-STEP DELAY -->
+    <div class="flexColumn">
+      <label for="oddDelay">Micro-step delay (ms):</label>
+      <input id="oddDelay"
+             type="number"
+             :value="oddDelay"
+             min="0"
+             max="10000"
+             @input="updateNumber('oddDelay', $event.target.value)"/>
+      <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
+    </div>
+
 
         <!-- MICRO-STEP DELAY -->
         <div class="flexColumn">
@@ -206,14 +222,26 @@ export default {
     },
     updateNumber(key, value) {
       const n = parseInt(value, 10);
-      if (!Number.isNaN(n)) {
-        // Add validation for memoryAddresBits to limit to max 10 (2^10 = 1024 cells)
-        if (key === 'memoryAddresBits') {
-          const limitedValue = Math.max(1, Math.min(10, n));
-          this.update(key, limitedValue);
-        } else {
-          this.update(key, n);
-        }
+      
+      if (Number.isNaN(n)) return;
+      
+      const validationRules = {
+        memoryAddresBits: { min: 1, max: 32 },
+        codeBits: { min: 1, max: 16 },
+        addresBits: { min: 1, max: 32 },
+        oddDelay: { min: 0, max: 10000 }
+      };
+      
+      const rules = validationRules[key];
+      if (!rules) {
+        // If no rules defined, just check for non-negative
+        if (n >= 0) this.update(key, n);
+        return;
+      }
+      
+      // Apply validation rules
+      if (n >= rules.min && n <= rules.max) {
+        this.update(key, n);
       }
     },
     updateExtras(key, value) {

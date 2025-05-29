@@ -14,7 +14,6 @@
           </svg>
         </button>
       </div>
-
       <div class="settings-content">
         <!-- LIGHT/DARK THEME -->
         <div class="flexColumn">

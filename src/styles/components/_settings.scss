@@ -18,56 +18,95 @@
 
 .simpleSvgButton:hover {
   transform: scale(1.1);
-
   transition: 0.25s ease-in-out;
 }
 
 .simpleSvgButton:active {
   transform: scale(0.9);
-
   transition: 0.1s ease-in-out;
 }
 
-#settings {
-
-  position: absolute;
+// Settings slide-out panel overlay
+#settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 100;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-height: 80vh;
-  overflow-y: auto;
-
-  display: grid;
-  justify-content: stretch;
-  align-content: stretch;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 1rem;
-  padding: 1rem;
-  text-align: left;
-  outline: 1px solid var(--panelOutlineColor, white);
-  background-color: var(--panelBackgroundColor, white);
-
-  border-radius: var(--default-border-radius, 0.25rem);
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(0.25rem);
+  opacity: 0;
+  animation: fadeIn 0.3s ease-in-out forwards;
 }
 
-#settings>.titleSpan {
-  grid-column: 1 / -1;
-  height: 2rem;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+// Settings slide-out panel
+#settings {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 400px;
+  max-width: 90vw;
+  z-index: 101;
+  
+  background-color: var(--panelBackgroundColor);
+  border-left: 1px solid var(--panelOutlineColor);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  flex-direction: column;
+  
+  // Initial state - panel is off-screen
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  &.slide-in {
+    transform: translateX(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--panelOutlineColor);
+  background-color: var(--panelBackgroundColor);
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+#settings .titleSpan {
   font-weight: bold;
-  font-size: 1.5rem;
-  text-align: center;
+  font-size: 1.2rem;
+  color: var(--fontColor);
+  margin: 0;
 }
 
 #settings .flexColumn {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
 #settings .flexRow {
@@ -77,54 +116,176 @@
   align-items: center;
 }
 
-#settings .flexRow label {
-  min-width: 150px;
-  flex-shrink: 0;
-}
-
-#settings .flexRow input {
-  flex: 1;
-  max-width: 100px;
-}
-
-/* #settings:not(.open) > *:not(#openCloseSettings):not(.titleSpan) {
-    display: none !important;
-  } */
 #settings .extras {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+#settings .extras > label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: var(--fontColor);
+}
+
+#settings .switchDiv {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
-#settings>#openCloseSettings {
-  align-self: flex-start;
-  justify-self: flex-end;
-
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-
-  height: 2rem;
-  width: 2rem;
+#settings .switchDiv input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--signal-active);
 }
 
-#settings>#openCloseSettings svg {
-  width: 100%;
-  height: 100%;
+#settings .switchDiv label {
+  color: var(--fontColor);
+  font-weight: normal;
+}
+
+#settings #openCloseSettings {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  color: var(--fontColor);
+}
+
+#settings #openCloseSettings:hover {
+  background-color: var(--buttonHoverColor);
+}
+
+#settings #openCloseSettings svg {
+  width: 20px;
+  height: 20px;
 }
 
 #settings input[type="number"] {
-  padding: 0.25rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--backgroundColor, white);
-  color: var(--fontColor, black);
+  padding: 0.5rem;
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+  background-color: var(--backgroundColor);
+  color: var(--fontColor);
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+#settings input[type="number"]:focus {
+  border-color: var(--signal-active);
+  outline: none;
 }
 
 #settings select {
-  padding: 0.25rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--backgroundColor, white);
-  color: var(--fontColor, black);
+  padding: 0.5rem;
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+  background-color: var(--backgroundColor);
+  color: var(--fontColor);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+#settings select:focus {
+  border-color: var(--signal-active);
+  outline: none;
+}
+
+#settings label {
+  font-weight: 500;
+  color: var(--fontColor);
+  margin-bottom: 0.25rem;
+}
+
+#settings p {
+  font-size: 0.85rem;
+  color: var(--fontColor);
+  opacity: 0.7;
+  margin: 0.25rem 0 0 0;
+  line-height: 1.4;
+}
+
+// Toggle button styling
+.toggleButtonDiv {
+  display: flex;
+  border-radius: var(--default-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--panelOutlineColor);
+  
+  span {
+    flex: 1;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    background-color: var(--buttonBackgroundColor);
+    color: var(--buttonTextColor);
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    
+    &:hover {
+      background-color: var(--buttonHoverColor);
+    }
+  }
+  
+  &.active span:first-child {
+    background-color: var(--signal-active);
+    color: white;
+  }
+  
+  &:not(.active) span:last-child {
+    background-color: var(--signal-active);
+    color: white;
+  }
+}
+
+// Reset button styling
+.SvgAndTextButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  background-color: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  flex: 1;
+  justify-content: center;
+  
+  &:hover {
+    background-color: var(--buttonHoverColor);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    background-color: var(--buttonActiveColor);
+    transform: translateY(0);
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Responsive design for smaller screens
+@media (max-width: 768px) {
+  #settings {
+    width: 100vw;
+    max-width: 100vw;
+  }
 }

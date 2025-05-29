@@ -43,7 +43,7 @@
           <div class="switchDiv">
             <input id="editCommandToggle" type="checkbox" v-model="editCommandEnabled" />
             <label for="editCommandToggle">
-              {{ editCommandEnabled ? 'Zapisz' : 'Edytuj' }}
+              {{ editCommandEnabled ? 'Save' : 'Edit' }}
             </label>
           </div>
         </div>

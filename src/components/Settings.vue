@@ -48,7 +48,7 @@
               min="1"
               max="32"
               @input="updateNumber('memoryAddresBits', $event.target.value)"/>
-        <p>Tyle bitów będzie mieć adres pamięci</p>
+        <p>This is how many bits the memory address will have.</p>
       </div>
 
       <!-- CODE BITS -->
@@ -60,7 +60,7 @@
               min="1"
               max="16"
               @input="updateNumber('codeBits', $event.target.value)"/>
-        <p>Tyle bitów będzie kod rozkazu</p>
+        <p>This is how many bits the command code will be.</p>
       </div>
 
       <!-- ADDRESS BITS -->
@@ -72,7 +72,7 @@
               min="1"
               max="32"
               @input="updateNumber('addresBits', $event.target.value)"/>
-        <p>Tyle bitów będzie mieć argument</p>
+        <p>This is how many bits the argument will have.</p>
       </div>
 
       <!-- MICRO-STEP DELAY -->
@@ -84,7 +84,7 @@
               min="0"
               max="10000"
               @input="updateNumber('oddDelay', $event.target.value)"/>
-        <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
+        <p>Delay between micro-operations in milliseconds.</p>
       </div>
 
         <!-- EXTRAS SWITCHES -->

@@ -11,16 +11,20 @@
       <slot name="chooseProgram"></slot>
     </div>
 
+    <!-- Manual mode instruction -->
+    <div v-if="manualMode" class="manualModeInstruction">
+      <p>To run program, click on the chosen signal and press 'next line'</p>
+    </div>
+
     <!-- Code editor or compiled listing -->
     <textarea
-      v-if="!codeCompiled && !manualMode"
+      v-else-if="!codeCompiled"
       :value="code"
       placeholder="rozkaz"
-      :disabled="manualMode"
       @input="$emit('update:code', $event.target.value)"
     />
 
-    <div v-else-if="!manualMode" class="compiledCode">
+    <div v-else class="compiledCode">
       <span
         v-for="(line, index) in compiledCode"
         :key="index"
@@ -123,5 +127,26 @@ textarea:disabled {
 
 .nextLine span span {
   white-space: pre;
+}
+
+.manualModeInstruction {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem;
+  padding: 1rem;
+  border-radius: var(--default-border-radius, 0.25rem);
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  font-style: italic;
+  text-align: center;
+}
+
+.manualModeInstruction p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 </style>

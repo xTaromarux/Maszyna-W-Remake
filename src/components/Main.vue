@@ -513,6 +513,14 @@ export default {
           }
         });
 
+
+        // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
+        if (this.memoryAddresBits > 10) {
+          this.memoryAddresBits = 10;
+          this.addLog("Memory size was limited to maximum 1024 cells (10 bits)", "system");
+        }
+
+
         // Always reset to default values for registers and program state
         this.A = 0;
         this.ACC = 0;
@@ -529,6 +537,7 @@ export default {
         this.code = "czyt wys wei il;\nwyl wea;";
         this.compiledCode = [];
         this.activeLine = 0;
+
         this.nextLine = new Set();
         this.codeCompiled = false;
         this.manualMode = true;

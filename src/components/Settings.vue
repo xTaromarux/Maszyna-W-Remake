@@ -39,15 +39,18 @@
           </select>
         </div>
 
-        <!-- MEMORY SIZE -->
-        <div class="flexColumn">
-          <label for="argBits">Memory Size Bits:</label>
-          <input id="argBits"
-                 type="number"
-                 :value="memoryAddresBits"
-                 @input="updateNumber('memoryAddresBits', $event.target.value)"/>
-          <p>Tyle bitów będzie mieć adres pamięci</p>
-        </div>
+    <!-- MEMORY SIZE -->
+    <div class="flexColumn">
+      <label for="argBits">Memory Size Bits:</label>
+      <input id="argBits"
+             type="number"
+             :value="memoryAddresBits"
+             @input="updateNumber('memoryAddresBits', $event.target.value)"
+             min="1"
+             max="10"/>
+      <p>Tyle bitów będzie mieć adres pamięci (max 10 bitów = 1024 komórki)</p>
+    </div>
+
 
         <!-- CODE BITS -->
         <div class="flexColumn">
@@ -203,7 +206,15 @@ export default {
     },
     updateNumber(key, value) {
       const n = parseInt(value, 10);
-      if (!Number.isNaN(n)) this.update(key, n);
+      if (!Number.isNaN(n)) {
+        // Add validation for memoryAddresBits to limit to max 10 (2^10 = 1024 cells)
+        if (key === 'memoryAddresBits') {
+          const limitedValue = Math.max(1, Math.min(10, n));
+          this.update(key, limitedValue);
+        } else {
+          this.update(key, n);
+        }
+      }
     },
     updateExtras(key, value) {
       this.$emit("update:extras", { ...this.extras, [key]: value });

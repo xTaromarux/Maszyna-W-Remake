@@ -540,7 +540,7 @@ export default {
       const formatters = {
         dec: () => number,
         hex: () => "0x" + Math.floor(number).toString(16).toUpperCase(),
-        bin: () => "0b" + Math.floor(number).toString(2),
+        bin: () => Math.floor(number).toString(2),
       };
 
       return formatters[this.numberFormat]?.() ?? `EE${number}`;

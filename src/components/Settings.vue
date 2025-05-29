@@ -39,98 +39,85 @@
           </select>
         </div>
 
-    <!-- MEMORY SIZE -->
-    <div class="flexColumn">
-      <label for="argBits">Memory Size Bits:</label>
-      <input id="argBits"
-             type="number"
-             :value="memoryAddresBits"
-             min="1"
-             max="32"
-             @input="updateNumber('memoryAddresBits', $event.target.value)"/>
-      <p>Tyle bitów będzie mieć adres pamięci</p>
-    </div>
+      <!-- MEMORY SIZE -->
+      <div class="flexColumn">
+        <label for="argBits">Memory Size Bits:</label>
+        <input id="argBits"
+              type="number"
+              :value="memoryAddresBits"
+              min="1"
+              max="32"
+              @input="updateNumber('memoryAddresBits', $event.target.value)"/>
+        <p>Tyle bitów będzie mieć adres pamięci</p>
+      </div>
 
-    <!-- CODE BITS -->
-    <div class="flexColumn">
-      <label for="commandBits">Code Bits:</label>
-      <input id="commandBits"
-             type="number"
-             :value="codeBits"
-             min="1"
-             max="16"
-             @input="updateNumber('codeBits', $event.target.value)"/>
-      <p>Tyle bitów będzie kod rozkazu</p>
-    </div>
+      <!-- CODE BITS -->
+      <div class="flexColumn">
+        <label for="commandBits">Code Bits:</label>
+        <input id="commandBits"
+              type="number"
+              :value="codeBits"
+              min="1"
+              max="16"
+              @input="updateNumber('codeBits', $event.target.value)"/>
+        <p>Tyle bitów będzie kod rozkazu</p>
+      </div>
 
-    <!-- ADDRESS BITS -->
-    <div class="flexColumn">
-      <label for="addresBits">Address Bits:</label>
-      <input id="addresBits"
-             type="number"
-             :value="addresBits"
-             min="1"
-             max="32"
-             @input="updateNumber('addresBits', $event.target.value)"/>
-      <p>Tyle bitów będzie mieć argument</p>
-    </div>
+      <!-- ADDRESS BITS -->
+      <div class="flexColumn">
+        <label for="addresBits">Address Bits:</label>
+        <input id="addresBits"
+              type="number"
+              :value="addresBits"
+              min="1"
+              max="32"
+              @input="updateNumber('addresBits', $event.target.value)"/>
+        <p>Tyle bitów będzie mieć argument</p>
+      </div>
 
-    <!-- MICRO-STEP DELAY -->
-    <div class="flexColumn">
-      <label for="oddDelay">Micro-step delay (ms):</label>
-      <input id="oddDelay"
-             type="number"
-             :value="oddDelay"
-             min="0"
-             max="10000"
-             @input="updateNumber('oddDelay', $event.target.value)"/>
-      <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
-    </div>
-
-
-        <!-- MICRO-STEP DELAY -->
-        <div class="flexColumn">
-          <label for="oddDelay">Micro-step delay (ms):</label>
-          <input id="oddDelay"
-                 type="number"
-                 :value="oddDelay"
-                 min="0"
-                 @input="updateNumber('oddDelay', $event.target.value)"/>
-          <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
-        </div>
-
+      <!-- MICRO-STEP DELAY -->
+      <div class="flexColumn">
+        <label for="oddDelay">Micro-step delay (ms):</label>
+        <input id="oddDelay"
+              type="number"
+              :value="oddDelay"
+              min="0"
+              max="10000"
+              @input="updateNumber('oddDelay', $event.target.value)"/>
+        <p>Opóźnienie pomiędzy mikro-operacjami w milisekundach</p>
+      </div>
 
         <!-- EXTRAS SWITCHES -->
-        <div class="extras">
-          <label>Extras:</label>
-          <template v-for="(label, key) in extrasLabels" :key="key">
-            <div class="switchDiv">
-              <input
-                :id="key"
-                type="checkbox"
-                :checked="extras[key]"
-                @change="updateExtras(key, $event.target.checked)"
-              />
-              <label :for="key">{{ label }}</label>
-            </div>
-          </template>
-        </div>
-
-        <!-- RESET BUTTONS -->
-        <div class="flexColumn">
-          <div class="flexRow">
-            <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
-              <RefreshIcon />
-              <span>Reset <u>Register Values</u></span>
-            </button>
-            <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
-              <RefreshIcon />
-              <span>Default <u>Settings</u></span>
-            </button>
+      <div class="extras">
+        <label>Extras:</label>
+        <template v-for="(label, key) in extrasLabels" :key="key">
+          <div class="switchDiv">
+            <input
+              :id="key"
+              type="checkbox"
+              :checked="extras[key]"
+              @change="updateExtras(key, $event.target.checked)"
+            />
+            <label :for="key">{{ label }}</label>
           </div>
+        </template>
+      </div>
+
+      <!-- RESET BUTTONS -->
+      <div class="flexColumn">
+        <div class="flexRow">
+          <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
+            <RefreshIcon />
+            <span>Reset <u>Register Values</u></span>
+          </button>
+          <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
+            <RefreshIcon />
+            <span>Default <u>Settings</u></span>
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
 
     <!-- CREATOR INFO -->

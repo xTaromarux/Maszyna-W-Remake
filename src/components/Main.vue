@@ -297,6 +297,7 @@ export default {
           "wys",
           "czyt",
           "pisz",
+          "przep",
           "weja",
           "weak",
           "dod",

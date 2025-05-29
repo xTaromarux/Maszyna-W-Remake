@@ -7,26 +7,38 @@
       />
       <div class="flexRow">
         <button
-          @click="compileProgram"
           v-if="!programCompiled"
+          @click="compileProgram"
           :disabled="manualMode || !program.trim()"
+          class="execution-btn execution-btn--compile"
         >
-          Compile
+          <CompileIcon />
+          <span>Compile</span>
         </button>
+
         <button
+          v-else
           @click="uncompileProgram"
-          v-if="programCompiled"
           :disabled="manualMode"
+          class="execution-btn execution-btn--edit"
         >
-          Edit
+          <EditIcon />
+          <span>Edit</span>
         </button>
       </div>
     </div>
   </template>
   
   <script>
+  import EditIcon from "@/assets/svg/EditIcon.vue";
+  import CompileIcon from "@/assets/svg/CompileIcon.vue";
+
   export default {
     name: 'ProgramSection',
+    components: {
+      CompileIcon,
+      EditIcon,
+    },
     props: {
       manualMode: { type: Boolean, required: true },
       commandList: { type: Array, required: true }

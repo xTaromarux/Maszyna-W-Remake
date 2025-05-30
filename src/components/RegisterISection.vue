@@ -4,7 +4,7 @@
       spanClassNames="arrowRightOnBottom" @click="handleClick('wyad')" />
     <RegisterComponent label="I" :model="I" @update:model="$emit('update:I', $event)" :formatNumber="formatNumber" />
     <SignalButton id="wei" :signal="signals.wei" label="wei" divClassNames="impulse pathUpOnLeft"
-      spanClassNames="arrowLeftOnBottom" @click="handleClick('wyad')" />
+      spanClassNames="arrowLeftOnBottom" @click="handleClick('wei')" />
   </div>
 </template>
 

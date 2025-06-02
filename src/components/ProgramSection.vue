@@ -1,4 +1,5 @@
 <template>
+
   <div id="program" v-if="!manualMode">
     <textarea v-model="program" placeholder="Wpisz swój program tutaj, np: &#13;&#10;&#13;&#10;POB &#13;&#10;DOD"
       :disabled="manualMode || programCompiled" />
@@ -13,9 +14,11 @@
         <EditIcon />
         <span>Edit</span>
       </button>
+
     </div>
   </div>
 </template>
+
 
 <script>
 import EditIcon from "@/assets/svg/EditIcon.vue";
@@ -56,6 +59,7 @@ export default {
           return;
         }
         codeFragments.push(cmd.lines);
+
       }
 
       const compiled = codeFragments.join('\n');

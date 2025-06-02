@@ -23,20 +23,19 @@
   padding: 0.25rem 0.5rem;
   cursor: pointer;
 }
-.toggleButtonDiv>span:first-child {
+
+/* Default state - all spans use normal text color */
+.toggleButtonDiv > span {
   color: var(--buttonTextColor, black);
 }
 
-.toggleButtonDiv.active>span:first-child {
+/* Active state - the span under the blue ball gets white text */
+.toggleButtonDiv.active > span:first-child {
   color: #eee;
 }
 
-.toggleButtonDiv>span:not(:first-child) {
+.toggleButtonDiv:not(.active) > span:last-child {
   color: #eee;
-}
-
-.toggleButtonDiv.active>span:not(:first-child) {
-  color: var(--buttonTextColor, black);
 }
 
 .toggleButtonDiv::after {
@@ -44,7 +43,7 @@
   position: absolute;
   z-index: 2;
   top: 0;
-  left: 50%;
+  left: 0;
   width: 50%;
   height: 100%;
   background-color: #0066cc;
@@ -53,5 +52,5 @@
 }
 
 .toggleButtonDiv.active::after {
-  left: 0;
+  left: 50%;
 }

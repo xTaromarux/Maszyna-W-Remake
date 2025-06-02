@@ -144,8 +144,11 @@
 
 .scrollWrapper > div {
   min-width: 5rem;
-  text-align: right;
+  text-align: center;
   border: 1px solid var(--panelOutlineColor, black);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .scrollWrapper > span,
@@ -153,7 +156,7 @@
   border: 1px solid var(--panelOutlineColor, black);
   padding: 0.125rem;
   display: flex;
-  justify-content: end;
+  justify-content: center;
   align-items: center;
 }
 
@@ -165,6 +168,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   z-index: 10;
+  justify-content: center;
 }
 
 .scrollWrapper > .selected {

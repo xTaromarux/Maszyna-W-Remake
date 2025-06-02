@@ -83,20 +83,42 @@
   font-size: 1rem;
 }
 
-#console>div.error {
-  background-color: #0066cc88;
+#console>div.error,
+#console>div.błąd {
+  background-color: #cc0000aa;
 }
 
 #console>div.io {
   background-color: #0099ff88;
 }
 
-#console>div.command.compiler {
+#console>div.command.compiler,
+#console>div.kompilator.rozkazów {
   background-color: #00ccff88;
 }
 
 #console>div.program.compiler {
   background-color: #00aaff88;
+}
+
+#console>div.system,
+#console>div.System {
+  background-color: #0099ff88;
+}
+
+#console>div.info {
+  background-color: #0099ff88;
+}
+
+/* Style for compound class names */
+#console>div[class*="błąd parsera kodu"],
+#console>div[class*="code parser error"] {
+  background-color: #cc0000aa;
+}
+
+#console>div[class*="kompilator rozkazów"],
+#console>div[class*="command compiler"] {
+  background-color: #00ccff88;
 }
 
 .console-indicator {

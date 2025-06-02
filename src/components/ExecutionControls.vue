@@ -8,7 +8,7 @@
       class="execution-btn execution-btn--compile"
     >
       <CompileIcon />
-      <span>Compile</span>
+      <span>Kompiluj</span>
     </button>
 
     <button
@@ -18,7 +18,7 @@
       class="execution-btn execution-btn--edit"
     >
       <EditIcon />
-      <span>Edit</span>
+      <span>Edytuj</span>
     </button>
 
     <!-- Single‑step execution -->
@@ -28,7 +28,7 @@
       class="execution-btn execution-btn--step"
     >
       <NextLineIcon />
-      <span>Next line</span>
+      <span>Następna linia</span>
     </button>
 
     <!-- Run program -->
@@ -38,7 +38,7 @@
       class="execution-btn execution-btn--run"
     >
       <RunIcon />
-      <span>Run</span>
+      <span>Uruchom</span>
     </button>
   </div>
 </template>

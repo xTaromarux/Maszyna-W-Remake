@@ -5,7 +5,7 @@
     <div class="flexRow">
       <button
         class="simpleSvgButton"
-        aria-label="Open Console"
+        aria-label="Otwórz konsolę"
         @click="$emit('toggle-console')"
       >
         <ConsoleIcon 
@@ -15,7 +15,7 @@
 
       <button
         class="simpleSvgButton"
-        aria-label="Open AI Chat"
+        aria-label="Otwórz czat AI"
         @click="$emit('open-chat')"
       >
         <AiChatIcon 
@@ -27,18 +27,10 @@
 
       <button
         class="simpleSvgButton"
-        aria-label="Open Settings"
+        aria-label="Otwórz ustawienia"
         @click="$emit('open-settings')"
       >
         <KogWheelIcon />
-      </button>
-
-      <button
-        class="simpleSvgButton"
-        aria-label="Open Command List"
-        @click="$emit('open-command-list')"
-      >
-        <CommandListIcon />
       </button>
     </div>
   </header>
@@ -48,7 +40,6 @@
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
 import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
-import CommandListIcon    from '@/assets/svg/CommandListIcon.vue'
 import ConsoleIcon        from '@/assets/svg/ConsoleIcon.vue'
 
 defineProps({
@@ -58,6 +49,6 @@ defineProps({
   }
 })
 
-defineEmits(['open-chat', 'open-settings', 'open-command-list', 'toggle-console'])
+defineEmits(['open-chat', 'open-settings', 'toggle-console'])
 </script>
 

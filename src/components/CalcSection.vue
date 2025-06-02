@@ -1,13 +1,13 @@
 <template>
     <div id="calc">
         <div v-if="extras.jamlExtras" id="flags">
-            FLAGS:
+            FLAGI:
             <div title="Negative number in Acc" v-if="ACC < 0">N</div>
             <div title="Zero in Acc" v-if="ACC === 0">Z</div>
         </div>
 
         <div class="accSignals">
-            <SignalButton v-if="extras.jamlExtras" id="iak" :signal="signals.iak" label="wei"
+            <SignalButton v-if="extras.jamlExtras" id="iak" :signal="signals.iak" label="iak"
                 spanClassNames="arrowRightOnBottom" @click="handleClick('iak')" />
             <SignalButton v-if="extras.jamlExtras" id="dak" :signal="signals.dak" label="dak"
                 spanClassNames="arrowRightOnBottom" @click="handleClick('dak')" />
@@ -41,16 +41,8 @@
                 spanClassNames="lineRightOnBottom" @click="handleClick('i')" />
         </div>
 
-        <div id="jaml" class="register">
-            <span>JAML</span>
-        </div>
-
-        <!-- ??? PO CO TO JEST ??? -->
-
-        <!-- <div v-if="extras.showInvisibleRegisters" class="inputWrapper">
-              <span>{{ formatNumber(JAML) }}</span>
-              <input type="number" v-model="JAML">
-            </div> -->
+        <RegisterComponent id="jaml" label="JAML" :model="JAML" @update:model="$emit('update:JAML', $event)"
+            :formatNumber="formatNumber" />
 
         <SignalButton id="weja" :signal="signals.weja" label="weja" divClassNames="pathUpOnRight"
             spanClassNames="arrowRightOnBottom" @click="handleClick('weja')" />

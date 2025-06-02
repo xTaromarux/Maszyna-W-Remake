@@ -4,13 +4,11 @@
     <div id="settings" :class="{ 'slide-in': isAnimated }" @click.stop>
       <!-- Title & Close -->
       <div class="settings-header">
-        <span class="titleSpan">Settings</span>
+        <span class="titleSpan">Ustawienia</span>
         <button @click="$emit('close')" id="openCloseSettings">
           <!-- SVG Close Icon -->
-          <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
-            <path d="M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3"
-                  stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
       </div>
@@ -19,100 +17,102 @@
         <div class="flexColumn">
           <div class="toggleButtonDiv" :class="{ active: lightMode }">
             <span @click="setLightMode(true)">
-              <SunIcon /> Light
+              <SunIcon /> Jasny
             </span>
             <span @click="setLightMode(false)">
-              <MoonIcon /> Dark
+              <MoonIcon /> Ciemny
             </span>
           </div>
         </div>
 
         <!-- NUMBER FORMAT -->
         <div class="flexColumn">
-          <label for="numberFormat">Number Format:</label>
-          <select id="numberFormat"
-                  :value="numberFormat"
-                  @change="update('numberFormat', $event.target.value)">
-            <option value="dec">Decimal</option>
-            <option value="hex">Hexadecimal</option>
-            <option value="bin">Binary</option>
-          </select>
+          <label>Format liczb:</label>
+          <div class="number-format-toggle">
+            <div class="toggleButtonDiv format-toggle" :class="{ 'active-dec': numberFormat === 'dec', 'active-hex': numberFormat === 'hex', 'active-bin': numberFormat === 'bin' }">
+              <span @click="update('numberFormat', 'dec')">DEC</span>
+              <span @click="update('numberFormat', 'hex')">HEX</span>
+              <span @click="update('numberFormat', 'bin')">BIN</span>
+            </div>
+          </div>
         </div>
 
       <!-- MEMORY SIZE -->
       <div class="flexColumn">
-        <label for="argBits">Memory Size Bits:</label>
+        <label for="argBits">Bity rozmiaru pamięci:</label>
         <input id="argBits"
               type="number"
               :value="memoryAddresBits"
               min="1"
               max="32"
               @input="updateNumber('memoryAddresBits', $event.target.value)"/>
-        <p>This is how many bits the memory address will have.</p>
+        <p>Ilość bitów dla adresu pamięci.</p>
       </div>
 
       <!-- CODE BITS -->
       <div class="flexColumn">
-        <label for="commandBits">Code Bits:</label>
+        <label for="commandBits">Bity kodu:</label>
         <input id="commandBits"
               type="number"
               :value="codeBits"
               min="1"
               max="16"
               @input="updateNumber('codeBits', $event.target.value)"/>
-        <p>This is how many bits the command code will be.</p>
+        <p>Ilość bitów dla kodu rozkazu.</p>
       </div>
 
       <!-- ADDRESS BITS -->
       <div class="flexColumn">
-        <label for="addresBits">Address Bits:</label>
+        <label for="addresBits">Bity adresu:</label>
         <input id="addresBits"
               type="number"
               :value="addresBits"
               min="1"
               max="32"
               @input="updateNumber('addresBits', $event.target.value)"/>
-        <p>This is how many bits the argument will have.</p>
+        <p>Ilość bitów dla argumentu.</p>
       </div>
 
       <!-- MICRO-STEP DELAY -->
       <div class="flexColumn">
-        <label for="oddDelay">Micro-step delay (ms):</label>
+        <label for="oddDelay">Opóźnienie mikro-kroku (ms):</label>
         <input id="oddDelay"
               type="number"
               :value="oddDelay"
               min="0"
               max="10000"
               @input="updateNumber('oddDelay', $event.target.value)"/>
-        <p>Delay between micro-operations in milliseconds.</p>
+        <p>Opóźnienie między mikro-operacjami w milisekundach.</p>
       </div>
 
         <!-- EXTRAS SWITCHES -->
       <div class="extras">
-        <label>Extras:</label>
+        <label>Dodatki:</label>
         <template v-for="(label, key) in extrasLabels" :key="key">
-          <div class="switchDiv">
-            <input
-              :id="key"
-              type="checkbox"
-              :checked="extras[key]"
-              @change="updateExtras(key, $event.target.checked)"
-            />
-            <label :for="key">{{ label }}</label>
+          <div class="module-toggle-wrapper">
+            <span class="module-label">{{ label }}</span>
+            <div class="toggleButtonDiv module-toggle" :class="{ active: !extras[key] }" @click="updateExtras(key, !extras[key])">
+              <span>Wył</span>
+              <span>Wł</span>
+            </div>
           </div>
         </template>
       </div>
 
       <!-- RESET BUTTONS -->
       <div class="flexColumn">
-        <div class="flexRow">
-          <button class="SvgAndTextButton" id="resetValues" @click="$emit('resetValues')">
+        <div class="flexColumn button-column">
+          <button class="SvgAndTextButton compact-button" id="resetValues" @click="$emit('resetValues')">
             <RefreshIcon />
-            <span>Reset <u>Register Values</u></span>
+            <span>Resetuj <u>Wartości Rejestrów</u></span>
           </button>
-          <button class="SvgAndTextButton" id="defaultSettings" @click="$emit('defaultSettings')">
+          <button class="SvgAndTextButton compact-button" id="defaultSettings" @click="$emit('defaultSettings')">
             <RefreshIcon />
-            <span>Default <u>Settings</u></span>
+            <span>Domyślne <u>Ustawienia</u></span>
+          </button>
+          <button class="SvgAndTextButton compact-button" id="openCommandList" @click="$emit('open-command-list')">
+            <CommandListIcon />
+            <span>Lista <u>Instrukcji</u></span>
           </button>
         </div>
       </div>
@@ -257,10 +257,11 @@ import MoonIcon from "@/assets/svg/MoonIcon.vue";
 import RefreshIcon from "@/assets/svg/RefreshIcon.vue";
 import LinkedInIcon from "@/assets/svg/LinkedInIcon.vue";
 import GitHubIcon from "@/assets/svg/GitHubIcon.vue";
+import CommandListIcon from "@/assets/svg/CommandListIcon.vue";
 
 export default {
   name: "Settings",
-  components: { SunIcon, MoonIcon, RefreshIcon, LinkedInIcon, GitHubIcon },
+  components: { SunIcon, MoonIcon, RefreshIcon, LinkedInIcon, GitHubIcon, CommandListIcon },
 
   props: {
     open: { type: Boolean, default: false },
@@ -302,18 +303,19 @@ export default {
     "update:oddDelay",
     "update:extras",
     "resetValues",
-    "defaultSettings"
+    "defaultSettings",
+    "open-command-list"
   ],
 
   computed: {
     extrasLabels() {
       return {
-        xRegister: "X Register",
-        yRegister: "Y Register",
+        xRegister: "Rejestr X",
+        yRegister: "Rejestr Y",
         dl: "DL",
-        jamlExtras: "JAML Extras",
-        busConnectors: "Bus Connectors",
-        showInvisibleRegisters: "Show Invisible Registers"
+        jamlExtras: "Dodatki JAML",
+        busConnectors: "Łączniki magistrali",
+        showInvisibleRegisters: "Pokaż niewidoczne rejestry"
       };
     }
   },
@@ -435,5 +437,104 @@ export default {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
+}
+
+.button-column {
+  gap: 0.75rem;
+}
+
+.compact-button {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-button span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.module-toggle-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.module-label {
+  color: var(--fontColor);
+  font-weight: normal;
+  flex: 1;
+}
+
+.module-toggle {
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.module-toggle span {
+  min-width: 60px !important;
+  font-size: 0.85rem;
+}
+
+.number-format-toggle {
+  width: 100%;
+}
+
+.format-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  min-width: 180px;
+  position: relative;
+}
+
+.format-toggle::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  width: 33.333%;
+  height: 100%;
+  background-color: #0066cc;
+  border-radius: 2rem;
+  transition: 0.25s ease-in-out;
+  left: 0; /* Default to DEC (first position) */
+}
+
+.format-toggle.active-dec::after {
+  left: 0;
+}
+
+.format-toggle.active-hex::after {
+  left: 33.333%;
+}
+
+.format-toggle.active-bin::after {
+  left: 66.666%;
+}
+
+.format-toggle span {
+  min-width: 60px !important;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  transition: color 0.25s ease;
+}
+
+.format-toggle.active-dec span:nth-child(1),
+.format-toggle.active-hex span:nth-child(2),
+.format-toggle.active-bin span:nth-child(3) {
+  color: #eee;
+}
+
+.format-toggle span {
+  color: var(--buttonTextColor, black);
 }
 </style>

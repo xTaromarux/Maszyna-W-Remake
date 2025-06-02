@@ -49,6 +49,43 @@
   align-items: stretch;
 }
 
-.hoverInput{
-    border-radius:  0.5rem;
+.hoverInput {
+    border-radius: 0.5rem;
+    border: 1px solid var(--panelOutlineColor);
+    background-color: var(--panelBackgroundColor);
+    color: var(--fontColor);
+    padding: 0.5rem;
+    font-size: inherit;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    
+    /* Remove default input styling */
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+.hoverInput:hover {
+    border-color: var(--signal-hover);
+    /* Keep the same background color on hover */
+    background-color: var(--panelBackgroundColor);
+}
+
+.hoverInput:focus {
+    border-color: var(--signal-active);
+    /* Keep the same background color on focus */
+    background-color: var(--panelBackgroundColor);
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+/* Remove spinner arrows in Chrome, Safari, Edge */
+.hoverInput::-webkit-outer-spin-button,
+.hoverInput::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Remove spinner arrows in Firefox */
+.hoverInput[type=number] {
+    -moz-appearance: textfield;
 }

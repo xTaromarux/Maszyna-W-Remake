@@ -1,7 +1,7 @@
 <template>
     <div id="commandList" v-if="visible">
       <div class="header">
-        <h1>Instruction List</h1>
+        <h1>Lista instrukcji</h1>
         <button @click="$emit('close')" class="closeButton" title="Zamknij">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
@@ -28,7 +28,7 @@
             type="text" 
             v-model="localList[selectedCommand].name" 
             @blur="validateCommandName"
-            placeholder="Instruction Name"
+            placeholder="Nazwa rozkazu"
             class="commandNameInput"
           />
           <button @click="deleteCommand" title="Usuń rozkaz">
@@ -38,13 +38,13 @@
               <path d="M10 11v6m4-6v6"/>
               <path d="M15 6V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2"/>
             </svg>
-            <span>Delete</span>
+            <span>Usuń</span>
           </button>
-          <div class="switchDiv">
-            <input id="editCommandToggle" type="checkbox" v-model="editCommandEnabled" />
-            <label for="editCommandToggle">
-              {{ editCommandEnabled ? 'Save' : 'Edit' }}
-            </label>
+          <div class="edit-toggle-wrapper">
+            <div class="toggleButtonDiv" :class="{ active: editCommandEnabled }" @click="editCommandEnabled = !editCommandEnabled">
+              <span>Edytuj</span>
+              <span>Zapisz</span>
+            </div>
           </div>
         </div>
   
@@ -66,7 +66,7 @@
           <input 
             type="text" 
             v-model="newCommandName" 
-            placeholder="Name of the new instruction"
+            placeholder="Nazwa nowego rozkazu"
             class="newCommandInput"
             @keyup.enter="addCommand"
           />
@@ -77,7 +77,7 @@
                 <circle cx="12" cy="12" r="9"/>
               </g>
             </svg>
-            <span>Add</span>
+            <span>Dodaj</span>
           </button>
         </div>
         
@@ -87,14 +87,14 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746"/>
             </svg>
-            <span>Upload</span>
+            <span>Wgraj</span>
           </button>
           <button @click="downloadCommandList" title="Pobierz listę rozkazów">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2"/>
             </svg>
-            <span>Download</span>
+            <span>Pobierz</span>
           </button>
         </div>
       </div>
@@ -498,22 +498,19 @@
     box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
   }
 
-  .switchDiv {
+  .edit-toggle-wrapper {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  .switchDiv input[type="checkbox"] {
-    margin: 0;
+  .edit-toggle-wrapper .toggleButtonDiv {
+    min-width: 120px;
   }
 
-  .switchDiv label {
-    cursor: pointer;
-    user-select: none;
-    font-size: 14px;
-    color: var(--fontColor, black);
-    font-weight: 500;
+  .edit-toggle-wrapper .toggleButtonDiv span {
+    min-width: 60px;
+    font-size: 0.85rem;
   }
 
   #commandDetails .roskazCode {

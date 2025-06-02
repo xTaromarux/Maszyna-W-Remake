@@ -2,7 +2,7 @@
   <div class="programEditor">
     <!-- Manual / Program toggle -->
     <div class="toggleButtonDiv" :class="{ active: manualMode }">
-      <span @click="$emit('setManualMode', true)">Manual Mode</span>
+      <span @click="$emit('setManualMode', true)">Tryb ręczny</span>
       <span @click="$emit('setManualMode', false)">Program</span>
     </div>
 
@@ -13,7 +13,7 @@
 
     <!-- Manual mode instruction -->
     <div v-if="manualMode" class="manualModeInstruction">
-      <p>To run program, click on the chosen signal and press 'next line'</p>
+      <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
     <!-- Code editor or compiled listing -->
@@ -39,7 +39,7 @@
 
     <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="nextLine && nextLine.size">
-      <span>Next line signals:</span>
+      <span>Sygnały następnej linii:</span>
       <div class="flexRow">
         <div v-for="cmd in [...nextLine]" :key="cmd">
           <span>{{ cmd }}</span>

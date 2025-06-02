@@ -10,10 +10,10 @@
       <header class="chatHeader">
         <h1>{{ title }}</h1>
         <div class="headerBtns">
-          <button class="resetBtn" @click="resetConversation" aria-label="Reset chat">
+          <button class="resetBtn" @click="resetConversation" aria-label="Resetuj czat">
             <AiChatTrashIcon width="22" height="22" class="trashIcon" />
           </button>
-          <button class="closeBtn" @click="startClose" aria-label="Close chat">
+          <button class="closeBtn" @click="startClose" aria-label="Zamknij czat">
             &times;
           </button>
         </div>
@@ -39,7 +39,7 @@
                   v-if="msg.sender==='assistant' && aiTyping && i===currentAiIndex"
                   class="cancelBtn"
                   @click="cancelResponse"
-                  aria-label="Cancel response"
+                  aria-label="Anuluj odpowiedź"
                 >×</button>
               </div>
               <p class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
@@ -65,7 +65,7 @@
             type="text"
             :disabled="aiTyping"
           />
-          <button type="submit" :disabled="aiTyping">Send</button>
+          <button type="submit" :disabled="aiTyping">Wyślij</button>
         </form>
       </div>
     </div>
@@ -98,9 +98,9 @@ chatWorker.onmessage = (e) => {
 const isHide = ref(false)
 const props = defineProps({
   visible: { type: Boolean, default: false },
-  title: { type: String, default: 'AI Assistant' },
-  placeholder: { type: String, default: 'Type a message…' },
-  instruction: { type: String, default: 'Describe the operation to get the machine code:' }
+  title: { type: String, default: 'Asystent AI' },
+  placeholder: { type: String, default: 'Napisz wiadomość…' },
+  instruction: { type: String, default: 'Opisz operację, aby otrzymać kod maszynowy:' }
 })
 const emit = defineEmits(['close'])
 

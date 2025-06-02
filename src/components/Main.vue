@@ -1,6 +1,6 @@
 <template>
   <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
-    @open-command-list="commandListOpen = true" @toggle-console="toggleConsole"
+    @toggle-console="toggleConsole"
     :hasConsoleErrors="hasConsoleErrors" />
   <div id="wLayout">
     <div id="W" :class="{ manualMode: manualMode }">
@@ -39,6 +39,7 @@
           :JAML="JAML"
           :formatNumber="formatNumber"
           @update:ACC="ACC = $event"
+          @update:JAML="JAML = $event"
           @clickItem="handleSignalToggle"
         />
 
@@ -170,6 +171,7 @@
       @close="closeSettings"
       @resetValues="resetValues"
       @defaultSettings="defaultSettings"
+      @open-command-list="commandListOpen = true"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
       @update:memoryAddresBits="memoryAddresBits = $event"
@@ -278,8 +280,8 @@ export default {
       activeLine: 0,
       nextLine: new Set(),
 
-      // DEFAULT IS 2000ms
-      oddDelay: 2000, // Delay for odd commands in ms
+      // DEFAULT IS 100ms
+      oddDelay: 100, // Delay for odd commands in ms
 
       commandList,
 
@@ -396,7 +398,7 @@ export default {
 
       lightMode: true,
 
-      consoleOpen: true,
+      consoleOpen: false,
       hasConsoleErrors: false,
     };
   },
@@ -430,7 +432,7 @@ export default {
         try {
           msg = JSON.parse(text);
         } catch (e) {
-          console.warn('[WS] Invalid JSON:', text);
+          console.warn('[WS] Nieprawidłowy JSON:', text);
           return;
         }
 
@@ -518,7 +520,7 @@ export default {
         // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
         if (this.memoryAddresBits > 10) {
           this.memoryAddresBits = 10;
-          this.addLog("Memory size was limited to maximum 1024 cells (10 bits)", "system");
+          this.addLog("Rozmiar pamięci został ograniczony do maksymalnie 1024 komórek (10 bitów)", "system");
         }
 
 
@@ -548,26 +550,29 @@ export default {
           this.signals[key] = false;
         }
         
-        // Reset logs
-        this.logs = [];
+        // Don't reset logs - they should persist during the session
       }
     },
     saveToLS() {
-      localStorage.setItem("W", JSON.stringify(this.$data));
+      // Create a copy of data without logs
+      const dataToSave = { ...this.$data };
+      delete dataToSave.logs;
+      delete dataToSave.hasConsoleErrors;
+      localStorage.setItem("W", JSON.stringify(dataToSave));
     },
     addLog(message, classification = "info") {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
       
       // Check if this is an error and set the error flag
-      const errorTypes = ['error', 'code parser error', 'Error', 'Code Parser Error'];
+      const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu'];
       if (errorTypes.some(type => classification.toLowerCase().includes(type.toLowerCase()))) {
         this.hasConsoleErrors = true;
       }
     },
     formatNumber(number) {
       if (typeof number !== "number" || isNaN(number)) {
-        return "Error: Invalid number.";
+        return "Błąd: Nieprawidłowa liczba.";
       }
 
       const formatters = {
@@ -631,7 +636,7 @@ export default {
 
     compileCode() {
       if (!this.code) {
-        this.addLog("No code to compile", "Error");
+        this.addLog("Brak kodu do kompilacji", "Błąd");
         return;
       }
 
@@ -652,8 +657,8 @@ export default {
 
         if (!signalslist.has(command)) {
           this.addLog(
-            `Signal "${command}" not recognized at position ${index + 1}`,
-            "Code Parser Error"
+            `Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`,
+            "Błąd parsera kodu"
           );
           return;
         }
@@ -671,7 +676,7 @@ export default {
       this.nextLine.clear();
       this.executeLine();
 
-      this.addLog("Code compiled succesfully", "command compiler");
+      this.addLog("Kod skompilowany pomyślnie", "kompilator rozkazów");
     },
     uncompileCode() {
       this.codeCompiled = false;
@@ -728,7 +733,7 @@ export default {
         this.activeLine++;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog("Code finished", "command compiler");
+          this.addLog("Kod zakończony", "kompilator rozkazów");
         } else {
           for (const command of this.compiledCode[this.activeLine].split(" ")) {
             this.nextLine.add(command);
@@ -1011,14 +1016,14 @@ export default {
 
     resetValues() {
       // Reset all register values to 0
-      this.A = 0;
-      this.ACC = 0;
-      this.JAML = 0;
       this.programCounter = 0;
       this.I = 0;
+      this.ACC = 0;
+      this.A = 0;
+      this.S = 0;
       this.X = 0;
       this.Y = 0;
-      this.S = 0;
+      this.JAML = 0;
       this.BusA = 0;
       this.BusS = 0;
       
@@ -1031,7 +1036,12 @@ export default {
       }
       
       this.nextLine.clear();
-      this.addLog("All register values have been reset", "system");
+      
+      // Clear console logs
+      this.logs = [];
+      this.hasConsoleErrors = false;
+      
+      this.addLog("Wszystkie wartości rejestrów zostały zresetowane", "system");
     },
 
     defaultSettings() {
@@ -1039,7 +1049,7 @@ export default {
       this.memoryAddresBits = 6;
       this.codeBits = 6;
       this.addresBits = 4;
-      this.oddDelay = 2000;
+      this.oddDelay = 100;
       this.numberFormat = "dec";
       this.extras = {
         xRegister: false,
@@ -1053,7 +1063,11 @@ export default {
       // Resize memory according to new settings
       this.resizeMemory();
       
-      this.addLog("Settings have been reset to default values", "system");
+      // Clear console logs
+      this.logs = [];
+      this.hasConsoleErrors = false;
+      
+      this.addLog("Ustawienia zostały przywrócone do wartości domyślnych", "system");
     },
 
     closeSettings() {
@@ -1139,7 +1153,7 @@ export default {
     this.loadFromLS();
     this.resizeMemory();
 
-    this.addLog("System initialized.", "System");
+    this.addLog("System zainicjalizowany.", "System");
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
 

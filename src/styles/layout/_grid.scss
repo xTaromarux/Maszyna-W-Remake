@@ -9,6 +9,7 @@
 }
 #wLayout {
   display: grid;
+  flex-wrap: wrap;
   gap: 1rem;
   grid-template-areas:
     "w i p"
@@ -16,6 +17,20 @@
     "c c c";
   grid-template-rows: auto 1fr auto;
   grid-template-columns: 1fr auto auto;
+}
+@media (max-width: 992px) {
+  #wLayout {
+    margin: 20px;
+    grid-template-areas:
+      "w w"
+      "i p"
+      "c c";
+    grid-template-rows: auto auto auto auto;
+    grid-template-columns: 1fr;
+  }
+  #wLayout > * {
+    width: 100%;
+  }
 }
 #wLayout > #console { grid-area: c; }
 #wLayout > #W       { grid-area: w; }

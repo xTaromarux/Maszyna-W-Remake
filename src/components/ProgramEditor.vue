@@ -78,10 +78,22 @@ export default {
   align-items: center;
 }
 
+@media (max-width: 992px) {
+  textarea {
+    height: 400px;
+  }
+}
+
+@media (min-width: 992px) {
+  textarea {
+    height: 94%;
+  }
+}
+
 textarea {
+  width: 20rem;
   flex-grow: 1;
-  margin: 0.5rem;
-  height: 94%;
+  margin-top: 0.7rem;
   padding: 0.5rem;
   border-radius: var(--default-border-radius, 0.25rem);
   border: 1px solid var(--panelOutlineColor, black);

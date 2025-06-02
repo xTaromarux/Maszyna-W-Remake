@@ -33,8 +33,3 @@
     },
   };
   </script>
-  
-  <style scoped>
-  /* Styles for SignalButton component */
-  </style>
-  

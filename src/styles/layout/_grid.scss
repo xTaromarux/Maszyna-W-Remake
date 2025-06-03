@@ -20,12 +20,6 @@
   grid-template-columns: 2fr 0.73fr auto;
 }
 
-@media (max-width: 1400px) {
-  #wLayout {
-    grid-template-columns: 60% 20% auto;
-  }
-}
-
 @media (max-width: 1080px) {
   #wLayout {
     margin: 20px;

@@ -78,7 +78,7 @@ export default {
 .programEditor{
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: flex-end;
     height: 100%;
 }
@@ -193,7 +193,6 @@ textarea:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 150px;
   overflow-y: auto;
   padding: 0.5rem;
   border: 1px solid var(--panelOutlineColor, black);

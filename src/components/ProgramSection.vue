@@ -164,6 +164,8 @@ export default {
 
 .code-editor {
   flex-grow: 1;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
   padding: 0.5rem;
   font-family: monospace;
   font-size: 14px;
@@ -178,6 +180,12 @@ export default {
   overflow-x: auto;
   height: 100%;
   width: 100%;
+}
+
+.code-editor::placeholder {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  opacity: 0.6;
 }
 
 .code-editor:focus {

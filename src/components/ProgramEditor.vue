@@ -22,7 +22,12 @@
       :value="code"
       placeholder="rozkaz"
       @input="$emit('update:code', $event.target.value)"
+      spellcheck="false"
+      autocorrect="off"
+      autocomplete="off"
+      autocapitalize="off"
     />
+
 
     <div v-else class="compiledCode">
       <span

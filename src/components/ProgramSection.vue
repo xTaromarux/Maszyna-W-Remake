@@ -55,7 +55,7 @@ export default {
           c => c.name.toLowerCase() === name.toLowerCase()
         );
         if (!cmd) {
-          this.$emit('log', { message: `Program error: line ${i + 1} \"${name}\" not found`, class: 'Error' });
+          this.$emit('log', { message: `Błąd programu: linia ${i + 1} \"${name}\" nie znaleziona`, class: 'Error' });
           return;
         }
         codeFragments.push(cmd.lines);
@@ -65,11 +65,11 @@ export default {
       const compiled = codeFragments.join('\n');
       this.$emit('update:code', compiled);
       this.programCompiled = true;
-      this.$emit('log', { message: 'Program compiled successfully', class: 'program.compiler' });
+      this.$emit('log', { message: "Kod skompilowany pomyślnie", class: "kompilator rozkazów" });
     },
     uncompileProgram() {
       this.programCompiled = false;
-      this.$emit('log', { message: 'Program unlocked for editing', class: 'system' });
+      this.$emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
     }
   }
 }

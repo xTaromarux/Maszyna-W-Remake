@@ -21,6 +21,7 @@
 @media (max-width: 992px) {
   #wLayout {
     margin: 20px;
+    flex-wrap: nowrap;
     grid-template-areas:
       "w w"
       "i p"

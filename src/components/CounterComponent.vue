@@ -8,7 +8,7 @@
             <span>L</span><span>:</span>
             <div class="inputWrapper">
                 <span>{{ formatNumber(programCounter) }}</span>
-                <input type="number" class="hoverInput" :value="programCounter" @input="updateProgramCounter($event.target.value)" />
+                <input type="number" inputmode="numeric" pattern="[0-9]*" class="hoverInput" :value="programCounter" @input="updateProgramCounter($event.target.value)" />
             </div>
         </span>
 

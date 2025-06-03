@@ -29,7 +29,7 @@
           <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
           <div :class="{ selected: A === index }" class="inputWrapper">
             <span>{{ formatNumber(mem[index]) }}</span>
-            <input type="number" class="hoverInput" v-model="mem[index]" />
+            <input inputmode="numeric"pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
           </div>
           <span :class="{ selected: A === index }">
             {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}

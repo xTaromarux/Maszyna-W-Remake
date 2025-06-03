@@ -112,16 +112,62 @@ textarea:disabled {
   gap: 0.125rem;
   padding: 0.5rem;
   flex-grow: 1;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--panelOutlineColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
+  background-color: var(--panelBackgroundColor, white);
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.compiledCode .flexRow {
+  max-width: none;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+  min-height: 1.5em;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+}
+
+.compiledCode .flexRow > span:first-child {
+  min-width: 3rem;
+  text-align: right;
+  font-weight: bold;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.compiledCode .flexRow > span:nth-child(2) {
+  flex-shrink: 0;
+  color: #666;
+}
+
+.compiledCode .flexRow:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .compiledCode .active {
+  color: var(--signal-active);
+  background-color: rgba(0, 170, 255, 0.1);
+  font-weight: bold;
+}
+
+.compiledCode .active > span:first-child {
   color: var(--signal-active);
 }
 
 .codeLine {
   flex-grow: 1;
   text-align: left;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-left: 0.5rem;
+  line-height: 1.4;
 }
 
 .nextLine {
@@ -129,6 +175,12 @@ textarea:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
+  background-color: var(--panelBackgroundColor, white);
 }
 
 .nextLine span {

@@ -192,9 +192,9 @@
       <AiChat
         :visible="aiChatOpen"
         @close="closePopups"
-        title="AI Assistant 🤖"
-        placeholder="Type a message…"
-        instruction="Describe the operation to get the machine code:"
+        title="Asystent AI 🤖"
+        placeholder="Wpisz wiadomość…"
+        instruction="Opisz operację uzyskania kodu maszynowego:"
       />
   </div>
 </template>

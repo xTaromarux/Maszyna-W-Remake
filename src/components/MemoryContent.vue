@@ -21,15 +21,15 @@
 
     <div id="memoryTable">
       <div class="scrollWrapper">
-        <span class="label">Mem Address</span>
-        <span class="label">Value</span>
-        <span class="label">Code</span>
-        <span class="label">Address</span>
+        <span class="label">Adres pamięci</span>
+        <span class="label">Wartość</span>
+        <span class="label">Kod</span>
+        <span class="label">Adres</span>
         <template v-for="(value, index) in mem" :key="index">
           <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
           <div :class="{ selected: A === index }" class="inputWrapper">
             <span>{{ formatNumber(mem[index]) }}</span>
-            <input type="number" class="hoverInput" v-model="mem[index]" />
+            <input inputmode="numeric"pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
           </div>
           <span :class="{ selected: A === index }">
             {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}

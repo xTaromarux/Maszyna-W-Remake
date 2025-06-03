@@ -3,7 +3,7 @@
         <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span><span>:</span> 
         <div class="inputWrapper">
             <span>{{ formatNumber(model) }}</span>
-            <input type="number" class="hoverInput" :value="model" @input="updateValue" />
+            <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" />
         </div>
     </div>
 </template>

@@ -29,7 +29,14 @@
         <div class="flexColumn">
           <label>Format liczb:</label>
           <div class="number-format-toggle">
-            <div class="toggleButtonDiv format-toggle" :class="{ 'active-dec': numberFormat === 'dec', 'active-hex': numberFormat === 'hex', 'active-bin': numberFormat === 'bin' }">
+            <div
+              class="multiToggleButton format-toggle"
+              :class="{
+                'active-dec': numberFormat === 'dec',
+                'active-hex': numberFormat === 'hex',
+                'active-bin': numberFormat === 'bin'
+              }"
+            >
               <span @click="update('numberFormat', 'dec')">DEC</span>
               <span @click="update('numberFormat', 'hex')">HEX</span>
               <span @click="update('numberFormat', 'bin')">BIN</span>
@@ -42,6 +49,8 @@
         <label for="argBits">Bity rozmiaru pamięci:</label>
         <input id="argBits"
               type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
               :value="memoryAddresBits"
               min="1"
               max="32"
@@ -54,6 +63,8 @@
         <label for="commandBits">Bity kodu:</label>
         <input id="commandBits"
               type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
               :value="codeBits"
               min="1"
               max="16"
@@ -66,6 +77,8 @@
         <label for="addresBits">Bity adresu:</label>
         <input id="addresBits"
               type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
               :value="addresBits"
               min="1"
               max="32"
@@ -78,6 +91,8 @@
         <label for="oddDelay">Opóźnienie mikro-kroku (ms):</label>
         <input id="oddDelay"
               type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
               :value="oddDelay"
               min="0"
               max="10000"
@@ -489,52 +504,52 @@ export default {
   width: 100%;
 }
 
+.multiToggleButton {
+  display: flex;
+  border-radius: var(--default-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--panelOutlineColor);
+}
+
+.multiToggleButton span {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.multiToggleButton span:hover {
+  background-color: var(--buttonHoverColor);
+}
+
 .format-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   min-width: 180px;
-  position: relative;
-}
-
-.format-toggle::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  width: 33.333%;
-  height: 100%;
-  background-color: #0066cc;
-  border-radius: 2rem;
-  transition: 0.25s ease-in-out;
-  left: 0; /* Default to DEC (first position) */
-}
-
-.format-toggle.active-dec::after {
-  left: 0;
-}
-
-.format-toggle.active-hex::after {
-  left: 33.333%;
-}
-
-.format-toggle.active-bin::after {
-  left: 66.666%;
 }
 
 .format-toggle span {
-  min-width: 60px !important;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  transition: color 0.25s ease;
+  background-color: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor, black);
+  transition: all 0.2s ease;
 }
 
 .format-toggle.active-dec span:nth-child(1),
 .format-toggle.active-hex span:nth-child(2),
 .format-toggle.active-bin span:nth-child(3) {
-  color: #eee;
+  background-color: var(--signal-active);
+  color: white;
 }
 
-.format-toggle span {
-  color: var(--buttonTextColor, black);
+.format-toggle.active-dec span:nth-child(1):hover,
+.format-toggle.active-hex span:nth-child(2):hover,
+.format-toggle.active-bin span:nth-child(3):hover {
+  background-color: var(--signal-active);
 }
 </style>

@@ -2,6 +2,10 @@
   <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
     @toggle-console="toggleConsole"
     :hasConsoleErrors="hasConsoleErrors" />
+
+    <div v-if="errorMessage" class="error-alert">
+      {{ errorMessage }}
+    </div>
   <div id="wLayout">
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
@@ -400,6 +404,8 @@ export default {
 
       consoleOpen: false,
       hasConsoleErrors: false,
+      errorMessage: "",
+      errorTimeoutId: null
     };
   },
   methods: {
@@ -456,17 +462,77 @@ export default {
       this.suppressBroadcast = false;
     },
 
-    handleSignalToggle(signalName) {
+     checkConflict(signalName) {
+       // Groups of mutually conflicting signals:
+       const groups = [
+         ["wyad", "wyl"],
+         ["wys", "wyak"],
+         ["il", "wel"],
+         ["czyt", "pisz"],
+         ["iak", "dak"],
+       ];
+       // One JAML Operation at a Time Group:
+       const jalOperations = [
+         "dod","ode","przep","mno","dziel","shr","shl","neg","lub","i"
+       ];
 
-      if (!this.manualMode) return;
-      if (this.nextLine.has(signalName)) {
-        this.nextLine.delete(signalName);
-        this.signals[signalName] = false;
-      } else {
-        this.nextLine.add(signalName);
-        this.signals[signalName] = true;
-      }
-    },
+       for (const group of groups) {
+         if (group.includes(signalName)) {
+           for (const other of group) {
+             if (other === signalName) continue;
+             if (this.signals[other]) {
+               return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
+             }
+           }
+         }
+       }
+
+       if (jalOperations.includes(signalName)) {
+         for (const other of jalOperations) {
+           if (other === signalName) continue;
+           if (this.signals[other]) {
+             return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
+           }
+         }
+       }
+
+       return null;
+     },
+
+   handleSignalToggle(signalName) {
+     if (!this.manualMode) return;
+
+     const willBeOn = !this.signals[signalName];
+
+     if (willBeOn) {
+       const conflictMsg = this.checkConflict(signalName);
+       if (conflictMsg) {
+         if (this.errorTimeoutId) {
+           clearTimeout(this.errorTimeoutId);
+         }
+         this.errorMessage = conflictMsg;
+         this.errorTimeoutId = setTimeout(() => {
+           this.errorMessage = "";
+           this.errorTimeoutId = null;
+         }, 3000);
+         return;
+       }
+     }
+
+     this.errorMessage = "";
+     if (this.errorTimeoutId) {
+       clearTimeout(this.errorTimeoutId);
+       this.errorTimeoutId = null;
+     }
+
+     if (this.nextLine.has(signalName)) {
+       this.nextLine.delete(signalName);
+       this.signals[signalName] = false;
+     } else {
+       this.nextLine.add(signalName);
+       this.signals[signalName] = true;
+     }
+   },
 
     sendSignalToggle(id, value) {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {

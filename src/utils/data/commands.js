@@ -25,6 +25,19 @@ export const commandList = [
         description: "(Ak) + ((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;",
     },
+    // [ode]
+    // Linie=5
+    // Linia1=// (Ak)-((Ad))->Ak
+    // Linia2=ROZKAZ ODE;
+    // Linia3=czyt wys wei il;
+    // Linia4=wyad wea;
+    // Linia5=czyt wys weja ode weak wyl wea;
+    {
+        name: "ode",
+        args: 0,
+        description: "(Ak) + ((Ad)) -> Ak",
+        lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja ode weak wyl wea;",
+    },
     // [pob]
     // Linie=5
     // Linia1=// ((Ad))->Ak

@@ -1,11 +1,26 @@
 <template>
-
   <div id="program" v-if="!manualMode">
-    <textarea 
-      v-model="program" 
-      class="no-horiz-resize"
-      placeholder="Wpisz swój program tutaj, np: &#13;&#10;&#13;&#10;POB &#13;&#10;DOD"
-      :disabled="manualMode || programCompiled" />
+    <div class="code-editor-container">
+      <div class="line-numbers" ref="lineNumbers">
+        <div 
+          v-for="(line, index) in lineNumbers" 
+          :key="index" 
+          class="line-number"
+        >
+          {{ index + 1 }}
+        </div>
+      </div>
+      <textarea 
+        v-model="program"
+        ref="codeEditor"
+        class="code-editor no-horiz-resize"
+        :disabled="manualMode || programCompiled"
+        @scroll="syncScroll"
+        @input="updateLineNumbers"
+        placeholder="Wpisz swój program tutaj, np:&#13;&#10;&#13;&#10;POB&#13;&#10;DOD"
+        spellcheck="false"
+      ></textarea>
+    </div>
     <div class="flexRow">
       <button v-if="!programCompiled" @click="compileProgram" :disabled="manualMode || !program.trim()"
         class="execution-btn execution-btn--compile">
@@ -21,7 +36,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
 import EditIcon from "@/assets/svg/EditIcon.vue";
@@ -43,7 +57,25 @@ export default {
       programCompiled: false
     }
   },
+  computed: {
+    lineNumbers() {
+      if (this.program.length === 0) {
+        return [''];
+      }
+      return this.program.split('\n');
+    }
+  },
   methods: {
+    syncScroll() {
+      if (this.$refs.lineNumbers && this.$refs.codeEditor) {
+        this.$refs.lineNumbers.scrollTop = this.$refs.codeEditor.scrollTop;
+      }
+    },
+    updateLineNumbers() {
+      this.$nextTick(() => {
+        this.syncScroll();
+      });
+    },
     compileProgram() {
       const lines = this.program
         .split('\n')
@@ -74,6 +106,10 @@ export default {
       this.programCompiled = false;
       this.$emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
     }
+  },
+  mounted() {
+    // Initialize line numbers
+    this.updateLineNumbers();
   }
 }
 </script>
@@ -94,19 +130,69 @@ export default {
   }
 }
 
-textarea {
+.code-editor-container {
   flex-grow: 1;
-  padding: 0.5rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-
+  display: flex;
   border: 1px solid var(--panelOutlineColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
   background-color: var(--panelBackgroundColor, white);
-  color: var(--fontColor, black);
-  font-family: monospace;
+  overflow: hidden;
+  position: relative;
+  height: 300px;
 }
 
-textarea:focus {
-  border: 1px solid #00aaff;
+.line-numbers {
+  background-color: var(--buttonBackgroundColor, #f8f9fa);
+  border-right: 1px solid var(--panelOutlineColor, #e9ecef);
+  padding: 0.5rem 0.5rem 0.5rem 0.25rem;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fontColor, #6c757d);
+  opacity: 0.7;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  min-width: 2.5rem;
+  height: 100%;
+}
+
+.line-number {
+  height: 1.5em;
+  white-space: nowrap;
+}
+
+.code-editor {
+  flex-grow: 1;
+  padding: 0.5rem;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fontColor, black);
+  background-color: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  white-space: pre;
+  overflow-y: auto;
+  overflow-x: auto;
+  height: 100%;
+  width: 100%;
+}
+
+.code-editor:focus {
+  outline: none;
+}
+
+.code-editor:disabled {
+  background-color: var(--buttonBackgroundColor, #f8f9fa);
+  color: var(--fontColor, #6c757d);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.code-editor-container:focus-within {
+  border-color: #00aaff;
 }
 
 .flexRow {

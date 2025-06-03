@@ -49,6 +49,13 @@
   align-items: stretch;
 }
 
+.no-horiz-resize {
+  resize: vertical;
+
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
 .hoverInput {
     border-radius: 0.5rem;
     border: 1px solid var(--panelOutlineColor);

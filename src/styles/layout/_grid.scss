@@ -10,15 +10,23 @@
 #wLayout {
   display: grid;
   flex-wrap: wrap;
+  padding: 0 40px;
   gap: 1rem;
   grid-template-areas:
     "w i p"
     "w i p"
     "c c c";
   grid-template-rows: auto 1fr auto;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 2fr 0.73fr auto;
 }
-@media (max-width: 992px) {
+
+@media (max-width: 1400px) {
+  #wLayout {
+    grid-template-columns: 60% 20% auto;
+  }
+}
+
+@media (max-width: 1080px) {
   #wLayout {
     margin: 20px;
     flex-wrap: nowrap;

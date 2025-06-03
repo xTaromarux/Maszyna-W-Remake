@@ -1,7 +1,7 @@
 <template>
   <div class="programEditor">
     <!-- Manual / Program toggle -->
-    <div class="toggleButtonDiv" :class="{ active: manualMode }">
+    <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
       <span @click="$emit('setManualMode', true)">Tryb ręczny</span>
       <span @click="$emit('setManualMode', false)">Program</span>
     </div>
@@ -22,7 +22,9 @@
       :value="code"
       placeholder="rozkaz"
       @input="$emit('update:code', $event.target.value)"
-    />
+      class="no-horiz-resize"
+    ></textarea>
+
 
     <div v-else class="compiledCode">
       <span
@@ -38,8 +40,8 @@
     </div>
 
     <!-- Preview of next-line signals (manual execution) -->
-    <div class="nextLine" v-if="nextLine && nextLine.size">
-      <span>Sygnały następnej linii:</span>
+    <div class="nextLine" v-if="manualMode">
+      <span v-if="nextLine && nextLine.size">Sygnały następnej linii:</span>
       <div class="flexRow">
         <div v-for="cmd in [...nextLine]" :key="cmd">
           <span>{{ cmd }}</span>
@@ -65,7 +67,15 @@ export default {
 </script>
 
 <style scoped>
+.toggleButtonProgram{
+  width: 100%;
+}
+
 .programEditor{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
     height: 100%;
 }
 
@@ -78,20 +88,21 @@ export default {
   align-items: center;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1080px) {
   textarea {
     height: 400px;
   }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1080px) {
   textarea {
     height: 94%;
   }
 }
 
 textarea {
-  width: 20rem;
+  width: 100%;
+  height: 470px;
   flex-grow: 1;
   margin-top: 0.7rem;
   padding: 0.5rem;
@@ -108,6 +119,7 @@ textarea:disabled {
 
 .compiledCode {
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 0.125rem;
   padding: 0.5rem;
@@ -125,6 +137,8 @@ textarea:disabled {
 }
 
 .nextLine {
+  flex-grow: 1;
+  width: 100%;
   margin-top: 20px;
   display: flex;
   flex-direction: column;
@@ -142,11 +156,10 @@ textarea:disabled {
 }
 
 .manualModeInstruction {
-  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0.5rem;
+  margin: 0.5rem 0 0 0;
   padding: 1rem;
   border-radius: var(--default-border-radius, 0.25rem);
   border: 1px solid var(--panelOutlineColor, black);

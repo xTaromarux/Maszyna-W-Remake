@@ -1,18 +1,21 @@
 <template>
 
   <div id="program" v-if="!manualMode">
-    <textarea v-model="program" placeholder="Wpisz swój program tutaj, np: &#13;&#10;&#13;&#10;POB &#13;&#10;DOD"
+    <textarea 
+      v-model="program" 
+      class="no-horiz-resize"
+      placeholder="Wpisz swój program tutaj, np: &#13;&#10;&#13;&#10;POB &#13;&#10;DOD"
       :disabled="manualMode || programCompiled" />
     <div class="flexRow">
       <button v-if="!programCompiled" @click="compileProgram" :disabled="manualMode || !program.trim()"
         class="execution-btn execution-btn--compile">
         <CompileIcon />
-        <span>Compile</span>
+        <span>Kompiluj</span>
       </button>
 
       <button v-else @click="uncompileProgram" :disabled="manualMode" class="execution-btn execution-btn--edit">
         <EditIcon />
-        <span>Edit</span>
+        <span>Edytuj</span>
       </button>
 
     </div>
@@ -77,13 +80,18 @@ export default {
 
 <style scoped>
 #program {
-  width: 20rem;
   grid-area: p;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   justify-content: stretch;
   align-items: stretch;
+}
+
+@media (min-width: 1400px) {
+  #program {
+    width: 20rem;
+  }
 }
 
 textarea {
@@ -103,7 +111,6 @@ textarea:focus {
 
 .flexRow {
   display: flex;
-  padding: 1rem;
   flex-direction: row;
   align-items: center;
 }

@@ -45,7 +45,7 @@
 
     <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="manualMode">
-      <span v-if="nextLine && nextLine.size">Sygnały następnej linii:</span>
+      <span >Sygnały następnej linii:</span>
       <div class="flexRow">
         <div v-for="cmd in [...nextLine]" :key="cmd">
           <span>{{ cmd }}</span>
@@ -189,6 +189,7 @@ textarea:disabled {
 .nextLine {
   flex-grow: 1;
   width: 100%;
+  min-height: 200px;
   margin-top: 20px;
   display: flex;
   flex-direction: column;
@@ -213,6 +214,7 @@ textarea:disabled {
 .manualModeInstruction {
   display: flex;
   align-items: center;
+  width: 100%;
   justify-content: center;
   margin: 0.5rem 0 0 0;
   padding: 1rem;

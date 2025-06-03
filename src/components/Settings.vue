@@ -1,15 +1,13 @@
 <!-- Settings.vue -->
 <template>
-  <div id="settings-overlay" v-if="open" @click="closeIfClickingOverlay">
-    <div id="settings" :class="{ 'slide-in': isAnimated }" @click.stop>
+  <div id="settings-overlay" v-if="open" 
+    @click.self="startClose">
+    <div id="settings" :class="{ 'slide-in': isAnimated, 'slide-out': !isAnimated }" @click.stop>
       <!-- Title & Close -->
       <div class="settings-header">
         <span class="titleSpan">Ustawienia</span>
-        <button @click="$emit('close')" id="openCloseSettings">
-          <!-- SVG Close Icon -->
-          <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
+        <button class="closeBtn" @click="$emit('close')"  aria-label="Zamknij ustawienia">
+          &times;
         </button>
       </div>
       <div class="settings-content">
@@ -125,7 +123,7 @@
             <RefreshIcon />
             <span>Domyślne <u>Ustawienia</u></span>
           </button>
-          <button class="SvgAndTextButton compact-button" id="openCommandList" @click="$emit('open-command-list')">
+          <button class="SvgAndTextButton compact-button" id="openCommandList" @click="emitEvents">
             <CommandListIcon />
             <span>Lista <u>Instrukcji</u></span>
           </button>
@@ -279,7 +277,7 @@ export default {
   components: { SunIcon, MoonIcon, RefreshIcon, LinkedInIcon, GitHubIcon, CommandListIcon },
 
   props: {
-    open: { type: Boolean, default: false },
+    settingsOpen: { type: Boolean, default: false },
     lightMode: { type: Boolean, required: true },
     numberFormat: { type: String, required: true },
     memoryAddresBits: { type: Number, required: true },
@@ -304,7 +302,8 @@ export default {
 
   data() {
     return {
-      isAnimated: false
+      isAnimated: false,
+      open: false
     };
   },
 
@@ -336,8 +335,9 @@ export default {
   },
 
   watch: {
-    open(newVal) {
+    settingsOpen(newVal) {
       if (newVal) {
+        this.open = true;
         // Small delay to ensure DOM is ready, then trigger animation
         this.$nextTick(() => {
           setTimeout(() => {
@@ -345,12 +345,27 @@ export default {
           }, 10);
         });
       } else {
-        this.isAnimated = false;
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.open = false;
+          }, 400);
+          setTimeout(() => {
+            this.isAnimated = false;
+          }, 10);
+        });
       }
     }
   },
 
   methods: {
+    startClose() {
+      this.$emit('close')
+      setTimeout(() => { this.open = false }, 400)
+    },
+    emitEvents(){
+      this.$emit('open-command-list')
+      this.$emit('close')
+    },
     setLightMode(value) {
       this.$emit("update:lightMode", value);
     },

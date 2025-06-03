@@ -160,7 +160,7 @@
     />
 
     <Settings
-      :open="settingsOpen"
+      :settingsOpen="settingsOpen"
       :light-mode="lightMode"
       :number-format="numberFormat"
       :memory-addres-bits="memoryAddresBits"
@@ -168,7 +168,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="closeSettings"
+      @close="closePopups('settingsOpen')"
       @resetValues="resetValues"
       @defaultSettings="defaultSettings"
       @open-command-list="commandListOpen = true"
@@ -186,12 +186,12 @@
       :commandList="commandList"
       :codeBits="codeBits"
       @update:commandList="commandList = $event"
-      @close="closePopups"
+      @close="closePopups('commandListOpen')"
     />
 
       <AiChat
         :visible="aiChatOpen"
-        @close="closePopups"
+        @close="closePopups('aiChatOpen')"
         title="Asystent AI 🤖"
         placeholder="Wpisz wiadomość…"
         instruction="Opisz operację uzyskania kodu maszynowego:"
@@ -242,7 +242,7 @@ export default {
 
   computed: {
     anyPopupOpen() {
-      return this.commandListOpen || this.aiChatOpen;
+      return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
     },
   },
 
@@ -626,12 +626,16 @@ export default {
         this.uncompileCode();
       }
     },
-    closePopups() {
-      this.commandListOpen = false;
-      this.aiChatOpen = false;
-      setTimeout(() => {
-        this.disappearBlour = false;
-      }, 1000);
+    closePopups(popupName) {
+      if (typeof popupName === 'string' && popupName in this.$data) {
+        this[popupName] = false;
+      }
+      
+      if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
+        setTimeout(() => {
+          this.disappearBlour = false;
+        }, 1000);
+      }
     },
 
     compileCode() {
@@ -1068,10 +1072,6 @@ export default {
       this.hasConsoleErrors = false;
       
       this.addLog("Ustawienia zostały przywrócone do wartości domyślnych", "system");
-    },
-
-    closeSettings() {
-      this.settingsOpen = false;
     },
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;

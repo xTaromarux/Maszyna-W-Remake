@@ -34,10 +34,12 @@
   right: 0;
   bottom: 0;
   z-index: 100;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(0.25rem);
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+.settings-overlay.hide {
+  animation: fadeOut 0.3s ease-in-out forwards;
 }
 
 @keyframes fadeIn {
@@ -73,6 +75,10 @@
   
   &.slide-in {
     transform: translateX(0);
+  }
+
+  &.slide-out {
+    transform: translateX(100);
   }
 }
 
@@ -145,29 +151,6 @@
   font-weight: normal;
 }
 
-#settings #openCloseSettings {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-  color: var(--fontColor);
-}
-
-#settings #openCloseSettings:hover {
-  background-color: var(--buttonHoverColor);
-}
-
-#settings #openCloseSettings svg {
-  width: 20px;
-  height: 20px;
-}
 
 #settings input[type="number"] {
   padding: 0.5rem;

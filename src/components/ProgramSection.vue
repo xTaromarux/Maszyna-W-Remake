@@ -13,7 +13,7 @@
       <textarea 
         v-model="program"
         ref="codeEditor"
-        class="code-editor"
+        class="code-editor no-horiz-resize"
         :disabled="manualMode || programCompiled"
         @scroll="syncScroll"
         @input="updateLineNumbers"
@@ -25,12 +25,12 @@
       <button v-if="!programCompiled" @click="compileProgram" :disabled="manualMode || !program.trim()"
         class="execution-btn execution-btn--compile">
         <CompileIcon />
-        <span>Compile</span>
+        <span>Kompiluj</span>
       </button>
 
       <button v-else @click="uncompileProgram" :disabled="manualMode" class="execution-btn execution-btn--edit">
         <EditIcon />
-        <span>Edit</span>
+        <span>Edytuj</span>
       </button>
 
     </div>
@@ -90,7 +90,7 @@ export default {
           c => c.name.toLowerCase() === name.toLowerCase()
         );
         if (!cmd) {
-          this.$emit('log', { message: `Program error: line ${i + 1} \"${name}\" not found`, class: 'Error' });
+          this.$emit('log', { message: `Błąd programu: linia ${i + 1} \"${name}\" nie znaleziona`, class: 'Error' });
           return;
         }
         codeFragments.push(cmd.lines);
@@ -100,11 +100,11 @@ export default {
       const compiled = codeFragments.join('\n');
       this.$emit('update:code', compiled);
       this.programCompiled = true;
-      this.$emit('log', { message: 'Program compiled successfully', class: 'program.compiler' });
+      this.$emit('log', { message: "Kod skompilowany pomyślnie", class: "kompilator rozkazów" });
     },
     uncompileProgram() {
       this.programCompiled = false;
-      this.$emit('log', { message: 'Program unlocked for editing', class: 'system' });
+      this.$emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
     }
   },
   mounted() {
@@ -116,13 +116,18 @@ export default {
 
 <style scoped>
 #program {
-  width: 20rem;
   grid-area: p;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   justify-content: stretch;
   align-items: stretch;
+}
+
+@media (min-width: 1400px) {
+  #program {
+    width: 20rem;
+  }
 }
 
 .code-editor-container {
@@ -192,7 +197,6 @@ export default {
 
 .flexRow {
   display: flex;
-  padding: 1rem;
   flex-direction: row;
   align-items: center;
 }

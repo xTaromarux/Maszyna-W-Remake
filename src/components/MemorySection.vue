@@ -142,7 +142,7 @@ export default {
   },
   computed: {
     isMobile() {
-      return this.windowWidth < 992;
+      return this.windowWidth < 1080;
     }
   },
   methods: {

@@ -25,7 +25,7 @@
             v-for="(msg, i) in messages"
             :key="i"
             class="messageBubble"
-            :class="{ messageUser: msg.sender === 'użytkownik', messageAi: msg.sender === 'ai' }"
+            :class="{ messageUser: msg.sender === 'Użytkownik', messageAi: msg.sender === 'ai' }"
           >
             <div class="iconWrapper">
               {{ msg.sender === 'assistant' ? '🤖' : '' }}
@@ -165,7 +165,7 @@ async function sendUserMessage() {
   if (aiTyping.value || !text.value.trim()) return
 
   // dodajemy wiadomość użytkownika
-  messages.value.push({ sender: 'użytkownik', text: text.value, timestamp: now })
+  messages.value.push({ sender: 'Użytkownik', text: text.value, timestamp: now })
   text.value = ''
 
   // przygotowujemy AI

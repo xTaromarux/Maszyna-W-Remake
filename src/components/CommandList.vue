@@ -1,31 +1,20 @@
 <template>
-  <div id="commandList" v-if="visible">
-    <div class="header">
-      <h1>Lista instrukcji</h1>
-      <button @click="$emit('close')" class="closeButton" title="Zamknij">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <div id="commandListTable">
-      <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
-      <button
-        v-for="(cmd, idx) in commandList"
-        :key="idx"
-        @click="editCommand(idx)"
-        class="command"
-        :class="{ selected: selectedCommand === idx }"
-      >
+    <div id="commandList" v-if="visible">
+      <div class="header">
+        <h1>Lista instrukcji</h1>
+        <button class="closeBtn closeButton" @click="$emit('close')"  aria-label="Zamknij liste instrukcji">
+          &times;
+        </button>
+      </div>
+  
+      <div id="commandListTable">
+        <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
+        <button
+          v-for="(cmd, idx) in commandList"
+          :key="idx"
+          @click="editCommand(idx)"
+          class="command"
+          :class="{ selected: selectedCommand === idx }">
         <span>{{ cmd.name }}</span>
       </button>
     </div>
@@ -441,6 +430,7 @@ export default {
 
       this.$emit('update:commandList', JSON.parse(JSON.stringify(this.localList)));
     },
+
   },
 };
 </script>
@@ -472,7 +462,7 @@ export default {
   max-width: 90vw;
   height: 90vh;
 }
-
+  
 body.darkMode #commandList {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
 }
@@ -497,17 +487,6 @@ body.darkMode #commandList {
   position: absolute;
   right: 0;
   top: 0%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  color: var(--fontColor, black);
-  border-radius: 4px;
-  width: auto;
-  height: auto;
-  margin: 0;
-  box-sizing: border-box;
-  will-change: color;
 }
 
 .closeButton:hover {

@@ -245,17 +245,18 @@ export default {
       addresBits: 4,
       codeBits: 6,
       memoryAddresBits: 6,
-      A: 0,
-      ACC: 0,
       JAML: 0,
       mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
-
       programCounter: 0,
-      I: 0,
+      JAML: 0,
+
+
       X: 0,
       Y: 0,
+      ACC: 0,
+      I: 0,
+      A: 0,
       S: 0,
-
       BusA: 0,
       BusS: 0,
 
@@ -379,12 +380,13 @@ export default {
   methods: {
     initWebsocket() {
       // Local Test
-      // this.ws = new WebSocket('ws://localhost:8080');
+      this.ws = new WebSocket('ws://localhost:8080');
       // ESP32
-      this.ws = new WebSocket('ws://192.168.4.1:80/ws');
+      // this.ws = new WebSocket('ws://192.168.4.1:80/ws');
       this.ws.binaryType = 'arraybuffer';
       this.ws.addEventListener('open', () => {
         console.log('[WS] Connected to server');
+        this.sendFullDataToESP();
       });
 
       this.ws.addEventListener('error', (err) => {
@@ -410,16 +412,23 @@ export default {
           return;
         }
 
-        if (msg.type === 'signal-toggle') {
-          console.log('[WS] Received toggle:', msg.id, msg.value);
-          this.handleRemoteToggle(msg.id, msg.value);
-        } else if (msg.type === 'mem-update') {
-          this.handleRemoteMemUpdate(msg.index, msg.value);
+        // Local Test
+        // if (msg.type === 'signal-toggle') {
+        //   console.log('[WS] Received toggle:', msg.id, msg.value);
+        //   this.handleRemoteToggleLocalWebSocket(msg.id, msg.value);
+        // } else if (msg.type === 'mem-update') {
+        //   this.handleRemoteMemUpdate(msg.index, msg.value);
+        // }
+
+        // ESP32
+        if (msg.type === 'button_press') {
+          console.log('[WS] Received toggle:', msg);
+          this.handleRemoteToggleESPWebSocket(msg.buttonName);
         }
       });
     },
 
-    handleRemoteToggle(id, value) {
+    handleRemoteToggleLocalWebSocket(id, value) {
       this.suppressBroadcast = true;
       if (value) {
         this.nextLine.add(id);
@@ -492,49 +501,138 @@ export default {
       return null;
     },
 
-    handleSignalToggle(signalName) {
-      if (!this.manualMode) return;
+    handleRemoteToggleESPWebSocket(value) {
+      this.suppressBroadcast = true;
 
-      const willBeOn = !this.signals[signalName];
-
-      if (willBeOn) {
-        const conflictMsg = this.checkConflict(signalName);
-        if (conflictMsg) {
-          this.addLog(conflictMsg, 'błąd sygnału');
-          return;
-        }
-      }
-
-      if (this.nextLine.has(signalName)) {
-        this.nextLine.delete(signalName);
-        this.signals[signalName] = false;
+      if (!this.signals[value]) {
+        this.nextLine.add(value);
       } else {
-        this.nextLine.add(signalName);
-        this.signals[signalName] = true;
+        this.nextLine.delete(value);
+      }
+      this.signals[value] = !this.signals[value];
+      this.suppressBroadcast = false;
+    },
+
+     checkConflict(signalName) {
+       // Groups of mutually conflicting signals:
+       const groups = [
+         ["wyad", "wyl"],
+         ["wys", "wyak"],
+         ["il", "wel"],
+         ["czyt", "pisz"],
+         ["iak", "dak"],
+       ];
+       // One JAML Operation at a Time Group:
+       const jalOperations = [
+         "dod","ode","przep","mno","dziel","shr","shl","neg","lub","i"
+       ];
+
+       for (const group of groups) {
+         if (group.includes(signalName)) {
+           for (const other of group) {
+             if (other === signalName) continue;
+             if (this.signals[other]) {
+               return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
+             }
+           }
+         }
+       }
+
+       if (jalOperations.includes(signalName)) {
+         for (const other of jalOperations) {
+           if (other === signalName) continue;
+           if (this.signals[other]) {
+             return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
+           }
+         }
+       }
+
+       return null;
+     },
+
+   handleSignalToggle(signalName) {
+     if (!this.manualMode) return;
+
+     const willBeOn = !this.signals[signalName];
+
+     if (willBeOn) {
+       const conflictMsg = this.checkConflict(signalName);
+       if (conflictMsg) {
+         if (this.errorTimeoutId) {
+           clearTimeout(this.errorTimeoutId);
+         }
+         this.errorMessage = conflictMsg;
+         this.errorTimeoutId = setTimeout(() => {
+           this.errorMessage = "";
+           this.errorTimeoutId = null;
+         }, 3000);
+         return;
+       }
+     }
+
+     this.errorMessage = "";
+     if (this.errorTimeoutId) {
+       clearTimeout(this.errorTimeoutId);
+       this.errorTimeoutId = null;
+     }
+
+     if (this.nextLine.has(signalName)) {
+       this.nextLine.delete(signalName);
+       this.signals[signalName] = false;
+     } else {
+       this.nextLine.add(signalName);
+       this.signals[signalName] = true;
+     }
+   },
+   
+    sendPartialData(fieldName, newValue) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({
+            type: 'reg-update',
+            field: fieldName,
+            value: newValue
+          }));
+        }
+      },
+
+    sendMemUpdate() {
+      const addrs = this.mem.slice(0, 4).map((_, idx) => idx);
+      const args  = this.mem.slice(0, 4).map(val => this.decToArgument(val));
+      const vals  = this.mem.slice(0, 4);
+
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          type: 'mem-update',
+          data: {
+            addrs: addrs,
+            args:  args,
+            vals:  vals
+          }
+        }));
       }
     },
 
-    sendSignalToggle(id, value) {
+    sendFullDataToESP() {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(
-          JSON.stringify({
-            type: 'signal-toggle',
-            id,
-            value,
-          })
-        );
-      }
-    },
+        const addrs = this.mem.slice(0, 4).map((val, idx) => idx);
+        const args = this.mem.slice(0, 4).map((val => this.decToArgument(val)));
+        const vals = this.mem.slice(0, 4)
 
-    sendMemUpdate(idx, value) {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(
-          JSON.stringify({
-            type: 'mem-update',
-            index: idx,
-            value,
-          })
-        );
+        const data = {
+          acc: this.ACC,
+          a: this.A,
+          s: this.S,
+          c: this.programCounter,
+          i: this.I,
+          addrs: addrs,
+          args: args,
+          vals, vals
+        };
+
+        this.ws.send(JSON.stringify({
+          type: 'mem-update',
+          data: data
+        }));
       }
     },
 
@@ -1147,7 +1245,7 @@ export default {
         const curr = { ...this.signals };
         for (const key in curr) {
           if (curr[key] !== this.prevSignals[key]) {
-            this.sendSignalToggle(key, curr[key]);
+            this.sendPartialData(key, curr[key]);
           }
         }
         this.prevSignals = curr;
@@ -1158,14 +1256,46 @@ export default {
       deep: true,
       handler() {
         if (this.suppressBroadcast) return;
-        const curr = [...this.mem];
-        curr.forEach((v, i) => {
-          if (v !== this.prevMem[i]) {
-            this.sendMemUpdate(i, v);
+
+        let first4Changed = false;
+        for (let i = 0; i < 4; i++) {
+          if (this.mem[i] !== this.prevMem[i]) {
+            first4Changed = true;
+            break;
           }
-        });
-        this.prevMem = curr;
-      },
+        }
+
+        if (first4Changed) {
+          this.sendMemUpdate()
+        }
+
+        this.prevMem = [...this.mem];
+      }
+    },
+
+    ACC(newVal, oldVal) {
+      if (this.suppressBroadcast) return;
+      this.sendPartialData('acc', newVal);
+    },
+
+    A(newVal, oldVal) {
+      if (this.suppressBroadcast) return;
+      this.sendPartialData('a', newVal);
+    },
+
+    S(newVal, oldVal) {
+      if (this.suppressBroadcast) return;
+      this.sendPartialData('s', newVal);
+    },
+
+    programCounter(newVal, oldVal) {
+      if (this.suppressBroadcast) return;
+      this.sendPartialData('c', newVal);
+    },
+
+    I(newVal, oldVal) {
+      if (this.suppressBroadcast) return;
+      this.sendPartialData('i', newVal);
     },
 
     anyPopupOpen: {

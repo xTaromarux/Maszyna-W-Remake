@@ -250,7 +250,6 @@ export default {
       programCounter: 0,
       JAML: 0,
 
-
       X: 0,
       Y: 0,
       ACC: 0,
@@ -264,6 +263,9 @@ export default {
       compiledCode: [],
       activeLine: 0,
       nextLine: new Set(),
+
+      // Array to store active timeout IDs for signal management
+      activeTimeouts: [],
 
       // DEFAULT IS 100ms
       oddDelay: 100, // Delay for odd commands in ms
@@ -513,110 +515,112 @@ export default {
       this.suppressBroadcast = false;
     },
 
-     checkConflict(signalName) {
-       // Groups of mutually conflicting signals:
-       const groups = [
-         ["wyad", "wyl"],
-         ["wys", "wyak"],
-         ["il", "wel"],
-         ["czyt", "pisz"],
-         ["iak", "dak"],
-       ];
-       // One JAML Operation at a Time Group:
-       const jalOperations = [
-         "dod","ode","przep","mno","dziel","shr","shl","neg","lub","i"
-       ];
+    checkConflict(signalName) {
+      // Groups of mutually conflicting signals:
+      const groups = [
+        ['wyad', 'wyl'],
+        ['wys', 'wyak'],
+        ['il', 'wel'],
+        ['czyt', 'pisz'],
+        ['iak', 'dak'],
+      ];
+      // One JAML Operation at a Time Group:
+      const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
 
-       for (const group of groups) {
-         if (group.includes(signalName)) {
-           for (const other of group) {
-             if (other === signalName) continue;
-             if (this.signals[other]) {
-               return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
-             }
-           }
-         }
-       }
+      for (const group of groups) {
+        if (group.includes(signalName)) {
+          for (const other of group) {
+            if (other === signalName) continue;
+            if (this.signals[other]) {
+              return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
+            }
+          }
+        }
+      }
 
-       if (jalOperations.includes(signalName)) {
-         for (const other of jalOperations) {
-           if (other === signalName) continue;
-           if (this.signals[other]) {
-             return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
-           }
-         }
-       }
+      if (jalOperations.includes(signalName)) {
+        for (const other of jalOperations) {
+          if (other === signalName) continue;
+          if (this.signals[other]) {
+            return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
+          }
+        }
+      }
 
-       return null;
-     },
+      return null;
+    },
 
-   handleSignalToggle(signalName) {
-     if (!this.manualMode) return;
+    handleSignalToggle(signalName) {
+      if (!this.manualMode) return;
 
-     const willBeOn = !this.signals[signalName];
+      const willBeOn = !this.signals[signalName];
 
-     if (willBeOn) {
-       const conflictMsg = this.checkConflict(signalName);
-       if (conflictMsg) {
-         if (this.errorTimeoutId) {
-           clearTimeout(this.errorTimeoutId);
-         }
-         this.errorMessage = conflictMsg;
-         this.errorTimeoutId = setTimeout(() => {
-           this.errorMessage = "";
-           this.errorTimeoutId = null;
-         }, 3000);
-         return;
-       }
-     }
+      if (willBeOn) {
+        const conflictMsg = this.checkConflict(signalName);
+        if (conflictMsg) {
+          if (this.errorTimeoutId) {
+            clearTimeout(this.errorTimeoutId);
+          }
+          this.errorMessage = conflictMsg;
+          this.errorTimeoutId = setTimeout(() => {
+            this.errorMessage = '';
+            this.errorTimeoutId = null;
+          }, 3000);
+          return;
+        }
+      }
 
-     this.errorMessage = "";
-     if (this.errorTimeoutId) {
-       clearTimeout(this.errorTimeoutId);
-       this.errorTimeoutId = null;
-     }
+      this.errorMessage = '';
+      if (this.errorTimeoutId) {
+        clearTimeout(this.errorTimeoutId);
+        this.errorTimeoutId = null;
+      }
 
-     if (this.nextLine.has(signalName)) {
-       this.nextLine.delete(signalName);
-       this.signals[signalName] = false;
-     } else {
-       this.nextLine.add(signalName);
-       this.signals[signalName] = true;
-     }
-   },
-   
+      if (this.nextLine.has(signalName)) {
+        this.nextLine.delete(signalName);
+        this.signals[signalName] = false;
+      } else {
+        this.nextLine.add(signalName);
+        this.signals[signalName] = true;
+      }
+    },
+
     sendPartialData(fieldName, newValue) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-          this.ws.send(JSON.stringify({
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(
+          JSON.stringify({
             type: 'reg-update',
             field: fieldName,
-            value: newValue
-          }));
-        }
-      },
+            value: newValue,
+          })
+        );
+      }
+    },
 
     sendMemUpdate() {
       const addrs = this.mem.slice(0, 4).map((_, idx) => idx);
-      const args  = this.mem.slice(0, 4).map(val => this.decToArgument(val));
-      const vals  = this.mem.slice(0, 4);
+      const args = this.mem.slice(0, 4).map((val) => this.decToArgument(val));
+      const vals = this.mem.slice(0, 4);
 
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({
-          type: 'mem-update',
-          data: {
-            addrs: addrs,
-            args:  args,
-            vals:  vals
-          }
-        }));
+        this.ws.send(
+          JSON.stringify({
+            type: 'mem-update',
+            data: {
+              addrs: addrs,
+              args: args,
+              vals: vals,
+            },
+          })
+        );
       }
     },
 
     sendFullDataToESP() {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         const addrs = this.mem.slice(0, 4).map((val, idx) => idx);
-        const args = this.mem.slice(0, 4).map((val => this.decToArgument(val)));
-        const vals = this.mem.slice(0, 4)
+        const args = this.mem.slice(0, 4).map((val) => this.decToArgument(val));
+        const vals = this.mem.slice(0, 4);
 
         const data = {
           acc: this.ACC,
@@ -626,13 +630,16 @@ export default {
           i: this.I,
           addrs: addrs,
           args: args,
-          vals, vals
+          vals,
+          vals,
         };
 
-        this.ws.send(JSON.stringify({
-          type: 'mem-update',
-          data: data
-        }));
+        this.ws.send(
+          JSON.stringify({
+            type: 'mem-update',
+            data: data,
+          })
+        );
       }
     },
 
@@ -751,9 +758,8 @@ export default {
       this.manualModeChanged();
     },
     manualModeChanged() {
-      for (const key in this.signals) {
-        this.signals[key] = false;
-      }
+      // Clear any active timeouts when switching modes
+      this.clearActiveTimeouts();
 
       this.nextLine.clear();
 
@@ -815,6 +821,9 @@ export default {
       this.nextLine.clear();
     },
     executeLine() {
+      // Clear all active timeouts to prevent signal overlap
+      this.clearActiveTimeouts();
+
       // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
       if (this.nextLine.has('czyt')) this.czyt(); // only czyt or pisz active at the same time
@@ -875,6 +884,7 @@ export default {
     },
     runCode() {
       this.manualMode = false;
+      this.clearActiveTimeouts();
       while (this.activeLine < this.compiledCode.length) {
         this.executeLine();
       }
@@ -885,225 +895,253 @@ export default {
     il() {
       this.signals.il = true;
       this.programCounter++;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.il = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     dl() {
       this.signals.dl = true;
       this.programCounter--;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.dl = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wyl() {
       this.signals.wyl = true;
       this.signals.busA = true;
       this.BusA = this.programCounter;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wyl = false;
         this.signals.busA = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wel() {
       this.signals.wel = true;
       this.signals.busA = true;
       this.programCounter = this.BusA;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wel = false;
         this.signals.busA = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wyad() {
       this.signals.wyad = true;
       this.signals.busA = true;
       this.BusA = this.I;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wyad = false;
         this.signals.busA = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wei() {
       this.signals.wei = true;
       this.signals.busS = true;
       this.I = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wei = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     iak() {
       this.signals.iak = true;
       this.ACC++;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.iak = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     dak() {
       this.signals.dak = true;
       this.ACC--;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.dak = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     weak() {
       this.signals.weak = true;
       this.ACC = this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.weak = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     weja() {
       this.signals.weja = true;
       this.signals.busS = true;
       this.JAML = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.weja = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wyak() {
       this.signals.wyak = true;
       this.signals.busS = true;
       this.BusS = this.ACC;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wyak = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     dod() {
       this.signals.dod = true;
       this.JAML += this.ACC;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.dod = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     ode() {
       this.signals.ode = true;
       this.JAML -= this.ACC;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.ode = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     przep() {
       this.signals.przep = true;
       this.ACC = this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.przep = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     mno() {
       this.signals.mno = true;
       this.ACC *= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.mno = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     dziel() {
       this.signals.dziel = true;
       this.ACC /= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.dziel = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     shr() {
       this.signals.shr = true;
       this.ACC >>= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.shr = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     shl() {
       this.signals.shl = true;
       this.ACC <<= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.shl = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     neg() {
       this.signals.neg = true;
       this.ACC = -this.ACC;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.neg = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     lub() {
       this.signals.lub = true;
       this.ACC |= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.lub = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     i() {
       this.signals.i = true;
       this.ACC &= this.JAML;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.i = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wyx() {
       this.signals.wyx = true;
       this.signals.busS = true;
       this.BusS = this.X;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wyx = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wex() {
       this.signals.wex = true;
       this.signals.busS = true;
       this.X = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wex = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wyy() {
       this.signals.wyy = true;
       this.signals.busS = true;
       this.BusS = this.Y;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wyy = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wey() {
       this.signals.wey = true;
       this.signals.busS = true;
       this.Y = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wey = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
 
     wea() {
       this.signals.wea = true;
       this.signals.busA = true;
       this.A = this.BusA;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wea = false;
         this.signals.busA = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wes() {
       this.signals.wes = true;
       this.signals.busS = true;
       this.S = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wes = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     wys() {
       this.signals.wys = true;
       this.signals.busS = true;
       this.BusS = this.S;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.wys = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     stop() {
       this.codeCompiled = false;
@@ -1114,39 +1152,46 @@ export default {
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusS = this.BusA;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.as = false;
         this.signals.busA = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     sa() {
       this.signals.sa = true;
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusA = this.BusS;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.sa = false;
         this.signals.busA = false;
         this.signals.busS = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     czyt() {
       this.signals.czyt = true;
       this.S = this.mem[this.A];
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.czyt = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
     pisz() {
       this.signals.pisz = true;
       this.mem[this.A] = this.S;
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.signals.pisz = false;
       }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
     },
 
     resetValues() {
+      // Clear any active timeouts first
+      this.clearActiveTimeouts();
+
       // Reset all register values to 0
       this.programCounter = 0;
       this.I = 0;
@@ -1216,6 +1261,19 @@ export default {
         this.consoleOpen = false;
       }
     },
+
+    clearActiveTimeouts() {
+      // Clear all active timeouts and reset all signals to false
+      this.activeTimeouts.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      this.activeTimeouts = [];
+
+      // Immediately turn off all signals
+      for (const key in this.signals) {
+        this.signals[key] = false;
+      }
+    },
   },
   watch: {
     $data: {
@@ -1266,11 +1324,11 @@ export default {
         }
 
         if (first4Changed) {
-          this.sendMemUpdate()
+          this.sendMemUpdate();
         }
 
         this.prevMem = [...this.mem];
-      }
+      },
     },
 
     ACC(newVal, oldVal) {

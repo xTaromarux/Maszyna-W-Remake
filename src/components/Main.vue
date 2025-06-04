@@ -1,11 +1,11 @@
 <template>
-  <TopBar @open-chat="aiChatOpen = true" @open-settings="settingsOpen = true"
+  <TopBar
+    @open-chat="aiChatOpen = true"
+    @open-settings="settingsOpen = true"
     @toggle-console="toggleConsole"
-    :hasConsoleErrors="hasConsoleErrors" />
+    :hasConsoleErrors="hasConsoleErrors"
+  />
 
-    <div v-if="errorMessage" class="error-alert">
-      {{ errorMessage }}
-    </div>
   <div id="wLayout">
     <div id="W" :class="{ manualMode: manualMode }">
       <div id="layer1" class="layer">
@@ -28,13 +28,7 @@
       />
 
       <div id="layer2" class="layer">
-        <RegisterISection
-          :I="I"
-          :signals="signals"
-          :formatNumber="formatNumber"
-          @update:I="I = $event"
-          @clickItem="handleSignalToggle"
-        />
+        <RegisterISection :I="I" :signals="signals" :formatNumber="formatNumber" @update:I="I = $event" @clickItem="handleSignalToggle" />
 
         <CalcSection
           :signals="signals"
@@ -118,9 +112,7 @@
         :compiled-code="compiledCode"
         :active-line="activeLine"
         :next-line="nextLine"
-        @setManualMode="
-          (flag) => (flag ? manualModeCheck() : manualModeUncheck())
-        "
+        @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="code = $event"
       />
       <ExecutionControls
@@ -141,14 +133,10 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console 
-      :logs="logs.slice().reverse()" 
-      :class="{ 'console-collapsed': !consoleOpen }"
-      @click="consoleOpen ? null : toggleConsole()"
-    />
-    
+    <Console :logs="logs.slice().reverse()" :class="{ 'console-collapsed': !consoleOpen }" @click="consoleOpen ? null : toggleConsole()" />
+
     <!-- Console indicator - visible only when console is collapsed -->
-    <div 
+    <div
       v-if="!consoleOpen"
       class="console-indicator"
       :class="{ 'has-errors': hasConsoleErrors }"
@@ -156,12 +144,7 @@
       title="Click to open console"
     />
 
-    <div
-      v-if="disappearBlour"
-      @click="closePopups"
-      :class="{ show: anyPopupOpen, hide: !anyPopupOpen }"
-      id="popupsBackdrop"
-    />
+    <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
 
     <Settings
       :settingsOpen="settingsOpen"
@@ -193,37 +176,37 @@
       @close="closePopups('commandListOpen')"
     />
 
-      <AiChat
-        :visible="aiChatOpen"
-        @close="closePopups('aiChatOpen')"
-        title="Asystent AI 🤖"
-        placeholder="Wpisz wiadomość…"
-        instruction="Opisz operację uzyskania kodu maszynowego:"
-      />
+    <AiChat
+      :visible="aiChatOpen"
+      @close="closePopups('aiChatOpen')"
+      title="Asystent AI 🤖"
+      placeholder="Wpisz wiadomość…"
+      instruction="Opisz operację uzyskania kodu maszynowego:"
+    />
   </div>
 </template>
 
 <script>
-import CommandList from "./CommandList.vue";
-import ProgramSection from "./ProgramSection.vue";
-import CounterComponent from "@/components/CounterComponent.vue";
-import BusSignal from "@/components/BusSignal.vue";
-import SignalButton from "@/components/SignalButton.vue";
-import MemorySection from "@/components/MemorySection.vue";
-import CalcSection from "@/components/CalcSection.vue";
-import RegisterISection from "@/components/RegisterISection.vue";
-import XRegisterSection from "@/components/XRegisterSection.vue";
-import YRegisterSection from "@/components/YRegisterSection.vue";
-import TopBar from "@/components/UI/TopBar.vue";
-import AiChat from "@/components/AiChat.vue";
-import Console from "@/components/Console.vue";
-import Settings from "@/components/Settings.vue";
-import ExecutionControls from "./ExecutionControls.vue";
-import ProgramEditor from "./ProgramEditor.vue";
-import { commandList } from "@/utils/data/commands.js";
+import CommandList from './CommandList.vue';
+import ProgramSection from './ProgramSection.vue';
+import CounterComponent from '@/components/CounterComponent.vue';
+import BusSignal from '@/components/BusSignal.vue';
+import SignalButton from '@/components/SignalButton.vue';
+import MemorySection from '@/components/MemorySection.vue';
+import CalcSection from '@/components/CalcSection.vue';
+import RegisterISection from '@/components/RegisterISection.vue';
+import XRegisterSection from '@/components/XRegisterSection.vue';
+import YRegisterSection from '@/components/YRegisterSection.vue';
+import TopBar from '@/components/UI/TopBar.vue';
+import AiChat from '@/components/AiChat.vue';
+import Console from '@/components/Console.vue';
+import Settings from '@/components/Settings.vue';
+import ExecutionControls from './ExecutionControls.vue';
+import ProgramEditor from './ProgramEditor.vue';
+import { commandList } from '@/utils/data/commands.js';
 
 export default {
-  name: "MainComponent",
+  name: 'MainComponent',
 
   components: {
     CommandList,
@@ -265,10 +248,7 @@ export default {
       A: 0,
       ACC: 0,
       JAML: 0,
-      mem: [
-        0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100,
-        0b111000,
-      ],
+      mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
 
       programCounter: 0,
       I: 0,
@@ -279,7 +259,7 @@ export default {
       BusA: 0,
       BusS: 0,
 
-      code: "czyt wys wei il;\nwyl wea;",
+      code: 'czyt wys wei il;\nwyl wea;',
       compiledCode: [],
       activeLine: 0,
       nextLine: new Set(),
@@ -289,44 +269,34 @@ export default {
 
       commandList,
 
-      numberFormat: "dec",
+      numberFormat: 'dec',
 
       avaiableSignals: {
         always: [
-          "il",
-          "wyl",
-          "wel",
-          "wyad",
-          "wei",
-          "wea",
-          "wes",
-          "wys",
-          "czyt",
-          "pisz",
-          "przep",
-          "weja",
-          "weak",
-          "dod",
-          "ode",
-          "przp",
-          "wyak",
-          "stop",
+          'il',
+          'wyl',
+          'wel',
+          'wyad',
+          'wei',
+          'wea',
+          'wes',
+          'wys',
+          'czyt',
+          'pisz',
+          'przep',
+          'weja',
+          'weak',
+          'dod',
+          'ode',
+          'przp',
+          'wyak',
+          'stop',
         ],
-        busConnectors: ["as", "sa"],
-        dl: ["dl"],
-        jamlExtras: [
-          "iak",
-          "dak",
-          "mno",
-          "dziel",
-          "shr",
-          "shl",
-          "neg",
-          "lub",
-          "i",
-        ],
-        xRegister: ["wyx", "wex"],
-        yRegister: ["wyy", "wey"],
+        busConnectors: ['as', 'sa'],
+        dl: ['dl'],
+        jamlExtras: ['iak', 'dak', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'],
+        xRegister: ['wyx', 'wex'],
+        yRegister: ['wyy', 'wey'],
       },
 
       signals: {
@@ -404,8 +374,6 @@ export default {
 
       consoleOpen: false,
       hasConsoleErrors: false,
-      errorMessage: "",
-      errorTimeoutId: null
     };
   },
   methods: {
@@ -419,7 +387,7 @@ export default {
         console.log('[WS] Connected to server');
       });
 
-      this.ws.addEventListener('error', err => {
+      this.ws.addEventListener('error', (err) => {
         console.error('[WS] Connection error', err);
       });
 
@@ -462,95 +430,111 @@ export default {
       this.suppressBroadcast = false;
     },
 
-     checkConflict(signalName) {
-       // Groups of mutually conflicting signals:
-       const groups = [
-         ["wyad", "wyl"],
-         ["wys", "wyak"],
-         ["il", "wel"],
-         ["czyt", "pisz"],
-         ["iak", "dak"],
-       ];
-       // One JAML Operation at a Time Group:
-       const jalOperations = [
-         "dod","ode","przep","mno","dziel","shr","shl","neg","lub","i"
-       ];
+    checkConflict(signalName) {
+      // Groups of mutually conflicting signals:
+      const groups = [
+        ['wyad', 'wyl'],
+        ['wys', 'wyak'],
+        ['il', 'wel'],
+        ['czyt', 'pisz'],
+        ['iak', 'dak'],
+      ];
 
-       for (const group of groups) {
-         if (group.includes(signalName)) {
-           for (const other of group) {
-             if (other === signalName) continue;
-             if (this.signals[other]) {
-               return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
-             }
-           }
-         }
-       }
+      // Sygnały używające magistrali A
+      const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa'];
 
-       if (jalOperations.includes(signalName)) {
-         for (const other of jalOperations) {
-           if (other === signalName) continue;
-           if (this.signals[other]) {
-             return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
-           }
-         }
-       }
+      // Sygnały używające magistrali S
+      const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa'];
 
-       return null;
-     },
+      // One JAML Operation at a Time Group:
+      const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
 
-   handleSignalToggle(signalName) {
-     if (!this.manualMode) return;
+      for (const group of groups) {
+        if (group.includes(signalName)) {
+          for (const other of group) {
+            if (other === signalName) continue;
+            if (this.signals[other]) {
+              return `Nie można włączyć „${signalName}" – koliduje z „${other}".`;
+            }
+          }
+        }
+      }
 
-     const willBeOn = !this.signals[signalName];
+      // Sprawdzenie konfliktów magistrali A
+      if (busASignals.includes(signalName)) {
+        for (const other of busASignals) {
+          if (other === signalName) continue;
+          if (this.signals[other]) {
+            return `Nie można włączyć „${signalName}" – koliduje z „${other}" (magistrala A zajęta).`;
+          }
+        }
+      }
 
-     if (willBeOn) {
-       const conflictMsg = this.checkConflict(signalName);
-       if (conflictMsg) {
-         if (this.errorTimeoutId) {
-           clearTimeout(this.errorTimeoutId);
-         }
-         this.errorMessage = conflictMsg;
-         this.errorTimeoutId = setTimeout(() => {
-           this.errorMessage = "";
-           this.errorTimeoutId = null;
-         }, 3000);
-         return;
-       }
-     }
+      // Sprawdzenie konfliktów magistrali S
+      if (busSSignals.includes(signalName)) {
+        for (const other of busSSignals) {
+          if (other === signalName) continue;
+          if (this.signals[other]) {
+            return `Nie można włączyć „${signalName}" – koliduje z „${other}" (magistrala S zajęta).`;
+          }
+        }
+      }
 
-     this.errorMessage = "";
-     if (this.errorTimeoutId) {
-       clearTimeout(this.errorTimeoutId);
-       this.errorTimeoutId = null;
-     }
+      if (jalOperations.includes(signalName)) {
+        for (const other of jalOperations) {
+          if (other === signalName) continue;
+          if (this.signals[other]) {
+            return `Nie można włączyć „${signalName}" – już działa „${other}" (maks. jedna operacja JAML naraz).`;
+          }
+        }
+      }
 
-     if (this.nextLine.has(signalName)) {
-       this.nextLine.delete(signalName);
-       this.signals[signalName] = false;
-     } else {
-       this.nextLine.add(signalName);
-       this.signals[signalName] = true;
-     }
-   },
+      return null;
+    },
+
+    handleSignalToggle(signalName) {
+      if (!this.manualMode) return;
+
+      const willBeOn = !this.signals[signalName];
+
+      if (willBeOn) {
+        const conflictMsg = this.checkConflict(signalName);
+        if (conflictMsg) {
+          this.addLog(conflictMsg, 'błąd sygnału');
+          return;
+        }
+      }
+
+      if (this.nextLine.has(signalName)) {
+        this.nextLine.delete(signalName);
+        this.signals[signalName] = false;
+      } else {
+        this.nextLine.add(signalName);
+        this.signals[signalName] = true;
+      }
+    },
 
     sendSignalToggle(id, value) {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({
-          type: 'signal-toggle',
-          id,
-          value
-        }));
+        this.ws.send(
+          JSON.stringify({
+            type: 'signal-toggle',
+            id,
+            value,
+          })
+        );
       }
     },
 
     sendMemUpdate(idx, value) {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({
-          type: 'mem-update',
-          index: idx,
-          value
-        }));
+        this.ws.send(
+          JSON.stringify({
+            type: 'mem-update',
+            index: idx,
+            value,
+          })
+        );
       }
     },
 
@@ -561,34 +545,24 @@ export default {
     },
 
     loadFromLS() {
-      const data = localStorage.getItem("W");
+      const data = localStorage.getItem('W');
       if (data) {
         const parsed = JSON.parse(data);
-        
+
         // Only restore settings, not register values or code
-        const settingsToRestore = [
-          'addresBits',
-          'codeBits', 
-          'memoryAddresBits',
-          'oddDelay',
-          'numberFormat',
-          'extras',
-          'lightMode'
-        ];
-        
-        settingsToRestore.forEach(setting => {
+        const settingsToRestore = ['addresBits', 'codeBits', 'memoryAddresBits', 'oddDelay', 'numberFormat', 'extras', 'lightMode'];
+
+        settingsToRestore.forEach((setting) => {
           if (parsed[setting] !== undefined) {
             this[setting] = parsed[setting];
           }
         });
 
-
         // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
         if (this.memoryAddresBits > 10) {
           this.memoryAddresBits = 10;
-          this.addLog("Rozmiar pamięci został ograniczony do maksymalnie 1024 komórek (10 bitów)", "system");
+          this.addLog('Rozmiar pamięci został ograniczony do maksymalnie 1024 komórek (10 bitów)', 'system');
         }
-
 
         // Always reset to default values for registers and program state
         this.A = 0;
@@ -601,21 +575,21 @@ export default {
         this.S = 0;
         this.BusA = 0;
         this.BusS = 0;
-        
+
         // Reset code to default
-        this.code = "czyt wys wei il;\nwyl wea;";
+        this.code = 'czyt wys wei il;\nwyl wea;';
         this.compiledCode = [];
         this.activeLine = 0;
 
         this.nextLine = new Set();
         this.codeCompiled = false;
         this.manualMode = true;
-        
+
         // Reset all signals to false
         for (const key in this.signals) {
           this.signals[key] = false;
         }
-        
+
         // Don't reset logs - they should persist during the session
       }
     },
@@ -624,26 +598,26 @@ export default {
       const dataToSave = { ...this.$data };
       delete dataToSave.logs;
       delete dataToSave.hasConsoleErrors;
-      localStorage.setItem("W", JSON.stringify(dataToSave));
+      localStorage.setItem('W', JSON.stringify(dataToSave));
     },
-    addLog(message, classification = "info") {
+    addLog(message, classification = 'info') {
       const timestamp = new Date();
       this.logs.push({ timestamp, message, class: classification });
-      
+
       // Check if this is an error and set the error flag
-      const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu'];
-      if (errorTypes.some(type => classification.toLowerCase().includes(type.toLowerCase()))) {
+      const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu', 'błąd sygnału'];
+      if (errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase()))) {
         this.hasConsoleErrors = true;
       }
     },
     formatNumber(number) {
-      if (typeof number !== "number" || isNaN(number)) {
-        return "Błąd: Nieprawidłowa liczba.";
+      if (typeof number !== 'number' || isNaN(number)) {
+        return 'Błąd: Nieprawidłowa liczba.';
       }
 
       const formatters = {
         dec: () => number,
-        hex: () => "0x" + Math.floor(number).toString(16).toUpperCase(),
+        hex: () => '0x' + Math.floor(number).toString(16).toUpperCase(),
         bin: () => Math.floor(number).toString(2),
       };
 
@@ -661,11 +635,8 @@ export default {
       const newMem = new Array(newSize).fill(0);
 
       // Set default values for the first 8 memory locations if memory is large enough
-      const defaultValues = [
-        0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100,
-        0b111000,
-      ];
-      
+      const defaultValues = [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000];
+
       for (let i = 0; i < Math.min(defaultValues.length, newSize); i++) {
         newMem[i] = defaultValues[i];
       }
@@ -696,7 +667,7 @@ export default {
       if (typeof popupName === 'string' && popupName in this.$data) {
         this[popupName] = false;
       }
-      
+
       if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
         setTimeout(() => {
           this.disappearBlour = false;
@@ -706,7 +677,7 @@ export default {
 
     compileCode() {
       if (!this.code) {
-        this.addLog("Brak kodu do kompilacji", "Błąd");
+        this.addLog('Brak kodu do kompilacji', 'Błąd');
         return;
       }
 
@@ -716,9 +687,7 @@ export default {
         ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
         ...(this.extras.dl ? this.avaiableSignals.dl : []),
         ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
-        ...(this.extras.busConnectors
-          ? this.avaiableSignals.busConnectors
-          : []),
+        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
       ]);
 
       console.log(signalslist);
@@ -726,27 +695,22 @@ export default {
         if (!command) continue; // Skip empty commands
 
         if (!signalslist.has(command)) {
-          this.addLog(
-            `Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`,
-            "Błąd parsera kodu"
-          );
+          this.addLog(`Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`, 'Błąd parsera kodu');
           return;
         }
       }
 
-      let code = this.code.replace(/\n/g, ""); // Remove all newline characters
-      this.compiledCode = code.split(";"); // Split the cleaned code into an array by ";"
+      let code = this.code.replace(/\n/g, ''); // Remove all newline characters
+      this.compiledCode = code.split(';'); // Split the cleaned code into an array by ";"
       //remove empty lines
-      this.compiledCode = this.compiledCode.filter(
-        (line) => line.trim() !== ""
-      );
+      this.compiledCode = this.compiledCode.filter((line) => line.trim() !== '');
 
       this.codeCompiled = true;
       this.activeLine = -1;
       this.nextLine.clear();
       this.executeLine();
 
-      this.addLog("Kod skompilowany pomyślnie", "kompilator rozkazów");
+      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
     },
     uncompileCode() {
       this.codeCompiled = false;
@@ -754,58 +718,58 @@ export default {
     },
     executeLine() {
       // all wy's first
-      if (this.nextLine.has("wyl")) this.wyl();
-      if (this.nextLine.has("czyt")) this.czyt(); // only czyt or pisz active at the same time
-      if (this.nextLine.has("pisz")) this.pisz();
-      if (this.nextLine.has("wys")) this.wys();
-      if (this.nextLine.has("stop")) this.stop();
-      if (this.nextLine.has("wyad")) this.wyad();
-      if (this.nextLine.has("wyak")) this.wyak();
-      if (this.nextLine.has("wyx")) this.wyx();
-      if (this.nextLine.has("wyy")) this.wyy();
+      if (this.nextLine.has('wyl')) this.wyl();
+      if (this.nextLine.has('czyt')) this.czyt(); // only czyt or pisz active at the same time
+      if (this.nextLine.has('pisz')) this.pisz();
+      if (this.nextLine.has('wys')) this.wys();
+      if (this.nextLine.has('stop')) this.stop();
+      if (this.nextLine.has('wyad')) this.wyad();
+      if (this.nextLine.has('wyak')) this.wyak();
+      if (this.nextLine.has('wyx')) this.wyx();
+      if (this.nextLine.has('wyy')) this.wyy();
 
-      if (this.nextLine.has("sa")) this.sa();
-      if (this.nextLine.has("as")) this.as();
+      if (this.nextLine.has('sa')) this.sa();
+      if (this.nextLine.has('as')) this.as();
 
       // then all we's
 
-      if (this.nextLine.has("wea")) this.wea();
-      if (this.nextLine.has("weja")) this.weja();
-      if (this.nextLine.has("wex")) this.wex();
-      if (this.nextLine.has("wey")) this.wey();
-      if (this.nextLine.has("wes")) this.wes();
-      if (this.nextLine.has("wei")) this.wei();
-      if (this.nextLine.has("wel")) this.wel();
+      if (this.nextLine.has('wea')) this.wea();
+      if (this.nextLine.has('weja')) this.weja();
+      if (this.nextLine.has('wex')) this.wex();
+      if (this.nextLine.has('wey')) this.wey();
+      if (this.nextLine.has('wes')) this.wes();
+      if (this.nextLine.has('wei')) this.wei();
+      if (this.nextLine.has('wel')) this.wel();
 
       // all math
 
-      if (this.nextLine.has("dod")) this.dod();
-      if (this.nextLine.has("ode")) this.ode();
-      if (this.nextLine.has("przep")) this.przep();
-      if (this.nextLine.has("mno")) this.mno();
-      if (this.nextLine.has("dziel")) this.dziel();
-      if (this.nextLine.has("shr")) this.shr();
-      if (this.nextLine.has("shl")) this.shl();
-      if (this.nextLine.has("neg")) this.neg();
-      if (this.nextLine.has("lub")) this.lub();
-      if (this.nextLine.has("i")) this.i();
+      if (this.nextLine.has('dod')) this.dod();
+      if (this.nextLine.has('ode')) this.ode();
+      if (this.nextLine.has('przep')) this.przep();
+      if (this.nextLine.has('mno')) this.mno();
+      if (this.nextLine.has('dziel')) this.dziel();
+      if (this.nextLine.has('shr')) this.shr();
+      if (this.nextLine.has('shl')) this.shl();
+      if (this.nextLine.has('neg')) this.neg();
+      if (this.nextLine.has('lub')) this.lub();
+      if (this.nextLine.has('i')) this.i();
 
-      if (this.nextLine.has("iak")) this.iak();
-      if (this.nextLine.has("dak")) this.dak();
+      if (this.nextLine.has('iak')) this.iak();
+      if (this.nextLine.has('dak')) this.dak();
 
-      if (this.nextLine.has("weak")) this.weak();
+      if (this.nextLine.has('weak')) this.weak();
 
-      if (this.nextLine.has("il")) this.il();
-      if (this.nextLine.has("dl")) this.dl();
+      if (this.nextLine.has('il')) this.il();
+      if (this.nextLine.has('dl')) this.dl();
 
       this.nextLine.clear();
       if (!this.manualMode) {
         this.activeLine++;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog("Kod zakończony", "kompilator rozkazów");
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
         } else {
-          for (const command of this.compiledCode[this.activeLine].split(" ")) {
+          for (const command of this.compiledCode[this.activeLine].split(' ')) {
             this.nextLine.add(command);
           }
         }
@@ -1096,22 +1060,22 @@ export default {
       this.JAML = 0;
       this.BusA = 0;
       this.BusS = 0;
-      
+
       // Reset memory to all zeros
       this.mem = new Array(1 << this.memoryAddresBits).fill(0);
-      
+
       // Reset all signals to false
       for (const key in this.signals) {
         this.signals[key] = false;
       }
-      
+
       this.nextLine.clear();
-      
+
       // Clear console logs
       this.logs = [];
       this.hasConsoleErrors = false;
-      
-      this.addLog("Wszystkie wartości rejestrów zostały zresetowane", "system");
+
+      this.addLog('Wszystkie wartości rejestrów zostały zresetowane', 'system');
     },
 
     defaultSettings() {
@@ -1120,28 +1084,28 @@ export default {
       this.codeBits = 6;
       this.addresBits = 4;
       this.oddDelay = 100;
-      this.numberFormat = "dec";
+      this.numberFormat = 'dec';
       this.extras = {
         xRegister: false,
         yRegister: false,
         dl: false,
         jamlExtras: false,
         busConnectors: false,
-        showInvisibleRegisters: false
+        showInvisibleRegisters: false,
       };
-      
+
       // Resize memory according to new settings
       this.resizeMemory();
-      
+
       // Clear console logs
       this.logs = [];
       this.hasConsoleErrors = false;
-      
-      this.addLog("Ustawienia zostały przywrócone do wartości domyślnych", "system");
+
+      this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
     },
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
-      
+
       // Reset error flag when console is opened
       if (this.consoleOpen) {
         this.hasConsoleErrors = false;
@@ -1168,11 +1132,11 @@ export default {
     lightMode() {
       // add lightMode or darkMode class to body
       if (this.lightMode) {
-        document.body.classList.add("lightMode");
-        document.body.classList.remove("darkMode");
+        document.body.classList.add('lightMode');
+        document.body.classList.remove('darkMode');
       } else {
-        document.body.classList.add("darkMode");
-        document.body.classList.remove("lightMode");
+        document.body.classList.add('darkMode');
+        document.body.classList.remove('lightMode');
       }
     },
 
@@ -1187,7 +1151,7 @@ export default {
           }
         }
         this.prevSignals = curr;
-      }
+      },
     },
 
     mem: {
@@ -1201,17 +1165,17 @@ export default {
           }
         });
         this.prevMem = curr;
-      }
+      },
     },
 
     anyPopupOpen: {
       handler(val) {
-        if(val){
+        if (val) {
           this.disappearBlour = val;
         }
       },
-      immediate: true
-    }
+      immediate: true,
+    },
   },
 
   mounted() {
@@ -1219,7 +1183,7 @@ export default {
     this.loadFromLS();
     this.resizeMemory();
 
-    this.addLog("System zainicjalizowany.", "System");
+    this.addLog('System zainicjalizowany.', 'System');
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
 

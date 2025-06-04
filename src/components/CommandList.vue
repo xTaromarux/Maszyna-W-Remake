@@ -1,20 +1,19 @@
 <template>
-    <div id="commandList" v-if="visible">
-      <div class="header">
-        <h1>Lista instrukcji</h1>
-        <button class="closeBtn closeButton" @click="$emit('close')"  aria-label="Zamknij liste instrukcji">
-          &times;
-        </button>
-      </div>
-  
-      <div id="commandListTable">
-        <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
-        <button
-          v-for="(cmd, idx) in commandList"
-          :key="idx"
-          @click="editCommand(idx)"
-          class="command"
-          :class="{ selected: selectedCommand === idx }">
+  <div id="commandList" v-if="visible">
+    <div class="header">
+      <h1>Lista instrukcji</h1>
+      <button class="closeBtn closeButton" @click="$emit('close')" aria-label="Zamknij liste instrukcji">&times;</button>
+    </div>
+
+    <div id="commandListTable">
+      <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
+      <button
+        v-for="(cmd, idx) in commandList"
+        :key="idx"
+        @click="editCommand(idx)"
+        class="command"
+        :class="{ selected: selectedCommand === idx }"
+      >
         <span>{{ cmd.name }}</span>
       </button>
     </div>
@@ -430,7 +429,6 @@ export default {
 
       this.$emit('update:commandList', JSON.parse(JSON.stringify(this.localList)));
     },
-
   },
 };
 </script>
@@ -462,7 +460,7 @@ export default {
   max-width: 90vw;
   height: 90vh;
 }
-  
+
 body.darkMode #commandList {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
 }

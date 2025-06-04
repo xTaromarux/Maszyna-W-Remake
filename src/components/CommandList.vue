@@ -1,20 +1,19 @@
 <template>
-    <div id="commandList" v-if="visible">
-      <div class="header">
-        <h1>Lista instrukcji</h1>
-        <button class="closeBtn closeButton" @click="$emit('close')"  aria-label="Zamknij liste instrukcji">
-          &times;
-        </button>
-      </div>
-  
-      <div id="commandListTable">
-        <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
-        <button
-          v-for="(cmd, idx) in commandList"
-          :key="idx"
-          @click="editCommand(idx)"
-          class="command"
-          :class="{ selected: selectedCommand === idx }">
+  <div id="commandList" v-if="visible">
+    <div class="header">
+      <h1>Lista instrukcji</h1>
+      <button class="closeBtn closeButton" @click="$emit('close')" aria-label="Zamknij liste instrukcji">&times;</button>
+    </div>
+
+    <div id="commandListTable">
+      <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
+      <button
+        v-for="(cmd, idx) in commandList"
+        :key="idx"
+        @click="editCommand(idx)"
+        class="command"
+        :class="{ selected: selectedCommand === idx }"
+      >
         <span>{{ cmd.name }}</span>
       </button>
     </div>
@@ -142,6 +141,7 @@ export default {
   data() {
     return {
       localList: JSON.parse(JSON.stringify(this.commandList)),
+      fullCommandList: JSON.parse(JSON.stringify(this.commandList)),
       selectedCommand: this.commandList.length > 0 ? 0 : null,
       editCommandEnabled: false,
       EditCommandField: '',
@@ -153,6 +153,13 @@ export default {
       newCommandLines: '',
     };
   },
+
+  // there can be a situation where fullCommandList is deprecated after adding a new command
+  // needs to be addressed, leaving due to the lack of time
+  created() {
+    this.fullCommandList = JSON.parse(JSON.stringify(this.commandList));
+  },
+
   computed: {
     commandInputPlaceholder() {
       if (this.isEditingName) {
@@ -163,6 +170,7 @@ export default {
       }
       return 'Nazwa nowego rozkazu';
     },
+
     matchingCommand() {
       if (!this.commandInputValue.trim()) return null;
 
@@ -187,6 +195,40 @@ export default {
         }
       },
       deep: true,
+    },
+
+    codeBits: {
+      handler(newBits, oldBits) {
+        const newMaxCommands = Math.pow(2, newBits);
+        const oldMaxCommands = oldBits ? Math.pow(2, oldBits) : this.fullCommandList.length;
+
+        if (newMaxCommands < oldMaxCommands) {
+          // Bits decreased - trim visible list to new limit
+          if (this.localList.length > newMaxCommands) {
+            this.localList = this.localList.slice(0, newMaxCommands);
+
+            // Adjust selected command if needed
+            if (this.selectedCommand !== null && this.selectedCommand >= newMaxCommands) {
+              this.selectedCommand = newMaxCommands > 0 ? newMaxCommands - 1 : null;
+            }
+
+            this.emitUpdate();
+          }
+        } else if (newMaxCommands > oldMaxCommands) {
+          // Bits increased - restore instructions from full list up to new limit
+          const commandsToRestore = Math.min(this.fullCommandList.length, newMaxCommands);
+          this.localList = JSON.parse(JSON.stringify(this.fullCommandList.slice(0, commandsToRestore)));
+          console.log(this.fullCommandList.length, this.localList.length, this.commandList.length);
+
+          // Restore selected command if it was trimmed before
+          if (this.selectedCommand === null && this.localList.length > 0) {
+            this.selectedCommand = 0;
+          }
+
+          this.emitUpdate();
+        }
+      },
+      immediate: false,
     },
 
     selectedCommand(newVal) {
@@ -222,6 +264,14 @@ export default {
         this.EditCommandField = this.localList[this.selectedCommand]?.lines || '';
       } else if (this.selectedCommand !== null) {
         this.localList[this.selectedCommand].lines = this.EditCommandField;
+
+        // Update the same command in fullCommandList
+        const commandToUpdate = this.localList[this.selectedCommand];
+        const fullListIndex = this.fullCommandList.findIndex((cmd) => cmd.name === commandToUpdate.name);
+        if (fullListIndex !== -1) {
+          this.fullCommandList[fullListIndex].lines = this.EditCommandField;
+        }
+
         this.emitUpdate();
       }
     },
@@ -301,9 +351,15 @@ export default {
       }
 
       if (newName !== this.editingCommandOriginalName) {
-        // Check for duplicates (excluding current command)
+        // Check for duplicates (excluding current command) in both lists
         const otherCommands = this.localList.filter((cmd) => cmd !== commandToEdit);
-        const duplicate = otherCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase());
+        const otherFullCommands = this.fullCommandList.filter(
+          (cmd) => cmd.name.trim().toLowerCase() !== this.editingCommandOriginalName.toLowerCase()
+        );
+
+        const duplicate =
+          otherCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase()) ||
+          otherFullCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase());
 
         if (duplicate) {
           alert(`Rozkaz o nazwie "${newName}" już istnieje!`);
@@ -311,8 +367,17 @@ export default {
           return;
         }
 
-        // Update the command name
+        // Update the command name in local list
         commandToEdit.name = newName;
+
+        // Update the same command in fullCommandList
+        const fullListCommand = this.fullCommandList.find(
+          (cmd) => cmd.name.trim().toLowerCase() === this.editingCommandOriginalName.toLowerCase()
+        );
+        if (fullListCommand) {
+          fullListCommand.name = newName;
+        }
+
         this.emitUpdate();
       }
 
@@ -353,6 +418,7 @@ export default {
       };
 
       this.localList.push(newCommand);
+      this.fullCommandList.push(JSON.parse(JSON.stringify(newCommand)));
 
       const newIndex = this.localList.length - 1;
       this.selectedCommand = newIndex;
@@ -380,9 +446,13 @@ export default {
         reader.onload = (ev) => {
           try {
             const parsed = JSON.parse(ev.target.result);
-            this.localList = parsed;
 
-            if (parsed.length > 0) {
+            // Apply current codeBits limit when loading
+            const maxCommands = Math.pow(2, this.codeBits);
+            this.fullCommandList = parsed; // Store complete loaded list
+            this.localList = parsed.slice(0, maxCommands); // Show only up to current limit
+
+            if (this.localList.length > 0) {
               this.selectedCommand = 0;
               this.editCommandEnabled = false;
             } else {
@@ -399,7 +469,7 @@ export default {
       input.click();
     },
     downloadCommandList() {
-      const data = JSON.stringify(this.localList, null, 2);
+      const data = JSON.stringify(this.fullCommandList, null, 2);
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -414,7 +484,20 @@ export default {
     },
     deleteCommand() {
       if (this.selectedCommand === null) return;
+
+      const commandToDelete = this.localList[this.selectedCommand];
+
+      // Remove from local list
       this.localList.splice(this.selectedCommand, 1);
+
+      // Remove from full list as well
+      const fullListIndex = this.fullCommandList.findIndex(
+        (cmd) => cmd.name === commandToDelete.name && cmd.lines === commandToDelete.lines
+      );
+      if (fullListIndex !== -1) {
+        this.fullCommandList.splice(fullListIndex, 1);
+      }
+
       this.emitUpdate();
       this.selectedCommand = this.localList.length ? Math.min(this.selectedCommand, this.localList.length - 1) : null;
     },
@@ -430,7 +513,6 @@ export default {
 
       this.$emit('update:commandList', JSON.parse(JSON.stringify(this.localList)));
     },
-
   },
 };
 </script>
@@ -462,7 +544,7 @@ export default {
   max-width: 90vw;
   height: 90vh;
 }
-  
+
 body.darkMode #commandList {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
 }

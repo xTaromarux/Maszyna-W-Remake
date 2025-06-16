@@ -27,3 +27,37 @@ npm run dev
 ```sh
 npm run build
 ```
+
+
+## Platform Selection: Web / ESP32
+
+This project supports conditional behavior depending on the target platform (e.g., web browser or ESP32 hardware).  
+You can configure it using the `VITE_APP_PLATFORM` environment variable.
+
+### Available options:
+- `web` – for standard browser-based usage
+- `esp` – for deployment targeting ESP32
+
+### How to use:
+
+1. Create one of the following `.env` files in the project root:
+
+**`.env`**
+```env
+VITE_APP_PLATFORM=web
+```
+
+**`.env.esp`**
+```env
+VITE_APP_PLATFORM=esp
+```
+
+2. Then build or run with the selected mode:
+
+```sh
+npm run build                # for web version
+npm run build:esp            # for ESP32 version
+
+npm run dev                  # for development targeting browser
+npm run dev:esp              # for development targeting ESP32
+```

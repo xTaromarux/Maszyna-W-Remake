@@ -7,7 +7,9 @@
     "serve:ws": "node server.cjs",
     "dev:ws": "concurrently -k \"npm:serve:ws\" \"npm:dev\"",
     "dev": "vite",
+    "dev:esp": "vite --mode esp",
     "build": "vite build",
+    "build:esp": "vite build --mode esp",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -99,7 +99,7 @@
       </div>
 
         <!-- EXTRAS SWITCHES -->
-      <div class="extras">
+      <div class="extras" v-if="platform !== 'esp'">
         <label>Dodatki:</label>
         <template v-for="(label, key) in extrasLabels" :key="key">
           <div class="module-toggle-wrapper">
@@ -303,7 +303,8 @@ export default {
   data() {
     return {
       isAnimated: false,
-      open: false
+      open: false,
+      platform: import.meta.env.VITE_APP_PLATFORM
     };
   },
 

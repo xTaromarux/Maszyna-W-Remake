@@ -41,11 +41,11 @@
 }
 
 #iRegister #wyad {
-  margin-right: 0.5rem;
+  margin-right:2rem;
 }
 
 #iRegister #wei {
-  margin-left: 0.5rem;
+  margin-left: 2rem;
 }
 
 #sa {
@@ -212,16 +212,17 @@
 }
 
 #memory #wea {
+  margin-right: 30px;
   grid-area: wea;
   position: relative;
 }
 
 #memory #wes {
-  margin-right: 0.25rem;
+  margin-right: 5px;
 }
 
 #memory #wys {
-  margin-left: 0.25rem;
+  margin-left: 15px;
 }
 
 
@@ -253,6 +254,7 @@
 }
 
 .mobile-button-wrapper #wea {
+  margin-right: 40px;
   grid-area: wea;
   position: relative;
 }

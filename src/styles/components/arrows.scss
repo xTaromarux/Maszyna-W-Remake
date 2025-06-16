@@ -15,6 +15,10 @@
     bottom: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
 }
 
+.fullSizeArrow{
+    height: 97% !important;
+}
+
 .arrowLeftOnBottom {
     color: var(--signalText, black);
     border-bottom: var(--arrowLineThickness, 0.125rem) solid var(--signal, black);

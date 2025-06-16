@@ -14,6 +14,7 @@
       </button>
 
       <button
+        v-if="platform !== 'esp'"
         class="simpleSvgButton"
         aria-label="Otwórz czat AI"
         @click="$emit('open-chat')"
@@ -42,12 +43,15 @@ import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
 import ConsoleIcon        from '@/assets/svg/ConsoleIcon.vue'
 
+const platform = import.meta.env.VITE_APP_PLATFORM;
+
 defineProps({
   hasConsoleErrors: {
     type: Boolean,
     default: false
   }
 })
+
 
 defineEmits(['open-chat', 'open-settings', 'toggle-console'])
 </script>

@@ -133,7 +133,12 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console :logs="logs.slice().reverse()" :class="{ 'console-collapsed': !consoleOpen }" @click="consoleOpen ? null : toggleConsole()" />
+    <Console 
+      ref="console" 
+      :logs="logs.slice().reverse()" 
+      :class="{ 'console-collapsed': !consoleOpen }" 
+      @click="consoleOpen ? null : toggleConsole()" 
+    />
 
     <!-- Console indicator - visible only when console is collapsed -->
     <div
@@ -1249,9 +1254,14 @@ export default {
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
 
-      // Reset error flag when console is opened
       if (this.consoleOpen) {
         this.hasConsoleErrors = false;
+
+        this.$nextTick(() => {
+          if (window.innerWidth <= 1080 && this.$refs.console?.$el) {
+            this.$refs.console.$el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
       }
     },
 

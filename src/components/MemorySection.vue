@@ -51,7 +51,7 @@
                 id="wes"
                 :signal="signals.wes"
                 label="wes"
-                divClassNames="pathUpOnRight"
+                divClassNames="pathUpOnRight fullSizeArrow"
                 spanClassNames="arrowRightOnBottom"
                 @click="handleClick('wes')"
             />
@@ -59,7 +59,7 @@
                 id="wys"
                 :signal="signals.wys"
                 label="wys"
-                divClassNames="pathDownOnLeft"
+                divClassNames="pathDownOnLeft fullSizeArrow"
                 spanClassNames="lineLeftOnBottom"
                 @click="handleClick('wys')"
             />

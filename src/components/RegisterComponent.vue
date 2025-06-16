@@ -36,6 +36,7 @@ export default {
                 X: 'Rejestr X',
                 Y: 'Rejestr Y',
                 I: 'Rejestr I (adresowy)',
+                L: 'Licznik',
                 S: 'Rejestr S',
                 A: 'Rejestr A',
                 JAML: 'Rejestr JAML',

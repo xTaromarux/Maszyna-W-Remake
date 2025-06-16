@@ -4,13 +4,8 @@
         <SignalButton id="il" :signal="signals.il" @click="handleClick('il')" label="il"
             spanClassNames="arrowRightOnBottom" />
 
-        <span class="register">
-            <span>L</span><span>:</span>
-            <div class="inputWrapper">
-                <span>{{ formatNumber(programCounter) }}</span>
-                <input type="number" inputmode="numeric" pattern="[0-9]*" class="hoverInput" :value="programCounter" @input="updateProgramCounter($event.target.value)" />
-            </div>
-        </span>
+        <RegisterComponent label="L" :model="programCounter" @update:model="$emit('update:programCounter', $event)" :formatNumber="formatNumber" />
+
 
         <SignalButton id="dl" v-if="extras.dl" :signal="signals.dl" @click="handleClick('dl')" label="dl"
             spanClassNames="arrowLeftOnBottom" />
@@ -26,13 +21,19 @@
 
 <script>
 import SignalButton from './SignalButton.vue';
+import RegisterComponent from './RegisterComponent.vue';
 
 export default {
     name: "CounterComponent",
     components: {
         SignalButton,
+        RegisterComponent
     },
     props: {
+        L: {
+            type: Number,
+            required: true
+        },
         signals: {
             type: Object,
             required: true
@@ -54,10 +55,6 @@ export default {
         handleClick(id) {
             this.$emit('clickItem', id);
         },
-
-        updateProgramCounter(value) {
-            this.$emit("update:programCounter", Number(value));
-        }
     }
 };
 </script>

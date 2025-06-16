@@ -21,30 +21,26 @@
 
     <div id="memoryTable">
       <div class="scrollWrapper">
-        <span class="label">{{ memoryLabel }}</span>
-        <span class="label">Wartość</span>
-        <span class="label">Kod</span>
-        <span class="label">Adres</span>
+        <div class="memoryContainer">
+            <span class="label">{{ memoryLabel }}</span>
+            <span class="label">Wartość</span>
+            <span class="label">Kod</span>
+            <span class="label">Adres</span>
 
-        <template v-for="(value, index) in mem" :key="index">
-          <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
-          <div :class="{ selected: A === index }" class="inputWrapper">
-            <span>{{ formatNumber(mem[index]) }}</span>
-            <input
-              inputmode="numeric"
-              pattern="[0-9]*"
-              type="number"
-              class="hoverInput"
-              v-model="mem[index]"
-            />
+            <template v-for="(value, index) in mem" :key="index" >
+              <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
+              <div :class="{ selected: A === index }" class="inputWrapper">
+                <span>{{ formatNumber(mem[index]) }}</span>
+                <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
+              </div>
+              <span :class="{ selected: A === index }">
+                {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}
+              </span>
+              <span :class="{ selected: A === index }">
+                {{ formatNumber(decToArgument(value)) }}
+              </span>
+            </template>
           </div>
-          <span :class="{ selected: A === index }">
-            {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}
-          </span>
-          <span :class="{ selected: A === index }">
-            {{ formatNumber(decToArgument(value)) }}
-          </span>
-        </template>
       </div>
     </div>
 

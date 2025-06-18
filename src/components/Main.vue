@@ -359,6 +359,8 @@ export default {
         // Y
         wyy: false,
         wey: false,
+
+        stop: false,
       },
       extras: {
         xRegister: false,
@@ -1149,6 +1151,12 @@ export default {
       this.activeTimeouts.push(timeoutId);
     },
     stop() {
+      this.signals.stop = true;     
+      const timeoutId = setTimeout(() => {
+      this.signals.pisz = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId); 
+
       this.codeCompiled = false;
       this.nextLine.clear();
     },

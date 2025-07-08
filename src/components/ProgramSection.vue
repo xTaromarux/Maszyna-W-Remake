@@ -1,28 +1,15 @@
 <template>
   <div id="program" v-if="!manualMode">
-    <div class="code-editor-container">
-      <div class="line-numbers" ref="lineNumbers">
-        <div 
-          v-for="(line, index) in lineNumbers" 
-          :key="index" 
-          class="line-number"
-        >
-          {{ index + 1 }}
-        </div>
-      </div>
-      <textarea 
-        v-model="program"
-        ref="codeEditor"
-        class="code-editor no-horiz-resize"
-        :disabled="manualMode || programCompiled"
-        @scroll="syncScroll"
-        @input="updateLineNumbers"
-        placeholder="Wpisz swój program tutaj, np:&#13;&#10;&#13;&#10;POB&#13;&#10;DOD"
-        spellcheck="false"
-      ></textarea>
-    </div>
+
+    <MonacoEditor 
+      v-model="programLocal" 
+      language="macroW" 
+      theme="macroTheme"
+      :read-only="manualMode || programCompiled"
+      />
+
     <div class="flexRow">
-      <button v-if="!programCompiled" @click="compileProgram" :disabled="manualMode || !program.trim()"
+      <button v-if="!programCompiled" @click="compileProgram" :disabled="manualMode || !programLocal.trim()"
         class="execution-btn execution-btn--compile">
         <CompileIcon />
         <span>Kompiluj</span>
@@ -37,80 +24,149 @@
   </div>
 </template>
 
-<script>
-import EditIcon from "@/assets/svg/EditIcon.vue";
-import CompileIcon from "@/assets/svg/CompileIcon.vue";
+<script setup>
+import { ref } from 'vue'
+import MonacoEditor from '@/components/MonacoEditor.vue'
+import CompileIcon from '@/assets/svg/CompileIcon.vue'
+import EditIcon from '@/assets/svg/EditIcon.vue'
 
-export default {
-  name: 'ProgramSection',
-  components: {
-    CompileIcon,
-    EditIcon,
-  },
-  props: {
-    manualMode: { type: Boolean, required: true },
-    commandList: { type: Array, required: true }
-  },
-  data() {
-    return {
-      program: '',
-      programCompiled: false
+// Props from parent
+const props = defineProps({
+  manualMode: { type: Boolean, required: true },
+  commandList: { type: Array, required: true }
+})
+
+// Events to parent: update assembled code, log messages
+const emit = defineEmits(['update:code', 'log'])
+
+// Local state
+const programLocal = ref('')
+const programCompiled = ref(false)
+
+// Compile high-level commands into assembler code
+function compileProgram() {
+  // 1. Podziel na niepuste linie
+  const rawLines = programLocal.value
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l !== '')
+
+  // 2. Budowa mapy etykiet i tablicy instrukcji
+  const labelMap = {}      // { 'Pętla': idx, ... }
+  const insts = []      // [{ name, args }...]
+
+  rawLines.forEach((line, idx) => {
+    // dyrektywa inicjująca RST: "Etykieta: RST 5"
+    const rstMatch = /^([A-Za-z_]\w*):\s*RST\s+(-?\d+)\s*$/i.exec(line)
+    if (rstMatch) {
+      // traktujemy RST jako pseudo‐instrukcję inicjującą pamięć
+      const lbl = rstMatch[1]
+      const val = parseInt(rstMatch[2], 10)
+      insts.push({ name: 'rst', args: [lbl, val] })
+      // etykieta dla RST też rejestrujemy na bieżącej pozycji
+      labelMap[lbl] = insts.length - 1
+      return
     }
-  },
-  computed: {
-    lineNumbers() {
-      if (this.program.length === 0) {
-        return [''];
-      }
-      return this.program.split('\n');
+
+    // etykieta definiująca skok: "Pętla:" (bez dalszej instrukcji)
+    if (/^[A-Za-z_]\w*:$/.test(line)) {
+      const lbl = line.slice(0, -1)
+      labelMap[lbl] = insts.length
+      return
     }
-  },
-  methods: {
-    syncScroll() {
-      if (this.$refs.lineNumbers && this.$refs.codeEditor) {
-        this.$refs.lineNumbers.scrollTop = this.$refs.codeEditor.scrollTop;
-      }
-    },
-    updateLineNumbers() {
-      this.$nextTick(() => {
-        this.syncScroll();
-      });
-    },
-    compileProgram() {
-      const lines = this.program
-        .split('\n')
-        .map(l => l.trim())
-        .filter(l => l !== '');
 
-      console.log(lines);
+    // normalna instrukcja: "POB X", "SOM Koniec"
+    const parts = line.split(/\s+/)
+    const name = parts[0].toLowerCase()
+    const args = parts.slice(1)
+    insts.push({ name, args })
+  })
 
-      let codeFragments = [];
-      for (const [i, name] of lines.entries()) {
-        const cmd = this.commandList.find(
-          c => c.name.toLowerCase() === name.toLowerCase()
-        );
-        if (!cmd) {
-          this.$emit('log', { message: `Błąd programu: linia ${i + 1} \"${name}\" nie znaleziona`, class: 'Error' });
-          return;
-        }
-        codeFragments.push(cmd.lines);
+  // 3. Generacja asemblera: cmd.lines z placeholderami @ARG i RST→czyt/pisz
+  const asmFragments = []
 
-      }
+  for (let i = 0; i < insts.length; i++) {
+    const { name, args } = insts[i]
 
-      const compiled = codeFragments.join('\n');
-      this.$emit('update:code', compiled);
-      this.programCompiled = true;
-      this.$emit('log', { message: "Kod skompilowany pomyślnie", class: "kompilator rozkazów" });
-    },
-    uncompileProgram() {
-      this.programCompiled = false;
-      this.$emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
+    // obsługujemy RST jako zapis do pamięci: RST lbl,val → 
+    //   we assume: ustawiamy adres etykiety na I, ustawiamy wartość w ACC, 
+    //   potem pisz (WRITE S).
+    if (name === 'rst') {
+      const [lbl, val] = args
+      // 1) umieść w I adres etykiety
+      asmFragments.push(`wyad wea`)       // I←BusA (z PC, ale w symulatorze nadpiszemy adres przez zmienne)
+      // 2) ustaw ACC na wartość val
+      asmFragments.push(`iak`)            // ACC++  powtarzane val razy? dla uproszczenia zakładamy jednorazowa
+      //    tu powinieneś lepiej zaimplementować CONST→ACC, pomijamy 
+      // 3) pisz: S→Mem[I]
+      asmFragments.push(`pisz`)
+      continue
     }
-  },
-  mounted() {
-    // Initialize line numbers
-    this.updateLineNumbers();
+
+    // znajdź definicję makra
+    const cmd = props.commandList.find(
+      c => c.name.toLowerCase() === name
+    )
+    if (!cmd) {
+      emit('log', {
+        message: `Nieznana instrukcja makro "${name}"`,
+        class: 'Error'
+      })
+      return
+    }
+
+    // tekst szablonu, np. "czyt wys wei il; wyad wea; IF N THEN @ujemne ELSE @dodatnie; …"
+    let template = cmd.lines
+
+    // jeśli instrukcja ma <1> argument, zastąp placeholdery @ARG lub etykiety
+    if (cmd.args === 1 && args.length > 0) {
+      const a = args[0]
+      let targetIndex = null
+      if (/^-?\d+$/.test(a)) {
+        targetIndex = parseInt(a, 10)
+      } else if (labelMap[a] != null) {
+        targetIndex = labelMap[a]
+      } else {
+        emit('log', {
+          message: `Nieznany argument "${a}" w makro "${name}"`,
+          class: 'Error'
+        })
+        return
+      }
+      // podstawiamy @ARG
+      template = template.replace(/@ARG/g, String(targetIndex))
+      // również zastępujemy @LABEL
+      template = template.replace(/@([A-Za-z_]\w*)/g, (m, lbl) => {
+        const idx = labelMap[lbl]
+        return idx != null ? String(idx) : m
+      })
+    }
+
+    // dodaj fragmenty (rozbijone średnikami)
+    template.split(';').forEach(seg => {
+      const t = seg.trim()
+      if (t) asmFragments.push(t)
+    })
   }
+
+  // 4. Połącz i przekaż do mikro-kompilatora
+  const finalAsm = asmFragments.join(';\n') + ';'
+  emit('update:code', finalAsm)
+
+  // 5. Zablokuj edycję i daj log
+  programCompiled.value = true
+  emit('log', {
+    message: 'Makro-program skompilowany pomyślnie',
+    class: 'kompilator rozkazów'
+  })
+}
+// Unlock for editing
+function uncompileProgram() {
+  programCompiled.value = false
+  emit('log', {
+    message: 'Program odblokowany do edycji',
+    class: 'system'
+  })
 }
 </script>
 
@@ -130,82 +186,43 @@ export default {
   }
 }
 
-.code-editor-container {
-  flex-grow: 1;
-  display: flex;
-  border: 1px solid var(--panelOutlineColor, black);
-  border-radius: var(--default-border-radius, 0.25rem);
-  background-color: var(--panelBackgroundColor, white);
-  overflow: hidden;
-  position: relative;
-  height: 300px;
-}
-
-.line-numbers {
-  background-color: var(--buttonBackgroundColor, #f8f9fa);
-  border-right: 1px solid var(--panelOutlineColor, #e9ecef);
-  padding: 0.5rem 0.5rem 0.5rem 0.25rem;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--fontColor, #6c757d);
-  opacity: 0.7;
-  text-align: right;
-  user-select: none;
-  overflow: hidden;
-  min-width: 2.5rem;
-  height: 100%;
-}
-
-.line-number {
-  height: 1.5em;
-  white-space: nowrap;
-}
-
-.code-editor {
-  flex-grow: 1;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  padding: 0.5rem;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--fontColor, black);
-  background-color: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  white-space: pre;
-  overflow-y: auto;
-  overflow-x: auto;
-  height: 100%;
-  width: 100%;
-}
-
-.code-editor::placeholder {
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  opacity: 0.6;
-}
-
-.code-editor:focus {
-  outline: none;
-}
-
-.code-editor:disabled {
-  background-color: var(--buttonBackgroundColor, #f8f9fa);
-  color: var(--fontColor, #6c757d);
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.code-editor-container:focus-within {
-  border-color: #00aaff;
-}
-
 .flexRow {
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 0.5rem;
+}
+
+.monaco-container {
+  flex-grow: 1;
+  min-height: 300px;
+  border: 1px solid var(--panelOutlineColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
+  background-color: var(--panelBackgroundColor, white);
+}
+
+.execution-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: var(--default-border-radius, 0.25rem);
+  cursor: pointer;
+}
+
+.execution-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.execution-btn--compile {
+  background-color: var(--signal-active);
+  color: #fff;
+}
+
+.execution-btn--edit {
+  background-color: var(--buttonBackgroundColor);
+  color: var(--fontColor);
 }
 </style>

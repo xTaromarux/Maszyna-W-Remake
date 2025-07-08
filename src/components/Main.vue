@@ -209,6 +209,7 @@ import Settings from '@/components/Settings.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
+import { parse } from '@/parser/parser'
 
 export default {
   name: 'MainComponent',
@@ -788,40 +789,67 @@ export default {
 
     compileCode() {
       if (!this.code) {
-        this.addLog('Brak kodu do kompilacji', 'Błąd');
-        return;
+        this.addLog('Brak kodu do kompilacji', 'Błąd')
+        return
       }
 
-      let signalslist = new Set([
+      let ast
+      try {
+        ast = parse(this.code)   // parsujemy cały mikroprogram
+      } catch (e) {
+        this.addLog(`Błąd parsera: ${e.message}`, 'Błąd parsera kodu')
+        return
+      }
+
+      // zbiór wszystkich dopuszczalnych sygnałów
+      const signalsList = new Set([
         ...this.avaiableSignals.always,
-        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
-        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
-        ...(this.extras.dl ? this.avaiableSignals.dl : []),
-        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
-        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
-      ]);
+        ...(this.extras.xRegister    ? this.avaiableSignals.xRegister    : []),
+        ...(this.extras.yRegister    ? this.avaiableSignals.yRegister    : []),
+        ...(this.extras.dl           ? this.avaiableSignals.dl           : []),
+        ...(this.extras.jamlExtras   ? this.avaiableSignals.jamlExtras   : []),
+        ...(this.extras.busConnectors? this.avaiableSignals.busConnectors: []),
+      ])
 
-      console.log(signalslist);
-      for (let [index, command] of this.code.split(/[\s;]+/).entries()) {
-        if (!command) continue; // Skip empty commands
+      const compiledLines = []
 
-        if (!signalslist.has(command)) {
-          this.addLog(`Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`, 'Błąd parsera kodu');
-          return;
+      // przejdź po każdej instrukcji w AST
+      for (const node of ast.body) {
+        if (node.type === 'Instruction') {
+          // flatten: nazwa + wszystkie argumenty (string lub LabelRef)
+          const parts = [
+            node.name,
+            ...node.args.map(arg =>
+              typeof arg === 'string' ? arg : arg.name
+            )
+          ]
+
+          // walidacja: każdy element musi być znanym sygnałem
+          for (const sig of parts) {
+            if (!signalsList.has(sig)) {
+              this.addLog(
+                `Sygnał "${sig}" nie został rozpoznany w instrukcji "${node.name}"`,
+                'Błąd parsera kodu'
+              )
+              return
+            }
+          }
+
+          compiledLines.push(parts.join(' '))
         }
+        // jeśli natrafisz na dyrektywę (node.type==='Directive'), możesz ją tutaj obsłużyć
+        // np. zmieniać licznik lub ustawiać etykietę, ale na razie je pomijamy:
+        // else if (node.type==='Directive') { … }
       }
 
-      let code = this.code.replace(/\n/g, ''); // Remove all newline characters
-      this.compiledCode = code.split(';'); // Split the cleaned code into an array by ";"
-      //remove empty lines
-      this.compiledCode = this.compiledCode.filter((line) => line.trim() !== '');
+      // ustawienie wynikowego microprogramu
+      this.compiledCode = compiledLines
+      this.codeCompiled   = true
+      this.activeLine     = -1
+      this.nextLine.clear()
+      this.executeLine()
 
-      this.codeCompiled = true;
-      this.activeLine = -1;
-      this.nextLine.clear();
-      this.executeLine();
-
-      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
+      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów')
     },
     uncompileCode() {
       this.codeCompiled = false;
@@ -1411,4 +1439,18 @@ ol {
   gap: 1rem;
   text-align: left;
 }
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.toolbar button.active {
+  background-color: var(--signal-active);
+  color: white;
+}
+.toolbar select {
+  padding: 0.2rem;
+}
+
 </style>

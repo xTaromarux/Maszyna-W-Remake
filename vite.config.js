@@ -1,9 +1,9 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-import monacoEditorPlugin from 'vite-plugin-monaco-editor-esm'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import vueDevTools from 'vite-plugin-vue-devtools';
+import monacoEditorPlugin from 'vite-plugin-monaco-editor-esm';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,8 +11,8 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     monacoEditorPlugin({
-      languages: ['plaintext']
-    })
+      languages: ['plaintext'],
+    }),
   ],
   server: {
     host: true,
@@ -22,7 +22,7 @@ export default defineConfig({
     hmr: {
       protocol: 'wss',
       host: 'maszynaw.loca.lt',
-      port: 443
+      port: 443,
     },
     allowedHosts: 'all',
     proxy: {
@@ -30,14 +30,14 @@ export default defineConfig({
         target: 'real-large-cricket.ngrok-free.app',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   optimizeDeps: { include: ['@/workers/chat.worker.js'] },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-})
+});

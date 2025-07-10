@@ -30,7 +30,7 @@ export class Parser {
   expect(type, text) {
     const tok = this.peek();
     if (!tok || tok.type !== type || (text && tok.text !== text)) {
-      throw new Error(`Oczekiwano ${type}${text?`('${text}')`:''}, ale było ${tok?.type}:${tok?.text}`);
+      throw new Error(`Oczekiwano ${type}${text ? `('${text}')` : ''}, ale było ${tok?.type}:${tok?.text}`);
     }
     return this.consume();
   }
@@ -76,7 +76,7 @@ export class Parser {
   parseInstruction() {
     const nameTok = this.expect('IDENT');
     const args = [];
-    while (this.peek() && !['SEMICOLON','NEWLINE'].includes(this.peek().type)) {
+    while (this.peek() && !['SEMICOLON', 'NEWLINE'].includes(this.peek().type)) {
       const t = this.consume();
       if (t.type === 'AT') {
         const lbl = this.expect('IDENT');
@@ -97,4 +97,3 @@ export class Parser {
 export function parse(source) {
   return new Parser(source).parseProgram();
 }
- 

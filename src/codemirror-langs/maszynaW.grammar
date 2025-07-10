@@ -1,0 +1,52 @@
+@top Program { statement* }
+
+@tokens {
+  keyword { 
+    "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" | 
+    "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" | 
+    "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" | 
+    "wyak" | "stop"
+  }
+  
+  number { @digit+ }
+  
+  labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
+  
+  labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
+  
+  identifier { @asciiLetter (@asciiLetter | @digit | "_")* }
+  
+  ";" "," "."
+  
+  @precedence { keyword, labelDef, identifier }
+  
+  space { @whitespace+ }
+  
+  LineComment { "//" ![\n]* }
+}
+
+@skip { space | LineComment }
+
+statement {
+  labelDef |
+  instruction |
+  directive
+}
+
+instruction {
+  keyword argument*
+}
+
+directive {
+  "." identifier argument*
+}
+
+argument {
+  number |
+  identifier |
+  labelRef
+}
+
+@external propSource maszynaWHighlight from "./maszynaW.highlight"
+
+@detectDelim 

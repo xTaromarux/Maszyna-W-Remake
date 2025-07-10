@@ -1,16 +1,16 @@
 // Token specification: [type, regex]
 const tokenSpecs = [
-  ['WHITESPACE',  /^[ \t\r]+/],
-  ['NEWLINE',     /^\n+/],
-  ['IF',          /^IF\b/],
-  ['THEN',        /^THEN\b/],
-  ['ELSE',        /^ELSE\b/],
-  ['NUMBER',      /^\d+/],
-  ['COLON',       /^:/],
-  ['SEMICOLON',   /^;/],
-  ['COMMA',       /^,/],
-  ['AT',          /^@/],
-  ['IDENT',       /^[A-Za-z_]\w*/]
+  ['WHITESPACE', /^[ \t\r]+/],
+  ['NEWLINE', /^\n+/],
+  ['IF', /^IF\b/],
+  ['THEN', /^THEN\b/],
+  ['ELSE', /^ELSE\b/],
+  ['NUMBER', /^\d+/],
+  ['COLON', /^:/],
+  ['SEMICOLON', /^;/],
+  ['COMMA', /^,/],
+  ['AT', /^@/],
+  ['IDENT', /^[A-Za-z_]\w*/],
 ];
 
 /**
@@ -20,7 +20,9 @@ const tokenSpecs = [
  */
 export function lex(input) {
   const tokens = [];
-  let pos = 0, line = 1, col = 1;
+  let pos = 0,
+    line = 1,
+    col = 1;
 
   while (pos < input.length) {
     let matched = false;

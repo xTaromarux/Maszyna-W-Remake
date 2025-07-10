@@ -16,20 +16,10 @@
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
-    <MonacoEditor 
-      v-else-if="!codeCompiled" 
-      v-model="codeLocal" 
-      language="maszynaW" 
-      theme="mwTheme" 
-      />
+    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" />
 
     <div v-else class="compiledCode">
-      <span
-        v-for="(line, index) in compiledCode"
-        :key="index"
-        class="flexRow"
-        :class="{ active: activeLine === index }"
-      >
+      <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{ active: activeLine === index }">
         <span>{{ index }}</span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
@@ -49,8 +39,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import MonacoEditor from '@/components/MonacoEditor.vue'
+import { ref, watch } from 'vue';
+import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -58,18 +48,23 @@ const props = defineProps({
   code: { type: String, required: true },
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true } // Set
-})
-const emit = defineEmits(['update:code', 'setManualMode'])
+  nextLine: { type: Object, required: true }, // Set
+});
+const emit = defineEmits(['update:code', 'setManualMode']);
 
 // lokalna kopia, by v-model poprawnie działało
-const codeLocal = ref(props.code)
-watch(codeLocal, v => emit('update:code', v))
-watch(() => props.code, v => { if (v !== codeLocal.value) codeLocal.value = v })
+const codeLocal = ref(props.code);
+watch(codeLocal, (v) => emit('update:code', v));
+watch(
+  () => props.code,
+  (v) => {
+    if (v !== codeLocal.value) codeLocal.value = v;
+  }
+);
 </script>
 
 <style scoped>
-.toggleButtonProgram{
+.toggleButtonProgram {
   width: 100%;
 }
 
@@ -88,7 +83,6 @@ watch(() => props.code, v => { if (v !== codeLocal.value) codeLocal.value = v })
   gap: 1rem;
   align-items: center;
 }
-
 
 .compiledCode {
   display: flex;

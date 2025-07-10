@@ -133,11 +133,11 @@
       @log="addLog($event.message, $event.class)"
     />
 
-    <Console 
-      ref="console" 
-      :logs="logs.slice().reverse()" 
-      :class="{ 'console-collapsed': !consoleOpen }" 
-      @click="consoleOpen ? null : toggleConsole()" 
+    <Console
+      ref="console"
+      :logs="logs.slice().reverse()"
+      :class="{ 'console-collapsed': !consoleOpen }"
+      @click="consoleOpen ? null : toggleConsole()"
     />
 
     <!-- Console indicator - visible only when console is collapsed -->
@@ -209,7 +209,7 @@ import Settings from '@/components/Settings.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
-import { parse } from '@/parser/parser'
+import { parse } from '@/WLAN/parser';
 
 export default {
   name: 'MainComponent',
@@ -789,53 +789,45 @@ export default {
 
     compileCode() {
       if (!this.code) {
-        this.addLog('Brak kodu do kompilacji', 'Błąd')
-        return
+        this.addLog('Brak kodu do kompilacji', 'Błąd');
+        return;
       }
 
-      let ast
+      let ast;
       try {
-        ast = parse(this.code)   // parsujemy cały mikroprogram
+        ast = parse(this.code); // parsujemy cały mikroprogram
       } catch (e) {
-        this.addLog(`Błąd parsera: ${e.message}`, 'Błąd parsera kodu')
-        return
+        this.addLog(`Błąd parsera: ${e.message}`, 'Błąd parsera kodu');
+        return;
       }
 
       // zbiór wszystkich dopuszczalnych sygnałów
       const signalsList = new Set([
         ...this.avaiableSignals.always,
-        ...(this.extras.xRegister    ? this.avaiableSignals.xRegister    : []),
-        ...(this.extras.yRegister    ? this.avaiableSignals.yRegister    : []),
-        ...(this.extras.dl           ? this.avaiableSignals.dl           : []),
-        ...(this.extras.jamlExtras   ? this.avaiableSignals.jamlExtras   : []),
-        ...(this.extras.busConnectors? this.avaiableSignals.busConnectors: []),
-      ])
+        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
+        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
+        ...(this.extras.dl ? this.avaiableSignals.dl : []),
+        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
+        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
+      ]);
 
-      const compiledLines = []
+      const compiledLines = [];
 
       // przejdź po każdej instrukcji w AST
       for (const node of ast.body) {
         if (node.type === 'Instruction') {
           // flatten: nazwa + wszystkie argumenty (string lub LabelRef)
-          const parts = [
-            node.name,
-            ...node.args.map(arg =>
-              typeof arg === 'string' ? arg : arg.name
-            )
-          ]
+          const parts = [node.name, ...node.args.map((arg) => (typeof arg === 'string' ? arg : arg.name))];
 
           // walidacja: każdy element musi być znanym sygnałem
           for (const sig of parts) {
             if (!signalsList.has(sig)) {
-              this.addLog(
-                `Sygnał "${sig}" nie został rozpoznany w instrukcji "${node.name}"`,
-                'Błąd parsera kodu'
-              )
-              return
+              this.addLog(`Sygnał "${sig}" nie został rozpoznany w instrukcji "${node.name}"`, 'Błąd parsera kodu');
+              return;
             }
           }
 
-          compiledLines.push(parts.join(' '))
+          compiledLines.push(parts.join(' '));
         }
         // jeśli natrafisz na dyrektywę (node.type==='Directive'), możesz ją tutaj obsłużyć
         // np. zmieniać licznik lub ustawiać etykietę, ale na razie je pomijamy:
@@ -843,13 +835,13 @@ export default {
       }
 
       // ustawienie wynikowego microprogramu
-      this.compiledCode = compiledLines
-      this.codeCompiled   = true
-      this.activeLine     = -1
-      this.nextLine.clear()
-      this.executeLine()
+      this.compiledCode = compiledLines;
+      this.codeCompiled = true;
+      this.activeLine = -1;
+      this.nextLine.clear();
+      this.executeLine();
 
-      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów')
+      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
     },
     uncompileCode() {
       this.codeCompiled = false;
@@ -1179,11 +1171,11 @@ export default {
       this.activeTimeouts.push(timeoutId);
     },
     stop() {
-      this.signals.stop = true;     
+      this.signals.stop = true;
       const timeoutId = setTimeout(() => {
-      this.signals.pisz = false;
+        this.signals.pisz = false;
       }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId); 
+      this.activeTimeouts.push(timeoutId);
 
       this.codeCompiled = false;
       this.nextLine.clear();
@@ -1452,5 +1444,4 @@ ol {
 .toolbar select {
   padding: 0.2rem;
 }
-
 </style>

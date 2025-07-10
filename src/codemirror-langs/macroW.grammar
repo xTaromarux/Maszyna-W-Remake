@@ -1,0 +1,66 @@
+@top Program { statement* }
+
+@tokens {
+  keyword { 
+    "stp" | "dod" | "ode" | "pob" | "lad" | "sob" | "som" | "soz" | "dns" | 
+    "pwr" | "pzs" | "sdp" | "dzi" | "mno" | "wpr" | "wyp"
+  }
+  
+  "IF" "THEN" "ELSE"
+  
+  number { @digit+ }
+  
+  labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
+  
+  labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
+  
+  identifier { @asciiLetter (@asciiLetter | @digit | "_")* }
+  
+  ";" "," "."
+  
+  @precedence { "IF", "THEN", "ELSE", keyword, labelDef, identifier }
+  
+  space { @whitespace+ }
+  
+  LineComment { "//" ![\n]* }
+}
+
+@skip { space | LineComment }
+
+statement {
+  labelDef |
+  instruction |
+  directive |
+  conditionalStatement
+}
+
+instruction {
+  keyword argument*
+}
+
+directive {
+  "." identifier argument*
+}
+
+conditionalStatement {
+  "IF" expression "THEN" statement !else |
+  "IF" expression "THEN" statement "ELSE" statement
+}
+
+@precedence { else }
+
+expression {
+  number |
+  identifier |
+  labelRef
+}
+
+argument {
+  number |
+  identifier |
+  labelRef
+}
+
+@external propSource macroWHighlight from "./macroW.highlight"
+
+@detectDelim 

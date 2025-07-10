@@ -18,7 +18,7 @@
 
         <!-- NUMBER FORMAT -->
         <div class="flexColumn">
-          <label>Format liczb:</label>
+          <label>Domyślny format liczb:</label>
           <div class="number-format-toggle">
             <div
               class="multiToggleButton format-toggle"

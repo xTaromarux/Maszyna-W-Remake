@@ -35,22 +35,6 @@
           </div>
         </div>
 
-        <!-- MEMORY SIZE -->
-        <div class="flexColumn">
-          <label for="argBits">Bity rozmiaru pamięci:</label>
-          <input
-            id="argBits"
-            type="number"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            :value="memoryAddresBits"
-            min="1"
-            max="32"
-            @input="updateNumber('memoryAddresBits', $event.target.value)"
-          />
-          <p>Ilość bitów dla adresu pamięci.</p>
-        </div>
-
         <!-- CODE BITS -->
         <div class="flexColumn">
           <label for="commandBits">Bity kodu:</label>
@@ -64,7 +48,7 @@
             max="16"
             @input="updateNumber('codeBits', $event.target.value)"
           />
-          <p>Ilość bitów dla kodu rozkazu.</p>
+          <p>Liczba bitów dla kodu rozkazu.</p>
         </div>
 
         <!-- ADDRESS BITS -->
@@ -80,7 +64,7 @@
             max="32"
             @input="updateNumber('addresBits', $event.target.value)"
           />
-          <p>Ilość bitów dla argumentu.</p>
+          <p>Liczba bitów dla argumentu.</p>
         </div>
 
         <!-- MICRO-STEP DELAY -->
@@ -105,10 +89,10 @@
           <template v-for="(label, key) in extrasLabels" :key="key">
             <div class="module-toggle-wrapper">
               <span class="module-label">{{ label }}</span>
-              <div class="toggleButtonDiv module-toggle" :class="{ active: !extras[key] }" @click="updateExtras(key, !extras[key])">
-                <span>Wył</span>
-                <span>Wł</span>
-              </div>
+              <label class="switch">
+                <input type="checkbox" :checked="extras[key]" @change="updateExtras(key, $event.target.checked)" />
+                <span class="slider round"></span>
+              </label>
             </div>
           </template>
         </div>
@@ -126,7 +110,7 @@
             </button>
             <button class="SvgAndTextButton compact-button action-button" id="openCommandList" @click="emitEvents">
               <CommandListIcon />
-              <span>Lista instrukcji</span>
+              <span>Lista rozkazów</span>
             </button>
           </div>
         </div>
@@ -279,7 +263,6 @@ export default {
     settingsOpen: { type: Boolean, default: false },
     lightMode: { type: Boolean, required: true },
     numberFormat: { type: String, required: true },
-    memoryAddresBits: { type: Number, required: true },
     codeBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
@@ -304,7 +287,6 @@ export default {
     'close',
     'update:lightMode',
     'update:numberFormat',
-    'update:memoryAddresBits',
     'update:codeBits',
     'update:addresBits',
     'update:oddDelay',
@@ -373,7 +355,6 @@ export default {
       if (Number.isNaN(n)) return;
 
       const validationRules = {
-        memoryAddresBits: { min: 1, max: 32 },
         codeBits: { min: 1, max: 16 },
         addresBits: { min: 1, max: 32 },
         oddDelay: { min: 0, max: 10000 },
@@ -405,6 +386,92 @@ export default {
 </script>
 
 <style scoped>
+.settings-content {
+  overflow-y: auto;
+  padding-right: 10px; /* Add padding to avoid content hiding behind scrollbar */
+}
+
+/* Custom Scrollbar for Webkit browsers */
+.settings-content::-webkit-scrollbar {
+  width: 12px;
+  background-color: var(--backgroundColor); /* Or a color from your theme */
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background-color: var(--backgroundColor);
+  border-radius: 10px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background-color: var(--panelOutlineColor); /* A visible color from your theme */
+  border-radius: 10px;
+  border: 3px solid var(--backgroundColor); /* Padding around thumb */
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--fontColor); /* A slightly more visible color on hover */
+}
+
+/* Simple slider switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
 .creators-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

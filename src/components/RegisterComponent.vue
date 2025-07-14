@@ -1,177 +1,183 @@
 <template>
-    <div :id="id" :class="[classNames, edgeClass]">
-        <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span><span>:</span> 
-        <div class="inputWrapper">
-            <span>{{ formatNumber(model) }}</span>
-            <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" />
-        </div>
+  <div :id="id" :class="[classNames, edgeClass, 'register-container']">
+    <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span
+    ><span>:</span>
+    <div class="inputWrapper">
+      <span>{{ formattedValue }}</span>
+      <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" />
     </div>
+    <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
+      <button class="format-button" @click.stop="toggleFormatMenu">
+        <KogWheelIcon />
+      </button>
+      <div v-if="showFormatMenu" class="format-menu">
+        <div @click="setFormat('dec')" :class="{ active: numberFormat === 'dec' }">DEC</div>
+        <div @click="setFormat('hex')" :class="{ active: numberFormat === 'hex' }">HEX</div>
+        <div @click="setFormat('bin')" :class="{ active: numberFormat === 'bin' }">BIN</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
+import KogWheelIcon from '@/assets/svg/KogWheelIcon.vue';
+
 export default {
-    name: "RegisterComponent",
-    props: {
-        label: String,
-        id: String,
-        classNames: { 
-            type: String, 
-            default: 'register' 
-        },
-        model: [Number],
-        formatNumber: {
-            type: Function,
-            required: true,
-        }
+  name: 'RegisterComponent',
+  components: { KogWheelIcon },
+  props: {
+    label: String,
+    id: String,
+    classNames: {
+      type: String,
+      default: 'register',
     },
-    data() {
-        return {
-            edgeClass: ''
-        }
+    model: [Number],
+    numberFormat: {
+      type: String,
+      default: 'dec',
     },
-    computed: {
-        fullName() {
-            const names = {
-                AK: 'Akumulator',
-                X: 'Rejestr X',
-                Y: 'Rejestr Y',
-                I: 'Rejestr I (adresowy)',
-                L: 'Licznik',
-                S: 'Rejestr S',
-                A: 'Rejestr A',
-                JAML: 'Rejestr JAML',
-            };
-            return names[this.label] || this.label;
-        }
+    showFormatSelector: {
+      type: Boolean,
+      default: true,
     },
-    methods: {
-        updateValue(event) {
-            this.$emit('update:model', Number(event.target.value));
-        },
-        handleMouseEnter(event) {
-            const element = event.target;
-            const rect = element.getBoundingClientRect();
-            const windowWidth = window.innerWidth;
-            
-            // Check if element is near right edge (within 150px)
-            if (rect.right > windowWidth - 150) {
-                this.edgeClass = 'edge-right';
-            }
-            // Check if element is near left edge (within 150px)
-            else if (rect.left < 150) {
-                this.edgeClass = 'edge-left';
-            }
-            else {
-                this.edgeClass = '';
-            }
-        },
-        handleMouseLeave() {
-            this.edgeClass = '';
-        }
+  },
+  emits: ['update:model', 'update:numberFormat'],
+  data() {
+    return {
+      edgeClass: '',
+      showFormatMenu: false,
+    };
+  },
+  computed: {
+    fullName() {
+      const names = {
+        AK: 'Akumulator',
+        X: 'Rejestr X',
+        Y: 'Rejestr Y',
+        I: 'Rejestr I (adresowy)',
+        L: 'Licznik',
+        S: 'Rejestr S',
+        A: 'Rejestr A',
+        JAML: 'Rejestr JAML',
+      };
+      return names[this.label] || this.label;
     },
+    formattedValue() {
+      if (typeof this.model !== 'number' || isNaN(this.model)) {
+        return 'Błąd';
+      }
+      const formatters = {
+        dec: (num) => num.toString(),
+        hex: (num) => '0x' + num.toString(16).toUpperCase(),
+        bin: (num) => '0b' + num.toString(2),
+      };
+      return (formatters[this.numberFormat] || formatters.dec)(this.model);
+    },
+  },
+  methods: {
+    updateValue(event) {
+      const value = parseInt(event.target.value, 10);
+      if (!isNaN(value)) {
+        this.$emit('update:model', value);
+      }
+    },
+    handleMouseEnter() {
+      const rect = this.$el.getBoundingClientRect();
+      if (rect.left < 50) this.edgeClass = 'edge-left';
+      else if (rect.right > window.innerWidth - 50) this.edgeClass = 'edge-right';
+      else this.edgeClass = '';
+    },
+    handleMouseLeave() {
+      this.edgeClass = '';
+    },
+    toggleFormatMenu() {
+      this.showFormatMenu = !this.showFormatMenu;
+    },
+    setFormat(format) {
+      this.$emit('update:numberFormat', format);
+      this.showFormatMenu = false;
+    },
+    closeMenu(event) {
+      if (this.showFormatMenu && !this.$refs.formatSelector.contains(event.target)) {
+        this.showFormatMenu = false;
+      }
+    },
+  },
+  mounted() {
+    document.addEventListener('click', this.closeMenu);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.closeMenu);
+  },
 };
 </script>
 
 <style scoped>
-.register span:first-child {
-    font-weight: bold;
-    position: relative;
-    cursor: help;
+.register-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.register span:first-child:hover::after {
-    content: attr(title);
-    position: absolute;
-    bottom: calc(100% + 5px);
-    background-color: rgba(0, 0, 0, 0.98);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: normal;
-    white-space: nowrap;
-    z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    
-    /* Smart positioning to avoid going off screen */
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* Fallback positioning for edge cases */
-    min-width: max-content;
-    max-width: 180px;
-    
-    /* Ensure full coverage */
-    backdrop-filter: blur(2px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.inputWrapper {
+  position: relative;
 }
 
-/* Tooltip arrow */
-.register span:first-child:hover::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% + 1px);
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.98);
-    z-index: 10000;
+.format-selector {
+  position: relative;
+  margin-left: 4px;
 }
 
-/* Alternative positioning for right edge elements */
-.register:last-child span:first-child:hover::after,
-.register.edge-right span:first-child:hover::after {
-    left: auto;
-    right: 0;
-    transform: none;
+.format-button {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
-.register:last-child span:first-child:hover::before,
-.register.edge-right span:first-child:hover::before {
-    left: auto;
-    right: 15px;
-    transform: none;
+.format-button:hover {
+  background-color: rgba(128, 128, 128, 0.2);
 }
 
-/* Alternative positioning for left edge elements */
-.register:first-child span:first-child:hover::after,
-.register.edge-left span:first-child:hover::after {
-    left: 0;
-    right: auto;
-    transform: none;
+.format-button svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--fontColor);
 }
 
-.register:first-child span:first-child:hover::before,
-.register.edge-left span:first-child:hover::before {
-    left: 15px;
-    right: auto;
-    transform: none;
+.format-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--backgroundColor);
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  padding: 4px;
+  z-index: 100;
+  min-width: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .register span:first-child:hover::after {
-        position: fixed;
-        bottom: auto;
-        top: 50%;
-        left: 50%;
-        right: auto;
-        transform: translate(-50%, -50%);
-        max-width: 90vw;
-        white-space: normal;
-        text-align: center;
-        z-index: 10001;
-    }
-    
-    .register span:first-child:hover::before {
-        display: none;
-    }
+.format-menu div {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
-/* Extra safety for very wide screens */
-@media (min-width: 1200px) {
-    .register span:first-child:hover::after {
-        max-width: 200px;
-    }
+.format-menu div:hover {
+  background-color: var(--buttonHoverColor);
+}
+
+.format-menu div.active {
+  background-color: var(--signal-active);
+  color: white;
 }
 </style>

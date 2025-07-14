@@ -16,120 +16,118 @@
       label="A"
       :model="A"
       @update:model="$emit('update:A', $event)"
-      :formatNumber="formatNumber"
+      :number-format="aFormat"
+      @update:number-format="$emit('update:aFormat', $event)"
     />
 
     <div id="memoryTable">
       <div class="scrollWrapper">
         <div class="memoryContainer">
-            <span class="label">{{ memoryLabel }}</span>
-            <span class="label">Wartość</span>
-            <span class="label">Kod</span>
-            <span class="label">Adres</span>
+          <span class="label">{{ memoryLabel }}</span>
+          <span class="label">Wartość</span>
+          <span class="label">Kod</span>
+          <span class="label">Adres</span>
 
-            <template v-for="(value, index) in mem" :key="index" >
-              <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
-              <div :class="{ selected: A === index }" class="inputWrapper">
-                <span>{{ formatNumber(mem[index]) }}</span>
-                <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
-              </div>
-              <span :class="{ selected: A === index }">
-                {{ decToCommand(value) ? decToCommand(value).name : "EMPTY" }}
-              </span>
-              <span :class="{ selected: A === index }">
-                {{ formatNumber(decToArgument(value)) }}
-              </span>
-            </template>
-          </div>
+          <template v-for="(value, index) in mem" :key="index">
+            <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
+            <div :class="{ selected: A === index }" class="inputWrapper">
+              <span>{{ formatNumber(mem[index]) }}</span>
+              <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
+            </div>
+            <span :class="{ selected: A === index }">
+              {{ decToCommand(value) ? decToCommand(value).name : 'EMPTY' }}
+            </span>
+            <span :class="{ selected: A === index }">
+              {{ formatNumber(decToArgument(value)) }}
+            </span>
+          </template>
+        </div>
       </div>
     </div>
 
-    <div id="operations" v-if="!isMobile">
-      <SignalButton
-        id="czyt"
-        :signal="signals.czyt"
-        label="czyt"
-        spanClassNames="lineLeftOnBottom"
-        @click="handleClick('czyt')"
-      />
-      <SignalButton
-        id="pisz"
-        :signal="signals.pisz"
-        label="pisz"
-        spanClassNames="lineLeftOnBottom"
-        @click="handleClick('pisz')"
-      />
-    </div>
-
     <RegisterComponent
+      classNames="register"
       id="sRegister"
       label="S"
       :model="S"
       @update:model="$emit('update:S', $event)"
-      :formatNumber="formatNumber"
+      :number-format="sFormat"
+      @update:number-format="$emit('update:sFormat', $event)"
     />
 
-    <div class="signals" v-if="!isMobile">
-      <SignalButton
-        id="wes"
-        :signal="signals.wes"
-        label="wes"
-        divClassNames="pathUpOnRight"
-        spanClassNames="arrowRightOnBottom"
-        @click="handleClick('wes')"
-      />
-      <SignalButton
-        id="wys"
-        :signal="signals.wys"
-        label="wys"
-        divClassNames="pathDownOnLeft"
-        spanClassNames="lineLeftOnBottom"
-        @click="handleClick('wys')"
-      />
+    <SignalButton
+      id="wes"
+      v-if="!isMobile"
+      :signal="signals.wes"
+      label="wes"
+      divClassNames="pathUpOnRight"
+      spanClassNames="arrowRightOnBottom"
+      @click="handleClick('wes')"
+    />
+    <div id="memOp" v-if="!isMobile">
+      <SignalButton id="czyt" :signal="signals.czyt" label="czyt" spanClassNames="lineLeftOnBottom" @click="handleClick('czyt')" />
+      <SignalButton id="pisz" :signal="signals.pisz" label="pisz" spanClassNames="lineLeftOnBottom" @click="handleClick('pisz')" />
     </div>
+
+    <SignalButton
+      id="wys"
+      v-if="!isMobile"
+      :signal="signals.wys"
+      label="wys"
+      divClassNames="pathDownOnLeft"
+      spanClassNames="lineLeftOnBottom"
+      @click="handleClick('wys')"
+    />
   </div>
 </template>
 
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
-
 export default {
-  name: "MemoryContent",
+  name: 'MemoryContent',
   props: {
     A: {
       type: Number,
-      required: true
+      required: true,
     },
     S: {
       type: Number,
-      required: true
+      required: true,
     },
     mem: {
       type: Array,
-      required: true
+      required: true,
     },
     signals: {
       type: Object,
-      required: true
+      required: true,
     },
     formatNumber: {
       type: Function,
-      required: true
+      required: true,
     },
     decToCommand: {
       type: Function,
-      required: true
+      required: true,
     },
     decToArgument: {
       type: Function,
-      required: true
-    }
+      required: true,
+    },
+    aFormat: {
+      type: String,
+      required: true,
+    },
+    sFormat: {
+      type: String,
+      required: true,
+    },
   },
-  emits: ['update:A', 'update:S', 'clickItem'],
+  emits: ['update:A', 'update:S', 'clickItem', 'update:aFormat', 'update:sFormat'],
   components: {
     SignalButton,
-    RegisterComponent
+    RegisterComponent,
   },
   data() {
     return {
@@ -142,7 +140,7 @@ export default {
     },
     memoryLabel() {
       return this.windowWidth < 1400 ? 'Adr.' : 'Adres pamięci';
-    }
+    },
   },
   methods: {
     handleClick(id) {
@@ -150,13 +148,13 @@ export default {
     },
     updateWindowWidth() {
       this.windowWidth = window.innerWidth;
-    }
+    },
   },
   mounted() {
     window.addEventListener('resize', this.updateWindowWidth);
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateWindowWidth);
-  }
+  },
 };
 </script>

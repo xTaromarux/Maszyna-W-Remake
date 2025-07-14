@@ -1,7 +1,38 @@
 <template>
-  <div class="memory-wrapper">
+  <div id="memorySection">
+    <div v-if="isMobile" class="mobile-memory-header">
+      <button @click="openMobileModal" class="mobile-memory-button">
+        <ListLinesIcon />
+        <span>Pamięć</span>
+      </button>
+    </div>
 
-    <!-- ======= DESKTOP ======= -->
+    <!-- Teleport for mobile view -->
+    <teleport to="body">
+      <div v-if="showMobileModal" class="mobile-memory-modal" @click.self="closeMobileModal">
+        <div class="mobile-memory-content">
+          <MemoryContent
+            :A="A"
+            :S="S"
+            :mem="mem"
+            :signals="signals"
+            :formatNumber="formatNumber"
+            :decToCommand="decToCommand"
+            :decToArgument="decToArgument"
+            :a-format="aFormat"
+            @update:a-format="$emit('update:aFormat', $event)"
+            :s-format="sFormat"
+            @update:s-format="$emit('update:sFormat', $event)"
+            @update:A="$emit('update:A', $event)"
+            @update:S="$emit('update:S', $event)"
+            @clickItem="handleClick"
+          />
+          <button @click="closeMobileModal" class="close-modal-button">&times;</button>
+        </div>
+      </div>
+    </teleport>
+
+    <!-- Desktop view -->
     <MemoryContent
       v-if="!isMobile"
       :A="A"
@@ -11,139 +42,78 @@
       :formatNumber="formatNumber"
       :decToCommand="decToCommand"
       :decToArgument="decToArgument"
-      @clickItem="$emit('clickItem', $event)"
+      :a-format="aFormat"
+      @update:a-format="$emit('update:aFormat', $event)"
+      :s-format="sFormat"
+      @update:s-format="$emit('update:sFormat', $event)"
       @update:A="$emit('update:A', $event)"
       @update:S="$emit('update:S', $event)"
+      @clickItem="handleClick"
     />
-
-    <!-- ======= MOBILE ======= -->
-    <div v-else class="mobile-button-wrapper">
-
-        <SignalButton
-            id="wea"
-            :signal="signals.wea"
-            label="wea"
-            divClassNames="pathDownOnRight"
-            spanClassNames="arrowRightOnBottom"
-            @click="handleClick('wea')"
-            />
-        <div class="mobile-toggle" id="pao" @click="openMobileModal">
-            PaO
-        </div>
-        <div id="operations">
-            <SignalButton
-                id="czyt"
-                :signal="signals.czyt"
-                label="czyt"
-                spanClassNames="lineLeftOnBottom"
-                @click="handleClick('czyt')"
-            />
-            <SignalButton
-                id="pisz"
-                :signal="signals.pisz"
-                label="pisz"
-                spanClassNames="lineLeftOnBottom"
-                @click="handleClick('pisz')"
-            />
-        </div>
-        <div class="signals">
-            <SignalButton
-                id="wes"
-                :signal="signals.wes"
-                label="wes"
-                divClassNames="pathUpOnRight fullSizeArrow"
-                spanClassNames="arrowRightOnBottom"
-                @click="handleClick('wes')"
-            />
-            <SignalButton
-                id="wys"
-                :signal="signals.wys"
-                label="wys"
-                divClassNames="pathDownOnLeft fullSizeArrow"
-                spanClassNames="lineLeftOnBottom"
-                @click="handleClick('wys')"
-            />
-        </div>
-      
-
-    <!-- ======= MODAL ======= -->
-      <div
-        v-if="showMobileModal"
-        class="mobile-overlay"
-        @click.self="closeMobileModal"
-      >
-        <div class="mobile-modal-content">
-          <MemoryContent
-            :A="A"
-            :S="S"
-            :mem="mem"
-            :signals="signals"
-            :formatNumber="formatNumber"
-            :decToCommand="decToCommand"
-            :decToArgument="decToArgument"
-            @clickItem="$emit('clickItem', $event)"
-            @update:A="$emit('update:A', $event)"
-            @update:S="$emit('update:S', $event)"
-          />
-          <button class="close-button" @click="closeMobileModal">×</button>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script>
 import MemoryContent from './MemoryContent.vue';
 import SignalButton from './SignalButton.vue';
+import ListLinesIcon from '@/assets/svg/ListLinesIcon.vue';
 
 export default {
-  name: "MemorySection",
+  name: 'MemorySection',
   components: {
     MemoryContent,
-    SignalButton
+    SignalButton,
+    ListLinesIcon,
   },
   props: {
     A: {
       type: Number,
-      required: true
+      required: true,
     },
     S: {
       type: Number,
-      required: true
+      required: true,
     },
     mem: {
       type: Array,
-      required: true
+      required: true,
     },
     signals: {
       type: Object,
-      required: true
+      required: true,
     },
     formatNumber: {
       type: Function,
-      required: true
+      required: true,
     },
     decToCommand: {
       type: Function,
-      required: true
+      required: true,
     },
     decToArgument: {
       type: Function,
-      required: true
-    }
+      required: true,
+    },
+    aFormat: {
+      type: String,
+      required: true,
+    },
+    sFormat: {
+      type: String,
+      required: true,
+    },
   },
-  emits: ['clickItem', 'update:A', 'update:S'],
+  emits: ['clickItem', 'update:A', 'update:S', 'update:aFormat', 'update:sFormat'],
   data() {
     return {
       windowWidth: window.innerWidth,
-      showMobileModal: false
+      showMobileModal: false,
     };
   },
   computed: {
     isMobile() {
       return this.windowWidth < 1080;
-    }
+    },
   },
   methods: {
     updateWidth() {
@@ -159,7 +129,7 @@ export default {
     },
     handleClick(id) {
       this.$emit('clickItem', id);
-    }
+    },
   },
   mounted() {
     window.addEventListener('resize', this.updateWidth);
@@ -167,6 +137,6 @@ export default {
   beforeUnmount() {
     window.removeEventListener('resize', this.updateWidth);
     document.body.style.overflow = '';
-  }
+  },
 };
 </script>

@@ -29,14 +29,9 @@
       autocapitalize="off"
     />
 
-
     <div v-else class="compiledCode">
-      <span
-        v-for="(line, index) in compiledCode"
-        :key="index"
-        class="flexRow"
-        :class="{ active: activeLine === index }"
-      >
+      <div v-if="activeLine > 0" class="executed-info">Ostatnio wykonana linia: {{ activeLine - 1 }}</div>
+      <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{ active: activeLine === index }">
         <span>{{ index }}</span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
@@ -45,7 +40,7 @@
 
     <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="manualMode">
-      <span >Sygnały następnej linii:</span>
+      <span>Sygnały następnej linii:</span>
       <div class="flexRow">
         <div v-for="cmd in [...nextLine]" :key="cmd">
           <span>{{ cmd }}</span>
@@ -57,7 +52,7 @@
 
 <script>
 export default {
-  name: "ProgramEditor",
+  name: 'ProgramEditor',
   props: {
     manualMode: { type: Boolean, required: true },
     codeCompiled: { type: Boolean, required: true },
@@ -66,21 +61,21 @@ export default {
     activeLine: { type: Number, required: true },
     nextLine: { type: Object, required: true }, // Set
   },
-  emits: ["update:code", "setManualMode"],
+  emits: ['update:code', 'setManualMode'],
 };
 </script>
 
 <style scoped>
-.toggleButtonProgram{
+.toggleButtonProgram {
   width: 100%;
 }
 
-.programEditor{
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-end;
-    height: 100%;
+.programEditor {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  height: 100%;
 }
 
 .flexRow {
@@ -135,6 +130,16 @@ textarea:disabled {
   background-color: var(--panelBackgroundColor, white);
   font-family: monospace;
   font-size: 0.9rem;
+}
+
+.executed-info {
+  text-align: center;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+  color: #888;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--panelOutlineColor, black);
 }
 
 .compiledCode .flexRow {

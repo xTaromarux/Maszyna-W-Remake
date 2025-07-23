@@ -1,7 +1,7 @@
 @top Program { statement* }
 
 @tokens {
-  keyword { 
+  Keyword { 
     "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" | 
     "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" | 
     "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" | 
@@ -18,7 +18,7 @@
   
   ";" "," "."
   
-  @precedence { keyword, labelDef, identifier }
+  @precedence { Keyword, labelDef, identifier }
   
   space { @whitespace+ }
   
@@ -34,7 +34,7 @@ statement {
 }
 
 instruction {
-  keyword argument*
+  Keyword argument*
 }
 
 directive {
@@ -47,6 +47,6 @@ argument {
   labelRef
 }
 
-@external propSource maszynaWHighlight from "./maszynaW.highlight"
+@external propSource maszynaWHighlight from "./maszynaW.highlight.js"
 
 @detectDelim 

@@ -38,11 +38,21 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits } from 'vue';
-import { EditorView, basicSetup } from 'codemirror';
+import { EditorView } from 'codemirror';
 import { EditorState, StateEffect } from '@codemirror/state';
-import { lineNumbers, highlightActiveLine, keymap } from '@codemirror/view';
-import { indentWithTab } from '@codemirror/commands';
-import { autocompletion } from '@codemirror/autocomplete';
+import {
+  lineNumbers,
+  highlightActiveLine,
+  keymap,
+  drawSelection,
+  dropCursor,
+  rectangularSelection,
+  crosshairCursor,
+} from '@codemirror/view';
+import { indentWithTab, history, defaultKeymap, historyKeymap, undo, redo } from '@codemirror/commands';
+import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
+import { searchKeymap, highlightSelectionMatches, search } from '@codemirror/search';
+import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { javascript } from '@codemirror/lang-javascript';
 
 // Import custom languages and themes
@@ -136,15 +146,198 @@ function getThemeExtension(theme?: string) {
 // 6. Create editor extensions
 function createExtensions() {
   return [
-    basicSetup,
+    // Essential editor features
     lineNumbers(),
     highlightActiveLine(),
-    autocompletion(),
-    keymap.of([indentWithTab]),
-    getLanguageExtension(props.language),
-    ...getThemeExtension(props.theme),
+    history(),
+    drawSelection(),
+    dropCursor(),
+    rectangularSelection(),
+    crosshairCursor(),
+
+    // Language features
+    bracketMatching(),
+    indentOnInput(),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+
+    // Autocompletion with better configuration
+    // autocompletion({
+    //   activateOnTyping: true,
+    //   override: [
+    //     // Custom completions for maszynaW
+    //     (context) => {
+    //       if (props.language === 'maszynaW') {
+    //         const word = context.matchBefore(/\w*/);
+    //         if (!word) return null;
+
+    //         const maszynaWKeywords = [
+    //           'il',
+    //           'dl',
+    //           'wyl',
+    //           'wel',
+    //           'wyad',
+    //           'wea',
+    //           'wei',
+    //           'wys',
+    //           'wes',
+    //           'czyt',
+    //           'pisz',
+    //           'as',
+    //           'sa',
+    //           'dod',
+    //           'ode',
+    //           'przep',
+    //           'mno',
+    //           'dziel',
+    //           'shr',
+    //           'shl',
+    //           'neg',
+    //           'lub',
+    //           'i',
+    //           'iak',
+    //           'dak',
+    //           'weak',
+    //           'weja',
+    //           'wyak',
+    //           'stop',
+    //         ];
+
+    //         const completions = maszynaWKeywords
+    //           .filter((keyword) => keyword.startsWith(word.text))
+    //           .map((keyword) => ({
+    //             label: keyword,
+    //             type: 'keyword',
+    //             info: `MaszynaW keyword: ${keyword}`,
+    //           }));
+
+    //         return {
+    //           from: word.from,
+    //           options: completions,
+    //         };
+    //       }
+    //       return null;
+    //     },
+
+    //     // Custom completions for macroW
+    //     (context) => {
+    //       if (props.language === 'macroW') {
+    //         const word = context.matchBefore(/\w*/);
+    //         if (!word) return null;
+
+    //         const macroWKeywords = [
+    //           'stp',
+    //           'dod',
+    //           'ode',
+    //           'pob',
+    //           'lad',
+    //           'sob',
+    //           'som',
+    //           'soz',
+    //           'dns',
+    //           'pwr',
+    //           'pzs',
+    //           'sdp',
+    //           'dzi',
+    //           'mno',
+    //           'wpr',
+    //           'wyp',
+    //           'IF',
+    //           'THEN',
+    //           'ELSE',
+    //         ];
+
+    //         const completions = macroWKeywords
+    //           .filter((keyword) => keyword.toLowerCase().startsWith(word.text.toLowerCase()))
+    //           .map((keyword) => ({
+    //             label: keyword,
+    //             type: 'keyword',
+    //             info: `MacroW keyword: ${keyword}`,
+    //           }));
+
+    //         return {
+    //           from: word.from,
+    //           options: completions,
+    //         };
+    //       }
+    //       return null;
+    //     },
+    //   ],
+    // }),
+
+    closeBrackets(),
+    highlightSelectionMatches(),
+    search({ top: true }),
+
+    // Enhanced keymap with explicit undo/redo and useful shortcuts
+    keymap.of([
+      ...closeBracketsKeymap,
+      ...completionKeymap,
+      ...searchKeymap,
+      ...historyKeymap,
+      { key: 'Ctrl-z', run: undo },
+      { key: 'Ctrl-y', run: redo },
+      { key: 'Ctrl-Shift-z', run: redo },
+      { key: 'Tab', run: indentWithTab.run },
+      { key: 'Shift-Tab', run: indentWithTab.run },
+      // Additional useful shortcuts
+      {
+        key: 'Ctrl-a',
+        run: (view) => {
+          view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
+          return true;
+        },
+      },
+      {
+        key: 'Ctrl-/',
+        run: (view) => {
+          // Simple comment toggle - adds // at the beginning of lines
+          const { state } = view;
+          const changes = [];
+
+          for (let i = 0; i < state.selection.ranges.length; i++) {
+            const range = state.selection.ranges[i];
+            const from = state.doc.lineAt(range.from).from;
+            const to = state.doc.lineAt(range.to).to;
+
+            for (let lineStart = from; lineStart <= to; ) {
+              const line = state.doc.lineAt(lineStart);
+              const lineText = line.text;
+
+              if (lineText.trim().startsWith('//')) {
+                // Remove comment
+                const commentIndex = lineText.indexOf('//');
+                changes.push({
+                  from: line.from + commentIndex,
+                  to: line.from + commentIndex + 2 + (lineText[commentIndex + 2] === ' ' ? 1 : 0),
+                  insert: '',
+                });
+              } else if (lineText.trim().length > 0) {
+                // Add comment
+                const firstNonSpace = lineText.search(/\S/);
+                const insertPos = firstNonSpace >= 0 ? line.from + firstNonSpace : line.from;
+                changes.push({
+                  from: insertPos,
+                  to: insertPos,
+                  insert: '// ',
+                });
+              }
+
+              lineStart = line.to + 1;
+            }
+          }
+
+          if (changes.length > 0) {
+            view.dispatch({ changes });
+          }
+          return true;
+        },
+      },
+    ]),
     EditorState.readOnly.of(props.readOnly ?? false),
     EditorView.lineWrapping,
+    // Add language and theme LAST to ensure they override
+    getLanguageExtension(props.language),
+    ...getThemeExtension(props.theme),
     EditorView.theme({
       '&': {
         fontSize: '14px',
@@ -155,6 +348,85 @@ function createExtensions() {
       },
       '.cm-scroller': {
         overflow: 'auto',
+      },
+      '.cm-content': {
+        textAlign: 'left',
+        padding: '10px',
+        minHeight: '100%',
+      },
+      '.cm-line': {
+        textAlign: 'left',
+        lineHeight: '1.4',
+      },
+      // Selection styling
+      '.cm-selectionBackground': {
+        backgroundColor: '#316AC5 !important',
+        opacity: '0.3 !important',
+      },
+      '.cm-focused .cm-selectionBackground': {
+        backgroundColor: '#316AC5 !important',
+        opacity: '0.4 !important',
+      },
+      '&.cm-focused .cm-selectionBackground': {
+        backgroundColor: '#316AC5 !important',
+      },
+      // // Cursor styling
+      // '.cm-cursor': {
+      //   borderLeftColor: '#ffffff !important',
+      //   borderLeftWidth: '2px !important',
+      // },
+      // '.cm-dropCursor': {
+      //   borderLeftColor: '#316AC5 !important',
+      //   borderLeftWidth: '2px !important',
+      // },
+      // Active line highlighting
+      '.cm-activeLine': {
+        backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+      },
+      // Autocomplete styling
+      '.cm-tooltip-autocomplete': {
+        border: '1px solid #555 !important',
+        backgroundColor: '#2d2d2d !important',
+        color: '#ffffff !important',
+      },
+      '.cm-completionLabel': {
+        color: '#ffffff !important',
+      },
+      '.cm-completionDetail': {
+        color: '#888 !important',
+      },
+      '.cm-tooltip-autocomplete .cm-completionIcon-keyword': {
+        color: '#4FC1FF !important',
+      },
+      // Search match highlighting
+      '.cm-searchMatch': {
+        backgroundColor: '#ffd700 !important',
+        color: '#000 !important',
+      },
+      '.cm-searchMatch.cm-searchMatch-selected': {
+        backgroundColor: '#ff8c00 !important',
+      },
+      // Keywords for macroW conditional statements
+      '.tok-IF, .tok-THEN, .tok-ELSE': {
+        color: '#4FC1FF !important',
+        fontWeight: 'bold !important',
+      },
+      '.cmt-IF, .cmt-THEN, .cmt-ELSE': {
+        color: '#4FC1FF !important',
+        fontWeight: 'bold !important',
+      },
+      // Label styling
+      '.tok-labelName, .cmt-labelName': {
+        color: '#795E26 !important',
+        fontStyle: 'italic !important',
+      },
+      '.tok-labelDef, .cmt-labelDef': {
+        color: '#795E26 !important',
+        fontStyle: 'italic !important',
+      },
+      '.tok-labelRef, .cmt-labelRef': {
+        color: '#795E26 !important',
+        fontStyle: 'italic !important',
       },
     }),
     // Update listener

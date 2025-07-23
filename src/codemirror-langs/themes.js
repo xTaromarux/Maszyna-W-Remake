@@ -41,7 +41,7 @@ export const mwTheme = [
   }),
   syntaxHighlighting(
     HighlightStyle.define([
-      { tag: t.keyword, fontWeight: 'bold' },
+      { tag: t.keyword, color: '#4FC1FF' },
       { tag: t.number, color: '#098658' },
       { tag: t.labelName, color: '#795E26', fontStyle: 'italic' },
       { tag: t.variableName, color: '#000000' },
@@ -90,7 +90,7 @@ export const macroTheme = [
   }),
   syntaxHighlighting(
     HighlightStyle.define([
-      { tag: t.keyword, fontWeight: 'bold' },
+      { tag: t.keyword, color: '#4FC1FF' },
       { tag: t.number, color: '#098658' },
       { tag: t.labelName, color: '#795E26', fontStyle: 'italic' },
       { tag: t.variableName, color: '#000000' },

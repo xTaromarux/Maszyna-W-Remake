@@ -1,6 +1,6 @@
 <template>
   <div id="program" v-if="!manualMode">
-    <CodeMirrorEditor v-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" />
+    <CodeMirrorEditor v-if="!codeCompiled" v-model="codeLocal" language="macroW" theme="macroTheme" />
 
     <div class="flexRow">
       <button

@@ -1,7 +1,7 @@
 @top Program { statement* }
 
 @tokens {
-  keyword { 
+  Keyword { 
     "stp" | "dod" | "ode" | "pob" | "lad" | "sob" | "som" | "soz" | "dns" | 
     "pwr" | "pzs" | "sdp" | "dzi" | "mno" | "wpr" | "wyp"
   }
@@ -18,7 +18,7 @@
   
   ";" "," "."
   
-  @precedence { "IF", "THEN", "ELSE", keyword, labelDef, identifier }
+  @precedence { "IF", "THEN", "ELSE", Keyword, labelDef, identifier }
   
   space { @whitespace+ }
   
@@ -35,7 +35,7 @@ statement {
 }
 
 instruction {
-  keyword argument*
+  Keyword argument*
 }
 
 directive {
@@ -61,6 +61,6 @@ argument {
   labelRef
 }
 
-@external propSource macroWHighlight from "./macroW.highlight"
+@external propSource macroWHighlight from "./macroW.highlight.js"
 
 @detectDelim 

@@ -6,71 +6,132 @@
       <span @click="$emit('setManualMode', false)">Program</span>
     </div>
 
-    <!-- Placeholder for future program chooser -->
+    <!-- Program chooser and state management -->
     <div class="chooseProgram">
       <slot name="chooseProgram"></slot>
+      <!-- Save/Load state -->
+      <div class="stateControls">
+        <button @click="$emit('saveState')">Zapisz stan</button>
+        <select v-model="selectedState" @change="onLoadState">
+          <option disabled value="">Wczytaj stan...</option>
+          <option v-for="name in savedStates" :key="name" :value="name">{{ name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Przycisk kompilacji -->
+    <div class="compileButtonDiv">
+      <button @click="$emit('compile')">Kompiluj</button>
     </div>
 
     <!-- Manual mode instruction -->
     <div v-if="manualMode" class="manualModeInstruction">
-      <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
+      <p>Aby uruchomić program, wybierz fazę i naciśnij 'Następna faza' lub 'Następna instrukcja'</p>
     </div>
 
+    <!-- Edytor kodu -->
     <MonacoEditor 
       v-else-if="!codeCompiled" 
       v-model="codeLocal" 
       language="maszynaW" 
       theme="mwTheme" 
-      />
+      class="monaco-container"
+    />
 
+    <!-- Wyświetlenie mikroprogramu po kompilacji -->
     <div v-else class="compiledCode">
-      <span
+      <div
         v-for="(line, index) in compiledCode"
         :key="index"
-        class="flexRow"
-        :class="{ active: activeLine === index }"
+        class="flexRow codeLineEntry"
+        :class="{ active: activeLine === index, breakpoint: breakpoints.has(index) }"
+        @click="$emit('toggleBreakpoint', index)"
       >
-        <span>{{ index }}</span>
+        <span class="lineIndex">
+          <span v-if="breakpoints.has(index)" class="breakpointDot">●</span>
+          {{ index }}
+        </span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
-      </span>
+      </div>
     </div>
 
     <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="manualMode">
-      <span>Sygnały następnej linii:</span>
+      <span>Sygnały następnej fazy:</span>
       <div class="flexRow">
-        <div v-for="cmd in [...nextLine]" :key="cmd">
+        <div v-for="cmd in nextSignalsArray" :key="cmd">
           <span>{{ cmd }}</span>
         </div>
       </div>
     </div>
+
+    <!-- Log console -->
+    <div v-if="showLog" class="logConsole">
+      <h4>Log wykonania</h4>
+      <div v-for="(entry, idx) in log" :key="idx" class="logEntry">
+        <span v-if="entry.type==='phase'">[Faza] PC={{ entry.L }} idx={{ entry.phaseIdx }} sygnały={{ entry.phase | formatSignals }}</span>
+        <span v-else>[Instr] PC={{ entry.L }} instrukcja={{ entry.asmLine }}</span>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import MonacoEditor from '@/components/MonacoEditor.vue'
+import { ref, watch, computed } from 'vue'
+import MonacoEditor from './MonacoEditor.vue'
 
 const props = defineProps({
-  manualMode: { type: Boolean, required: true },
-  codeCompiled: { type: Boolean, required: true },
-  code: { type: String, required: true },
-  compiledCode: { type: Array, required: true },
-  activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true } // Set
+  manualMode:    { type: Boolean, required: true },
+  codeCompiled:  { type: Boolean, required: true },
+  code:          { type: String,  required: true },
+  compiledCode:  { type: Array,   required: true },
+  activeLine:    { type: Number,  required: true },
+  nextLine:      { type: Object,  required: true }, // Set<string>
+  breakpoints:   { type: Object,  default: () => new Set() },
+  savedStates:   { type: Array,   default: () => [] },
+  log:           { type: Array,   default: () => [] },
+  showLog:       { type: Boolean, default: false }
 })
-const emit = defineEmits(['update:code', 'setManualMode'])
 
-// lokalna kopia, by v-model poprawnie działało
+const emit = defineEmits([
+  'update:code', 'setManualMode', 'compile',
+  'toggleBreakpoint', 'saveState', 'loadState'
+])
+
+// lokalna kopia kodu dla edytora
 const codeLocal = ref(props.code)
 watch(codeLocal, v => emit('update:code', v))
 watch(() => props.code, v => { if (v !== codeLocal.value) codeLocal.value = v })
+
+// stan wybranego zapisu
+const selectedState = ref('')
+function onLoadState() {
+  if (selectedState.value) {
+    emit('loadState', selectedState.value)
+    selectedState.value = ''
+  }
+}
+
+// sygnały następnej fazy jako tablica
+const nextSignalsArray = computed(() => Array.from(props.nextLine || []))
+
+// filtr sygnałów do czytelnej postaci
+function formatSignals(phase) {
+  return Object.keys(phase).filter(k => phase[k]).join(', ')
+}
 </script>
 
 <style scoped>
 .toggleButtonProgram{
   width: 100%;
+}
+
+.compileButtonDiv {
+  margin: 0.5rem 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .programEditor {
@@ -88,7 +149,6 @@ watch(() => props.code, v => { if (v !== codeLocal.value) codeLocal.value = v })
   gap: 1rem;
   align-items: center;
 }
-
 
 .compiledCode {
   display: flex;

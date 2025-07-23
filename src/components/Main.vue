@@ -114,6 +114,7 @@
         :next-line="nextLine"
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="code = $event"
+        @compile="compileCode"
       />
       <ExecutionControls
         :manual-mode="manualMode"
@@ -193,6 +194,7 @@
 
 <script>
 import CommandList from './CommandList.vue';
+import { tokenize } from '../pipeline/lexer';
 import ProgramSection from './ProgramSection.vue';
 import CounterComponent from '@/components/CounterComponent.vue';
 import BusSignal from '@/components/BusSignal.vue';
@@ -209,7 +211,7 @@ import Settings from '@/components/Settings.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
-import { parse } from '@/parser/parser'
+import { parse } from '@/pipeline/parser'
 
 export default {
   name: 'MainComponent',
@@ -1413,6 +1415,10 @@ export default {
   },
 
   mounted() {
+
+    console.log(tokenize(`START:  RST 5\nPOB START\nDOD B\nSTP`));
+
+
     this.initWebsocket();
     this.loadFromLS();
     this.resizeMemory();

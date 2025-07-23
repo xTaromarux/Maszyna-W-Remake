@@ -1,7 +1,11 @@
+// parser.js
 import { lex } from './lexer.js';
 
 /**
- * Parser budujący proste AST dla programu
+ * Parser budujący AST zgodny z fazą semantyczną:
+ * - LabelDefinition: { type: 'LabelDefinition', name, line }
+ * - Directive:       { type: 'Directive',      name,   operands: [Immediate|LabelRef], line }
+ * - Instruction:     { type: 'Instruction',    name,   operands: [Register|Immediate|LabelRef], line }
  */
 export class Parser {
   /**
@@ -30,71 +34,150 @@ export class Parser {
   expect(type, text) {
     const tok = this.peek();
     if (!tok || tok.type !== type || (text && tok.text !== text)) {
-      throw new Error(`Oczekiwano ${type}${text?`('${text}')`:''}, ale było ${tok?.type}:${tok?.text}`);
+      throw new Error(
+        `Oczekiwano ${type}${text ? `('${text}')` : ''}, ale było ${tok?.type}:${tok?.text}`
+      );
     }
     return this.consume();
   }
 
   /**
-   * Program → (Directive | Instruction)*
+   * Program → (LabelDefinition | Directive | Instruction)* 
    */
   parseProgram() {
     const body = [];
     while (this.peek()) {
       const tok = this.peek();
-      // Dyrektywy zaczynają się od kropki (np. .org)
-      if (tok.type === 'IDENT' && tok.text.startsWith('.')) {
+
+      // 1) LabelDefinition: IDENT ':' 
+      if (tok.type === 'IDENT' && this.tokens[this.pos + 1]?.type === 'COLON') {
+        body.push(this.parseLabelDefinition());
+      
+      // 2) Directive: IDENT starting with '.'
+      } else if (tok.type === 'IDENT' && tok.text.startsWith('.')) {
         body.push(this.parseDirective());
+      
+      // 3) Instruction
       } else {
         body.push(this.parseInstruction());
       }
-      // Pomijamy średnik i/lub końce linii
+
+      // Pomijamy średnik i/lub nowe linie
       if (this.peek()?.type === 'SEMICOLON') this.consume();
-      if (this.peek()?.type === 'NEWLINE') this.consume();
+      if (this.peek()?.type === 'NEWLINE')  this.consume();
     }
     return { type: 'Program', body };
   }
 
   /**
-   * Directive → IDENT args*
+   * LabelDefinition → IDENT ':' 
    */
-  parseDirective() {
+  parseLabelDefinition() {
     const nameTok = this.expect('IDENT');
-    const args = [];
-    while (this.peek() && this.peek().type !== 'NEWLINE') {
-      const t = this.consume();
-      if (t.type === 'NUMBER' || t.type === 'IDENT') {
-        args.push(t.text);
-      }
-    }
-    return { type: 'Directive', name: nameTok.text, args };
+    this.expect('COLON');
+    return {
+      type: 'LabelDefinition',
+      name: nameTok.text,
+      line: nameTok.line
+    };
   }
 
   /**
-   * Instruction → IDENT (NUMBER|IDENT|LabelRef)*
+   * Directive → IDENT args*
+   *   gdzie IDENT zaczyna się od '.'
    */
-  parseInstruction() {
+  parseDirective() {
     const nameTok = this.expect('IDENT');
-    const args = [];
+    const name = nameTok.text.slice(1).toUpperCase(); // usuń kropkę, ujednolić wielkość
+    const operands = [];
+
     while (this.peek() && !['SEMICOLON','NEWLINE'].includes(this.peek().type)) {
-      const t = this.consume();
-      if (t.type === 'AT') {
-        const lbl = this.expect('IDENT');
-        args.push({ type: 'LabelRef', name: lbl.text });
-      } else if (t.type === 'NUMBER' || t.type === 'IDENT') {
-        args.push(t.text);
+      const tok = this.consume();
+      if (tok.type === 'NUMBER') {
+        operands.push({
+          type: 'Immediate',
+          value: Number(tok.text),
+          line: tok.line
+        });
+      } else if (tok.type === 'IDENT') {
+        // etykieta w dyrektywie
+        operands.push({
+          type: 'LabelRef',
+          name: tok.text,
+          line: tok.line
+        });
       }
       if (this.peek()?.type === 'COMMA') this.consume();
     }
-    return { type: 'Instruction', name: nameTok.text, args };
+
+    return {
+      type: 'Directive',
+      name,
+      operands,
+      line: nameTok.line
+    };
+  }
+
+  /**
+   * Instruction → IDENT ( AT IDENT | REGISTER | NUMBER | IDENT )* 
+   */
+  parseInstruction() {
+    const nameTok = this.expect('IDENT');
+    const name = nameTok.text.toUpperCase();
+    const operands = [];
+
+    while (this.peek() && !['SEMICOLON','NEWLINE'].includes(this.peek().type)) {
+      const tok = this.consume();
+
+      if (tok.type === 'AT') {
+        // np. @Label
+        const lbl = this.expect('IDENT');
+        operands.push({
+          type: 'LabelRef',
+          name: lbl.text,
+          line: lbl.line
+        });
+
+      } else if (tok.type === 'REGISTER') {
+        operands.push({
+          type: 'Register',
+          name: tok.text.toUpperCase(),
+          line: tok.line
+        });
+
+      } else if (tok.type === 'NUMBER') {
+        operands.push({
+          type: 'Immediate',
+          value: Number(tok.text),
+          line: tok.line
+        });
+
+      } else if (tok.type === 'IDENT') {
+        // rozważamy to jako odnośnik etykiety
+        operands.push({
+          type: 'LabelRef',
+          name: tok.text,
+          line: tok.line
+        });
+      }
+
+      if (this.peek()?.type === 'COMMA') this.consume();
+    }
+
+    return {
+      type: 'Instruction',
+      name,
+      operands,
+      line: nameTok.line
+    };
   }
 }
 
 /**
  * Prosty helper do parsowania: zwraca AST
  * @param {string} source
+ * @returns {object}
  */
 export function parse(source) {
   return new Parser(source).parseProgram();
 }
- 

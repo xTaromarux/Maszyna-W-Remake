@@ -61,3 +61,5 @@ export function lex(input) {
 
   return tokens;
 }
+
+export { lex as tokenize };

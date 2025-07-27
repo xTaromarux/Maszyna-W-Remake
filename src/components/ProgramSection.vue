@@ -1,6 +1,6 @@
 <template>
   <div id="program" v-if="!manualMode">
-    <CodeMirrorEditor v-if="!codeCompiled" v-model="codeLocal" language="macroW" theme="macroTheme" />
+    <CodeMirrorEditor v-if="!programCompiled" v-model="programLocal" language="macroW" theme="macroTheme" />
 
     <div class="flexRow">
       <button
@@ -27,6 +27,11 @@ import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 
+// Import WLAN compilation modules
+import { parse } from '@/WLAN/parser';
+import { analyzeSemantics } from '@/WLAN/semanticAnalyzer';
+import { generateMicroProgram } from '@/WLAN/microGenerator';
+
 // Props from parent
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -40,121 +45,64 @@ const emit = defineEmits(['update:code', 'log']);
 const programLocal = ref('');
 const programCompiled = ref(false);
 
-// Compile high-level commands into assembler code
+// Compile high-level commands into assembler code using WLAN system
 function compileProgram() {
-  // 1. Podziel na niepuste linie
-  const rawLines = programLocal.value
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l !== '');
+  try {
+    // Step 1: Parse the source code into AST
+    const ast = parse(programLocal.value);
 
-  // 2. Budowa mapy etykiet i tablicy instrukcji
-  const labelMap = {}; // { 'Pętla': idx, ... }
-  const insts = []; // [{ name, args }...]
+    // Step 2: Perform semantic analysis (resolve labels, validate)
+    console.log(ast);
+    const analyzedNodes = analyzeSemantics(ast);
 
-  rawLines.forEach((line, idx) => {
-    // dyrektywa inicjująca RST: "Etykieta: RST 5"
-    const rstMatch = /^([A-Za-z_]\w*):\s*RST\s+(-?\d+)\s*$/i.exec(line);
-    if (rstMatch) {
-      // traktujemy RST jako pseudo‐instrukcję inicjującą pamięć
-      const lbl = rstMatch[1];
-      const val = parseInt(rstMatch[2], 10);
-      insts.push({ name: 'rst', args: [lbl, val] });
-      // etykieta dla RST też rejestrujemy na bieżącej pozycji
-      labelMap[lbl] = insts.length - 1;
-      return;
-    }
+    // Step 3: Generate microprogram
+    const microProgram = generateMicroProgram(analyzedNodes);
 
-    // etykieta definiująca skok: "Pętla:" (bez dalszej instrukcji)
-    if (/^[A-Za-z_]\w*:$/.test(line)) {
-      const lbl = line.slice(0, -1);
-      labelMap[lbl] = insts.length;
-      return;
-    }
+    // Step 4: Convert microprogram to assembler format expected by the rest of the system
+    const asmFragments = [];
 
-    // normalna instrukcja: "POB X", "SOM Koniec"
-    const parts = line.split(/\s+/);
-    const name = parts[0].toLowerCase();
-    const args = parts.slice(1);
-    insts.push({ name, args });
-  });
+    for (const entry of microProgram) {
+      // Each entry has asmLine (for display) and phases (microinstructions)
+      for (const phase of entry.phases) {
+        if (phase.conditional) {
+          // Handle conditional phases (SOM, SOZ)
+          const flag = phase.flag;
+          const truePhase = phase.truePhases[0];
+          const falsePhase = phase.falsePhases[0];
 
-  // 3. Generacja asemblera: cmd.lines z placeholderami @ARG i RST→czyt/pisz
-  const asmFragments = [];
+          const trueSignals = Object.keys(truePhase).join(' ');
+          const falseSignals = Object.keys(falsePhase).join(' ');
 
-  for (let i = 0; i < insts.length; i++) {
-    const { name, args } = insts[i];
-
-    // obsługujemy RST jako zapis do pamięci: RST lbl,val →
-    //   we assume: ustawiamy adres etykiety na I, ustawiamy wartość w ACC,
-    //   potem pisz (WRITE S).
-    if (name === 'rst') {
-      const [lbl, val] = args;
-      // 1) umieść w I adres etykiety
-      asmFragments.push(`wyad wea`); // I←BusA (z PC, ale w symulatorze nadpiszemy adres przez zmienne)
-      // 2) ustaw ACC na wartość val
-      asmFragments.push(`iak`); // ACC++  powtarzane val razy? dla uproszczenia zakładamy jednorazowa
-      //    tu powinieneś lepiej zaimplementować CONST→ACC, pomijamy
-      // 3) pisz: S→Mem[I]
-      asmFragments.push(`pisz`);
-      continue;
-    }
-
-    // znajdź definicję makra
-    const cmd = props.commandList.find((c) => c.name.toLowerCase() === name);
-    if (!cmd) {
-      emit('log', {
-        message: `Nieznana instrukcja makro "${name}"`,
-        class: 'Error',
-      });
-      return;
-    }
-
-    // tekst szablonu, np. "czyt wys wei il; wyad wea; IF N THEN @ujemne ELSE @dodatnie; …"
-    let template = cmd.lines;
-
-    // jeśli instrukcja ma <1> argument, zastąp placeholdery @ARG lub etykiety
-    if (cmd.args === 1 && args.length > 0) {
-      const a = args[0];
-      let targetIndex = null;
-      if (/^-?\d+$/.test(a)) {
-        targetIndex = parseInt(a, 10);
-      } else if (labelMap[a] != null) {
-        targetIndex = labelMap[a];
-      } else {
-        emit('log', {
-          message: `Nieznany argument "${a}" w makro "${name}"`,
-          class: 'Error',
-        });
-        return;
+          asmFragments.push(`IF ${flag} THEN ${trueSignals} ELSE ${falseSignals}`);
+        } else {
+          // Regular phase - extract signals
+          const signals = Object.keys(phase).join(' ');
+          if (signals.trim()) {
+            asmFragments.push(signals);
+          }
+        }
       }
-      // podstawiamy @ARG
-      template = template.replace(/@ARG/g, String(targetIndex));
-      // również zastępujemy @LABEL
-      template = template.replace(/@([A-Za-z_]\w*)/g, (m, lbl) => {
-        const idx = labelMap[lbl];
-        return idx != null ? String(idx) : m;
-      });
     }
 
-    // dodaj fragmenty (rozbijone średnikami)
-    template.split(';').forEach((seg) => {
-      const t = seg.trim();
-      if (t) asmFragments.push(t);
+    // Step 5: Join fragments and emit to parent
+    const finalAsm = asmFragments.join(';\n') + ';';
+    emit('update:code', finalAsm);
+
+    // Step 6: Update state and log success
+    programCompiled.value = true;
+    emit('log', {
+      message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN',
+      class: 'kompilator rozkazów',
+    });
+  } catch (error) {
+    // Handle compilation errors
+    emit('log', {
+      message: `Błąd kompilacji: ${error.message}`,
+      class: 'Error',
     });
   }
-
-  // 4. Połącz i przekaż do mikro-kompilatora
-  const finalAsm = asmFragments.join(';\n') + ';';
-  emit('update:code', finalAsm);
-
-  // 5. Zablokuj edycję i daj log
-  programCompiled.value = true;
-  emit('log', {
-    message: 'Makro-program skompilowany pomyślnie',
-    class: 'kompilator rozkazów',
-  });
 }
+
 // Unlock for editing
 function uncompileProgram() {
   programCompiled.value = false;

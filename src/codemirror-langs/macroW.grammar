@@ -2,8 +2,8 @@
 
 @tokens {
   Keyword { 
-    "stp" | "dod" | "ode" | "pob" | "lad" | "sob" | "som" | "soz" | "dns" | 
-    "pwr" | "pzs" | "sdp" | "dzi" | "mno" | "wpr" | "wyp"
+    "STP" | "DOD" | "ODE" | "POB" | "LAD" | "SOB" | "SOM" | "SOZ" | "DNS" | 
+    "PWR" | "PZS" | "SDP" | "DZI" | "MNO" | "wpr" | "WYP"
   }
   
   "IF" "THEN" "ELSE"

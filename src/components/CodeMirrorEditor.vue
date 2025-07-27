@@ -49,8 +49,8 @@ import {
   rectangularSelection,
   crosshairCursor,
 } from '@codemirror/view';
-import { indentWithTab, history, defaultKeymap, historyKeymap, undo, redo } from '@codemirror/commands';
-import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
+import { indentWithTab, history, historyKeymap, undo, redo } from '@codemirror/commands';
+import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches, search } from '@codemirror/search';
 import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { javascript } from '@codemirror/lang-javascript';
@@ -108,16 +108,13 @@ const props = defineProps<{
   readOnly?: boolean;
 }>();
 
-// 2. Emits
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
-// 3. Template refs
 const editorContainer = ref<HTMLDivElement | null>(null);
 let editorView: EditorView | null = null;
 
-// 4. Helper function to get language extension
 function getLanguageExtension(language?: string) {
   switch (language) {
     case 'maszynaW':
@@ -131,7 +128,6 @@ function getLanguageExtension(language?: string) {
   }
 }
 
-// 5. Helper function to get theme extension
 function getThemeExtension(theme?: string) {
   switch (theme) {
     case 'mwTheme':

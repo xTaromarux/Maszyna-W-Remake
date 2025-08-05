@@ -1,4 +1,5 @@
 import { lex } from './lexer';
+import { Token, TokenType } from './model';
 
 const REGISTER_REGEX = /^(A|S|L|I|AK|PC|IR)$/i;
 
@@ -8,7 +9,7 @@ const REGISTER_REGEX = /^(A|S|L|I|AK|PC|IR)$/i;
  */
 
 export class Parser {
-  tokens: any[];
+  tokens: Token[];
   pos: number;
 
   constructor(source) {
@@ -26,7 +27,7 @@ export class Parser {
     return this.tokens[this.pos++];
   }
 
-  expect(type, text) {
+  expect(type: TokenType, text: string) {
     const tok = this.peek();
     if (!tok || tok.type !== type || (text && tok.text !== text)) {
       throw new Error(`Oczekiwano ${type}${text ? ` (${text})` : ''}, ale było ${tok?.type}:${tok?.text}`);
@@ -72,7 +73,7 @@ export class Parser {
 
   parseLabelDefinition() {
     const nameTok = this.consume(); // IDENT
-    this.expect('COLON', ':');
+    this.expect(TokenType.COLON, ':');
 
     const label = {
       type: 'LabelDefinition',
@@ -133,13 +134,13 @@ export class Parser {
   }
 
   parseConditional() {
-    const ifTok = this.expect('IF', 'IF');
+    const ifTok = this.expect(TokenType.IF, 'IF');
     const test = this.parseOperand();
-    this.expect('THEN', 'THEN');
+    this.expect(TokenType.THEN, 'THEN');
     const thenBranch = this.parseOperand();
 
     let elseBranch = null;
-    if (this.peek()?.type === 'ELSE') {
+    if (this.peek()?.type === TokenType.ELSE) {
       this.consume();
       elseBranch = this.parseOperand();
     }
@@ -198,6 +199,7 @@ export class Parser {
         break; // zamiast rzucać wyjątek – przerwij
       }
     }
+    console.log('Parsed instruction:', name, operands);
 
     return { type: 'Instruction', name, operands, line: nameTok.line };
   }
@@ -205,28 +207,28 @@ export class Parser {
   parseOperand() {
     const tok = this.peek();
 
-    if (tok.type === 'COMMA') {
+    if (tok.type === TokenType.COMMA) {
       throw new Error(`COMMA nie jest operatorem, tylko separatorem — nie powinien trafić tu`);
     }
 
     if (!tok) throw new Error(`Brak tokena przy parsowaniu operandu`);
 
-    if (tok.type === 'COLON') {
+    if (tok.type === TokenType.COLON) {
       throw new Error(`Dwukropek nie może być operandem`);
     }
 
-    if (tok.type === 'AT') {
+    if (tok.type === TokenType.AT) {
       this.consume();
-      const ident = this.expect('IDENT', undefined);
+      const ident = this.expect(TokenType.IDENT, undefined);
       return { type: 'LabelRef', name: ident.text, line: ident.line };
     }
 
-    if (tok.type === 'NUMBER') {
+    if (tok.type === TokenType.NUMBER) {
       const t = this.consume();
       return { type: 'Immediate', value: Number(t.text), line: t.line };
     }
 
-    if (tok.type === 'IDENT') {
+    if (tok.type === TokenType.IDENT) {
       const t = this.consume();
       if (REGISTER_REGEX.test(t.text)) {
         return { type: 'Register', name: t.text.toUpperCase(), line: t.line };

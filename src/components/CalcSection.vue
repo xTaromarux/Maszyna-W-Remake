@@ -34,17 +34,17 @@
       @update:number-format="$emit('update:accFormat', $event)"
     />
 
-    <div class="opSignals">
+    <div class="jamlSignals">
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
-      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowLeftOnBottom" @click="handleClick('dod')" />
-      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowLeftOnBottom" @click="handleClick('ode')" />
-      <SignalButton id="przp" :signal="signals.przp" label="przp" spanClassNames="arrowLeftOnBottom" @click="handleClick('przp')" />
+      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
+      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowRightOnBottom" @click="handleClick('ode')" />
+      <SignalButton id="przp" :signal="signals.przp" label="przp" spanClassNames="arrowRightOnBottom" @click="handleClick('przp')" />
       <SignalButton
         v-if="extras.jamlExtras"
         id="mno"
         :signal="signals.mno"
         label="mno"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('mno')"
       />
       <SignalButton
@@ -52,7 +52,7 @@
         id="dziel"
         :signal="signals.dziel"
         label="dziel"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('dziel')"
       />
       <SignalButton
@@ -60,7 +60,7 @@
         id="shr"
         :signal="signals.shr"
         label="shr"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('shr')"
       />
       <SignalButton
@@ -68,7 +68,7 @@
         id="shl"
         :signal="signals.shl"
         label="shl"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('shl')"
       />
       <SignalButton
@@ -76,7 +76,7 @@
         id="neg"
         :signal="signals.neg"
         label="neg"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('neg')"
       />
       <SignalButton
@@ -84,7 +84,7 @@
         id="lub"
         :signal="signals.lub"
         label="lub"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('lub')"
       />
       <SignalButton
@@ -92,7 +92,7 @@
         id="i"
         :signal="signals.i"
         label="i"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('i')"
       />
     </div>

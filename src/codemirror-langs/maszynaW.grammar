@@ -1,52 +1,58 @@
-@top Program { statement* }
+@top Program { (semi | statement semi)* }   
+
+semi { ";" }
 
 @tokens {
-  Keyword { 
-    "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" | 
-    "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" | 
-    "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" | 
+  Flag { "Z" | "N" }
+
+  Keyword {
+    "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" |
+    "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" |
+    "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" |
     "wyak" | "stop"
   }
-  
-  number { @digit+ }
-  
-  labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
-  
+
+  "IF" "THEN" "ELSE"
+
   labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
-  
-  identifier { @asciiLetter (@asciiLetter | @digit | "_")* }
-  
-  ";" "," "."
-  
-  @precedence { Keyword, labelDef, identifier }
-  
+
+  "," "."
+
+  @precedence { "IF", "THEN", "ELSE", Keyword, labelRef }
+
   space { @whitespace+ }
-  
   LineComment { "//" ![\n]* }
 }
 
 @skip { space | LineComment }
 
 statement {
-  labelDef |
-  instruction |
-  directive
+  conditional
+| labeledPhase
 }
 
-instruction {
-  Keyword argument*
+labeledPhase {
+  labelRef? phase
 }
 
-directive {
-  "." identifier argument*
+phase {
+  signal (("," signal) | signal)*
 }
 
-argument {
-  number |
-  identifier |
+signal { Keyword }
+
+conditional {
+  "IF" Flag "THEN" condBranch !else
+| "IF" Flag "THEN" condBranch "ELSE" condBranch
+}
+
+condBranch {
   labelRef
+| phase
 }
+
+@precedence { else }
 
 @external propSource maszynaWHighlight from "./maszynaW.highlight.js"
 
-@detectDelim 
+@detectDelim

@@ -1,15 +1,16 @@
 import { initStore, stepMicro } from './simulator.js';
+import type { Store, MicroProgramEntry } from './model';
 
 export class Debugger {
-  store: any;
+  store: Store;
   _initialSnapshot: any;
-  breakpoints: Set<unknown>;
+  breakpoints: Set<number>;
   paused: boolean;
   autoInterval: NodeJS.Timeout | null;
   log: any[];
-  _listeners: {};
+  _listeners: Record<string, Array<(data: any) => void>>;
 
-  constructor(store) {
+  constructor(store: Store) {
     this.store = store;
     this._initialSnapshot = JSON.parse(JSON.stringify(store));
     this.breakpoints = new Set();
@@ -19,22 +20,22 @@ export class Debugger {
     this._listeners = {};
   }
 
-  on(event, callback) {
+  on(event: string, callback: (data: any) => void) {
     if (!this._listeners[event]) this._listeners[event] = [];
     this._listeners[event].push(callback);
   }
 
-  _emit(event, data) {
+  _emit(event: string, data: any) {
     for (const cb of this._listeners[event] || []) {
       cb(data);
     }
   }
 
-  addBreakpoint(addr) {
+  addBreakpoint(addr: number) {
     this.breakpoints.add(addr);
   }
 
-  removeBreakpoint(addr) {
+  removeBreakpoint(addr: number) {
     this.breakpoints.delete(addr);
   }
 
@@ -104,12 +105,12 @@ export class Debugger {
     const snapshot = JSON.parse(JSON.stringify(this._initialSnapshot));
 
     const assignments = Array.from(snapshot.mem)
-      .map((val, addr) => ({ addr, val }))
-      .filter((entry) => entry.val !== 0);
+      .map((val, addr) => ({ addr, val: Number(val) }))
+      .filter((entry) => typeof entry.val === 'number' && entry.val !== 0);
 
     const restored = initStore(size, vb, assignments);
     Object.assign(restored, snapshot);
-    this.store = restored;
+    this.store = restored as Store;
 
     this.paused = false;
     this.log = [];

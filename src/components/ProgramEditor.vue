@@ -52,9 +52,11 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:code', 'setManualMode']);
 
-// lokalna kopia, by v-model poprawnie działało
 const codeLocal = ref(props.code);
-watch(codeLocal, (v) => emit('update:code', v));
+watch(codeLocal, (v) => {
+  console.log('Updating code:', v);
+  return emit('update:code', v);
+});
 watch(
   () => props.code,
   (v) => {

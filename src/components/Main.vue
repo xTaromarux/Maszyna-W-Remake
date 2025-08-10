@@ -113,13 +113,14 @@
         :active-line="activeLine"
         :next-line="nextLine"
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
-        @update:code="code = $event"
+        @update:code="(code) => (this.code = code)"
       />
+      <!--HACK WITH COMPILE CODE 2, it is an old version of the compile code function-->
       <ExecutionControls
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
         :code="code"
-        @compile="compileCode"
+        @compile="compileCode2"
         @edit="uncompileCode"
         @step="executeLine"
         @run="runCode"
@@ -131,6 +132,7 @@
       :commandList="commandList"
       @update:code="code = $event"
       @log="addLog($event.message, $event.class)"
+      @initMemory="applyInitMemory($event)"
     />
 
     <Console
@@ -388,6 +390,22 @@ export default {
     };
   },
   methods: {
+    applyInitMemory(assignments) {
+      // assignments: Array<{ addr:number, val:number }>
+      const size = 1 << this.memoryAddresBits;
+      const nextMem = new Array(size).fill(0);
+      // start from current mem to preserve any manual setup
+      for (let i = 0; i < Math.min(this.mem.length, size); i++) nextMem[i] = this.mem[i];
+      for (const { addr, val } of assignments) {
+        if (addr >= 0 && addr < size) {
+          nextMem[addr] = val & 0xff;
+        } else {
+          this.addLog(`Adres poza zakresem pamięci przy inicjalizacji: ${addr}`, 'Error');
+        }
+      }
+      this.mem = nextMem;
+      this.addLog(`Zastosowano inicjalizację pamięci (${assignments.length} wpisów)`, 'system');
+    },
     initWebsocket() {
       // Local Test
       this.ws = new WebSocket('ws://localhost:8080');
@@ -494,7 +512,7 @@ export default {
         for (const other of busSSignals) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" – koliduje z „${other}" (magistrala S zajęta).`;
+            return `Nie można włączyć „${signalName}" - koliduje z „${other}" (magistrala S zajęta).`;
           }
         }
       }
@@ -503,7 +521,7 @@ export default {
         for (const other of jalOperations) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" – już działa „${other}" (maks. jedna operacja JAML naraz).`;
+            return `Nie można włączyć „${signalName}" - już działa „${other}" (maks. jedna operacja JAML naraz).`;
           }
         }
       }
@@ -787,6 +805,44 @@ export default {
       }
     },
 
+    compileCode2() {
+      if (!this.code) {
+        this.addLog('Brak kodu do kompilacji', 'Błąd');
+        return;
+      }
+
+      let signalslist = new Set([
+        ...this.avaiableSignals.always,
+        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
+        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
+        ...(this.extras.dl ? this.avaiableSignals.dl : []),
+        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
+        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
+      ]);
+
+      console.log(signalslist);
+      for (let [index, command] of this.code.split(/[\s;]+/).entries()) {
+        if (!command) continue; // Skip empty commands
+
+        if (!signalslist.has(command)) {
+          this.addLog(`Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`, 'Błąd parsera kodu');
+          return;
+        }
+      }
+
+      let code = this.code.replace(/\n/g, ''); // Remove all newline characters
+      this.compiledCode = code.split(';'); // Split the cleaned code into an array by ";"
+      //remove empty lines
+      this.compiledCode = this.compiledCode.filter((line) => line.trim() !== '');
+
+      this.codeCompiled = true;
+      this.activeLine = -1;
+      this.nextLine.clear();
+      this.executeLine();
+
+      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
+    },
+
     compileCode() {
       if (!this.code) {
         this.addLog('Brak kodu do kompilacji', 'Błąd');
@@ -797,7 +853,10 @@ export default {
       try {
         ast = parse(this.code); // parsujemy cały mikroprogram
       } catch (e) {
-        this.addLog(`Błąd parsera: ${e.message}`, 'Błąd parsera kodu');
+        const parts = [`Błąd parsera: ${e?.message || String(e)}`];
+        if (e && e.frame) parts.push('\n' + e.frame);
+        if (e && e.hint) parts.push(`\nPodpowiedź: ${e.hint}`);
+        this.addLog(parts.join(''), 'Błąd parsera kodu');
         return;
       }
 
@@ -828,10 +887,11 @@ export default {
           }
 
           compiledLines.push(parts.join(' '));
+        } else if (node.type === 'Directive') {
+          // todo: dodać obsługę dyrektyw
+          this.addLog(`Dyrektywa "${node.name}" nie jest obsługiwana w tej wersji`, 'Błąd parsera kodu');
+          return;
         }
-        // jeśli natrafisz na dyrektywę (node.type==='Directive'), możesz ją tutaj obsłużyć
-        // np. zmieniać licznik lub ustawiać etykietę, ale na razie je pomijamy:
-        // else if (node.type==='Directive') { … }
       }
 
       // ustawienie wynikowego microprogramu
@@ -911,8 +971,9 @@ export default {
     },
     runCode() {
       this.manualMode = false;
+
       this.clearActiveTimeouts();
-      while (this.activeLine < this.compiledCode.length) {
+      while (this.activeLine < this.codeCompiled.length) {
         this.executeLine();
       }
     },

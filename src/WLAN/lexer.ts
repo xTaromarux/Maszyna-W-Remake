@@ -1,11 +1,11 @@
+import type { Token, TokenType } from './model';
+import { WlanError, errorAt } from './error';
+
 const tokenSpecs: [string, RegExp][] = [
   ['WHITESPACE', /^[ \t\r]+/],
   ['NEWLINE', /^\r?\n/],
   ['COMMENT_SLASH', /^\/\/[^\n]*/],
   ['COMMENT_SEMI', /^;[^\n]*/],
-  ['IF', /^IF\b/],
-  ['THEN', /^THEN\b/],
-  ['ELSE', /^ELSE\b/],
   ['NUMBER', /^\d+/],
   ['COLON', /^:/],
   ['SEMICOLON', /^;/],
@@ -14,13 +14,8 @@ const tokenSpecs: [string, RegExp][] = [
   ['IDENT', /^[\p{L}_][\p{L}0-9_]*/u],
 ];
 
-/**
- * Analiza leksykalna: zamienia tekst źródłowy na tokeny
- * @param {string} input
- * @returns {Array<{type: string, text: string, line: number, col: number}>}
- */
-export function lex(input) {
-  const tokens = [];
+export function lex(input: string): Token[] {
+  const tokens: Token[] = [];
   let pos = 0;
   let line = 1;
   let col = 1;
@@ -35,12 +30,15 @@ export function lex(input) {
 
       matched = true;
       const text = m[0];
+      const tokenStartLine = line;
+      const tokenStartCol = col;
       const newlines = text.match(/\r?\n/g);
 
       if (newlines) {
         line += newlines.length;
-        const lastLineBreak = Math.max(text.lastIndexOf('\n'), text.lastIndexOf('\r'));
-        col = text.length - lastLineBreak;
+        const lastLf = Math.max(text.lastIndexOf('\n'), text.lastIndexOf('\r'));
+        const tailLen = text.length - (lastLf + 1);
+        col = 1 + Math.max(0, tailLen);
       } else {
         col += text.length;
       }
@@ -50,7 +48,7 @@ export function lex(input) {
       // Pomiń whitespace i komentarze
       if (['WHITESPACE', 'COMMENT_SLASH', 'COMMENT_SEMI'].includes(type)) break;
 
-      tokens.push({ type, text, line, col });
+      tokens.push({ type, text, line: tokenStartLine, col: tokenStartCol });
       break;
     }
 
@@ -60,12 +58,17 @@ export function lex(input) {
         continue; // pomiń bez błędu
       }
       const unknownChar = input[pos];
-      tokens.push({ type: 'UNKNOWN', text: unknownChar, line, col });
-      pos++;
-      col++;
+      // Zgłoś błąd leksykalny z ramką kodu
+      throw errorAt(
+        input,
+        line,
+        col,
+        `Nieznany znak: '${unknownChar}'`,
+        'LEX_UNKNOWN_CHAR',
+        `Usuń lub popraw znak. Jeżeli to komentarz, użyj '//' lub rozpocznij linię średnikiem ';'.`
+      );
     }
   }
-
   return tokens;
 }
 

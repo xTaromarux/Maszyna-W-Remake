@@ -38,8 +38,8 @@ const props = defineProps({
   commandList: { type: Array, required: true },
 });
 
-// Events to parent: update assembled code, log messages
-const emit = defineEmits(['update:code', 'log']);
+// Events to parent: update assembled code, log messages, initialize memory
+const emit = defineEmits(['update:code', 'log', 'initMemory']);
 
 // Local state
 const programLocal = ref('');
@@ -48,58 +48,68 @@ const programCompiled = ref(false);
 // Compile high-level commands into assembler code using WLAN system
 function compileProgram() {
   try {
-    // Step 1: Parse the source code into AST
+    /* 1. AST */
     const ast = parse(programLocal.value);
 
-    // Step 2: Perform semantic analysis (resolve labels, validate)
-    console.log(ast);
+    /* 2. Analiza semantyczna */
     const analyzedNodes = analyzeSemantics(ast);
 
-    // Step 3: Generate microprogram
+    /* 3. Wyodrębnij inicjalizacje pamięci na podstawie dyrektyw RST/RPA */
+    const initAssignments = [];
+    for (const node of analyzedNodes) {
+      if (node.type === 'Directive' && node._initMemory) {
+        const { addr, val } = node._initMemory;
+        initAssignments.push({ addr, val });
+      }
+    }
+    if (initAssignments.length) {
+      emit('initMemory', initAssignments);
+    }
+
+    /* 4. Generowanie mikro‑programu */
     const microProgram = generateMicroProgram(analyzedNodes);
+    console.log('Wygenerowany mikro‑program:', microProgram);
 
-    // Step 4: Convert microprogram to assembler format expected by the rest of the system
+    /* 5. Konwersja mikro‑instrukcji do tekstu (bez dyrektyw) */
     const asmFragments = [];
-
     for (const entry of microProgram) {
-      // Each entry has asmLine (for display) and phases (microinstructions)
       for (const phase of entry.phases) {
-        if (phase.conditional) {
-          // Handle conditional phases (SOM, SOZ)
+        if (phase.conditional === true) {
           const flag = phase.flag;
-          const truePhase = phase.truePhases[0];
-          const falsePhase = phase.falsePhases[0];
-
-          const trueSignals = Object.keys(truePhase).join(' ');
-          const falseSignals = Object.keys(falsePhase).join(' ');
-
-          asmFragments.push(`IF ${flag} THEN ${trueSignals} ELSE ${falseSignals}`);
+          const trueSignals = Object.keys(phase.truePhases[0])
+            .filter((key) => phase.truePhases[0][key])
+            .join(' ');
+          const falseSignals = Object.keys(phase.falsePhases[0])
+            .filter((key) => phase.falsePhases[0][key])
+            .join(' ');
+          // Wymagany format z etykietami i domknięciem KONIEC
+          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero`);
+          asmFragments.push(`@zero ${trueSignals} KONIEC`);
+          asmFragments.push(`@niezero ${falseSignals}`);
         } else {
-          // Regular phase - extract signals
-          const signals = Object.keys(phase).join(' ');
-          if (signals.trim()) {
-            asmFragments.push(signals);
-          }
+          const signals = Object.keys(phase)
+            .filter((key) => phase[key] === true)
+            .join(' ');
+          if (signals.trim()) asmFragments.push(signals);
         }
       }
     }
 
-    // Step 5: Join fragments and emit to parent
-    const finalAsm = asmFragments.join(';\n') + ';';
+    /* 6. Emit wynik */
+    const finalAsm = asmFragments.map((line) => `${line};`).join('\n');
     emit('update:code', finalAsm);
 
-    // Step 6: Update state and log success
+    /* 7. Sukces */
     programCompiled.value = true;
     emit('log', {
       message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN',
       class: 'kompilator rozkazów',
     });
   } catch (error) {
-    // Handle compilation errors
-    emit('log', {
-      message: `Błąd kompilacji: ${error.message}`,
-      class: 'Error',
-    });
+    const parts = [`Błąd kompilacji: ${error?.message || String(error)}`];
+    if (error && error.frame) parts.push('\n' + error.frame);
+    if (error && error.hint) parts.push(`\nPodpowiedź: ${error.hint}`);
+    emit('log', { message: parts.join(''), class: 'Error' });
   }
 }
 

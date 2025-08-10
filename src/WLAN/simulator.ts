@@ -1,6 +1,12 @@
 export const DEFAULT_VECTOR_BASE = 0x10;
 
-export function initStore(memorySize = 256, vectorBase = DEFAULT_VECTOR_BASE, initialMemoryAssignments = []) {
+import type { Store, MicroProgramEntry } from './model';
+
+export function initStore(
+  memorySize = 256,
+  vectorBase = DEFAULT_VECTOR_BASE,
+  initialMemoryAssignments: Array<{ addr: number; val: number }> = []
+): Store {
   const mem = new Uint8Array(memorySize);
   for (const { addr, val } of initialMemoryAssignments) {
     if (addr >= 0 && addr < memorySize) {
@@ -19,12 +25,18 @@ export function initStore(memorySize = 256, vectorBase = DEFAULT_VECTOR_BASE, in
     magA: 0,
     magS: 0,
     flags: {
+      // Z: zero flag (true when Ak == 0)
       Z: false,
+      // N: negative flag (true when Ak has MSB set)
+      N: false,
       IE: false,
       IR: false,
     },
     mem,
-    stack: [],
+    // Stos danych (DNS/PZS)
+    dataStack: [],
+    // Stos powrotów (SDP/PWR oraz ISR)
+    callStack: [],
     program: [],
     phaseIdx: 0,
     ioIn: [],
@@ -36,17 +48,18 @@ export function initStore(memorySize = 256, vectorBase = DEFAULT_VECTOR_BASE, in
 }
 
 function runISR(store) {
-  store.stack.push({ L: store.L, phaseIdx: store.phaseIdx });
+  store.callStack.push({ L: store.L, phaseIdx: store.phaseIdx });
   store.flags.IE = false;
   store.flags.IR = false;
   store.L = store.vectorBase;
   store.phaseIdx = 0;
 }
 
-export function applySignals(phase, store) {
+export function applySignals(phase: any, store: Store) {
   if (phase.wyad) store.magA = store.I & 0xff;
   if (phase.wyl) store.magA = store.L & 0xff;
   if (phase.wys) store.magS = store.S;
+  if (phase.wyak) store.magS = store.Ak;
 
   if (phase.czyt) store.S = store.mem[store.magA];
   if (phase.pisz) store.mem[store.magA] = store.S;
@@ -69,7 +82,9 @@ export function applySignals(phase, store) {
 
   if (phase.weak) {
     store.Ak = store._aluOut;
-    store.flags.Z = !!(store.Ak & 0x80);
+    // aktualizacja flag po zapisie do Ak
+    store.flags.Z = (store.Ak & 0xff) === 0;
+    store.flags.N = !!(store.Ak & 0x80);
   }
 
   if (phase.wea) store.A = store.magA;
@@ -82,16 +97,44 @@ export function applySignals(phase, store) {
   }
 
   if (phase.writeIO) {
-    store.portOut = store.magS;
+    // domyślnie wyprowadź zawartość ACC (jeśli nie ustawiono inaczej)
+    const outVal = phase.useMagS ? store.magS : store.Ak;
+    store.portOut = outVal & 0xff;
     store.ioOut.push(store.portOut);
   }
   if (phase.readIO) {
     store.portIn = store.ioIn.length ? store.ioIn.shift() : 0;
-    store.magS = store.portIn;
+    store.magS = store.portIn & 0xff;
+  }
+
+  // Operacje stosu i wywołań
+  if (phase.pushAcc) {
+    store.dataStack.push(store.Ak & 0xff);
+  }
+  if (phase.popAcc) {
+    const val = store.dataStack.length ? store.dataStack.pop() : 0;
+    store.Ak = val & 0xff;
+    // odśwież flagi po pobraniu
+    store.flags.Z = (store.Ak & 0xff) === 0;
+    store.flags.N = !!(store.Ak & 0x80);
+  }
+  if (phase.call) {
+    // zapamiętaj adres powrotu (następna instrukcja, phaseIdx=0)
+    store.callStack.push({ L: (store.L + 1) & 0xff, phaseIdx: 0 });
+    // skok pod adres z magA
+    store.L = store.magA & 0xff;
+    store.phaseIdx = 0;
+  }
+  if (phase.ret) {
+    const ctx = store.callStack.length ? store.callStack.pop() : null;
+    if (ctx) {
+      store.L = ctx.L & 0xff;
+      store.phaseIdx = ctx.phaseIdx | 0;
+    }
   }
 }
 
-export function stepMicro(store) {
+export function stepMicro(store: Store) {
   if (store.flags.IE && store.flags.IR) {
     runISR(store);
     return;
@@ -116,8 +159,8 @@ export function stepMicro(store) {
   if (store.phaseIdx >= entry.phases.length) {
     store.phaseIdx = 0;
 
-    if (store.L >= store.vectorBase && store.stack.length) {
-      const ctx = store.stack.pop();
+    if (store.L >= store.vectorBase && store.callStack.length) {
+      const ctx = store.callStack.pop();
       store.L = ctx.L;
       store.phaseIdx = ctx.phaseIdx;
     } else {
@@ -126,7 +169,7 @@ export function stepMicro(store) {
   }
 }
 
-export function exportStore(store) {
+export function exportStore(store: Store) {
   return JSON.stringify({
     registers: { I: store.I, L: store.L, A: store.A, S: store.S, Ak: store.Ak },
     flags: store.flags,
@@ -134,11 +177,13 @@ export function exportStore(store) {
     program: store.program,
     ioIn: store.ioIn,
     ioOut: store.ioOut,
+    dataStack: store.dataStack,
+    callStack: store.callStack,
     vectorBase: store.vectorBase,
   });
 }
 
-export function importStore(json) {
+export function importStore(json: string): Store {
   const data = JSON.parse(json);
   const store = initStore(data.memory.length, data.vectorBase, []);
   store.I = data.registers.I;
@@ -151,16 +196,18 @@ export function importStore(json) {
   store.program = data.program;
   store.ioIn = Array.from(data.ioIn);
   store.ioOut = Array.from(data.ioOut);
+  store.dataStack = Array.from(data.dataStack || []);
+  store.callStack = Array.from(data.callStack || []);
   return store;
 }
 
-export function saveState(name, store) {
+export function saveState(name: string, store: Store) {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem(`WMachine_${name}`, exportStore(store));
   }
 }
 
-export function loadState(name) {
+export function loadState(name: string): Store {
   if (typeof localStorage !== 'undefined') {
     const json = localStorage.getItem(`WMachine_${name}`);
     if (!json) throw new Error(`Brak stanu '${name}' w LocalStorage`);

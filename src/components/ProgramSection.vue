@@ -96,8 +96,10 @@ function compileProgram() {
     }
 
     /* 6. Emit wynik */
-    const finalAsm = asmFragments.map((line) => `${line};`).join('\n');
-    emit('update:code', finalAsm);
+    const finalMicroSignals = asmFragments.map((line) => `${line};`).join('\n');
+    console.log('Wygenerowany kod assemblera:', finalMicroSignals);
+    // Emit both human-readable text and the structured micro program (with pc/meta)
+    emit('update:code', { text: finalMicroSignals, program: microProgram });
 
     /* 7. Sukces */
     programCompiled.value = true;

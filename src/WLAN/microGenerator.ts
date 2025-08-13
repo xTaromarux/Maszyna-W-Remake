@@ -87,19 +87,31 @@ export function generateMicroProgram(ast: AstNode[]): MicroProgramEntry[] {
 
     if (name === 'SOB') {
       const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== 'number')
+
+      if (typeof targetAddr !== 'number') {
         throw new WlanError(`SOB bez rozwiązanego adresu (po resolveLabelRefs)`, { code: 'GEN_SOB_NO_ADDR' });
+      }
+
       const targetPc = addrToPc.get(targetAddr);
-      if (targetPc === undefined) throw new WlanError(`SOB → adres ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_SOB_BAD_ADDR' });
+
+      if (targetPc === undefined) {
+        throw new WlanError(`SOB -> adres ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_SOB_BAD_ADDR' });
+      }
       meta.kind = 'JUMP';
       meta.trueTarget = targetPc;
     } else if (name === 'SOZ' || name === 'SOM') {
       const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== 'number')
+
+      if (typeof targetAddr !== 'number') {
         throw new WlanError(`${name} bez rozwiązanego adresu (po resolveLabelRefs)`, { code: 'GEN_CJUMP_NO_ADDR' });
+      }
+
       const targetPc = addrToPc.get(targetAddr);
-      if (targetPc === undefined)
-        throw new WlanError(`${name} → adres ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_CJUMP_BAD_ADDR' });
+
+      if (targetPc === undefined) {
+        throw new WlanError(`${name} -> adres ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_CJUMP_BAD_ADDR' });
+      }
+
       meta.kind = 'CJUMP';
       meta.flag = name === 'SOZ' ? 'Z' : 'N';
       meta.trueTarget = targetPc;

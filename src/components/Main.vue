@@ -130,7 +130,7 @@
     <ProgramSection
       :manualMode="manualMode"
       :commandList="commandList"
-      @update:code="code = $event"
+      @update:code="handleProgramSectionCompile($event)"
       @log="addLog($event.message, $event.class)"
       @initMemory="applyInitMemory($event)"
     />
@@ -269,6 +269,10 @@ export default {
 
       code: 'czyt wys wei il;\nwyl wea;',
       compiledCode: [],
+      // Structured micro-program (preferred execution format)
+      compiledProgram: [],
+      activeInstrIndex: -1,
+      activePhaseIndex: 0,
       activeLine: 0,
       nextLine: new Set(),
 
@@ -390,6 +394,40 @@ export default {
     };
   },
   methods: {
+    handleProgramSectionCompile(payload) {
+      // Accept both legacy string and structured payload from ProgramSection
+      if (typeof payload === 'string') {
+        this.code = payload;
+        this.compiledCode = payload
+          .split('\n')
+          .map((l) => l.replace(/;\s*$/, ''))
+          .filter((l) => l.trim() !== '');
+        this.compiledProgram = [];
+        this.codeCompiled = true;
+        this.activeLine = -1;
+        this.activeInstrIndex = -1;
+        this.activePhaseIndex = 0;
+        this.nextLine.clear();
+        return;
+      }
+
+      const { text, program } = payload || {};
+      if (typeof text === 'string') {
+        this.code = text;
+        this.compiledCode = text
+          .split('\n')
+          .map((l) => l.replace(/;\s*$/, ''))
+          .filter((l) => l.trim() !== '');
+      }
+      this.compiledProgram = Array.isArray(program) ? program : [];
+      this.codeCompiled = true;
+      this.activeLine = -1;
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
+      this.nextLine.clear();
+      this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
+    },
+
     applyInitMemory(assignments) {
       // assignments: Array<{ addr:number, val:number }>
       const size = 1 << this.memoryAddresBits;
@@ -820,27 +858,66 @@ export default {
         ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
       ]);
 
-      console.log(signalslist);
-      for (let [index, command] of this.code.split(/[\s;]+/).entries()) {
-        if (!command) continue; // Skip empty commands
+      // Build structured micro-program from simple micro lines separated by ';'
+      const rawLines = this.code
+        .split(';')
+        .map((l) => l.replace(/\n/g, ' ').trim())
+        .filter((l) => l.length > 0);
 
-        if (!signalslist.has(command)) {
-          this.addLog(`Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`, 'Błąd parsera kodu');
-          return;
+      // Basic validation (ignore labels that start with '@' and IF/THEN/ELSE tokens)
+      for (let [lineIdx, line] of rawLines.entries()) {
+        const parts = line.split(/\s+/).filter(Boolean);
+        for (const token of parts) {
+          if (token.startsWith('@')) continue;
+          const kw = token.toUpperCase();
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') continue;
+          if (!signalslist.has(token)) {
+            this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
+            return;
+          }
         }
       }
 
-      let code = this.code.replace(/\n/g, ''); // Remove all newline characters
-      this.compiledCode = code.split(';'); // Split the cleaned code into an array by ";"
-      //remove empty lines
-      this.compiledCode = this.compiledCode.filter((line) => line.trim() !== '');
+      const program = [];
+      let pc = 0;
+      for (const line of rawLines) {
+        const parts = line.split(/\s+/).filter(Boolean);
+        if (parts.length === 0) continue;
 
+        // strip labels
+        const labels = [];
+        while (parts[0] && parts[0].startsWith('@')) {
+          labels.push(parts.shift().slice(1));
+        }
+
+        // treat remaining tokens as a single phase (legacy micro input)
+        const phase = {};
+        for (const sig of parts) {
+          const kw = sig.toUpperCase();
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') break;
+          phase[sig] = true;
+        }
+
+        const entry = {
+          pc,
+          asmLine: '(micro)',
+          phases: [phase],
+          meta: { kind: 'NONE', labels },
+        };
+        program.push(entry);
+        pc += 1;
+      }
+
+      this.compiledProgram = program;
+      this.compiledCode = rawLines; // keep for display/legacy
       this.codeCompiled = true;
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
       this.activeLine = -1;
       this.nextLine.clear();
       this.executeLine();
 
-      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
+      this.addLog('Kod skompilowany pomyślnie (strukturalny)', 'kompilator rozkazów');
     },
 
     compileCode() {
@@ -906,14 +983,120 @@ export default {
     uncompileCode() {
       this.codeCompiled = false;
       this.nextLine.clear();
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
     },
     executeLine() {
+      // Structured program path
+      if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
+        if (this.activeInstrIndex < 0) {
+          this.activeInstrIndex = 0;
+          this.activePhaseIndex = 0;
+        }
+
+        if (this.activeInstrIndex >= this.compiledProgram.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          return;
+        }
+
+        const instr = this.compiledProgram[this.activeInstrIndex];
+        let totalPhases = 0;
+        for (let i = 0; i < this.activeInstrIndex; i++) {
+          totalPhases += this.compiledProgram[i].phases.length;
+        }
+        this.activeLine = totalPhases + this.activePhaseIndex;
+        const rawPhase = instr.phases[this.activePhaseIndex];
+        const resolvedPhase = this.getResolvedPhase(rawPhase);
+        const signalsSet = new Set(Object.keys(resolvedPhase || {}).filter((k) => resolvedPhase[k] === true));
+        this.nextLine = signalsSet;
+        this.executeSignalsFromNextLine();
+
+        // Handle manual mode advancement
+        if (this.manualMode) {
+          this.activePhaseIndex += 1;
+          if (this.activePhaseIndex >= instr.phases.length) {
+            // End of current instruction in manual mode - handle jumps
+            if (instr.meta?.kind === 'JUMP') {
+              // Unconditional jump (SOB)
+              this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
+            } else if (instr.meta?.kind === 'CJUMP') {
+              // Conditional jump (SOZ/SOM)
+              const flagValue = this.evaluateFlag(instr.meta.flag);
+              const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
+              this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok warunkowy ${instr.meta.flag}: ${flagValue ? 'PRAWDA' : 'FAŁSZ'} -> PC=${targetPc}`, 'system');
+            } else {
+              // Normal instruction - proceed to next
+              this.activeInstrIndex += 1;
+              this.activePhaseIndex = 0;
+            }
+          }
+        }
+
+        if (!this.manualMode) {
+          console.log('[EXEC] Executing structured instruction:', instr);
+          this.activePhaseIndex += 1;
+          if (this.activePhaseIndex >= instr.phases.length) {
+            // Check if this instruction has jump metadata
+            if (instr.meta?.kind === 'JUMP') {
+              // Unconditional jump (SOB)
+              this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
+            } else if (instr.meta?.kind === 'CJUMP') {
+              // Conditional jump (SOZ/SOM)
+              const flagValue = this.evaluateFlag(instr.meta.flag);
+              const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
+              this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok warunkowy ${instr.meta.flag}: ${flagValue ? 'PRAWDA' : 'FAŁSZ'} -> PC=${targetPc}`, 'system');
+            } else {
+              // Normal instruction - proceed to next
+              this.activeInstrIndex += 1;
+              this.activePhaseIndex = 0;
+            }
+          }
+          if (this.activeInstrIndex >= this.compiledProgram.length) {
+            this.uncompileCode();
+            this.addLog('Kod zakończony', 'kompilator rozkazów');
+          }
+        }
+        return;
+      }
+
+      // Legacy path
+      if (!this.manualMode) {
+        if (this.activeLine < 0) this.activeLine = 0;
+        if (this.activeLine >= this.compiledCode.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          return;
+        }
+        const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
+        this.nextLine.clear();
+        for (const c of commands) this.nextLine.add(c);
+      }
+      this.executeSignalsFromNextLine();
+      if (!this.manualMode) {
+        this.activeLine++;
+        if (this.activeLine >= this.compiledCode.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+        }
+      }
+    },
+
+    executeSignalsFromNextLine() {
       // Clear all active timeouts to prevent signal overlap
       this.clearActiveTimeouts();
 
       // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
-      if (this.nextLine.has('czyt')) this.czyt(); // only czyt or pisz active at the same time
+      if (this.nextLine.has('czyt')) this.czyt();
       if (this.nextLine.has('pisz')) this.pisz();
       if (this.nextLine.has('wys')) this.wys();
       if (this.nextLine.has('stop')) this.stop();
@@ -926,7 +1109,6 @@ export default {
       if (this.nextLine.has('as')) this.as();
 
       // then all we's
-
       if (this.nextLine.has('wea')) this.wea();
       if (this.nextLine.has('weja')) this.weja();
       if (this.nextLine.has('wex')) this.wex();
@@ -936,7 +1118,6 @@ export default {
       if (this.nextLine.has('wel')) this.wel();
 
       // all math
-
       if (this.nextLine.has('dod')) this.dod();
       if (this.nextLine.has('ode')) this.ode();
       if (this.nextLine.has('przep')) this.przep();
@@ -957,24 +1138,58 @@ export default {
       if (this.nextLine.has('dl')) this.dl();
 
       this.nextLine.clear();
-      if (!this.manualMode) {
-        this.activeLine++;
-        if (this.activeLine >= this.compiledCode.length) {
-          this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
-        } else {
-          for (const command of this.compiledCode[this.activeLine].split(' ')) {
-            this.nextLine.add(command);
-          }
-        }
+    },
+
+    getResolvedPhase(phase) {
+      if (!phase) return {};
+      if (phase.conditional === true) {
+        const flag = phase.flag;
+        const cond = this.evaluateFlag(flag);
+        const branch = cond ? phase.truePhases : phase.falsePhases;
+        return branch && branch[0] ? branch[0] : {};
+      }
+      return phase;
+    },
+
+    evaluateFlag(flag) {
+      if (!flag) return false;
+      const f = String(flag).toUpperCase();
+      switch (f) {
+        case 'Z':
+        case 'ZERO':
+          return this.ACC === 0;
+        case 'NZ':
+        case 'NZERO':
+          return this.ACC !== 0;
+        case 'NEG':
+        case 'N':
+        case 'M':
+          return this.ACC < 0;
+        case 'POS':
+        case 'P':
+          return this.ACC >= 0;
+        default:
+          return false;
       }
     },
     runCode() {
       this.manualMode = false;
-
       this.clearActiveTimeouts();
-      while (this.activeLine < this.codeCompiled.length) {
-        this.executeLine();
+
+      if (this.compiledProgram && this.compiledProgram.length > 0) {
+        let safety = 100000;
+        if (this.activeInstrIndex < 0) {
+          this.activeInstrIndex = 0;
+          this.activePhaseIndex = 0;
+        }
+        while (this.codeCompiled && this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length && safety-- > 0) {
+          this.executeLine();
+        }
+      } else if (this.compiledCode && this.compiledCode.length > 0) {
+        this.activeLine = Math.max(this.activeLine, 0);
+        while (this.activeLine < this.compiledCode.length) {
+          this.executeLine();
+        }
       }
     },
 

@@ -2,9 +2,6 @@ import { styleTags, tags as t } from '@lezer/highlight';
 
 export const macroWHighlight = styleTags({
   Keyword: t.keyword,
-  IF: t.labelName,
-  THEN: t.labelName,
-  ELSE: t.labelName,
   number: t.number,
   identifier: t.variableName,
   labelDef: t.labelName,

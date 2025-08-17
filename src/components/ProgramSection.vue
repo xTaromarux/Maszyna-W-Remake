@@ -91,7 +91,7 @@ function compileProgram() {
             .filter((key) => phase.falsePhases[0][key])
             .join(' ');
           // Wymagany format z etykietami i domknięciem KONIEC
-          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero` + `@zero ${trueSignals} KONIEC` + `@niezero ${falseSignals}`);
+          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero` + ` @zero ${trueSignals} KONIEC` + ` @niezero ${falseSignals}`);
         } else {
           const signals = Object.keys(phase)
             .filter((key) => phase[key] === true)

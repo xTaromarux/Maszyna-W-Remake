@@ -897,7 +897,9 @@ export default {
         for (const token of parts) {
           if (token.startsWith('@')) continue;
           const kw = token.toUpperCase();
-          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') continue;
+          // temp solution, for now will do
+          // TODO: change to something more robust in the future
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC' || kw === 'Z' || kw === 'M') continue;
           if (!signalslist.has(token)) {
             this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
             return;

@@ -8,7 +8,7 @@
       class="execution-btn execution-btn--compile"
     >
       <CompileIcon />
-      <span>Kompiluj nyga</span>
+      <span>Kompiluj</span>
     </button>
 
     <button v-else @click="$emit('edit')" :disabled="manualMode && codeCompiled" class="execution-btn execution-btn--edit">

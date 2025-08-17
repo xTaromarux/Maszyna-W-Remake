@@ -1,6 +1,14 @@
 <template>
   <div id="program" v-if="!manualMode">
-    <CodeMirrorEditor v-if="!programCompiled" v-model="programLocal" language="macroW" theme="macroTheme" />
+    <CodeMirrorEditor
+      v-if="!programCompiled"
+      v-model="programLocal"
+      language="macroW"
+      theme="macroTheme"
+      :programCompiled="programCompiled"
+      :onCompile="compileProgram"
+      :onEdit="uncompileProgram"
+    />
 
     <div class="flexRow">
       <button
@@ -83,9 +91,7 @@ function compileProgram() {
             .filter((key) => phase.falsePhases[0][key])
             .join(' ');
           // Wymagany format z etykietami i domknięciem KONIEC
-          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero`);
-          asmFragments.push(`@zero ${trueSignals} KONIEC`);
-          asmFragments.push(`@niezero ${falseSignals}`);
+          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero` + `@zero ${trueSignals} KONIEC` + `@niezero ${falseSignals}`);
         } else {
           const signals = Object.keys(phase)
             .filter((key) => phase[key] === true)

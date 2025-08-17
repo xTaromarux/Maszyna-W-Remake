@@ -1034,6 +1034,28 @@ export default {
         }
         this.activeLine = totalPhases + this.activePhaseIndex;
         const rawPhase = instr.phases[this.activePhaseIndex];
+
+        // Special handling for conditional jumps
+        if (instr.meta?.kind === 'CJUMP') {
+          // Evaluate condition and choose branch
+          const flagValue = this.evaluateFlag(instr.meta.flag);
+          const resolvedPhase = this.getResolvedPhase(rawPhase);
+          const signalsSet = new Set(Object.keys(resolvedPhase || {}).filter((k) => resolvedPhase[k] === true));
+          this.nextLine = signalsSet;
+          this.executeSignalsFromNextLine();
+
+          // Log the branch choice
+          const branchChoice = flagValue ? 'PRAWDA' : 'FAŁSZ';
+          const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
+          this.addLog(`[CJUMP] Skok warunkowy ${instr.meta.flag}: ${branchChoice} -> PC=${targetPc}`, 'system');
+
+          // Immediately jump after executing the chosen branch
+          this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
+          this.activePhaseIndex = 0;
+          return;
+        }
+
+        // Normal phase execution for non-conditional instructions
         const resolvedPhase = this.getResolvedPhase(rawPhase);
         const signalsSet = new Set(Object.keys(resolvedPhase || {}).filter((k) => resolvedPhase[k] === true));
         this.nextLine = signalsSet;
@@ -1049,13 +1071,6 @@ export default {
               this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
               this.activePhaseIndex = 0;
               this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
-            } else if (instr.meta?.kind === 'CJUMP') {
-              // Conditional jump (SOZ/SOM)
-              const flagValue = this.evaluateFlag(instr.meta.flag);
-              const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
-              this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
-              this.activePhaseIndex = 0;
-              this.addLog(`Skok warunkowy ${instr.meta.flag}: ${flagValue ? 'PRAWDA' : 'FAŁSZ'} -> PC=${targetPc}`, 'system');
             } else {
               // Normal instruction - proceed to next
               this.activeInstrIndex += 1;
@@ -1065,7 +1080,6 @@ export default {
         }
 
         if (!this.manualMode) {
-          console.log('[EXEC] Executing structured instruction:', instr);
           this.activePhaseIndex += 1;
           if (this.activePhaseIndex >= instr.phases.length) {
             // Check if this instruction has jump metadata
@@ -1074,13 +1088,6 @@ export default {
               this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
               this.activePhaseIndex = 0;
               this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
-            } else if (instr.meta?.kind === 'CJUMP') {
-              // Conditional jump (SOZ/SOM)
-              const flagValue = this.evaluateFlag(instr.meta.flag);
-              const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
-              this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
-              this.activePhaseIndex = 0;
-              this.addLog(`Skok warunkowy ${instr.meta.flag}: ${flagValue ? 'PRAWDA' : 'FAŁSZ'} -> PC=${targetPc}`, 'system');
             } else {
               // Normal instruction - proceed to next
               this.activeInstrIndex += 1;

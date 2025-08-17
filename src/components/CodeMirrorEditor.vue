@@ -1,6 +1,6 @@
 <template>
   <div class="editor-wrapper" :class="{ 'full-screen': isFullScreen }" ref="editorWrapper">
-    <button @click="toggleFullScreen" class="fullscreen-button">
+    <button v-if="language === 'macroW'" @click="toggleFullScreen" class="fullscreen-button">
       <svg
         v-if="!isFullScreen"
         key="maximize"
@@ -32,6 +32,20 @@
         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
       </svg>
     </button>
+
+    <!-- Compilation controls for fullscreen macro editor -->
+    <div v-if="language === 'macroW' && isFullScreen" class="fullscreen-controls">
+      <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="compile-btn compile-btn--compile">
+        <CompileIcon />
+        <span>Kompiluj</span>
+      </button>
+
+      <button v-else @click="onEdit" class="compile-btn compile-btn--edit">
+        <EditIcon />
+        <span>Edytuj</span>
+      </button>
+    </div>
+
     <div ref="editorContainer" class="codemirror-container" />
   </div>
 </template>
@@ -59,6 +73,10 @@ import { javascript } from '@codemirror/lang-javascript';
 import { maszynaW } from '../codemirror-langs/maszynaW.support.js';
 import { macroW } from '../codemirror-langs/macroW.support.js';
 import { mwTheme, macroTheme } from '../codemirror-langs/themes.js';
+
+// Import icons for compilation buttons
+import CompileIcon from '@/assets/svg/CompileIcon.vue';
+import EditIcon from '@/assets/svg/EditIcon.vue';
 
 const isFullScreen = ref(false);
 const editorWrapper = ref<HTMLDivElement | null>(null);
@@ -106,6 +124,10 @@ const props = defineProps<{
   language?: string;
   theme?: string;
   readOnly?: boolean;
+  // Props for macro compilation
+  programCompiled?: boolean;
+  onCompile?: () => void;
+  onEdit?: () => void;
 }>();
 
 const emit = defineEmits<{
@@ -545,13 +567,14 @@ watch(
 
 .editor-wrapper.full-screen {
   top: 0 !important;
-  left: 70vw !important;
-  width: 30vw !important;
+  left: 65vw !important;
+  width: 35vw !important;
   height: 100vh !important;
   z-index: 999;
   background-color: var(--backgroundColor);
   border: 1px solid var(--panelOutlineColor);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 0 8px;
 }
 
 .codemirror-container {
@@ -567,5 +590,51 @@ watch(
 
 .codemirror-container :deep(.cm-focused) {
   outline: none;
+}
+
+/* Fullscreen controls styling */
+.fullscreen-controls {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 20;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.compile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: var(--default-border-radius, 0.25rem);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.compile-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.compile-btn--compile {
+  background-color: var(--signal-active, #4caf50);
+  color: #fff;
+}
+
+.compile-btn--compile:hover:not(:disabled) {
+  background-color: var(--signal-active-hover, #45a049);
+}
+
+.compile-btn--edit {
+  background-color: var(--buttonBackgroundColor, #6c757d);
+  color: var(--fontColor, #fff);
+}
+
+.compile-btn--edit:hover {
+  background-color: var(--buttonBackgroundColorHover, #5a6268);
 }
 </style>

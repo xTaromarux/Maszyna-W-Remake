@@ -121,10 +121,5 @@ export function generateMicroProgram(ast: AstNode[]): MicroProgramEntry[] {
     program.push({ pc: i, asmLine, phases, meta });
   }
 
-  // console.log(
-  //   'Generated microprogram:',
-  //   program,
-  //   program.map((e) => `${e.pc}: ${e.asmLine}`)
-  // );
   return program;
 }

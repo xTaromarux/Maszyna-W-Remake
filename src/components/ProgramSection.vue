@@ -108,10 +108,20 @@ function compileProgram() {
       class: 'kompilator rozkazów',
     });
   } catch (error) {
-    const parts = [`Błąd kompilacji: ${error?.message || String(error)}`];
-    if (error && error.frame) parts.push('\n' + error.frame);
-    if (error && error.hint) parts.push(`\nPodpowiedź: ${error.hint}`);
-    emit('log', { message: parts.join(''), class: 'Error' });
+    // For WlanError or BaseAppError, pass the full error object for enhanced display
+    if (error && (error.level || error.code || error.hint || error.loc || error.frame)) {
+      emit('log', {
+        message: `Błąd kompilacji: ${error.message || String(error)}`,
+        class: 'Error',
+        error: error,
+      });
+    } else {
+      // Legacy error handling for unknown error types
+      const parts = [`Błąd kompilacji: ${error?.message || String(error)}`];
+      if (error && error.frame) parts.push('\n' + error.frame);
+      if (error && error.hint) parts.push(`\nPodpowiedź: ${error.hint}`);
+      emit('log', { message: parts.join(''), class: 'Error' });
+    }
   }
 }
 

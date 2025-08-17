@@ -131,7 +131,7 @@
       :manualMode="manualMode"
       :commandList="commandList"
       @update:code="handleProgramSectionCompile($event)"
-      @log="addLog($event.message, $event.class)"
+      @log="addLog($event.message, $event.class, $event.error)"
       @initMemory="applyInitMemory($event)"
     />
 
@@ -139,7 +139,8 @@
       ref="console"
       :logs="logs.slice().reverse()"
       :class="{ 'console-collapsed': !consoleOpen }"
-      @click="consoleOpen ? null : toggleConsole()"
+      @close="closeConsole"
+      @clear="clearConsole"
     />
 
     <!-- Console indicator - visible only when console is collapsed -->
@@ -769,13 +770,39 @@ export default {
       delete dataToSave.hasConsoleErrors;
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
-    addLog(message, classification = 'info') {
+    addLog(message, classification = 'info', errorObj = null) {
       const timestamp = new Date();
-      this.logs.push({ timestamp, message, class: classification });
+
+      // Enhanced log entry structure that supports both legacy and new error formats
+      const logEntry = {
+        timestamp,
+        message,
+        class: classification,
+      };
+
+      // If an error object is provided (e.g., WlanError or BaseAppError)
+      if (errorObj) {
+        logEntry.error = {
+          message: errorObj.message || message,
+          level: errorObj.level,
+          timestamp: errorObj.timestamp,
+          code: errorObj.code,
+          hint: errorObj.hint,
+          loc: errorObj.loc,
+          frame: errorObj.frame,
+          context: errorObj.context,
+        };
+      }
+
+      this.logs.push(logEntry);
 
       // Check if this is an error and set the error flag
       const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu', 'błąd sygnału'];
-      if (errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase()))) {
+      const isError =
+        errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase())) ||
+        (errorObj && ['ERROR', 'CRITICAL'].includes(errorObj.level));
+
+      if (isError) {
         this.hasConsoleErrors = true;
       }
     },
@@ -1569,6 +1596,16 @@ export default {
       }
     },
 
+    closeConsole() {
+      this.consoleOpen = false;
+    },
+
+    clearConsole() {
+      this.logs = [];
+      this.hasConsoleErrors = false;
+      this.addLog('Konsola została wyczyszczona', 'system');
+    },
+
     handleKeyPress(event) {
       // Close console with Escape key
       if (event.key === 'Escape' && this.consoleOpen) {
@@ -1587,6 +1624,47 @@ export default {
       for (const key in this.signals) {
         this.signals[key] = false;
       }
+    },
+
+    // Test method to demonstrate enhanced console with different error types
+    testEnhancedConsole() {
+      // Test different error levels and formats
+      this.addLog('System inicjalizowany', 'system');
+
+      // Test BaseAppError structure
+      const mockWlanError = {
+        message: 'Nieznany znak w linii kodu',
+        level: 'ERROR',
+        timestamp: new Date().toISOString(),
+        code: 'LEX_UNKNOWN_CHAR',
+        hint: "Usuń lub popraw znak. Jeżeli to komentarz, użyj '/\/' lub rozpocznij linię średnikiem ';'.",
+        loc: { line: 5, col: 12, length: 1 },
+        frame: '    3 | LAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
+      };
+
+      this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);
+
+      // Test warning
+      const mockWarning = {
+        message: 'Niewykorzystana etykieta',
+        level: 'WARNING',
+        timestamp: new Date().toISOString(),
+        code: 'SEM_UNUSED_LABEL',
+        hint: 'Sprawdź czy etykieta jest faktycznie potrzebna lub czy nie ma literówki w nazwie.',
+      };
+
+      this.addLog('Ostrzeżenie kompilatora', 'Warning', mockWarning);
+
+      // Test critical error
+      const mockCritical = {
+        message: 'Krytyczny błąd systemu',
+        level: 'CRITICAL',
+        timestamp: new Date().toISOString(),
+        code: 'SYS_CRITICAL',
+        hint: 'Skontaktuj się z administratorem systemu.',
+      };
+
+      this.addLog('Błąd krytyczny', 'Critical', mockCritical);
     },
   },
   watch: {

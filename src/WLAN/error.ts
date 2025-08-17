@@ -1,5 +1,7 @@
 // Rich diagnostic error utilities for WLAN toolchain (lexer/parser/analyzer)
 
+import { BaseAppError, ErrorLevel } from '../errors';
+
 export type Severity = 'error' | 'warning' | 'info';
 
 export interface DiagnosticLocation {
@@ -45,7 +47,7 @@ export function makeCodeFrame(
   return frameLines.join('\n');
 }
 
-export class WlanError extends Error {
+export class WlanError extends BaseAppError<string, DiagnosticData> {
   code?: string;
   hint?: string;
   severity: Severity;
@@ -54,15 +56,18 @@ export class WlanError extends Error {
 
   constructor(message: string, options?: DiagnosticData & { source?: string }) {
     const composed = WlanError.composeMessage(message, options);
-    super(composed);
+    super(composed, {
+      code: options?.code,
+      hint: options?.hint,
+      level: severityToLevel(options?.severity),
+      context: options,
+    });
     this.name = 'WlanError';
     this.code = options?.code;
     this.hint = options?.hint;
     this.severity = options?.severity || 'error';
     this.loc = options?.loc;
     this.frame = options?.frame;
-    // Fix TS/JS inheritance
-    Object.setPrototypeOf(this, new.target.prototype);
   }
 
   static composeMessage(message: string, options?: DiagnosticData & { source?: string }): string {
@@ -106,4 +111,16 @@ export function errorAt(
   length?: number
 ): WlanError {
   return new WlanError(message, { code, hint, loc: { line, col, length }, source });
+}
+
+function severityToLevel(sev?: Severity): ErrorLevel {
+  switch (sev) {
+    case 'info':
+      return ErrorLevel.INFO;
+    case 'warning':
+      return ErrorLevel.WARNING;
+    case 'error':
+    default:
+      return ErrorLevel.ERROR;
+  }
 }

@@ -22,7 +22,8 @@
 
 @media (max-width: 1080px) {
   #wLayout {
-    margin: 20px;
+    margin: 10px;
+    padding: 5px;
     flex-wrap: nowrap;
     grid-template-areas:
       "w w"

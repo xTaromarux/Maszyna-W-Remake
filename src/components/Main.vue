@@ -85,26 +85,24 @@
 
     <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
 
-    <Settings
-      :settingsOpen="settingsOpen"
+    <SettingsOverlay
+      :settings-open="settingsOpen"
       :light-mode="lightMode"
       :number-format="numberFormat"
-      :memory-addres-bits="memoryAddresBits"
       :code-bits="codeBits"
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="closePopups('settingsOpen')"
-      @resetValues="resetValues"
-      @defaultSettings="defaultSettings"
-      @open-command-list="commandListOpen = true"
+      @close="settingsOpen = false"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
-      @update:memoryAddresBits="memoryAddresBits = $event"
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
       @update:extras="extras = $event"
+      @resetValues="resetValues()"
+      @defaultSettings="restoreDefaults()"
+      @open-command-list="openCommandList()"
     />
 
     <CommandList
@@ -140,7 +138,7 @@ import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
 import Console from '@/components/Console.vue';
-import Settings from '@/components/Settings.vue';
+import SettingsOverlay  from '@/components/SettingsOverlay.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
@@ -163,7 +161,7 @@ export default {
     TopBar,
     AiChat,
     Console,
-    Settings,
+    SettingsOverlay,
     ExecutionControls,
     ProgramEditor,
   },

@@ -107,23 +107,25 @@
       :show-format-selector="false"
     />
 
-    <SignalButton
-      id="weja"
-      :signal="signals.weja"
-      label="weja"
-      divClassNames="pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
-      @click="handleClick('weja')"
-    />
+    <template v-if="!isMobile">
+      <SignalButton
+        id="weja"
+        :signal="signals.weja"
+        label="weja"
+        divClassNames="pathUpOnRight"
+        spanClassNames="arrowRightOnBottom"
+        @click="handleClick('weja')"
+      />
 
-    <SignalButton
-      id="wyak"
-      :signal="signals.wyak"
-      label="wyak"
-      divClassNames="pathDownOnRight"
-      spanClassNames="arrowLeftOnBottom"
-      @click="handleClick('wyak')"
-    />
+      <SignalButton
+        id="wyak"
+        :signal="signals.wyak"
+        label="wyak"
+        divClassNames="pathDownOnRight"
+        spanClassNames="arrowLeftOnBottom"
+        @click="handleClick('wyak')"
+      />
+    </template>
   </div>
 </template>
 
@@ -147,6 +149,17 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      isMobile: window.innerWidth <= 768
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', this.checkMobile)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile)
+  },
   emits: ['clickItem', 'update:ACC', 'update:JAML', 'update:accFormat', 'update:jamlFormat'],
   components: {
     SignalButton,
@@ -156,6 +169,9 @@ export default {
     handleClick(id) {
       this.$emit('clickItem', id);
     },
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768
+    }
   },
 };
 </script>

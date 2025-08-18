@@ -1,10 +1,20 @@
 <template>
   <div class="programEditor">
     <!-- Manual / Program toggle -->
-    <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
+    <!-- <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
       <span @click="$emit('setManualMode', true)">Tryb ręczny</span>
       <span @click="$emit('setManualMode', false)">Program</span>
-    </div>
+    </div> -->
+  <SegmentedToggle
+    :options="[
+      { label: 'Tryb ręczny', value: true },
+      { label: 'Program', value: false }
+    ]"
+    :model-value="manualMode"
+    @update:model-value="$emit('setManualMode', $event)"
+    class="toggleButtonProgram"
+  />
+
 
     <!-- Placeholder for future program chooser -->
     <div class="chooseProgram">
@@ -51,8 +61,11 @@
 </template>
 
 <script>
+import SegmentedToggle from './SegmentedToggle.vue'
+
 export default {
   name: 'ProgramEditor',
+  components: { SegmentedToggle },
   props: {
     manualMode: { type: Boolean, required: true },
     codeCompiled: { type: Boolean, required: true },

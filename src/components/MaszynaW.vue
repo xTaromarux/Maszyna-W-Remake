@@ -33,20 +33,22 @@
         @clickItem="name => $emit('clickItem', name)"
       />
 
-      <CalcSection
-        :signals="signals"
-        :extras="extras"
-        :ACC="ACC"
-        :JAML="JAML"
-        :formatNumber="formatNumber"
-        :acc-format="registerFormats.ACC"
-        @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
-        :jaml-format="registerFormats.JAML"
-        @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
-        @update:ACC="$emit('update:ACC', $event)"
-        @update:JAML="$emit('update:JAML', $event)"
-        @clickItem="name => $emit('clickItem', name)"
-      />
+      <template v-if="!isMobile">
+        <CalcSection
+          :signals="signals"
+          :extras="extras"
+          :ACC="ACC"
+          :JAML="JAML"
+          :formatNumber="formatNumber"
+          :acc-format="registerFormats.ACC"
+          @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
+          :jaml-format="registerFormats.JAML"
+          @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
+          @update:ACC="$emit('update:ACC', $event)"
+          @update:JAML="$emit('update:JAML', $event)"
+          @clickItem="name => $emit('clickItem', name)"
+        />
+      </template>
 
       <SignalButton
         v-if="extras.busConnectors"
@@ -108,6 +110,25 @@
         @clickItem="name => $emit('clickItem', name)"
       />
 
+      <template v-if="isMobile">
+        <SignalButton
+          id="weja"
+          :signal="signals.weja"
+          label="weja"
+          divClassNames="pathDownOnRight"
+          spanClassNames="arrowRightOnBottom"
+          @click="handleClick('weja')"
+        />
+
+        <SignalButton
+          id="wyak"
+          :signal="signals.wyak"
+          label="wyak"
+          divClassNames="pathUpOnLeft"
+          spanClassNames="arrowLeftOnBottom"
+          @click="handleClick('wyak')"
+        />
+      </template>
       <YRegisterSection
         :visible="extras.yRegister"
         :Y="Y"
@@ -119,6 +140,26 @@
         @clickItem="name => $emit('clickItem', name)"
       />
     </div>
+
+    <template v-if="isMobile">
+      <div id="layer4" class="layer">
+        <CalcSection
+          :signals="signals"
+          :extras="extras"
+          :ACC="ACC"
+          :JAML="JAML"
+          :formatNumber="formatNumber"
+          :acc-format="registerFormats.ACC"
+          @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
+          :jaml-format="registerFormats.JAML"
+          @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
+          @update:ACC="$emit('update:ACC', $event)"
+          @update:JAML="$emit('update:JAML', $event)"
+          @clickItem="name => $emit('clickItem', name)"
+        />
+      </div>
+    </template>
+
   </div>
 </template>
 
@@ -143,6 +184,22 @@ export default {
     RegisterISection,
     XRegisterSection,
     YRegisterSection,
+  },
+  data() {
+    return {
+      isMobile: window.innerWidth <= 768
+    }
+  },
+  methods: {
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', this.checkMobile)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile)
   },
   props: {
     manualMode: { type: Boolean, required: true },

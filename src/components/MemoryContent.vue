@@ -55,29 +55,32 @@
       @update:number-format="$emit('update:sFormat', $event)"
     />
 
-    <SignalButton
-      id="wes"
-      v-if="!isMobile"
-      :signal="signals.wes"
-      label="wes"
-      divClassNames="pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
-      @click="handleClick('wes')"
-    />
-    <div id="memOp" v-if="!isMobile">
+
+    <div id="operations" v-if="!isMobile">
       <SignalButton id="czyt" :signal="signals.czyt" label="czyt" spanClassNames="lineLeftOnBottom" @click="handleClick('czyt')" />
       <SignalButton id="pisz" :signal="signals.pisz" label="pisz" spanClassNames="lineLeftOnBottom" @click="handleClick('pisz')" />
     </div>
 
-    <SignalButton
-      id="wys"
-      v-if="!isMobile"
-      :signal="signals.wys"
-      label="wys"
-      divClassNames="pathDownOnLeft"
-      spanClassNames="lineLeftOnBottom"
-      @click="handleClick('wys')"
-    />
+    <div class="signals" v-if="!isMobile">
+      <SignalButton
+        id="wes"
+        v-if="!isMobile"
+        :signal="signals.wes"
+        label="wes"
+        divClassNames="pathUpOnRight"
+        spanClassNames="arrowRightOnBottom"
+        @click="handleClick('wes')"
+      />
+      <SignalButton
+        id="wys"
+        v-if="!isMobile"
+        :signal="signals.wys"
+        label="wys"
+        divClassNames="pathDownOnLeft"
+        spanClassNames="lineLeftOnBottom"
+        @click="handleClick('wys')"
+      />
+    </div>
   </div>
 </template>
 

@@ -26,19 +26,17 @@
     </div>
 
     <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="$emit('update:ACC', $event)" :formatNumber="formatNumber" />
-
     <div class="jamlSignals">
-      <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom" @click="handleClick('weak')" />
-      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom" @click="handleClick('dod')" />
-      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom" @click="handleClick('ode')" />
-      <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom" @click="handleClick('przep')" />
-
+      <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
+      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
+      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowRightOnBottom" @click="handleClick('ode')" />
+      <SignalButton id="przp" :signal="signals.przp" label="przp" spanClassNames="arrowRightOnBottom" @click="handleClick('przp')" />
       <SignalButton
         v-if="extras.jamlExtras"
         id="mno"
         :signal="signals.mno"
         label="mno"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('mno')"
       />
       <SignalButton
@@ -46,7 +44,7 @@
         id="dziel"
         :signal="signals.dziel"
         label="dziel"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('dziel')"
       />
       <SignalButton
@@ -54,7 +52,7 @@
         id="shr"
         :signal="signals.shr"
         label="shr"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('shr')"
       />
       <SignalButton
@@ -62,7 +60,7 @@
         id="shl"
         :signal="signals.shl"
         label="shl"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('shl')"
       />
       <SignalButton
@@ -70,7 +68,7 @@
         id="neg"
         :signal="signals.neg"
         label="neg"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('neg')"
       />
       <SignalButton
@@ -78,7 +76,7 @@
         id="lub"
         :signal="signals.lub"
         label="lub"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('lub')"
       />
       <SignalButton
@@ -86,30 +84,32 @@
         id="i"
         :signal="signals.i"
         label="i"
-        spanClassNames="lineRightOnBottom"
+        spanClassNames="arrowRightOnBottom"
         @click="handleClick('i')"
       />
     </div>
 
     <RegisterComponent id="jaml" label="JAML" :model="JAML" @update:model="$emit('update:JAML', $event)" :formatNumber="formatNumber" />
 
-    <SignalButton
-      id="weja"
-      :signal="signals.weja"
-      label="weja"
-      divClassNames="pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
-      @click="handleClick('weja')"
-    />
+    <template v-if="!isMobile">
+      <SignalButton
+        id="weja"
+        :signal="signals.weja"
+        label="weja"
+        divClassNames="pathUpOnRight"
+        spanClassNames="arrowRightOnBottom"
+        @click="handleClick('weja')"
+      />
 
-    <SignalButton
-      id="wyak"
-      :signal="signals.wyak"
-      label="wyak"
-      divClassNames="pathDownOnRight"
-      spanClassNames="arrowLeftOnBottom"
-      @click="handleClick('wyak')"
-    />
+      <SignalButton
+        id="wyak"
+        :signal="signals.wyak"
+        label="wyak"
+        divClassNames="pathDownOnRight"
+        spanClassNames="arrowLeftOnBottom"
+        @click="handleClick('wyak')"
+      />
+    </template>
   </div>
 </template>
 
@@ -126,6 +126,18 @@ export default {
     JAML: Number,
     formatNumber: Function,
   },
+  data() {
+    return {
+      isMobile: window.innerWidth <= 768
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', this.checkMobile)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile)
+  },
+  emits: ['clickItem', 'update:ACC', 'update:JAML', 'update:accFormat', 'update:jamlFormat'],
   components: {
     SignalButton,
     RegisterComponent,
@@ -134,6 +146,9 @@ export default {
     handleClick(id) {
       this.$emit('clickItem', id);
     },
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768
+    }
   },
 };
 </script>

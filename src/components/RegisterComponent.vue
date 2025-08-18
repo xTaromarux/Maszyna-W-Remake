@@ -4,7 +4,15 @@
     ><span>:</span>
     <div class="inputWrapper">
       <span>{{ formattedValue }}</span>
-      <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" />
+      <input
+        inputmode="numeric"
+        pattern="[0-9]*"
+        type="number"
+        class="hoverInput"
+        :value="model"
+        @input="updateValue"
+        @blur="onBlur"
+      />
     </div>
     <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
       <button class="format-button" @click.stop="toggleFormatMenu">
@@ -79,7 +87,16 @@ export default {
     updateValue(event) {
       const value = parseInt(event.target.value, 10);
       if (!isNaN(value)) {
-        this.$emit('update:model', value);
+        this.$emit('update:model', value); // poprawione
+      } else {
+        this.$emit('update:model', null);  // pozwalamy onBlur wykryć puste
+      }
+    },
+    onBlur(e) {
+      // ustaw 0 tylko jeśli pole jest puste
+      if (e.target.value === '' || e.target.value === null) {
+        e.target.value = 0;
+        this.$emit('update:model', 0);
       }
     },
     handleMouseEnter() {

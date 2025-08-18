@@ -11,12 +11,25 @@
   grid-template-rows: auto auto auto auto 1fr auto;
 }
 
+@media (max-width: 768px) {
+  #calc {
+    width: 100%;
+    padding-top: 0;
+    margin-bottom: 20px;
+      grid-template-areas:
+    ". . . "
+    "accSignals accSignals accumulator"
+    "accSignals accSignals accumulator"
+    ". . flags"
+    "jamlSignals jamlSignals jaml";
+  }
+}
+
 #calc #flags {
   grid-area: flags;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  border-radius:  0.5rem 0.5rem 0 0;
   padding: 0.5rem;
   gap: 1rem;
   border: 1px solid var(--panelOutlineColor, black);
@@ -51,8 +64,8 @@
   align-items: stretch;
 }
 
-#calc .accSignals>*,
-#calc .jamlSignals>* {
+#calc .accSignals > *,
+#calc .jamlSignals > * {
   flex-grow: 1;
   width: 100%;
   display: flex;
@@ -60,8 +73,8 @@
   align-items: center;
 }
 
-#calc .accSignals>*>*,
-#calc .jamlSignals>*>* {
+#calc .accSignals > * > *,
+#calc .jamlSignals > * > * {
   flex-grow: 1;
   width: 100%;
 }
@@ -75,7 +88,7 @@
   background-color: var(--panelBackgroundColor, white);
   padding: 0.5rem;
 
-  border-radius:  0.5rem 0.5rem 0 0 ;
+  border-radius: 0.5rem 0.5rem 0 0;
 }
 
 #calc #jaml {
@@ -95,7 +108,7 @@
 }
 
 #calc #jaml::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -108,7 +121,7 @@
 }
 
 #calc #jaml::after {
-  content: 'JAML';
+  content: "JAML";
   position: absolute;
   top: 50%;
   left: 50%;

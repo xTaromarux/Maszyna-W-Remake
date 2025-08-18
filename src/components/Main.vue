@@ -7,128 +7,36 @@
   />
 
   <div id="wLayout">
-    <div id="W" :class="{ manualMode: manualMode }">
-      <div id="layer1" class="layer">
-        <CounterComponent
-          :signals="signals"
-          :programCounter="programCounter"
-          :formatNumber="formatNumber"
-          :number-format="registerFormats.L"
-          @update:number-format="registerFormats.L = $event"
-          :extras="extras"
-          @update:programCounter="programCounter = $event"
-          @clickItem="handleSignalToggle"
-        />
-      </div>
-
-      <BusSignal
-        :signalStatus="signals.busA"
-        :busValue="BusA"
-        :busName="'A'"
-        :showInvisibleRegisters="extras.showInvisibleRegisters"
-        :formatNumber="formatNumber"
-        :number-format="registerFormats.BusA"
-        @update:number-format="registerFormats.BusA = $event"
-      />
-
-      <div id="layer2" class="layer">
-        <RegisterISection
-          :I="I"
-          :signals="signals"
-          :formatNumber="formatNumber"
-          :number-format="registerFormats.I"
-          @update:number-format="registerFormats.I = $event"
-          @update:I="I = $event"
-          @clickItem="handleSignalToggle"
-        />
-
-        <CalcSection
-          :signals="signals"
-          :extras="extras"
-          :ACC="ACC"
-          :JAML="JAML"
-          :formatNumber="formatNumber"
-          :acc-format="registerFormats.ACC"
-          @update:acc-format="registerFormats.ACC = $event"
-          :jaml-format="registerFormats.JAML"
-          @update:jaml-format="registerFormats.JAML = $event"
-          @update:ACC="ACC = $event"
-          @update:JAML="JAML = $event"
-          @clickItem="handleSignalToggle"
-        />
-
-        <SignalButton
-          v-if="extras.busConnectors"
-          id="sa"
-          :signal="signals.sa"
-          label="sa"
-          divClassNames="pathUpOnRight"
-          spanClassNames="lineRightOnBottom"
-          @click="handleSignalToggle('sa')"
-        />
-
-        <SignalButton
-          v-if="extras.busConnectors"
-          id="as"
-          :signal="signals.as"
-          label="as"
-          divClassNames="pathDownOnLeft"
-          spanClassNames="lineLeftOnBottom"
-          @click="handleSignalToggle('as')"
-        />
-
-        <MemorySection
-          :A="A"
-          :S="S"
-          :mem="mem"
-          :signals="signals"
-          :formatNumber="formatNumber"
-          :decToCommand="decToCommand"
-          :decToArgument="decToArgument"
-          :a-format="registerFormats.A"
-          @update:a-format="registerFormats.A = $event"
-          :s-format="registerFormats.S"
-          @update:s-format="registerFormats.S = $event"
-          @update:A="A = $event"
-          @update:S="S = $event"
-          @clickItem="handleSignalToggle"
-        />
-      </div>
-
-      <BusSignal
-        :signalStatus="signals.busS"
-        :busValue="BusS"
-        :busName="'S'"
-        :showInvisibleRegisters="extras.showInvisibleRegisters"
-        :formatNumber="formatNumber"
-        :number-format="registerFormats.BusS"
-        @update:number-format="registerFormats.BusS = $event"
-      />
-
-      <div id="layer3" class="layer">
-        <XRegisterSection
-          :visible="extras.xRegister"
-          :X="X"
-          :signals="signals"
-          :formatNumber="formatNumber"
-          :number-format="registerFormats.X"
-          @update:number-format="registerFormats.X = $event"
-          @update:X="X = $event"
-          @clickItem="handleSignalToggle"
-        />
-
-        <YRegisterSection
-          :visible="extras.yRegister"
-          :Y="Y"
-          :signals="signals"
-          :formatNumber="formatNumber"
-          :number-format="registerFormats.Y"
-          @update:number-format="registerFormats.Y = $event"
-          @update:Y="Y = $event"
-          @clickItem="handleSignalToggle"
-        />
-      </div>
-    </div>
+    <MaszynaW
+      :manual-mode="manualMode"
+      :signals="signals"
+      :programCounter="programCounter"
+      :formatNumber="formatNumber"
+      :registerFormats="registerFormats"
+      :extras="extras"
+      :BusA="BusA"
+      :BusS="BusS"
+      :I="I"
+      :ACC="ACC"
+      :JAML="JAML"
+      :A="A"
+      :S="S"
+      :mem="mem"
+      :X="X"
+      :Y="Y"
+      :decToCommand="decToCommand"
+      :decToArgument="decToArgument"
+      @clickItem="handleSignalToggle"
+      @update:programCounter="programCounter = $event"
+      @update:I="I = $event"
+      @update:ACC="ACC = $event"
+      @update:JAML="JAML = $event"
+      @update:A="A = $event"
+      @update:S="S = $event"
+      @update:X="X = $event"
+      @update:Y="Y = $event"
+      @update:number-format="({ field, value }) => (registerFormats[field] = value)"
+    />
 
     <div id="inputs">
       <ProgramEditor
@@ -181,26 +89,24 @@
 
     <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
 
-    <Settings
-      :settingsOpen="settingsOpen"
+    <SettingsOverlay
+      :settings-open="settingsOpen"
       :light-mode="lightMode"
       :number-format="numberFormat"
-      :memory-addres-bits="memoryAddresBits"
       :code-bits="codeBits"
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="closePopups('settingsOpen')"
-      @resetValues="resetValues"
-      @defaultSettings="defaultSettings"
-      @open-command-list="commandListOpen = true"
+      @close="settingsOpen = false"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
-      @update:memoryAddresBits="memoryAddresBits = $event"
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
       @update:extras="extras = $event"
+      @resetValues="resetValues()"
+      @defaultSettings="restoreDefaults()"
+      @open-command-list="openCommandList()"
     />
 
     <CommandList
@@ -222,6 +128,7 @@
 </template>
 
 <script>
+import MaszynaW from '@/components/MaszynaW.vue'
 import CommandList from './CommandList.vue';
 import ProgramSection from './ProgramSection.vue';
 import CounterComponent from '@/components/CounterComponent.vue';
@@ -235,7 +142,7 @@ import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
 import Console from '@/components/Console.vue';
-import Settings from '@/components/Settings.vue';
+import SettingsOverlay  from '@/components/SettingsOverlay.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
@@ -245,6 +152,7 @@ export default {
   name: 'MainComponent',
 
   components: {
+    MaszynaW,
     CommandList,
     ProgramSection,
     CounterComponent,
@@ -258,7 +166,7 @@ export default {
     TopBar,
     AiChat,
     Console,
-    Settings,
+    SettingsOverlay,
     ExecutionControls,
     ProgramEditor,
   },

@@ -1,10 +1,20 @@
 <template>
   <div class="programEditor">
     <!-- Manual / Program toggle -->
-    <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
+    <!-- <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
       <span @click="$emit('setManualMode', true)">Tryb ręczny</span>
       <span @click="$emit('setManualMode', false)">Program</span>
-    </div>
+    </div> -->
+  <SegmentedToggle
+    :options="[
+      { label: 'Tryb ręczny', value: true },
+      { label: 'Program', value: false }
+    ]"
+    :model-value="manualMode"
+    @update:model-value="$emit('setManualMode', $event)"
+    class="toggleButtonProgram"
+  />
+
 
     <!-- Placeholder for future program chooser -->
     <div class="chooseProgram">
@@ -39,8 +49,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
+import { ref, watch } from 'vue'
+import SegmentedToggle from './SegmentedToggle.vue'
+import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -48,21 +59,24 @@ const props = defineProps({
   code: { type: String, required: true },
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true }, // Set
-});
-const emit = defineEmits(['update:code', 'setManualMode']);
+  nextLine: { type: Object, required: true } // Set
+})
 
-const codeLocal = ref(props.code);
+const emit = defineEmits(['update:code', 'setManualMode'])
+
+const codeLocal = ref(props.code)
+
 watch(codeLocal, (v) => {
-  console.log('Updating code:', v);
-  return emit('update:code', v);
-});
+  console.log('Updating code:', v)
+  emit('update:code', v)
+})
+
 watch(
   () => props.code,
   (v) => {
-    if (v !== codeLocal.value) codeLocal.value = v;
+    if (v !== codeLocal.value) codeLocal.value = v
   }
-);
+)
 </script>
 
 <style scoped>

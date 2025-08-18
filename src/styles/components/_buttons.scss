@@ -49,17 +49,17 @@ button:has(span) {
   padding-right: 1rem !important;
 }
 
-button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
-  background-color: var(--buttonHoverColor, #fff);
-  transform: translateY(-0.05rem) scale(1.05);
-  transition: 0.1s ease-out;
-}
+// button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
+//   background-color: var(--buttonHoverColor, #fff);
+//   transform: translateY(-0.05rem) scale(1.05);
+//   transition: 0.1s ease-out;
+// }
 
-button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
-  background-color: var(--buttonActiveColor, #aaa);
-  transform: translateY(0.01rem) scale(0.98);
-  transition: 0.01s ease-out;
-}
+// button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
+//   background-color: var(--buttonActiveColor, #aaa);
+//   transform: translateY(0.01rem) scale(0.98);
+//   transition: 0.01s ease-out;
+// }
 
 button svg {
   width: 2rem;

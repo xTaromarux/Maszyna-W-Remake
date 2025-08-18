@@ -3,7 +3,7 @@
     grid-template-areas:
         "il c c dl"
         ". wel wyl .";
-    grid-template-rows: auto 2.5rem;
+    grid-template-rows: auto 3rem;
     grid-template-columns: auto 1fr 1fr auto;
     justify-content: stretch;
     align-items: stretch;
@@ -30,12 +30,14 @@
 
 #counter #wel {
     grid-area: wel;
+    padding-bottom: 20px;
     margin-right: 5px !important;
     margin-right: 0.25rem;
 }
 
 #counter #wyl {
     grid-area: wyl;
+    padding-bottom: 10px;
     margin-left: 15px !important;
     margin-left: 0.25rem;
 }

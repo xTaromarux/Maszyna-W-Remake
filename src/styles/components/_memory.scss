@@ -5,6 +5,7 @@
     "in out"
     "r r";
   gap: 0 0.5rem;
+  padding-bottom: 20px;
 }
 
 #xRegister .register,
@@ -18,6 +19,21 @@
   border-radius: 0.5rem;
 }
 
+#wyy {
+  padding-bottom: 10px;
+}
+
+#wey {
+  padding-bottom: 20px;
+}
+
+#wyx {
+  padding-bottom: 20px;
+}
+
+#wex {
+  padding-bottom: 10px;
+}
 
 #iRegister {
   display: flex;
@@ -41,7 +57,7 @@
 }
 
 #iRegister #wyad {
-  margin-right:2rem;
+  margin-right: 2rem;
 }
 
 #iRegister #wei {
@@ -94,11 +110,15 @@
 
 /* rejestry wewnątrz #memory */
 #memory #aRegister {
+  display: flex;
+  flex-direction: row;
   grid-area: aRegister;
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
 #memory #sRegister {
+  display: flex;
+  flex-direction: row;
   grid-area: sRegister;
   border-radius: 0 0 0.5rem 0.5rem;
 }
@@ -173,7 +193,7 @@
   font-weight: bold;
   position: sticky;
   top: 0;
-    border: 1px solid var(--panelOutlineColor, black);
+  border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, black);
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -224,7 +244,6 @@
 #memory #wys {
   margin-left: 15px;
 }
-
 
 #memory #operations {
   grid-area: operations;
@@ -354,4 +373,82 @@
 /* (opcjonalnie można doprecyzować, jak MemoryContent ma się zachowywać w modalu na wąskim ekranie) */
 @media screen and (max-width: 640px) {
   /* ewentualne dodatkowe style, jeśli potrzeba przeskalować #memory w mob. modalu */
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.scale-enter-active,
+.scale-leave-active {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  transform: scale(0.98);
+  opacity: 0;
+}
+
+.memorySection {
+  height: 100%;
+}
+
+.mobile-memory-header {
+  height: 100%;
+  display: grid;
+  grid-template-areas:
+    "wea ."
+    "memory memory-signals-in"
+    "memory-signals-out .";
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.memory-signal-in{
+  height: 100%;
+    display: flex;
+  height: 100%;
+  flex-direction: row;
+  justify-content: center;
+  padding-right: 30px;
+}
+
+.mobile-memory-button {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  background: var(--panelBackgroundColor, black);
+  cursor: pointer;
+}
+
+.memory-signals-in{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 20px;
+  padding-right: 20px;
+  gap: 10px
+}
+
+.memory-signals-out{
+  display: flex;
+  height: 100%;
+  flex-direction: row;
+  justify-content: center;
 }

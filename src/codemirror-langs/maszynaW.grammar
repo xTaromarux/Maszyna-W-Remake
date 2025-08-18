@@ -1,0 +1,58 @@
+@top Program { (semi | statement semi)* }   
+
+semi { ";" }
+
+@tokens {
+  Flag { "Z" | "N" }
+
+  Keyword {
+    "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" |
+    "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" |
+    "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" |
+    "wyak" | "stop"
+  }
+
+  "IF" "THEN" "ELSE"
+
+  labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
+
+  "," "."
+
+  @precedence { "IF", "THEN", "ELSE", Keyword, labelRef }
+
+  space { @whitespace+ }
+  LineComment { "//" ![\n]* }
+}
+
+@skip { space | LineComment }
+
+statement {
+  conditional
+| labeledPhase
+}
+
+labeledPhase {
+  labelRef? phase
+}
+
+phase {
+  signal (("," signal) | signal)*
+}
+
+signal { Keyword }
+
+conditional {
+  "IF" Flag "THEN" condBranch !else
+| "IF" Flag "THEN" condBranch "ELSE" condBranch
+}
+
+condBranch {
+  labelRef
+| phase
+}
+
+@precedence { else }
+
+@external propSource maszynaWHighlight from "./maszynaW.highlight.js"
+
+@detectDelim

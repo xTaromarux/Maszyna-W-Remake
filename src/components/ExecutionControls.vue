@@ -23,7 +23,7 @@
     </button>
 
     <!-- Run program -->
-    <button @click="$emit('run')" :disabled="manualMode || !codeCompiled" class="execution-btn execution-btn--run">
+    <button @click="$emit('run')" :disabled="manualMode || !code" class="execution-btn execution-btn--run">
       <RunIcon />
       <span>Uruchom</span>
     </button>

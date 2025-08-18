@@ -25,26 +25,20 @@
       />
     </div>
 
-    <RegisterComponent
-      id="accumulator"
-      label="AK"
-      :model="ACC"
-      @update:model="$emit('update:ACC', $event)"
-      :number-format="accFormat"
-      @update:number-format="$emit('update:accFormat', $event)"
-    />
+    <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="$emit('update:ACC', $event)" :formatNumber="formatNumber" />
 
-    <div class="opSignals">
-      <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
-      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowLeftOnBottom" @click="handleClick('dod')" />
-      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowLeftOnBottom" @click="handleClick('ode')" />
-      <SignalButton id="przp" :signal="signals.przp" label="przp" spanClassNames="arrowLeftOnBottom" @click="handleClick('przp')" />
+    <div class="jamlSignals">
+      <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom" @click="handleClick('weak')" />
+      <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom" @click="handleClick('dod')" />
+      <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom" @click="handleClick('ode')" />
+      <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom" @click="handleClick('przep')" />
+
       <SignalButton
         v-if="extras.jamlExtras"
         id="mno"
         :signal="signals.mno"
         label="mno"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('mno')"
       />
       <SignalButton
@@ -52,7 +46,7 @@
         id="dziel"
         :signal="signals.dziel"
         label="dziel"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('dziel')"
       />
       <SignalButton
@@ -60,7 +54,7 @@
         id="shr"
         :signal="signals.shr"
         label="shr"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('shr')"
       />
       <SignalButton
@@ -68,7 +62,7 @@
         id="shl"
         :signal="signals.shl"
         label="shl"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('shl')"
       />
       <SignalButton
@@ -76,7 +70,7 @@
         id="neg"
         :signal="signals.neg"
         label="neg"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('neg')"
       />
       <SignalButton
@@ -84,7 +78,7 @@
         id="lub"
         :signal="signals.lub"
         label="lub"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('lub')"
       />
       <SignalButton
@@ -92,20 +86,12 @@
         id="i"
         :signal="signals.i"
         label="i"
-        spanClassNames="arrowLeftOnBottom"
+        spanClassNames="lineRightOnBottom"
         @click="handleClick('i')"
       />
     </div>
 
-    <RegisterComponent
-      id="jaml"
-      label="JAML"
-      :model="JAML"
-      @update:model="$emit('update:JAML', $event)"
-      :number-format="jamlFormat"
-      @update:number-format="$emit('update:jamlFormat', $event)"
-      :show-format-selector="false"
-    />
+    <RegisterComponent id="jaml" label="JAML" :model="JAML" @update:model="$emit('update:JAML', $event)" :formatNumber="formatNumber" />
 
     <SignalButton
       id="weja"
@@ -138,16 +124,8 @@ export default {
     signals: Object,
     ACC: Number,
     JAML: Number,
-    accFormat: {
-      type: String,
-      required: true,
-    },
-    jamlFormat: {
-      type: String,
-      required: true,
-    },
+    formatNumber: Function,
   },
-  emits: ['clickItem', 'update:ACC', 'update:JAML', 'update:accFormat', 'update:jamlFormat'],
   components: {
     SignalButton,
     RegisterComponent,

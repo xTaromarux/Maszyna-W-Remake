@@ -26,21 +26,9 @@
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
-    <!-- Code editor or compiled listing -->
-    <textarea
-      v-else-if="!codeCompiled"
-      :value="code"
-      placeholder="rozkaz"
-      @input="$emit('update:code', $event.target.value)"
-      class="no-horiz-resize"
-      spellcheck="false"
-      autocorrect="off"
-      autocomplete="off"
-      autocapitalize="off"
-    />
+    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" />
 
     <div v-else class="compiledCode">
-      <div v-if="activeLine > 0" class="executed-info">Ostatnio wykonana linia: {{ activeLine - 1 }}</div>
       <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{ active: activeLine === index }">
         <span>{{ index }}</span>
         <span>:</span>
@@ -60,8 +48,10 @@
   </div>
 </template>
 
+<<<<<<< HEAD
 <script>
 import SegmentedToggle from './SegmentedToggle.vue'
+import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 
 export default {
   name: 'ProgramEditor',
@@ -76,6 +66,31 @@ export default {
   },
   emits: ['update:code', 'setManualMode'],
 };
+=======
+<script setup>
+
+const props = defineProps({
+  manualMode: { type: Boolean, required: true },
+  codeCompiled: { type: Boolean, required: true },
+  code: { type: String, required: true },
+  compiledCode: { type: Array, required: true },
+  activeLine: { type: Number, required: true },
+  nextLine: { type: Object, required: true }, // Set
+});
+const emit = defineEmits(['update:code', 'setManualMode']);
+
+const codeLocal = ref(props.code);
+watch(codeLocal, (v) => {
+  console.log('Updating code:', v);
+  return emit('update:code', v);
+});
+watch(
+  () => props.code,
+  (v) => {
+    if (v !== codeLocal.value) codeLocal.value = v;
+  }
+);
+>>>>>>> main
 </script>
 
 <style scoped>
@@ -86,9 +101,8 @@ export default {
 .programEditor {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
   height: 100%;
+  min-height: 0;
 }
 
 .flexRow {
@@ -98,35 +112,6 @@ export default {
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
-}
-
-@media (max-width: 1080px) {
-  textarea {
-    height: 400px;
-  }
-}
-
-@media (min-width: 1080px) {
-  textarea {
-    height: 94%;
-  }
-}
-
-textarea {
-  width: 100%;
-  height: 470px;
-  flex-grow: 1;
-  margin-top: 0.7rem;
-  padding: 0.5rem;
-  border-radius: var(--default-border-radius, 0.25rem);
-  border: 1px solid var(--panelOutlineColor, black);
-  background-color: var(--panelBackgroundColor, white);
-  color: var(--fontColor, black);
-  font-family: monospace;
-}
-
-textarea:disabled {
-  filter: contrast(0.5);
 }
 
 .compiledCode {
@@ -202,6 +187,14 @@ textarea:disabled {
   word-break: break-word;
   padding-left: 0.5rem;
   line-height: 1.4;
+}
+
+.monaco-container {
+  flex: 1;
+  min-height: 300px;
+  margin-bottom: 0.7rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
 }
 
 .nextLine {

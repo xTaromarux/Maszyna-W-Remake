@@ -47,13 +47,14 @@
         :active-line="activeLine"
         :next-line="nextLine"
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
-        @update:code="code = $event"
+        @update:code="(code) => (this.code = code)"
       />
+      <!--HACK WITH COMPILE CODE 2, it is an old version of the compile code function-->
       <ExecutionControls
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
         :code="code"
-        @compile="compileCode"
+        @compile="compileCode2"
         @edit="uncompileCode"
         @step="executeLine"
         @run="runCode"
@@ -63,15 +64,18 @@
     <ProgramSection
       :manualMode="manualMode"
       :commandList="commandList"
-      @update:code="code = $event"
-      @log="addLog($event.message, $event.class)"
+      @update:code="handleProgramSectionCompile($event)"
+      @log="addLog($event.message, $event.class, $event.error)"
+      @initMemory="applyInitMemory($event)"
     />
 
     <Console
       ref="console"
       :logs="logs.slice().reverse()"
       :class="{ 'console-collapsed': !consoleOpen }"
-      @click="consoleOpen ? null : toggleConsole()"
+      @close="closeConsole"
+      @clear="clearConsole"
+
     />
 
     <!-- Console indicator - visible only when console is collapsed -->
@@ -142,6 +146,7 @@ import SettingsOverlay  from '@/components/SettingsOverlay.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
+import { parse } from '@/WLAN/parser';
 
 export default {
   name: 'MainComponent',
@@ -200,6 +205,10 @@ export default {
 
       code: 'czyt wys wei il;\nwyl wea;',
       compiledCode: [],
+      // Structured micro-program (preferred execution format)
+      compiledProgram: [],
+      activeInstrIndex: -1,
+      activePhaseIndex: 0,
       activeLine: 0,
       nextLine: new Set(),
 
@@ -333,6 +342,56 @@ export default {
     };
   },
   methods: {
+    handleProgramSectionCompile(payload) {
+      // Accept both legacy string and structured payload from ProgramSection
+      if (typeof payload === 'string') {
+        this.code = payload;
+        this.compiledCode = payload
+          .split('\n')
+          .map((l) => l.replace(/;\s*$/, ''))
+          .filter((l) => l.trim() !== '');
+        this.compiledProgram = [];
+        this.codeCompiled = true;
+        this.activeLine = -1;
+        this.activeInstrIndex = -1;
+        this.activePhaseIndex = 0;
+        this.nextLine.clear();
+        return;
+      }
+
+      const { text, program } = payload || {};
+      if (typeof text === 'string') {
+        this.code = text;
+        this.compiledCode = text
+          .split('\n')
+          .map((l) => l.replace(/;\s*$/, ''))
+          .filter((l) => l.trim() !== '');
+      }
+      this.compiledProgram = Array.isArray(program) ? program : [];
+      this.codeCompiled = true;
+      this.activeLine = -1;
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
+      this.nextLine.clear();
+      this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
+    },
+
+    applyInitMemory(assignments) {
+      // assignments: Array<{ addr:number, val:number }>
+      const size = 1 << this.memoryAddresBits;
+      const nextMem = new Array(size).fill(0);
+      // start from current mem to preserve any manual setup
+      for (let i = 0; i < Math.min(this.mem.length, size); i++) nextMem[i] = this.mem[i];
+      for (const { addr, val } of assignments) {
+        if (addr >= 0 && addr < size) {
+          nextMem[addr] = val & 0xff;
+        } else {
+          this.addLog(`Adres poza zakresem pamięci przy inicjalizacji: ${addr}`, 'Error');
+        }
+      }
+      this.mem = nextMem;
+      this.addLog(`Zastosowano inicjalizację pamięci (${assignments.length} wpisów)`, 'system');
+    },
     initWebsocket() {
       // Local Test
       this.ws = new WebSocket('ws://localhost:8080');
@@ -439,7 +498,7 @@ export default {
         for (const other of busSSignals) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" – koliduje z „${other}" (magistrala S zajęta).`;
+            return `Nie można włączyć „${signalName}" - koliduje z „${other}" (magistrala S zajęta).`;
           }
         }
       }
@@ -448,7 +507,7 @@ export default {
         for (const other of jalOperations) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" – już działa „${other}" (maks. jedna operacja JAML naraz).`;
+            return `Nie można włączyć „${signalName}" - już działa „${other}" (maks. jedna operacja JAML naraz).`;
           }
         }
       }
@@ -667,13 +726,39 @@ export default {
       delete dataToSave.hasConsoleErrors;
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
-    addLog(message, classification = 'info') {
+    addLog(message, classification = 'info', errorObj = null) {
       const timestamp = new Date();
-      this.logs.push({ timestamp, message, class: classification });
+
+      // Enhanced log entry structure that supports both legacy and new error formats
+      const logEntry = {
+        timestamp,
+        message,
+        class: classification,
+      };
+
+      // If an error object is provided (e.g., WlanError or BaseAppError)
+      if (errorObj) {
+        logEntry.error = {
+          message: errorObj.message || message,
+          level: errorObj.level,
+          timestamp: errorObj.timestamp,
+          code: errorObj.code,
+          hint: errorObj.hint,
+          loc: errorObj.loc,
+          frame: errorObj.frame,
+          context: errorObj.context,
+        };
+      }
+
+      this.logs.push(logEntry);
 
       // Check if this is an error and set the error flag
       const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu', 'błąd sygnału'];
-      if (errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase()))) {
+      const isError =
+        errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase())) ||
+        (errorObj && ['ERROR', 'CRITICAL'].includes(errorObj.level));
+
+      if (isError) {
         this.hasConsoleErrors = true;
       }
     },
@@ -741,7 +826,7 @@ export default {
       }
     },
 
-    compileCode() {
+    compileCode2() {
       if (!this.code) {
         this.addLog('Brak kodu do kompilacji', 'Błąd');
         return;
@@ -756,21 +841,123 @@ export default {
         ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
       ]);
 
-      console.log(signalslist);
-      for (let [index, command] of this.code.split(/[\s;]+/).entries()) {
-        if (!command) continue; // Skip empty commands
+      // Build structured micro-program from simple micro lines separated by ';'
+      const rawLines = this.code
+        .split(';')
+        .map((l) => l.replace(/\n/g, ' ').trim())
+        .filter((l) => l.length > 0);
 
-        if (!signalslist.has(command)) {
-          this.addLog(`Sygnał "${command}" nie został rozpoznany na pozycji ${index + 1}`, 'Błąd parsera kodu');
+      // Basic validation (ignore labels that start with '@' and IF/THEN/ELSE tokens)
+      for (let [lineIdx, line] of rawLines.entries()) {
+        const parts = line.split(/\s+/).filter(Boolean);
+        for (const token of parts) {
+          if (token.startsWith('@')) continue;
+          const kw = token.toUpperCase();
+          // temp solution, for now will do
+          // TODO: change to something more robust in the future
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC' || kw === 'Z' || kw === 'M') continue;
+          if (!signalslist.has(token)) {
+            this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
+            return;
+          }
+        }
+      }
+
+      const program = [];
+      let pc = 0;
+      for (const line of rawLines) {
+        const parts = line.split(/\s+/).filter(Boolean);
+        if (parts.length === 0) continue;
+
+        // strip labels
+        const labels = [];
+        while (parts[0] && parts[0].startsWith('@')) {
+          labels.push(parts.shift().slice(1));
+        }
+
+        // treat remaining tokens as a single phase (legacy micro input)
+        const phase = {};
+        for (const sig of parts) {
+          const kw = sig.toUpperCase();
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') break;
+          phase[sig] = true;
+        }
+
+        const entry = {
+          pc,
+          asmLine: '(micro)',
+          phases: [phase],
+          meta: { kind: 'NONE', labels },
+        };
+        program.push(entry);
+        pc += 1;
+      }
+
+      this.compiledProgram = program;
+      this.compiledCode = rawLines; // keep for display/legacy
+      this.codeCompiled = true;
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
+      this.activeLine = -1;
+      this.nextLine.clear();
+      this.executeLine();
+
+      this.addLog('Kod skompilowany pomyślnie (strukturalny)', 'kompilator rozkazów');
+    },
+
+    compileCode() {
+      if (!this.code) {
+        this.addLog('Brak kodu do kompilacji', 'Błąd');
+        return;
+      }
+
+      let ast;
+      try {
+        ast = parse(this.code); // parsujemy cały mikroprogram
+      } catch (e) {
+        const parts = [`Błąd parsera: ${e?.message || String(e)}`];
+        if (e && e.frame) parts.push('\n' + e.frame);
+        if (e && e.hint) parts.push(`\nPodpowiedź: ${e.hint}`);
+        this.addLog(parts.join(''), 'Błąd parsera kodu');
+        return;
+      }
+
+      // zbiór wszystkich dopuszczalnych sygnałów
+      const signalsList = new Set([
+        ...this.avaiableSignals.always,
+        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
+        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
+        ...(this.extras.dl ? this.avaiableSignals.dl : []),
+        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
+        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
+      ]);
+
+      const compiledLines = [];
+
+      // przejdź po każdej instrukcji w AST
+      for (const node of ast.body) {
+        if (node.type === 'Instruction') {
+          // flatten: nazwa + wszystkie argumenty (string lub LabelRef)
+          const parts = [node.name, ...node.args.map((arg) => (typeof arg === 'string' ? arg : arg.name))];
+
+          // walidacja: każdy element musi być znanym sygnałem
+          for (const sig of parts) {
+            if (!signalsList.has(sig)) {
+              this.addLog(`Sygnał "${sig}" nie został rozpoznany w instrukcji "${node.name}"`, 'Błąd parsera kodu');
+              return;
+            }
+          }
+
+          compiledLines.push(parts.join(' '));
+        } else if (node.type === 'Directive') {
+          // todo: dodać obsługę dyrektyw
+          this.addLog(`Dyrektywa "${node.name}" nie jest obsługiwana w tej wersji`, 'Błąd parsera kodu');
           return;
         }
       }
 
-      let code = this.code.replace(/\n/g, ''); // Remove all newline characters
-      this.compiledCode = code.split(';'); // Split the cleaned code into an array by ";"
-      //remove empty lines
-      this.compiledCode = this.compiledCode.filter((line) => line.trim() !== '');
-
+      // ustawienie wynikowego microprogramu
+      this.compiledCode = compiledLines;
       this.codeCompiled = true;
       this.activeLine = -1;
       this.nextLine.clear();
@@ -781,14 +968,127 @@ export default {
     uncompileCode() {
       this.codeCompiled = false;
       this.nextLine.clear();
+      this.activeInstrIndex = -1;
+      this.activePhaseIndex = 0;
     },
     executeLine() {
+      // Structured program path
+      if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
+        if (this.activeInstrIndex < 0) {
+          this.activeInstrIndex = 0;
+          this.activePhaseIndex = 0;
+        }
+
+        if (this.activeInstrIndex >= this.compiledProgram.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          return;
+        }
+
+        const instr = this.compiledProgram[this.activeInstrIndex];
+        let totalPhases = 0;
+        for (let i = 0; i < this.activeInstrIndex; i++) {
+          totalPhases += this.compiledProgram[i].phases.length;
+        }
+        this.activeLine = totalPhases + this.activePhaseIndex;
+        const rawPhase = instr.phases[this.activePhaseIndex];
+
+        // Special handling for conditional jumps
+        if (instr.meta?.kind === 'CJUMP') {
+          // Evaluate condition and choose branch
+          const flagValue = this.evaluateFlag(instr.meta.flag);
+          const resolvedPhase = this.getResolvedPhase(rawPhase);
+          const signalsSet = new Set(Object.keys(resolvedPhase || {}).filter((k) => resolvedPhase[k] === true));
+          this.nextLine = signalsSet;
+          this.executeSignalsFromNextLine();
+
+          // Log the branch choice
+          const branchChoice = flagValue ? 'PRAWDA' : 'FAŁSZ';
+          const targetPc = flagValue ? instr.meta.trueTarget : instr.meta.falseTarget;
+          this.addLog(`[CJUMP] Skok warunkowy ${instr.meta.flag}: ${branchChoice} -> PC=${targetPc}`, 'system');
+
+          // Immediately jump after executing the chosen branch
+          this.activeInstrIndex = targetPc ?? this.activeInstrIndex + 1;
+          this.activePhaseIndex = 0;
+          return;
+        }
+
+        // Normal phase execution for non-conditional instructions
+        const resolvedPhase = this.getResolvedPhase(rawPhase);
+        const signalsSet = new Set(Object.keys(resolvedPhase || {}).filter((k) => resolvedPhase[k] === true));
+        this.nextLine = signalsSet;
+        this.executeSignalsFromNextLine();
+
+        // Handle manual mode advancement
+        if (this.manualMode) {
+          this.activePhaseIndex += 1;
+          if (this.activePhaseIndex >= instr.phases.length) {
+            // End of current instruction in manual mode - handle jumps
+            if (instr.meta?.kind === 'JUMP') {
+              // Unconditional jump (SOB)
+              this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
+            } else {
+              // Normal instruction - proceed to next
+              this.activeInstrIndex += 1;
+              this.activePhaseIndex = 0;
+            }
+          }
+        }
+
+        if (!this.manualMode) {
+          this.activePhaseIndex += 1;
+          if (this.activePhaseIndex >= instr.phases.length) {
+            // Check if this instruction has jump metadata
+            if (instr.meta?.kind === 'JUMP') {
+              // Unconditional jump (SOB)
+              this.activeInstrIndex = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+              this.activePhaseIndex = 0;
+              this.addLog(`Skok bezwarunkowy -> PC=${instr.meta.trueTarget}`, 'system');
+            } else {
+              // Normal instruction - proceed to next
+              this.activeInstrIndex += 1;
+              this.activePhaseIndex = 0;
+            }
+          }
+          if (this.activeInstrIndex >= this.compiledProgram.length) {
+            this.uncompileCode();
+            this.addLog('Kod zakończony', 'kompilator rozkazów');
+          }
+        }
+        return;
+      }
+
+      // Legacy path
+      if (!this.manualMode) {
+        if (this.activeLine < 0) this.activeLine = 0;
+        if (this.activeLine >= this.compiledCode.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          return;
+        }
+        const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
+        this.nextLine.clear();
+        for (const c of commands) this.nextLine.add(c);
+      }
+      this.executeSignalsFromNextLine();
+      if (!this.manualMode) {
+        this.activeLine++;
+        if (this.activeLine >= this.compiledCode.length) {
+          this.uncompileCode();
+          this.addLog('Kod zakończony', 'kompilator rozkazów');
+        }
+      }
+    },
+
+    executeSignalsFromNextLine() {
       // Clear all active timeouts to prevent signal overlap
       this.clearActiveTimeouts();
 
       // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
-      if (this.nextLine.has('czyt')) this.czyt(); // only czyt or pisz active at the same time
+      if (this.nextLine.has('czyt')) this.czyt();
       if (this.nextLine.has('pisz')) this.pisz();
       if (this.nextLine.has('wys')) this.wys();
       if (this.nextLine.has('stop')) this.stop();
@@ -801,7 +1101,6 @@ export default {
       if (this.nextLine.has('as')) this.as();
 
       // then all we's
-
       if (this.nextLine.has('wea')) this.wea();
       if (this.nextLine.has('weja')) this.weja();
       if (this.nextLine.has('wex')) this.wex();
@@ -811,7 +1110,6 @@ export default {
       if (this.nextLine.has('wel')) this.wel();
 
       // all math
-
       if (this.nextLine.has('dod')) this.dod();
       if (this.nextLine.has('ode')) this.ode();
       if (this.nextLine.has('przep')) this.przep();
@@ -832,23 +1130,58 @@ export default {
       if (this.nextLine.has('dl')) this.dl();
 
       this.nextLine.clear();
-      if (!this.manualMode) {
-        this.activeLine++;
-        if (this.activeLine >= this.compiledCode.length) {
-          this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
-        } else {
-          for (const command of this.compiledCode[this.activeLine].split(' ')) {
-            this.nextLine.add(command);
-          }
-        }
+    },
+
+    getResolvedPhase(phase) {
+      if (!phase) return {};
+      if (phase.conditional === true) {
+        const flag = phase.flag;
+        const cond = this.evaluateFlag(flag);
+        const branch = cond ? phase.truePhases : phase.falsePhases;
+        return branch && branch[0] ? branch[0] : {};
+      }
+      return phase;
+    },
+
+    evaluateFlag(flag) {
+      if (!flag) return false;
+      const f = String(flag).toUpperCase();
+      switch (f) {
+        case 'Z':
+        case 'ZERO':
+          return this.ACC === 0;
+        case 'NZ':
+        case 'NZERO':
+          return this.ACC !== 0;
+        case 'NEG':
+        case 'N':
+        case 'M':
+          return this.ACC < 0;
+        case 'POS':
+        case 'P':
+          return this.ACC >= 0;
+        default:
+          return false;
       }
     },
     runCode() {
       this.manualMode = false;
       this.clearActiveTimeouts();
-      while (this.activeLine < this.compiledCode.length) {
-        this.executeLine();
+
+      if (this.compiledProgram && this.compiledProgram.length > 0) {
+        let safety = 100000;
+        if (this.activeInstrIndex < 0) {
+          this.activeInstrIndex = 0;
+          this.activePhaseIndex = 0;
+        }
+        while (this.codeCompiled && this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length && safety-- > 0) {
+          this.executeLine();
+        }
+      } else if (this.compiledCode && this.compiledCode.length > 0) {
+        this.activeLine = Math.max(this.activeLine, 0);
+        while (this.activeLine < this.compiledCode.length) {
+          this.executeLine();
+        }
       }
     },
 
@@ -1240,6 +1573,16 @@ export default {
       }
     },
 
+    closeConsole() {
+      this.consoleOpen = false;
+    },
+
+    clearConsole() {
+      this.logs = [];
+      this.hasConsoleErrors = false;
+      this.addLog('Konsola została wyczyszczona', 'system');
+    },
+
     handleKeyPress(event) {
       // Close console with Escape key
       if (event.key === 'Escape' && this.consoleOpen) {
@@ -1258,6 +1601,47 @@ export default {
       for (const key in this.signals) {
         this.signals[key] = false;
       }
+    },
+
+    // Test method to demonstrate enhanced console with different error types
+    testEnhancedConsole() {
+      // Test different error levels and formats
+      this.addLog('System inicjalizowany', 'system');
+
+      // Test BaseAppError structure
+      const mockWlanError = {
+        message: 'Nieznany znak w linii kodu',
+        level: 'ERROR',
+        timestamp: new Date().toISOString(),
+        code: 'LEX_UNKNOWN_CHAR',
+        hint: "Usuń lub popraw znak. Jeżeli to komentarz, użyj '/\/' lub rozpocznij linię średnikiem ';'.",
+        loc: { line: 5, col: 12, length: 1 },
+        frame: '    3 | LAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
+      };
+
+      this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);
+
+      // Test warning
+      const mockWarning = {
+        message: 'Niewykorzystana etykieta',
+        level: 'WARNING',
+        timestamp: new Date().toISOString(),
+        code: 'SEM_UNUSED_LABEL',
+        hint: 'Sprawdź czy etykieta jest faktycznie potrzebna lub czy nie ma literówki w nazwie.',
+      };
+
+      this.addLog('Ostrzeżenie kompilatora', 'Warning', mockWarning);
+
+      // Test critical error
+      const mockCritical = {
+        message: 'Krytyczny błąd systemu',
+        level: 'CRITICAL',
+        timestamp: new Date().toISOString(),
+        code: 'SYS_CRITICAL',
+        hint: 'Skontaktuj się z administratorem systemu.',
+      };
+
+      this.addLog('Błąd krytyczny', 'Critical', mockCritical);
     },
   },
   watch: {
@@ -1377,5 +1761,18 @@ ol {
   flex-direction: column;
   gap: 1rem;
   text-align: left;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.toolbar button.active {
+  background-color: var(--signal-active);
+  color: white;
+}
+.toolbar select {
+  padding: 0.2rem;
 }
 </style>

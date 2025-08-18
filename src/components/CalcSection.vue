@@ -25,15 +25,7 @@
       />
     </div>
 
-    <RegisterComponent
-      id="accumulator"
-      label="AK"
-      :model="ACC"
-      @update:model="$emit('update:ACC', $event)"
-      :number-format="accFormat"
-      @update:number-format="$emit('update:accFormat', $event)"
-    />
-
+    <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="$emit('update:ACC', $event)" :formatNumber="formatNumber" />
     <div class="jamlSignals">
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
       <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
@@ -97,15 +89,7 @@
       />
     </div>
 
-    <RegisterComponent
-      id="jaml"
-      label="JAML"
-      :model="JAML"
-      @update:model="$emit('update:JAML', $event)"
-      :number-format="jamlFormat"
-      @update:number-format="$emit('update:jamlFormat', $event)"
-      :show-format-selector="false"
-    />
+    <RegisterComponent id="jaml" label="JAML" :model="JAML" @update:model="$emit('update:JAML', $event)" :formatNumber="formatNumber" />
 
     <template v-if="!isMobile">
       <SignalButton
@@ -140,14 +124,7 @@ export default {
     signals: Object,
     ACC: Number,
     JAML: Number,
-    accFormat: {
-      type: String,
-      required: true,
-    },
-    jamlFormat: {
-      type: String,
-      required: true,
-    },
+    formatNumber: Function,
   },
   data() {
     return {

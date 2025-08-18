@@ -102,6 +102,16 @@ watch(
   font-size: 0.9rem;
 }
 
+.executed-info {
+  text-align: center;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+  color: #888;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--panelOutlineColor, black);
+}
+
 .compiledCode .flexRow {
   max-width: none;
   flex-wrap: nowrap;

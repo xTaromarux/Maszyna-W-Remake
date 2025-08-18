@@ -13,6 +13,8 @@
           :signals="signals"
           :programCounter="programCounter"
           :formatNumber="formatNumber"
+          :number-format="registerFormats.L"
+          @update:number-format="registerFormats.L = $event"
           :extras="extras"
           @update:programCounter="programCounter = $event"
           @clickItem="handleSignalToggle"
@@ -25,10 +27,20 @@
         :busName="'A'"
         :showInvisibleRegisters="extras.showInvisibleRegisters"
         :formatNumber="formatNumber"
+        :number-format="registerFormats.BusA"
+        @update:number-format="registerFormats.BusA = $event"
       />
 
       <div id="layer2" class="layer">
-        <RegisterISection :I="I" :signals="signals" :formatNumber="formatNumber" @update:I="I = $event" @clickItem="handleSignalToggle" />
+        <RegisterISection
+          :I="I"
+          :signals="signals"
+          :formatNumber="formatNumber"
+          :number-format="registerFormats.I"
+          @update:number-format="registerFormats.I = $event"
+          @update:I="I = $event"
+          @clickItem="handleSignalToggle"
+        />
 
         <CalcSection
           :signals="signals"
@@ -36,6 +48,10 @@
           :ACC="ACC"
           :JAML="JAML"
           :formatNumber="formatNumber"
+          :acc-format="registerFormats.ACC"
+          @update:acc-format="registerFormats.ACC = $event"
+          :jaml-format="registerFormats.JAML"
+          @update:jaml-format="registerFormats.JAML = $event"
           @update:ACC="ACC = $event"
           @update:JAML="JAML = $event"
           @clickItem="handleSignalToggle"
@@ -69,6 +85,10 @@
           :formatNumber="formatNumber"
           :decToCommand="decToCommand"
           :decToArgument="decToArgument"
+          :a-format="registerFormats.A"
+          @update:a-format="registerFormats.A = $event"
+          :s-format="registerFormats.S"
+          @update:s-format="registerFormats.S = $event"
           @update:A="A = $event"
           @update:S="S = $event"
           @clickItem="handleSignalToggle"
@@ -81,6 +101,8 @@
         :busName="'S'"
         :showInvisibleRegisters="extras.showInvisibleRegisters"
         :formatNumber="formatNumber"
+        :number-format="registerFormats.BusS"
+        @update:number-format="registerFormats.BusS = $event"
       />
 
       <div id="layer3" class="layer">
@@ -89,6 +111,8 @@
           :X="X"
           :signals="signals"
           :formatNumber="formatNumber"
+          :number-format="registerFormats.X"
+          @update:number-format="registerFormats.X = $event"
           @update:X="X = $event"
           @clickItem="handleSignalToggle"
         />
@@ -98,6 +122,8 @@
           :Y="Y"
           :signals="signals"
           :formatNumber="formatNumber"
+          :number-format="registerFormats.Y"
+          @update:number-format="registerFormats.Y = $event"
           @update:Y="Y = $event"
           @clickItem="handleSignalToggle"
         />
@@ -141,6 +167,7 @@
       :class="{ 'console-collapsed': !consoleOpen }"
       @close="closeConsole"
       @clear="clearConsole"
+
     />
 
     <!-- Console indicator - visible only when console is collapsed -->
@@ -286,6 +313,18 @@ export default {
       commandList,
 
       numberFormat: 'dec',
+      registerFormats: {
+        L: 'dec',
+        I: 'dec',
+        ACC: 'dec',
+        A: 'dec',
+        S: 'dec',
+        X: 'dec',
+        Y: 'dec',
+        JAML: 'dec',
+        BusA: 'dec',
+        BusS: 'dec',
+      },
 
       avaiableSignals: {
         always: [
@@ -720,7 +759,16 @@ export default {
         const parsed = JSON.parse(data);
 
         // Only restore settings, not register values or code
-        const settingsToRestore = ['addresBits', 'codeBits', 'memoryAddresBits', 'oddDelay', 'numberFormat', 'extras', 'lightMode'];
+        const settingsToRestore = [
+          'addresBits',
+          'codeBits',
+          'memoryAddresBits',
+          'oddDelay',
+          'numberFormat',
+          'extras',
+          'lightMode',
+          'registerFormats',
+        ];
 
         settingsToRestore.forEach((setting) => {
           if (parsed[setting] !== undefined) {
@@ -814,7 +862,7 @@ export default {
       const formatters = {
         dec: () => number,
         hex: () => '0x' + Math.floor(number).toString(16).toUpperCase(),
-        bin: () => Math.floor(number).toString(2),
+        bin: () => '0b' + Math.floor(number).toString(2),
       };
 
       return formatters[this.numberFormat]?.() ?? `EE${number}`;
@@ -1573,6 +1621,18 @@ export default {
       this.addresBits = 4;
       this.oddDelay = 100;
       this.numberFormat = 'dec';
+      this.registerFormats = {
+        L: 'dec',
+        I: 'dec',
+        ACC: 'dec',
+        A: 'dec',
+        S: 'dec',
+        X: 'dec',
+        Y: 'dec',
+        JAML: 'dec',
+        BusA: 'dec',
+        BusS: 'dec',
+      };
       this.extras = {
         xRegister: false,
         yRegister: false,

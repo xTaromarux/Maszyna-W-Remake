@@ -32,6 +32,7 @@
       <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="lineRightOnBottom" @click="handleClick('dod')" />
       <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="lineRightOnBottom" @click="handleClick('ode')" />
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="lineRightOnBottom" @click="handleClick('przep')" />
+
       <SignalButton
         v-if="extras.jamlExtras"
         id="mno"

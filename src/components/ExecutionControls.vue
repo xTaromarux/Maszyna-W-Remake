@@ -19,7 +19,7 @@
     <!-- Single‑step execution -->
     <button @click="$emit('step')" :disabled="!manualMode && !codeCompiled" class="execution-btn execution-btn--step">
       <NextLineIcon />
-      <span>Następna linia</span>
+      <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj rozkaz' }}</span>
     </button>
 
     <!-- Run program -->

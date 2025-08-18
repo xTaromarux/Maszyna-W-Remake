@@ -48,26 +48,10 @@
   </div>
 </template>
 
-<<<<<<< HEAD
-<script>
-import SegmentedToggle from './SegmentedToggle.vue'
-import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
-
-export default {
-  name: 'ProgramEditor',
-  components: { SegmentedToggle },
-  props: {
-    manualMode: { type: Boolean, required: true },
-    codeCompiled: { type: Boolean, required: true },
-    code: { type: String, required: true },
-    compiledCode: { type: Array, required: true },
-    activeLine: { type: Number, required: true },
-    nextLine: { type: Object, required: true }, // Set
-  },
-  emits: ['update:code', 'setManualMode'],
-};
-=======
 <script setup>
+import { ref, watch } from 'vue'
+import SegmentedToggle from './SegmentedToggle.vue'
+import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -75,22 +59,24 @@ const props = defineProps({
   code: { type: String, required: true },
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true }, // Set
-});
-const emit = defineEmits(['update:code', 'setManualMode']);
+  nextLine: { type: Object, required: true } // Set
+})
 
-const codeLocal = ref(props.code);
+const emit = defineEmits(['update:code', 'setManualMode'])
+
+const codeLocal = ref(props.code)
+
 watch(codeLocal, (v) => {
-  console.log('Updating code:', v);
-  return emit('update:code', v);
-});
+  console.log('Updating code:', v)
+  emit('update:code', v)
+})
+
 watch(
   () => props.code,
   (v) => {
-    if (v !== codeLocal.value) codeLocal.value = v;
+    if (v !== codeLocal.value) codeLocal.value = v
   }
-);
->>>>>>> main
+)
 </script>
 
 <style scoped>

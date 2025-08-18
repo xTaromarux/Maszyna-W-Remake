@@ -87,7 +87,7 @@ function focusNext(i) {
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--count), 1fr);
-  background: linear-gradient(90deg,#8a2be2,#7a2ef8,#6f2dfd);
+  background: #003c7d;
   padding: 6px;
   border-radius: var(--radius);
   user-select: none;
@@ -122,5 +122,5 @@ function focusNext(i) {
   color: #f3e9ff;
   outline: none;
 }
-.seg-btn[aria-selected="true"] { color: #7a2ef8; }
+.seg-btn[aria-selected="true"] { color: #003c7d; }
 </style>

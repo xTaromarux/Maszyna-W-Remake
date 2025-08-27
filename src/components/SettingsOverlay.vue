@@ -7,6 +7,7 @@
     <CreatorsPanel
       :is-animated="isAnimated"
       :creators="creators"
+      :caregivers="caregivers"
     />
 
     <SettingsPanel
@@ -56,19 +57,26 @@ export default {
     creators: {
       type: Array,
       default: () => ([
-        { name: 'Paweł Linek', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Sławomir Put', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Maja Kucab', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Bartek Faruga', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Kacper Sikorski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Marcin Ryt', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Michał Kostrzewski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Oskar Forreiter', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Paweł Janus', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
-        { name: 'Sebastian Legierski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
         { name: 'Szymon Woźnica', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Maja Kucab', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Kacper Sikorski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Sławomir Put', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Paweł Linek', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Bartek Faruga', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Marcin Ryt', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Oskar Forreiter', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Michał Kostrzewski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Sebastian Legierski', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
+        { name: 'Paweł Janus', linkedin: 'https://www.polsl.pl', github: 'https://www.polsl.pl', roles: [] },
       ]),
     },
+    caregivers: {
+      default: () => ([
+        { name: 'Abc Abc', linkedin: 'https://www.polsl.pl', roles: [] },
+        { name: 'Abc Abc', linkedin: 'https://www.polsl.pl', roles: [] },
+        { name: 'Abc Abc', linkedin: 'https://www.polsl.pl', roles: [] },
+      ]),
+    }
   },
   emits: [
     'close',

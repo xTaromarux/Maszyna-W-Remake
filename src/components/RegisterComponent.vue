@@ -1,18 +1,24 @@
 <template>
   <div :id="id" :class="[classNames, edgeClass, 'register-container']">
-    <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span
-    ><span>:</span>
-    <div class="inputWrapper">
-      <span>{{ formattedValue }}</span>
-      <input
-        inputmode="numeric"
-        pattern="[0-9]*"
-        type="number"
-        class="hoverInput"
-        :value="model"
-        @input="updateValue"
-        @blur="onBlur"
-      />
+    <div v-if="isEnableEditValue" class="register-container">
+      <span   
+        :title="fullName" 
+        @mouseenter="handleMouseEnter" 
+        @mouseleave="handleMouseLeave">{{ label }}</span
+      ><span>:</span>
+      
+      <div class="inputWrapper">
+        <span>{{ formattedValue }}</span>
+        <input
+          inputmode="numeric"
+          pattern="[0-9]*"
+          type="number"
+          class="hoverInput"
+          :value="model"
+          @input="updateValue"
+          @blur="onBlur"
+        />
+        </div>
     </div>
     <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
       <button class="format-button" @click.stop="toggleFormatMenu">
@@ -46,6 +52,10 @@ export default {
       default: 'dec',
     },
     showFormatSelector: {
+      type: Boolean,
+      default: true,
+    },
+    isEnableEditValue: {
       type: Boolean,
       default: true,
     },
@@ -176,7 +186,7 @@ export default {
   border: 1px solid var(--panelOutlineColor);
   border-radius: var(--default-border-radius);
   padding: 4px;
-  z-index: 100;
+  z-index: 1000;
   min-width: 60px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }

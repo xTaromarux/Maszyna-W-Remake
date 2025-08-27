@@ -1522,7 +1522,7 @@ export default {
       this.addLog('Wszystkie wartości rejestrów zostały zresetowane', 'system');
     },
 
-    defaultSettings() {
+    restoreDefaults() {
       // Reset to default settings
       this.memoryAddresBits = 6;
       this.codeBits = 6;
@@ -1559,6 +1559,11 @@ export default {
 
       this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
     },
+
+    openCommandList(){
+      this.commandListOpen = true;
+    },
+
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
 

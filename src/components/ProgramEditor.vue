@@ -38,7 +38,7 @@
 
     <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="manualMode">
-      <span>Sygnały następnej linii:</span>
+      <p class="nextLineTitle">Sygnały następnej linii:</p>
       <div class="flexRow">
         <div v-for="cmd in [...nextLine]" :key="cmd">
           <span>{{ cmd }}</span>
@@ -100,6 +100,13 @@ watch(
   align-items: center;
 }
 
+.flexRow span {
+  opacity: 1;
+  color: var(--fontColor, black);
+  font-style: italic;
+  font-weight: bold;
+}
+
 .compiledCode {
   display: flex;
   width: 100%;
@@ -107,9 +114,10 @@ watch(
   gap: 0.125rem;
   padding: 0.5rem;
   flex-grow: 1;
+  margin-top: 10px;
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid var(--panelOutlineColor, black);
+  border: 4px solid #003c7d;
   border-radius: var(--default-border-radius, 0.25rem);
   background-color: var(--panelBackgroundColor, white);
   font-family: monospace;
@@ -187,25 +195,25 @@ watch(
   flex-grow: 1;
   width: 100%;
   min-height: 200px;
-  margin-top: 20px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   overflow-y: auto;
   padding: 0.5rem;
-  border: 1px solid var(--panelOutlineColor, black);
+  border: 4px solid #003c7d;
   border-radius: var(--default-border-radius, 0.25rem);
   background-color: var(--panelBackgroundColor, white);
 }
 
-.nextLine span {
+.nextLine .nextLineTitle {
   display: flex;
+  opacity: 0.8;
+  color: var(--fontColor, black);
+  font-style: italic;
+  font-weight: bold;
   flex-direction: row;
   gap: 0.5rem;
-}
-
-.nextLine span span {
-  white-space: pre;
 }
 
 .manualModeInstruction {
@@ -213,13 +221,13 @@ watch(
   align-items: center;
   width: 100%;
   justify-content: center;
-  margin: 0.5rem 0 0 0;
   padding: 1rem;
   border-radius: var(--default-border-radius, 0.25rem);
-  border: 1px solid var(--panelOutlineColor, black);
+  border: 5px solid #003c7d;
   background-color: var(--panelBackgroundColor, white);
   color: var(--fontColor, black);
   font-style: italic;
+  font-weight: bold;
   text-align: center;
 }
 

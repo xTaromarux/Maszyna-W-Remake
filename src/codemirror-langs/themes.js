@@ -41,7 +41,7 @@ export const mwTheme = [
   }),
   syntaxHighlighting(
     HighlightStyle.define([
-      { tag: t.keyword, color: '#4FC1FF' },
+      { tag: t.keyword, color: '#003c7d', fontWeight: 'bold' },
       { tag: t.number, color: '#098658' },
       { tag: t.labelName, color: '#795E26', fontStyle: 'italic' },
       { tag: t.variableName, color: '#000000' },

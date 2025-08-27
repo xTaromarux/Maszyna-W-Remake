@@ -5,66 +5,24 @@
     @click.stop
     aria-label="Twórcy projektu"
   >
-    <header class="creatorsHeader">
-        <h1>Twórcy</h1>
-    </header>
-
-    <div class="creatorsContent">
-      <div class="creators-list">
-        <div v-for="(c, idx) in creators" :key="idx" class="creatorItem">
-          <span class="creatorName">{{ c.name }}</span>
-
-          <div v-if="c.roles?.length" class="creator-roles">
-            <span v-for="(r, i) in c.roles" :key="i" class="creator-role">{{ r }}</span>
-          </div>
-
-          <div class="creator-links">
-            <a
-              v-if="c.linkedin"
-              :href="c.linkedin"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="icon-link"
-              aria-label="LinkedIn"
-              title="LinkedIn"
-            >
-              <LinkedInIcon />
-            </a>
-            <a
-              v-if="c.github"
-              :href="c.github"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="icon-link"
-              aria-label="GitHub"
-              title="GitHub"
-            >
-              <GitHubIcon />
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
+  <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
+  <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
   </div>
 </template>
 
 <script>
-import LinkedInIcon from '@/assets/svg/LinkedInIcon.vue'
-import GitHubIcon from '@/assets/svg/GitHubIcon.vue'
+import PeopleSection from './PeopleSection.vue'
 
 export default {
   name: 'CreatorsPanel',
-  components: { LinkedInIcon, GitHubIcon },
+  components: { PeopleSection },
   props: {
     isAnimated: { type: Boolean, default: false },
-    creators: {
-      type: Array,
-      default: () => [],
-    },
+    creators: { type: Array, default: () => [] },
+    caregivers: { type: Array, default: () => [] },
   },
 }
 </script>
-
 <style scoped>
 #creators {
   position: fixed;
@@ -83,52 +41,4 @@ export default {
 }
 #creators.slide-in-left { transform: translateX(0) }
 #creators.slide-out-left { transform: translateX(-100%) }
-
-.creatorsHeader {
-  display: flex;
-  height: 56px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #003c7d;
-  color: #fff;
-}
-.creatorsHeader h1 {
-  font-size: 1.25rem;
-  color: #FFF;
-  margin: 0;
-}
-
-.creatorsContent { flex: 1; overflow-y: auto; padding: .75rem 1rem 1rem 1rem; display: flex; flex-direction: column }
-
-.creators-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-  gap: 8px;
-  margin-top: 8px;
-  padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-.creatorItem {
-  padding: 8px 12px;
-  border: 1px sold black;
-  background: rgba(255,255,255,0.08);
-  border-radius: 6px;
-  font-size: .9em;
-  text-align: center;
-  color: #000;
-  transition: .2s;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-}
-.creatorItem:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px) }
-.creatorName { font-weight: 500; line-height: 1.2; color: 000; }
-
-.creator-links { display:flex; justify-content:center; gap:8px }
-.icon-link { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; color:#aaa; transition:.2s; border-radius:4px; padding:2px }
-.icon-link:hover { color:#fff; background:rgba(255,255,255,0.1); transform: scale(1.1) }
-
-.creator-roles { display:flex; gap:6px; flex-wrap:wrap }
-.creator-role { font-size:.75rem; opacity:.85; padding:2px 6px; border-radius:999px; border:1px solid rgba(255,255,255,0.15) }
 </style>

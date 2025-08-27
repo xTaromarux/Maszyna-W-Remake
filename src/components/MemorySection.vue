@@ -5,6 +5,11 @@
       :signals="signals"
       @open="openMobileModal"
       @clickItem="handleClick"
+      :mobileView="mobileView"
+      :busAValue="busAValue"
+      :busSValue="busSValue"
+      :showInvisibleRegisters="showInvisibleRegisters"
+      :formatNumber="formatNumber"
     />
 
     <teleport to="body">
@@ -76,6 +81,10 @@ export default {
     decToArgument: { type: Function, required: true },
     aFormat: { type: String, required: true },
     sFormat: { type: String, required: true },
+    mobileView: { type: Boolean, required: true },
+    busAValue: { type: Number, required: true },
+    busSValue: { type: Number, required: true },
+    showInvisibleRegisters: { type: Boolean, default: false },
   },
   emits: ['clickItem', 'update:A', 'update:S', 'update:aFormat', 'update:sFormat'],
   data() {

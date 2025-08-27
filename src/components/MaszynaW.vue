@@ -16,6 +16,7 @@
       :signalStatus="signals.busA"
       :busValue="BusA"
       :busName="'A'"
+      :mobileView="isMobile"
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusA"
@@ -40,9 +41,11 @@
           :ACC="ACC"
           :JAML="JAML"
           :formatNumber="formatNumber"
+          :number-format="registerFormats.ACC"
           :acc-format="registerFormats.ACC"
           @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
           :jaml-format="registerFormats.JAML"
+          @update:number-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
           @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
           @update:ACC="$emit('update:ACC', $event)"
           @update:JAML="$emit('update:JAML', $event)"
@@ -85,6 +88,10 @@
         @update:A="$emit('update:A', $event)"
         @update:S="$emit('update:S', $event)"
         @clickItem="name => $emit('clickItem', name)"
+        :mobileView="isMobile"
+        :busAValue="BusA"
+        :busSValue="BusS"
+        :showInvisibleRegisters="extras.showInvisibleRegisters"
       />
     </div>
 
@@ -92,6 +99,7 @@
       :signalStatus="signals.busS"
       :busValue="BusS"
       :busName="'S'"
+      :mobileView="isMobile"
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusS"

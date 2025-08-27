@@ -4,6 +4,7 @@
   align-items: flex-end;
   flex-wrap: wrap;
   justify-content: flex-start;
+  margin-bottom: 20px;
 }
 
 .execution-btn {
@@ -14,13 +15,12 @@
   justify-content: center;
   gap: 0.2rem;
   padding: 0.75rem;
-  border-radius:  0.5rem;
+  border-radius:  0.25rem;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 4px solid #003c7d;
   
   &::before {
     content: '';
@@ -30,7 +30,6 @@
     right: 0;
     bottom: 0;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
     z-index: -1;
     transition: opacity 0.3s ease;
   }
@@ -83,7 +82,6 @@
 // Dark mode styles (default)
 body.darkMode, body:not(.lightMode) {
   .execution-btn {
-    border: 1px solid #282a30;
     
     svg {
       stroke-width: 2.5;
@@ -98,85 +96,89 @@ body.darkMode, body:not(.lightMode) {
 
   // Dark mode button variants using app's color scheme
   .execution-btn--compile {
-    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
-    color: #d5d6db;
-    border: 1px solid rgba(170, 168, 255, 0.3);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: rgba(170, 168, 255, 0.9);
-      stroke: rgba(170, 168, 255, 0.9);
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
-      border: 1px solid rgba(170, 168, 255, 0.5);
-      
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
       svg {
-        color: rgba(170, 168, 255, 1);
-        stroke: rgba(170, 168, 255, 1);
+        color: #FFFFFF;
+        stroke: #FFFFFF;
       }
     }
   }
 
   .execution-btn--edit {
-    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
-    color: #d5d6db;
-    border: 1px solid rgba(222, 221, 255, 0.3);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: rgba(222, 221, 255, 0.9);
-      stroke: rgba(222, 221, 255, 0.9);
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
-      border: 1px solid rgba(222, 221, 255, 0.5);
-      
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
       svg {
-        color: rgba(222, 221, 255, 1);
-        stroke: rgba(222, 221, 255, 1);
+        color: #FFFFFF;
+        stroke: #FFFFFF;
       }
     }
   }
 
   .execution-btn--step {
-    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
-    color: #d5d6db;
-    border: 1px solid rgba(0, 102, 204, 0.5);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #0099ff;
-      stroke: #0099ff;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
-      border: 1px solid rgba(0, 102, 204, 0.7);
-      
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
       svg {
-        color: #00aaff;
-        stroke: #00aaff;
+        color: #FFFFFF;
+        stroke: #FFFFFF;
       }
     }
   }
 
   .execution-btn--run {
-    background: linear-gradient(135deg, #373a41 0%, #282a30 100%);
-    color: #d5d6db;
-    border: 1px solid rgba(0, 153, 255, 0.4);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #0066cc;
-      stroke: #0066cc;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #676b75 0%, #373a41 100%);
-      border: 1px solid rgba(0, 153, 255, 0.6);
-      
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
       svg {
-        color: #0099ff;
-        stroke: #0099ff;
+        color: #FFFFFF;
+        stroke: #FFFFFF;
       }
     }
   }
@@ -184,82 +186,105 @@ body.darkMode, body:not(.lightMode) {
 
 // Light mode styles
 body.lightMode {
-  .execution-btn {
-    border: 1px solid rgba(0, 0, 0, 0.15);
+   .execution-btn {
     
     svg {
       stroke-width: 2.5;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
     }
 
     span {
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
     
   }
 
-  // Light mode button variants
+  // Dark mode button variants using app's color scheme
   .execution-btn--compile {
-    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
-    color: #111;
-    border: 1px solid rgba(170, 168, 255, 0.4);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #6b46c1;
-      stroke: #6b46c1;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
-      border: 1px solid rgba(170, 168, 255, 0.6);
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
+      svg {
+        color: #FFFFFF;
+        stroke: #FFFFFF;
+      }
     }
   }
 
   .execution-btn--edit {
-    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
-    color: #111;
-    border: 1px solid rgba(222, 221, 255, 0.4);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #7c3aed;
-      stroke: #7c3aed;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
-      border: 1px solid rgba(222, 221, 255, 0.6);
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
+      svg {
+        color: #FFFFFF;
+        stroke: #FFFFFF;
+      }
     }
   }
 
   .execution-btn--step {
-    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
-    color: #111;
-    border: 1px solid rgba(0, 102, 204, 0.4);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #0066cc;
-      stroke: #0066cc;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
-      border: 1px solid rgba(0, 102, 204, 0.6);
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
+      svg {
+        color: #FFFFFF;
+        stroke: #FFFFFF;
+      }
     }
   }
 
   .execution-btn--run {
-    background: linear-gradient(135deg, #f8f8f8 0%, #eee 100%);
-    color: #111;
-    border: 1px solid rgba(0, 153, 255, 0.4);
+    color: #FFFFFF;
+    background-color: #003c7d;
+    border: 4px solid #003c7d;
     
     svg {
-      color: #0099ff;
-      stroke: #0099ff;
+      color: #FFFFFF;
+      stroke: #FFFFFF;
     }
     
     &:hover {
-      background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
-      border: 1px solid rgba(0, 153, 255, 0.6);
+      background: #0151a5;
+      border: 4px solid #0151a5;
+      color: #FFFFFF;
+
+      svg {
+        color: #FFFFFF;
+        stroke: #FFFFFF;
+      }
     }
   }
 }

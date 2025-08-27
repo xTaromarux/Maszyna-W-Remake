@@ -1,7 +1,7 @@
 <template>
   <div class="segmented" :style="rootStyle">
     <div class="track" role="tablist" :aria-label="ariaLabel">
-      <div class="thumb" aria-hidden="true"></div>
+      <div class="thumb" v-if="activeIndex >= 0" aria-hidden="true"></div>
       <button
         v-for="(opt, i) in options"
         :key="optKey(opt, i)"
@@ -40,9 +40,9 @@ const values = computed(() =>
 )
 
 const activeIndex = computed(() => {
-  const v = props.modelValue ?? values.value[0]
-  const idx = values.value.findIndex(x => x === v)
-  return idx < 0 ? 0 : idx
+  if (props.modelValue == null) return -1
+  const idx = values.value.findIndex(x => x === props.modelValue)
+  return idx
 })
 
 const rootStyle = computed(() => ({
@@ -79,13 +79,14 @@ function focusNext(i) {
 .segmented {
   --count: 2;
   --idx: 0;
-  --radius: 999px;
+  --radius: 0.25rem;
   --dur: 260ms;
   --ease: cubic-bezier(.2,.8,.2,1);
 }
 .track {
   position: relative;
   display: grid;
+  margin-bottom: 10px;
   grid-template-columns: repeat(var(--count), 1fr);
   background: #003c7d;
   padding: 6px;
@@ -99,8 +100,8 @@ function focusNext(i) {
   left: 6px;
   width: calc((100% - 12px) / var(--count));
   transform: translateX(calc(var(--idx) * 100%));
-  border-radius: var(--radius);
-  background: #fff;
+  border-radius: 0.1rem;
+  background: var(--buttonBackgroundColor); 
   box-shadow: 0 4px 14px rgba(0,0,0,.15);
   transition: transform var(--dur) var(--ease);
   will-change: transform;
@@ -117,10 +118,13 @@ function focusNext(i) {
   font-weight: 600;
   font-size: 14px;
   line-height: 1;
-  border-radius: var(--radius);
+  border-radius: 0.1rem;
   cursor: pointer;
   color: #f3e9ff;
   outline: none;
 }
-.seg-btn[aria-selected="true"] { color: #003c7d; }
+.seg-btn[aria-selected="true"] { color: var(--fontColorSelectedItem); }
+.toggleButtonProgram {
+  width: 100%;
+}
 </style>

@@ -97,7 +97,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="settingsOpen = false"
+      @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
       @update:codeBits="codeBits = $event"
@@ -1522,7 +1522,7 @@ export default {
       this.addLog('Wszystkie wartości rejestrów zostały zresetowane', 'system');
     },
 
-    defaultSettings() {
+    restoreDefaults() {
       // Reset to default settings
       this.memoryAddresBits = 6;
       this.codeBits = 6;
@@ -1559,6 +1559,11 @@ export default {
 
       this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
     },
+
+    openCommandList(){
+      this.commandListOpen = true;
+    },
+
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
 

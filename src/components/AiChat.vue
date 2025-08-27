@@ -65,7 +65,7 @@
             type="text"
             :disabled="aiTyping"
           />
-          <button type="submit" :disabled="aiTyping">Wyślij</button>
+          <button class="execution-btn execution-btn--run" type="submit" :disabled="aiTyping">Wyślij</button>
         </form>
       </div>
     </div>

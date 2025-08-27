@@ -25,7 +25,14 @@
       />
     </div>
 
-    <RegisterComponent id="accumulator" label="AK" :model="ACC" @update:model="$emit('update:ACC', $event)" :formatNumber="formatNumber" />
+    <RegisterComponent 
+      id="accumulator" 
+      label="AK" 
+      :model="ACC" 
+      @update:model="$emit('update:ACC', $event)" 
+      :number-format="numberFormat"
+      @update:number-format="$emit('update:numberFormat', $event)"
+      />
     <div class="jamlSignals">
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
       <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
@@ -89,7 +96,14 @@
       />
     </div>
 
-    <RegisterComponent id="jaml" label="JAML" :model="JAML" @update:model="$emit('update:JAML', $event)" :formatNumber="formatNumber" />
+    <RegisterComponent 
+      id="jaml" 
+      label="JAML" 
+      :model="JAML" 
+      @update:model="$emit('update:JAML', $event)" 
+      :formatNumber="formatNumber"
+      :isEnableEditValue="false"
+      :showFormatSelector="false" />
 
     <template v-if="!isMobile">
       <SignalButton
@@ -120,11 +134,30 @@ import RegisterComponent from './RegisterComponent.vue';
 export default {
   name: 'CalcSection',
   props: {
-    extras: Object,
-    signals: Object,
-    ACC: Number,
-    JAML: Number,
-    formatNumber: Function,
+    extras: {
+      type: Object,
+      required: true,
+    },
+    signals: {
+      type: Object,
+      required: true,
+    },
+    ACC: {
+      type: Number,
+      required: true,
+    },
+    JAML: {
+      type: Number,
+      required: true,
+    },
+    numberFormat: {
+      type: String,
+      required: true,
+    },
+    formatNumber: {
+      type: Function,
+      required: true,
+    },
   },
   data() {
     return {
@@ -137,7 +170,7 @@ export default {
   beforeUnmount() {
     window.removeEventListener('resize', this.checkMobile)
   },
-  emits: ['clickItem', 'update:ACC', 'update:JAML', 'update:accFormat', 'update:jamlFormat'],
+  emits: ['clickItem', 'update:ACC', 'update:JAML', 'update:accFormat', 'update:jamlFormat', 'update:numberFormat'],
   components: {
     SignalButton,
     RegisterComponent,

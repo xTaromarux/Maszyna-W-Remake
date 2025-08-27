@@ -35,7 +35,7 @@
 
     <!-- Compilation controls for fullscreen macro editor -->
     <div v-if="language === 'macroW' && isFullScreen" class="fullscreen-controls">
-      <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="compile-btn compile-btn--compile">
+      <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="execution-btn execution-btn--compile">
         <CompileIcon />
         <span>Kompiluj</span>
       </button>
@@ -126,6 +126,7 @@ const props = defineProps<{
   readOnly?: boolean;
   // Props for macro compilation
   programCompiled?: boolean;
+  disable?: boolean;
   onCompile?: () => void;
   onEdit?: () => void;
 }>();
@@ -351,7 +352,7 @@ function createExtensions() {
         },
       },
     ]),
-    EditorState.readOnly.of(props.readOnly ?? false),
+    EditorView.editable.of(!(props.readOnly || props.disable || false)),
     EditorView.lineWrapping,
     // Add language and theme LAST to ensure they override
     getLanguageExtension(props.language),
@@ -362,10 +363,17 @@ function createExtensions() {
         fontFamily: 'monospace',
       },
       '.cm-editor': {
+        borderStyle: 'solid',
+        borderWidth: 4,
+        borderColor: '#003c7d',
         height: '100%',
       },
       '.cm-scroller': {
         overflow: 'auto',
+        borderStyle: 'solid',
+        borderRadius: '0.25rem',
+        borderWidth: '4px',
+        borderColor: '#003c7d',
       },
       '.cm-content': {
         textAlign: 'left',
@@ -414,7 +422,7 @@ function createExtensions() {
         color: '#888 !important',
       },
       '.cm-tooltip-autocomplete .cm-completionIcon-keyword': {
-        color: '#4FC1FF !important',
+        color: '#003c7d !important',
       },
       // Search match highlighting
       '.cm-searchMatch': {
@@ -426,11 +434,11 @@ function createExtensions() {
       },
       // Keywords for macroW conditional statements
       '.tok-IF, .tok-THEN, .tok-ELSE': {
-        color: '#4FC1FF !important',
+        color: '#003c7d !important',
         fontWeight: 'bold !important',
       },
       '.cmt-IF, .cmt-THEN, .cmt-ELSE': {
-        color: '#4FC1FF !important',
+        color: '#003c7d !important',
         fontWeight: 'bold !important',
       },
       // Label styling
@@ -496,6 +504,17 @@ watch(
   }
 );
 
+watch(
+  () => props.disable,
+  () => {
+    if (editorView) {
+      editorView.dispatch({
+        effects: StateEffect.reconfigure.of(createExtensions()),
+      });
+    }
+  }
+);
+
 // 10. Watch for language changes
 watch(
   () => props.language,
@@ -538,6 +557,7 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
+  max-height: 35.8rem;
   transition:
     width 0.3s ease,
     height 0.3s ease,
@@ -547,8 +567,8 @@ watch(
 
 .fullscreen-button {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 10px;
+  right: 10px;
   z-index: 20;
   background-color: transparent;
   border: none;
@@ -582,6 +602,7 @@ watch(
   height: 100%;
   border: none;
   overflow: hidden;
+  max-height: 40rem;
 }
 
 .codemirror-container :deep(.cm-editor) {
@@ -601,40 +622,5 @@ watch(
   display: flex;
   gap: 0.5rem;
   align-items: center;
-}
-
-.compile-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: var(--default-border-radius, 0.25rem);
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.compile-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.compile-btn--compile {
-  background-color: var(--signal-active, #4caf50);
-  color: #fff;
-}
-
-.compile-btn--compile:hover:not(:disabled) {
-  background-color: var(--signal-active-hover, #45a049);
-}
-
-.compile-btn--edit {
-  background-color: var(--buttonBackgroundColor, #6c757d);
-  color: var(--fontColor, #fff);
-}
-
-.compile-btn--edit:hover {
-  background-color: var(--buttonBackgroundColorHover, #5a6268);
 }
 </style>

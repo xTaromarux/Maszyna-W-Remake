@@ -11,6 +11,15 @@
         style="grid-area: wea"
         />
     </div>
+    <div class="busLabel busLabelUp">
+      <BusLabel
+        busName="A"
+        :busValue="busAValue"
+        :showInvisibleRegisters="showInvisibleRegisters"
+        :mobileView="!mobileView"
+        :formatNumber="formatNumber"
+      />
+    </div>
     <button
       @click="$emit('open')"
       class="mobile-memory-button"
@@ -58,18 +67,32 @@
         style="grid-area: wys"
         />
     </div> 
+    <div class="busLabel busLabelDown">
+      <BusLabel
+        busName="S"
+        :busValue="busSValue"
+        :showInvisibleRegisters="showInvisibleRegisters"
+        :mobileView="!mobileView"
+        :formatNumber="formatNumber"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import SignalButton from './SignalButton.vue';
 import ListLinesIcon from '@/assets/svg/ListLinesIcon.vue';
-
+import BusLabel from './BusLabel.vue'
 export default {
   name: 'MobileMemoryHeader',
-  components: { SignalButton, ListLinesIcon },
+  components: { SignalButton, ListLinesIcon, BusLabel },
   props: {
     signals: { type: Object, required: true },
+    mobileView: { type: Boolean, required: true },
+    busAValue: { type: Number, required: true },
+    busSValue: { type: Number, required: true },
+    showInvisibleRegisters: { type: Boolean, default: false },
+    formatNumber: { type: Function, required: true },
   },
   emits: ['open', 'clickItem'],
   methods: {
@@ -78,4 +101,24 @@ export default {
     },
   },
 };
-</script>
+</script>,
+
+<style scoped>
+  .busLabel{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    position: relative;
+    gap: 5px;
+  }
+
+  .busLabelUp{
+    padding-top: 4px;
+    align-items: top;
+  }
+
+  .busLabelDown{
+    padding-bottom: 4px;
+    align-items: end;
+  }
+</style>

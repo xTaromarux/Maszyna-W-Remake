@@ -557,6 +557,7 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
+  max-height: 35.8rem;
   transition:
     width 0.3s ease,
     height 0.3s ease,
@@ -601,6 +602,7 @@ watch(
   height: 100%;
   border: none;
   overflow: hidden;
+  max-height: 40rem;
 }
 
 .codemirror-container :deep(.cm-editor) {

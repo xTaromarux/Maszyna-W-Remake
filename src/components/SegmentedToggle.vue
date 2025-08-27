@@ -1,7 +1,7 @@
 <template>
   <div class="segmented" :style="rootStyle">
     <div class="track" role="tablist" :aria-label="ariaLabel">
-      <div class="thumb" aria-hidden="true"></div>
+      <div class="thumb" v-if="activeIndex >= 0" aria-hidden="true"></div>
       <button
         v-for="(opt, i) in options"
         :key="optKey(opt, i)"
@@ -40,9 +40,9 @@ const values = computed(() =>
 )
 
 const activeIndex = computed(() => {
-  const v = props.modelValue ?? values.value[0]
-  const idx = values.value.findIndex(x => x === v)
-  return idx < 0 ? 0 : idx
+  if (props.modelValue == null) return -1
+  const idx = values.value.findIndex(x => x === props.modelValue)
+  return idx
 })
 
 const rootStyle = computed(() => ({

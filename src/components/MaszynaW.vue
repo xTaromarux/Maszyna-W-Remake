@@ -16,6 +16,7 @@
       :signalStatus="signals.busA"
       :busValue="BusA"
       :busName="'A'"
+      :mobileView="isMobile"
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusA"
@@ -87,6 +88,10 @@
         @update:A="$emit('update:A', $event)"
         @update:S="$emit('update:S', $event)"
         @clickItem="name => $emit('clickItem', name)"
+        :mobileView="isMobile"
+        :busAValue="BusA"
+        :busSValue="BusS"
+        :showInvisibleRegisters="extras.showInvisibleRegisters"
       />
     </div>
 
@@ -94,6 +99,7 @@
       :signalStatus="signals.busS"
       :busValue="BusS"
       :busName="'S'"
+      :mobileView="isMobile"
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusS"

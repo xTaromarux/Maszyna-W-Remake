@@ -23,7 +23,6 @@
           ]"
           :model-value="lightMode"
           @update:model-value="$emit('update:lightMode', $event)"
-          class=""
         />
       </div>
 
@@ -102,15 +101,15 @@
 
       <div class="flexColumn">
         <div class="flexColumn button-column">
-          <button class="SvgAndTextButton compact-button action-button" id="resetValues" @click="$emit('resetValues')">
+          <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="resetValues" @click="$emit('resetValues')">
             <RefreshIcon />
             <span>Resetuj wartości rejestrów</span>
           </button>
-          <button class="SvgAndTextButton compact-button action-button" id="defaultSettings" @click="$emit('defaultSettings')">
+          <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="defaultSettings" @click="$emit('defaultSettings')">
             <RefreshIcon />
             <span>Przywróć domyślne ustawienia</span>
           </button>
-          <button class="SvgAndTextButton compact-button action-button" id="openCommandList" @click="$emit('open-command-list')">
+          <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="openCommandList" @click="$emit('open-command-list')">
             <CommandListIcon />
             <span>Lista rozkazów</span>
           </button>
@@ -230,26 +229,10 @@ export default {
   margin: 0;
 }
 
-.closeBtn {
-  background: none;
-  width: 50px;
-  border: none;
-  color: inherit;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  transition: opacity 0.2s;
-}
-
-.closeBtn:hover {
-  color: var(--primaryColor, #003c7d) !important;
-  opacity: 0.75;
-}
-
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
+  width: 70px;
   height: 34px
 }
 
@@ -279,23 +262,23 @@ export default {
 }
 
 input:checked+.slider {
-  background: #2196f3
+  background: #003c7d
 }
 
 input:focus+.slider {
-  box-shadow: 0 0 1px #2196f3
+  box-shadow: 0 0 1px #003c7d
 }
 
 input:checked+.slider:before {
-  transform: translateX(26px)
+  transform: translateX(36px)
 }
 
 .slider.round {
-  border-radius: 34px
+  border-radius: 0.25rem;
 }
 
 .slider.round:before {
-  border-radius: 50%
+  border-radius: 0.25rem;
 }
 
 .button-column {
@@ -443,32 +426,6 @@ input:checked+.slider:before {
 .SvgAndTextButton:active {
   background: var(--buttonActiveColor);
   transform: translateY(0)
-}
-
-.action-button {
-  background: #0066cc !important;
-  color: #fff !important;
-  border: 1px solid var(--panelOutlineColor) !important;
-  border-radius: var(--default-border-radius) !important
-}
-
-.action-button:hover {
-  background: #0099ff !important
-}
-
-.action-button:active {
-  background: #004c99 !important
-}
-
-.action-button svg {
-  color: #fff !important;
-  fill: #fff !important;
-  width: 1.5rem !important;
-  height: 1.5rem !important
-}
-
-.action-button span {
-  color: #fff !important
 }
 
 #settings .flexColumn {

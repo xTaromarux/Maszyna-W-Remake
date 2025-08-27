@@ -97,7 +97,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
-      @close="settingsOpen = false"
+      @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
       @update:codeBits="codeBits = $event"

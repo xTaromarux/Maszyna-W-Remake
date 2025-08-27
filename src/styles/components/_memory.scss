@@ -427,9 +427,11 @@
 .mobile-memory-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   height: 100%;
   gap: .5rem;
-  padding: .5rem .75rem;
+  padding: .5rem !important;
   border-radius: .5rem;
   border: 1px solid var(--panelOutlineColor, black);
   background: var(--panelBackgroundColor, black);

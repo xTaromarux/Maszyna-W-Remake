@@ -59,7 +59,7 @@ export default {
   gap: 8px;
   margin-top: 8px;
   padding: 8px;                    /* ciaśniej */
-  background-color: #d6d4d4;
+  background-color: #ccc;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.1);
   align-items: stretch;            /* karty równej wysokości w wierszu */
@@ -69,7 +69,7 @@ export default {
 .creatorItem {
   height: 100%;
   padding: 8px 10px;
-  background-color: #e4e2e2;
+  background-color: #fff;
   border-radius: 6px;
   font-size: .9em;
   text-align: center;

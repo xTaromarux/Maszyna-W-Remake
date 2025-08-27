@@ -5,8 +5,9 @@
 .layer {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 0.8rem;
 }
+
 #wLayout {
   display: grid;
   flex-wrap: wrap;
@@ -21,17 +22,18 @@
   position: relative;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1195px) {
   #wLayout {
     margin: 10px;
     padding: 5px;
     flex-wrap: nowrap;
+    gap: 0;
     grid-template-areas:
       'w w'
       'i p'
       'c c';
     grid-template-rows: auto auto auto auto;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
   }
   #wLayout > * {
     width: 100%;

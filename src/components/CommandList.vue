@@ -12,7 +12,7 @@
           v-for="(cmd, idx) in commandList"
           :key="idx"
           @click="editCommand(idx)"
-          class="command"
+          class="execution-btn execution-btn--run"
           :class="{ selected: selectedCommand === idx }"
         >
           <span>{{ cmd.name }}</span>
@@ -30,17 +30,9 @@
 
         <div class="actionButtons">
           <div class="top-actions" v-if="selectedCommand !== null">
-            <button @click="deleteCommand" title="Usuń rozkaz">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+            <button @click="deleteCommand" title="Usuń rozkaz" class="execution-btn execution-btn--run">
+              <!-- ikona kosza -->
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                 <path d="M10 11v6m4-6v6" />
@@ -48,14 +40,25 @@
               </svg>
               <span>Usuń</span>
             </button>
-            <div class="edit-toggle-wrapper">
-              <div class="toggleButtonDiv" :class="{ active: editCommandEnabled }" @click="editCommandEnabled = !editCommandEnabled">
-                <span>Edytuj</span>
-                <span>Zapisz</span>
-              </div>
-            </div>
-          </div>
 
+            <button
+              class="execution-btn execution-btn--run"
+              @click="onEdit"
+              :disabled="!canEdit || editCommandEnabled"
+              title="Edytuj treść rozkazu"
+            >
+              <span>Edytuj</span>
+            </button>
+
+            <button
+              class="execution-btn execution-btn--run"
+              @click="onSave"
+              :disabled="!editCommandEnabled"
+              title="Zapisz zmiany"
+            >
+              <span>Zapisz</span>
+            </button>
+          </div>
           <div class="commandInputSection">
             <div class="unifiedCommandInput">
               <input
@@ -68,20 +71,20 @@
               />
             </div>
             <div class="editingButtons" v-if="isEditingName">
-              <button @click="confirmNameEdit" title="Potwierdź zmianę nazwy" class="confirmButton">
+              <button @click="confirmNameEdit" title="Potwierdź zmianę nazwy" class="execution-btn execution-btn--run">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 <span>Potwierdź</span>
               </button>
-              <button @click="cancelNameEdit" title="Anuluj edycję" class="cancelButton">
+              <button @click="cancelNameEdit" title="Anuluj edycję" class="execution-btn execution-btn--run">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
                 <span>Anuluj</span>
               </button>
             </div>
-            <button v-else-if="matchingCommand && !isEditingName" @click="startNameEdit" title="Edytuj nazwę rozkazu">
+            <button v-else-if="matchingCommand && !isEditingName" @click="startNameEdit" title="Edytuj nazwę rozkazu" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -92,7 +95,7 @@
               </svg>
               <span>Edytuj</span>
             </button>
-            <button v-else @click="handleAddCommand" :disabled="!commandInputValue.trim()" title="Dodaj nowy rozkaz">
+            <button v-else @click="handleAddCommand" :disabled="!commandInputValue.trim()" title="Dodaj nowy rozkaz" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <g stroke-width="2" stroke-linecap="round">
                   <path d="M12 16V8m4 4H8" />
@@ -104,7 +107,7 @@
           </div>
 
           <div class="fileActions">
-            <button @click="loadCommandList" title="Wgraj listę rozkazów">
+            <button @click="loadCommandList" title="Wgraj listę rozkazów" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -115,7 +118,7 @@
               </svg>
               <span>Wgraj</span>
             </button>
-            <button @click="downloadCommandList" title="Pobierz listę rozkazów">
+            <button @click="downloadCommandList" title="Pobierz listę rozkazów" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -134,8 +137,11 @@
 </template>
 
 <script>
+import SegmentedToggle from './SegmentedToggle.vue'
+
 export default {
   name: 'CommandList',
+  components: {  SegmentedToggle },
   props: {
     visible: { type: Boolean, default: false },
     commandList: { type: Array, required: true },
@@ -165,6 +171,7 @@ export default {
   },
 
   computed: {
+    canEdit() { return this.selectedCommand !== null },
     commandInputPlaceholder() {
       if (this.isEditingName) {
         return `Edytuj nazwę z "${this.editingCommandOriginalName}"`;
@@ -294,6 +301,9 @@ export default {
     }
   },
   methods: {
+    onEdit() { this.editCommandEnabled = true },
+    onSave() { this.editCommandEnabled = false },
+    changeEditCommandEnabled(){ this.editCommandEnabled = !this.editCommandEnabled },
     validateDuplicateNames() {
       const names = this.localList.map((cmd) => cmd.name.trim()).filter((name) => name !== '');
       const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
@@ -583,13 +593,6 @@ body.darkMode #commandList {
   top: 0%;
 }
 
-.closeButton:hover {
-  color: var(--accentColor, #00aaff);
-  background: none;
-  border: none;
-  padding: 0.5rem;
-}
-
 #commandListTable {
   grid-area: list;
   display: flex;
@@ -605,41 +608,6 @@ body.darkMode #commandList {
   opacity: 0.7;
   margin-bottom: 0.5rem;
   padding: 0 0.5rem;
-}
-
-#commandListTable > button {
-  all: unset;
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  border-radius: 8px;
-  margin-bottom: 0.25rem;
-  transition: all 0.2s ease;
-  color: var(--fontColor, black);
-  border: 1px solid var(--panelOutlineColor, transparent);
-  background-color: var(--buttonBackgroundColor, white);
-}
-
-#commandListTable > button:not(:last-child) {
-  border-bottom: none;
-}
-
-#commandListTable > button:hover {
-  background-color: var(--buttonHoverColor, rgba(0, 170, 255, 0.1));
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-color: var(--accentColor, #00aaff);
-}
-
-#commandListTable > button.selected {
-  background-color: var(--accentColor, #00aaff);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 170, 255, 0.3);
-  border-color: var(--accentColor, #00aaff);
 }
 
 body.darkMode #commandListTable > button:hover {
@@ -680,12 +648,12 @@ body.darkMode #commandListTable > button.selected {
 }
 
 #commandDetails .roskazCode textarea {
+  margin: 5px;
   width: 100%;
   flex-grow: 1;
   min-height: 150px;
   resize: vertical;
   padding: 0.75rem;
-  border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
   color: var(--fontColor, black);
   border-radius: 4px;
@@ -697,12 +665,12 @@ body.darkMode #commandListTable > button.selected {
 
 #commandDetails .roskazCode textarea:focus {
   outline: none;
-  border-color: var(--accentColor, #00aaff);
-  box-shadow: 0 0 0 2px rgba(0, 170, 255, 0.2);
+  border-color: #003c7d;
+  box-shadow: 0 0 0 2px #003c7d;
 }
 
 body.darkMode #commandDetails .roskazCode textarea:focus {
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
+  box-shadow: 0 0 0 2px #003c7d;
 }
 
 #commandDetails .roskazCode textarea:disabled {
@@ -728,39 +696,14 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   gap: 1rem;
 }
 
-.top-actions > button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--panelOutlineColor, black);
-  border-radius: 4px;
-  background: var(--buttonBackgroundColor, white);
-  color: var(--buttonTextColor, black);
-  cursor: pointer;
-  transition: all 0.2s ease;
+.top-actions > button{
+  height: 20px ;
 }
 
-.top-actions > button:hover {
+.top-actions > button:first-child:hover {
   background: #ff4444;
   color: white;
   border-color: #ff4444;
-}
-
-.edit-toggle-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.edit-toggle-wrapper .toggleButtonDiv {
-  min-width: 120px;
-  border: 1px solid var(--panelOutlineColor, black);
-}
-
-.edit-toggle-wrapper .toggleButtonDiv span {
-  min-width: 60px;
-  font-size: 0.85rem;
 }
 
 .commandInputSection {
@@ -781,36 +724,10 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   gap: 0.5rem;
 }
 
-.confirmButton,
-.cancelButton {
-  padding: 0.5rem 1rem;
-}
-
-.confirmButton {
-  background: #28a745 !important;
-  color: white !important;
-  border-color: #28a745 !important;
-}
-
-.confirmButton:hover {
-  background: #218838 !important;
-  border-color: #1e7e34 !important;
-}
-
-.cancelButton {
-  background: #dc3545 !important;
-  color: white !important;
-  border-color: #dc3545 !important;
-}
-
-.cancelButton:hover {
-  background: #c82333 !important;
-  border-color: #bd2130 !important;
-}
-
 .commandInput {
   flex: 1;
-  padding: 0.75rem;
+  margin-left: 5px;
+  padding: 1rem;
   border: 1px solid var(--panelOutlineColor, black);
   border-radius: 4px;
   background-color: var(--panelBackgroundColor, white);
@@ -821,8 +738,8 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
 
 .commandInput:focus {
   outline: none;
-  border-color: var(--accentColor, #00aaff);
-  box-shadow: 0 0 0 2px rgba(0, 170, 255, 0.2);
+  border-color: #003c7d;
+  box-shadow: 0 0 0 2px #003c7d;
 }
 
 body.darkMode .commandInput:focus {
@@ -835,37 +752,9 @@ body.darkMode .commandInput:focus {
   gap: 1rem;
 }
 
-.commandInputSection button,
-.fileActions button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border: 1px solid var(--panelOutlineColor, black);
-  border-radius: var(--default-border-radius, 0.25rem);
-  background: var(--buttonBackgroundColor, white);
-  color: var(--buttonTextColor, black);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  font-size: 1rem;
-  min-width: 120px;
-  flex-shrink: 0;
-}
-
 .actionButtons button svg {
   width: 20px;
   height: 20px;
-}
-
-.commandInputSection button:hover,
-.fileActions button:hover {
-  background: var(--accentColor, #00aaff);
-  color: white;
-  border-color: var(--accentColor, #00aaff);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .actionButtons button:disabled {
@@ -877,6 +766,7 @@ body.darkMode .commandInput:focus {
   transform: none;
   box-shadow: none;
 }
+
 body.darkMode .commandInputSection button:hover,
 body.darkMode .fileActions button:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);

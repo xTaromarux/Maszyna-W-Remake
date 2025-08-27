@@ -149,11 +149,31 @@ function uncompileProgram() {
   gap: 1rem;
   justify-content: stretch;
   align-items: stretch;
+  max-height: 40rem;
 }
 
-@media (min-width: 1400px) {
+@media (min-width: 1380px) {
   #program {
     width: 20rem;
+  }
+}
+
+@media (min-width: 1255px) and (max-width: 1380px) {
+  #program {
+    width: 12rem;
+  }
+}
+
+@media (min-width: 1165px) and (max-width: 1255px) {
+  #program {
+    width: 8rem;
+  }
+}
+
+@media (max-width: 1195px) {
+  #program {
+    margin-left: 20px;
+    width: 30rem;
   }
 }
 

@@ -88,7 +88,15 @@ watch(
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0;
+  height: 35.8rem;
+  max-height: 35.8rem;
+  min-height: 35.8rem;
+}
+
+@media (min-width: 675px) and (max-width: 1195px) {
+  .programEditor {
+    width: 40rem;
+  }
 }
 
 .flexRow {
@@ -115,7 +123,6 @@ watch(
   padding: 0.5rem;
   flex-grow: 1;
   margin-top: 10px;
-  max-height: 400px;
   overflow-y: auto;
   border: 4px solid #003c7d;
   border-radius: var(--default-border-radius, 0.25rem);

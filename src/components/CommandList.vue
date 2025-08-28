@@ -566,6 +566,17 @@ export default {
   height: 90vh;
 }
 
+@media (max-width: 675px) {
+  #commandList {
+    grid-template-areas:
+    'header header'
+    'right-panel right-panel'
+    'list list';
+    grid-template-rows: auto auto auto;
+    grid-template-columns: autos;
+  }
+}
+
 body.darkMode #commandList {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
 }

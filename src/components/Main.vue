@@ -1565,6 +1565,7 @@ export default {
     },
 
     openCommandList(){
+      this.closePopups('settingsOpen');
       this.commandListOpen = true;
     },
 

@@ -115,8 +115,8 @@
           </button>
         </div>
       </div>
-      <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
-      <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
+      <PeopleSection :isMobile="isMobile" title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
+      <PeopleSection :isMobile="isMobile" title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
     </div>
   </div>
 </template>

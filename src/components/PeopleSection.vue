@@ -1,5 +1,5 @@
 <template>
-  <section class="people-section">
+  <section v-if="isMobile" class="people-section">
     <header class="creatorsHeader">
       <h1>{{ title }}</h1>
     </header>
@@ -36,6 +36,7 @@ export default {
   components: { LinkedInIcon, GitHubIcon },
   props: {
     title: { type: String, required: true },
+    isMobile: { type: Boolean, required: false, default: true },
     people: { type: Array, default: () => [] },
     showGithub: { type: Boolean, default: true },
     columns: { type: Number, default: 2 },

@@ -115,6 +115,8 @@
           </button>
         </div>
       </div>
+      <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
+      <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
     </div>
   </div>
 </template>
@@ -125,14 +127,18 @@ import MoonIcon from '@/assets/svg/MoonIcon.vue'
 import RefreshIcon from '@/assets/svg/RefreshIcon.vue'
 import CommandListIcon from '@/assets/svg/CommandListIcon.vue'
 import SegmentedToggle from './SegmentedToggle.vue'
+import PeopleSection from './PeopleSection.vue'
 
 export default {
   name: 'SettingsPanel',
-  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle },
+  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle, PeopleSection },
   props: {
     isAnimated: { type: Boolean, default: false },
     lightMode: { type: Boolean, required: true },
+    isMobile: { type: Boolean, required: true },
     numberFormat: { type: String, required: true },
+    creators: { type: Array, default: () => [] },
+    caregivers: { type: Array, default: () => [] },
     codeBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
@@ -431,7 +437,8 @@ input:checked+.slider:before {
 #settings .flexColumn {
   display: flex;
   flex-direction: column;
-  gap: .5rem
+  gap: .5rem;
+  margin-bottom: 20px;
 }
 
 #settings input[type="number"] {

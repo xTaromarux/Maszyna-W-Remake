@@ -5,6 +5,7 @@
     @click.self="startClose"
   >
     <CreatorsPanel
+      :is-mobile="isMobile"
       :is-animated="isAnimated"
       :creators="creators"
       :caregivers="caregivers"
@@ -12,6 +13,9 @@
 
     <SettingsPanel
       :is-animated="isAnimated"
+      :is-mobile="isMobile"
+      :creators="creators"
+      :caregivers="caregivers"
       :light-mode="lightMode"
       :number-format="numberFormat"
       :code-bits="codeBits"
@@ -42,6 +46,7 @@ export default {
   components: { SettingsPanel, CreatorsPanel },
   props: {
     settingsOpen: { type: Boolean, default: false },
+    isMobile: { type: Boolean, required: true },
     lightMode: { type: Boolean, required: true },
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },

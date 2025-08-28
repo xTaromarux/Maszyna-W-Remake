@@ -565,6 +565,19 @@ watch(
     left 0.3s ease;
 }
 
+
+@media (min-width: 675px) and (max-width: 1195px) {
+  .editor-wrapper {
+    width: 40rem;
+  }
+}
+
+@media (max-width: 675px) {
+  .programEditor {
+    width: 100%;
+  }
+}
+
 .fullscreen-button {
   position: absolute;
   top: 10px;

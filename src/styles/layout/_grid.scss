@@ -8,6 +8,11 @@
   gap: 0.8rem;
 }
 
+.layerCenter{
+  justify-content: center;
+  align-items: center;
+}
+
 #wLayout {
   display: grid;
   flex-wrap: wrap;
@@ -21,42 +26,9 @@
   grid-template-columns: 2fr 0.73fr auto;
   position: relative;
 }
-
-@media (max-width: 1195px) {
-  #wLayout {
-    margin: 10px;
-    padding: 5px;
-    flex-wrap: nowrap;
-    gap: 0;
-    grid-template-areas:
-      'w w'
-      'i p'
-      'c c';
-    grid-template-rows: auto auto auto auto;
-    grid-template-columns: 1fr auto;
-  }
-  #wLayout > * {
-    width: 100%;
-  }
-  #wLayout > #console {
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-    width: 100vw;
-    max-width: none;
-  }
-}
 #wLayout > #console {
   grid-area: c;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  width: 100vw;
-  max-width: none;
+  width: 100%;
 }
 #wLayout > #W {
   grid-area: w;
@@ -74,4 +46,27 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+@media (max-width: 1195px) {
+  #wLayout {
+    margin: 10px;
+    padding: 5px;
+    flex-wrap: nowrap;
+    gap: 0;
+    grid-template-areas:
+      'w w'
+      'i i'
+      'p p'
+      'c c';
+    grid-template-rows: auto auto auto auto;
+    grid-template-columns: 1fr auto;
+  }
+  #wLayout > * {
+    width: 100%;
+  }
+  #wLayout > #inputs {
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
 }

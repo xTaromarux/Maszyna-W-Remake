@@ -344,7 +344,7 @@
   z-index: 999;
 }
 
-.mobile-modal-content {
+.mobileModalContent {
   position: relative;
   width: 90%;
   max-width: 600px;
@@ -353,26 +353,13 @@
   background-color: var(--panelBackgroundColor, black);
   border: 1px solid var(--panelOutlineColor, black);
   border-radius: 0.5rem;
-  padding: 4rem;
+  padding: 4rem 2rem;
 }
 
-.close-button {
+.closeButtonModal {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: none;
-  width: 50px;
-  border: none;
-  color: inherit;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  transition: opacity 0.2s;
-}
-
-/* (opcjonalnie można doprecyzować, jak MemoryContent ma się zachowywać w modalu na wąskim ekranie) */
-@media screen and (max-width: 640px) {
-  /* ewentualne dodatkowe style, jeśli potrzeba przeskalować #memory w mob. modalu */
 }
 
 .fade-enter-active,

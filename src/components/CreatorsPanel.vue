@@ -1,12 +1,13 @@
 <template>
   <div
+    v-if="!isMobile"
     id="creators"
     :class="{ 'slide-in-left': isAnimated, 'slide-out-left': !isAnimated }"
     @click.stop
     aria-label="Twórcy projektu"
   >
-  <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
-  <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
+    <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
+    <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
   </div>
 </template>
 
@@ -17,6 +18,7 @@ export default {
   name: 'CreatorsPanel',
   components: { PeopleSection },
   props: {
+    isMobile: { type: Boolean, default: false },
     isAnimated: { type: Boolean, default: false },
     creators: { type: Array, default: () => [] },
     caregivers: { type: Array, default: () => [] },

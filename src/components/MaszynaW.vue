@@ -41,7 +41,7 @@
           :ACC="ACC"
           :JAML="JAML"
           :formatNumber="formatNumber"
-          :number-format="registerFormats.ACC"
+          :numberFormat="registerFormats.ACC"
           :acc-format="registerFormats.ACC"
           @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
           :jaml-format="registerFormats.JAML"
@@ -106,7 +106,7 @@
       @update:number-format="val => $emit('update:number-format', { field: 'BusS', value: val })"
     />
 
-    <div id="layer3" class="layer">
+    <div id="layer3" class="layer layerCenter">
       <XRegisterSection
         :visible="extras.xRegister"
         :X="X"
@@ -156,6 +156,7 @@
           :extras="extras"
           :ACC="ACC"
           :JAML="JAML"
+          :numberFormat="registerFormats.ACC"
           :formatNumber="formatNumber"
           :acc-format="registerFormats.ACC"
           @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"

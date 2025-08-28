@@ -20,7 +20,7 @@
           @click.self="closeMobileModal"
         >
           <transition name="scale">
-            <div class="mobile-modal-content" role="dialog" aria-modal="true">
+            <div class="mobileModalContent" role="dialog" aria-modal="true">
               <MemoryContent
                 :A="A"
                 :S="S"
@@ -37,7 +37,9 @@
                 @update:S="$emit('update:S', $event)"
                 @clickItem="handleClick"
               />
-              <button @click="closeMobileModal" class="close-button" aria-label="Zamknij modal">×</button>
+              <button class="closeBtn closeButtonModal" @click="closeMobileModal" aria-label="Zamknij modal">
+                &times;
+              </button>
             </div>
           </transition>
         </div>

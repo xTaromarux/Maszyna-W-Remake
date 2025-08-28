@@ -44,13 +44,14 @@ import { generateMicroProgram } from '@/WLAN/microGenerator';
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
   commandList: { type: Array, required: true },
+  program: { type: String, required: true },
 });
 
 // Events to parent: update assembled code, log messages, initialize memory
 const emit = defineEmits(['update:code', 'log', 'initMemory']);
 
 // Local state
-const programLocal = ref('');
+const programLocal = ref(props.program);
 const programCompiled = ref(false);
 
 // Compile high-level commands into assembler code using WLAN system
@@ -149,6 +150,7 @@ function uncompileProgram() {
   gap: 1rem;
   justify-content: stretch;
   align-items: stretch;
+  min-height: 40rem;
   max-height: 40rem;
 }
 
@@ -170,10 +172,18 @@ function uncompileProgram() {
   }
 }
 
-@media (max-width: 1195px) {
+@media (min-width: 675px) and (max-width: 1195px) {
   #program {
-    margin-left: 20px;
-    width: 30rem;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+  }
+}
+
+@media (max-width: 675px) {
+  #program {
+    margin: 20px 0;
   }
 }
 

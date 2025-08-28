@@ -64,6 +64,7 @@
     <ProgramSection
       :manualMode="manualMode"
       :commandList="commandList"
+      :program="program"
       @update:code="handleProgramSectionCompile($event)"
       @log="addLog($event.message, $event.class, $event.error)"
       @initMemory="applyInitMemory($event)"
@@ -91,6 +92,7 @@
 
     <SettingsOverlay
       :settings-open="settingsOpen"
+      :is-mobile="isMobile"
       :light-mode="lightMode"
       :number-format="numberFormat"
       :code-bits="codeBits"
@@ -183,6 +185,7 @@ export default {
 
   data() {
     return {
+      isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
       prevSignals: {},
       prevMem: [],
@@ -203,7 +206,8 @@ export default {
       BusA: 0,
       BusS: 0,
 
-      code: 'czyt wys wei il;\nwyl wea;',
+      code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
+      program: 'DOD',
       compiledCode: [],
       // Structured micro-program (preferred execution format)
       compiledProgram: [],
@@ -703,7 +707,7 @@ export default {
         this.BusS = 0;
 
         // Reset code to default
-        this.code = 'czyt wys wei il;\nwyl wea;';
+        this.code = 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;';
         this.compiledCode = [];
         this.activeLine = 0;
 

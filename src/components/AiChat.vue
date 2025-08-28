@@ -201,7 +201,6 @@ watch(
 )
 
 
-const panelWidth = ref(500)       // startowa szerokość
 let startX = 0
 let startWidth = 0
 

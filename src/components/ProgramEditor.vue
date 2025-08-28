@@ -67,7 +67,6 @@ const emit = defineEmits(['update:code', 'setManualMode'])
 const codeLocal = ref(props.code)
 
 watch(codeLocal, (v) => {
-  console.log('Updating code:', v)
   emit('update:code', v)
 })
 
@@ -96,6 +95,12 @@ watch(
 @media (min-width: 675px) and (max-width: 1195px) {
   .programEditor {
     width: 40rem;
+  }
+}
+
+@media (max-width: 675px) {
+  .programEditor {
+    width: 100%;
   }
 }
 

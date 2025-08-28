@@ -25,6 +25,15 @@
   font-family: "Segoe UI", Tahoma, sans-serif;
   z-index: 100;
 }
+
+@media screen and (max-width: 500px) {
+  #aiChat.chatPanel {
+    width: 90%;
+    min-width: 90%;
+    max-width: 90%;
+  }
+}
+
 .chatPanel.show {
   animation: slideIn 0.5s ease-out forwards;
 }

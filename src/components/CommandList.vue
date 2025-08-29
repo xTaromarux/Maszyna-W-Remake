@@ -634,7 +634,6 @@ body.darkMode #commandListTable > button.selected {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  overflow-y: auto;
   padding-right: 0.5rem;
   min-width: 0;
 }
@@ -663,7 +662,7 @@ body.darkMode #commandListTable > button.selected {
   width: 100%;
   flex-grow: 1;
   min-height: 150px;
-  resize: vertical;
+  resize: none;
   padding: 0.75rem;
   background-color: var(--panelBackgroundColor, white);
   color: var(--fontColor, black);
@@ -700,11 +699,19 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   gap: 1rem;
 }
 
+
 .top-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
+}
+
+@media (max-width: 675px) {
+  .top-actions {
+    justify-content: center;
+    gap: 0.5rem;
+  }
 }
 
 .top-actions > button{
@@ -745,6 +752,14 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   color: var(--fontColor, black);
   font-size: 14px;
   transition: all 0.2s ease;
+}
+
+@media (max-width: 675px) {
+  .commandInputSection {
+    gap: 1rem;
+    justify-content: end;
+    flex-wrap: wrap;
+  }
 }
 
 .commandInput:focus {

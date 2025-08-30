@@ -1,26 +1,25 @@
 @top Program { statement* }
 
 @tokens {
+  // mnemonic rozkazu
   instrWord { @asciiLetter (@asciiLetter | @digit | "_")* }
-  
-  instruction { instrWord argument* }
 
-  "IF" "THEN" "ELSE"
-  
-  number { "-"? ( "0x" $hex+ | "0b" $[01]+ | $[0-9]+ ) }
-  
+  // słowa kluczowe IF/THEN/ELSE jako osobne tokeny
+  IF { "IF" }
+  THEN { "THEN" }
+  ELSE { "ELSE" }
+
+  number   { @digit+ }
   labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
-  
   labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
-  
   identifier { @asciiLetter (@asciiLetter | @digit | "_")* }
-  
+
   ";" "," "."
-  
-  @precedence { "IF", "THEN", "ELSE", Keyword, labelDef, identifier }
-  
+
+  // UWAGA: instrWord przed identifier, by rozstrzygać konflikt na korzyść mnemoników
+  @precedence { IF, THEN, ELSE, instrWord, labelDef, identifier }
+
   space { @whitespace+ }
-  
   LineComment { "//" ![\n]* }
 }
 
@@ -34,7 +33,7 @@ statement {
 }
 
 instruction {
-  Keyword argument*
+  instrWord argument*
 }
 
 directive {
@@ -42,8 +41,8 @@ directive {
 }
 
 conditionalStatement {
-  "IF" expression "THEN" statement !else |
-  "IF" expression "THEN" statement "ELSE" statement
+  IF expression THEN statement !else |
+  IF expression THEN statement ELSE statement
 }
 
 @precedence { else }
@@ -62,4 +61,4 @@ argument {
 
 @external propSource macroWHighlight from "./macroW.highlight.js"
 
-@detectDelim 
+@detectDelim

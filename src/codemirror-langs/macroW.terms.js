@@ -2,4 +2,6 @@
 export const
   LineComment = 1,
   Program = 2,
-  Keyword = 3
+  IF = 4,
+  THEN = 5,
+  ELSE = 6

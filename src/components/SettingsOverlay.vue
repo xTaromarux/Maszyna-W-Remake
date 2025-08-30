@@ -23,6 +23,8 @@
       :odd-delay="oddDelay"
       :extras="extras"
       :platform="platform"
+      :memory-addres-bits="memoryAddresBits" 
+      :autocomplete-enabled="autocompleteEnabled"  
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
@@ -33,6 +35,8 @@
       @resetValues="$emit('resetValues')"
       @defaultSettings="$emit('defaultSettings')"
       @open-command-list="$emit('open-command-list')"
+      @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
+      @update:memoryAddresBits="$emit('update:memoryAddresBits', $event)"
     />
   </div>
 </template>
@@ -50,6 +54,8 @@ export default {
     lightMode: { type: Boolean, required: true },
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },
+    autocompleteEnabled: { type: Boolean, default: true },
+    memoryAddresBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
     extras: {
@@ -94,6 +100,8 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
+    'update:memoryAddresBits',
+    'update:autocompleteEnabled',
   ],
   data() {
     return {

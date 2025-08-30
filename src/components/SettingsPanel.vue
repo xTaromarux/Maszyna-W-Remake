@@ -72,6 +72,21 @@
       </div>
 
       <div class="flexColumn">
+        <label for="memoryAddresBits">Bity pamięci (RAM):</label>
+        <input
+          id="memoryAddresBits"
+          type="number"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          :value="memoryAddresBits"
+          min="1"
+          max="10"
+          @input="updateNumber('memoryAddresBits', $event.target.value)"
+        />
+        <p>Rozmiar pamięci = 2^bity komórek.</p>
+      </div>
+
+      <div class="flexColumn">
         <label for="oddDelay">Opóźnienie mikro-kroku (ms):</label>
         <input
           id="oddDelay"
@@ -98,6 +113,21 @@
           </div>
         </template>
       </div>
+
+     <div class="flexColumn">
+       <label>Edytor:</label>
+       <div class="module-toggle-wrapper">
+         <span class="module-label">Auto-uzupełnianie (podpowiedzi)</span>
+         <label class="switch">
+           <input
+             type="checkbox"
+             :checked="autocompleteEnabled"
+             @change="$emit('update:autocompleteEnabled', $event.target.checked)"
+           />
+           <span class="slider round"></span>
+         </label>
+       </div>
+     </div>
 
       <div class="flexColumn">
         <div class="flexColumn button-column">
@@ -144,6 +174,8 @@ export default {
     oddDelay: { type: Number, required: true },
     extras: { type: Object, required: true },
     platform: { type: String, default: '' },
+    autocompleteEnabled: { type: Boolean, default: true },
+    memoryAddresBits: { type: Number, required: true },
   },
   emits: [
     'close',
@@ -156,6 +188,8 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
+    'update:memoryAddresBits',
+    'update:autocompleteEnabled',
   ],
   computed: {
     extrasLabels() {
@@ -176,6 +210,7 @@ export default {
       const rules = {
         codeBits: { min: 1, max: 16 },
         addresBits: { min: 1, max: 32 },
+        memoryAddresBits: { min: 1, max: 10 }, // <--- DODANE (np. do 1024 komórek)
         oddDelay: { min: 0, max: 10000 },
       }[key]
       if (!rules) { if (n >= 0) this.$emit(`update:${key}`, n); return }

@@ -65,6 +65,7 @@
       :manualMode="manualMode"
       :commandList="commandList"
       :program="program"
+      :autocompleteEnabled="autocompleteEnabled"
       @update:code="handleProgramSectionCompile($event)"
       @log="addLog($event.message, $event.class, $event.error)"
       @initMemory="applyInitMemory($event)"
@@ -99,6 +100,8 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
+      :autocomplete-enabled="autocompleteEnabled"
+      :memory-addres-bits="memoryAddresBits" 
       @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
@@ -109,6 +112,8 @@
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
+      @update:memoryAddresBits="memoryAddresBits = $event"
+      @update:autocompleteEnabled="autocompleteEnabled = $event"
     />
 
     <CommandList
@@ -185,6 +190,7 @@ export default {
 
   data() {
     return {
+      autocompleteEnabled: true,
       isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
       prevSignals: {},
@@ -205,7 +211,11 @@ export default {
       S: 0,
       BusA: 0,
       BusS: 0,
-
+      WS: 0,
+      DEV_READY: 0,
+      DEV_IN: 0,
+      DEV_OUT: 0, 
+      
       code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
       program: 'DOD',
       compiledCode: [],
@@ -258,6 +268,14 @@ export default {
           'przp',
           'wyak',
           'stop',
+          'wyws',
+          'iws',
+          'dws',
+          'wyls',
+          'wyg',
+          'werb',
+          'wyrb',
+          'start',
         ],
         busConnectors: ['as', 'sa'],
         dl: ['dl'],
@@ -320,6 +338,15 @@ export default {
         wey: false,
 
         stop: false,
+
+        wyws: false, 
+        iws: false,
+        dws: false,
+        wyls: false,
+        wyg: false,
+        werb: false,
+        wyrb: false,
+        start: false,
       },
       extras: {
         xRegister: false,
@@ -346,6 +373,9 @@ export default {
     };
   },
   methods: {
+    to8(v) { return v & 0xFF; },
+    addrMask() { return (1 << this.memoryAddresBits) - 1; },
+
     handleProgramSectionCompile(payload) {
       // Accept both legacy string and structured payload from ProgramSection
       if (typeof payload === 'string') {
@@ -468,10 +498,13 @@ export default {
       ];
 
       // Sygnały używające magistrali A
-      const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa'];
+      const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa', 'wyws'];
 
       // Sygnały używające magistrali S
-      const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa'];
+      const busSSignals = [
+        'wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa',
+        'wyls', 'wyg', 'wyrb'
+      ];
 
       // One JAML Operation at a Time Group:
       const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
@@ -680,6 +713,7 @@ export default {
           'extras',
           'lightMode',
           'registerFormats',
+          'autocompleteEnabled',
         ];
 
         settingsToRestore.forEach((setting) => {
@@ -780,7 +814,7 @@ export default {
       return formatters[this.numberFormat]?.() ?? `EE${number}`;
     },
     decToCommand(dec) {
-      return this.commandList[dec >> this.memoryAddresBits];
+      return this.commandList[dec >> this.addresBits];
     },
     decToArgument(dec) {
       return dec & ((1 << this.memoryAddresBits) - 1);
@@ -859,7 +893,8 @@ export default {
           const kw = token.toUpperCase();
           // temp solution, for now will do
           // TODO: change to something more robust in the future
-          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC' || kw === 'Z' || kw === 'M') continue;
+          const control = new Set(['IF','THEN','ELSE','KONIEC','Z','N','M','ZERO','NEG']);
+          if (control.has(kw)) continue;          
           if (!signalslist.has(token)) {
             this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
             return;
@@ -869,36 +904,72 @@ export default {
 
       const program = [];
       let pc = 0;
+
+      // zbierz etykiety -> pc po zbudowaniu programu
+      const labelsOfEntry = []; // parallel array do program: labels z tej linii
+      const pendingJumps = [];  // wpisy CJUMP do późniejszej rezolucji
+
       for (const line of rawLines) {
         const parts = line.split(/\s+/).filter(Boolean);
         if (parts.length === 0) continue;
 
-        // strip labels
+        // 1) IF <flag> THEN @t [ELSE @f]
+        if (/^IF$/i.test(parts[0])) {
+          const flag = (parts[1] || '').toUpperCase();    // 'Z' | 'N' | 'M'...
+          const thenIdx = parts.findIndex(t => /^THEN$/i.test(t));
+          const elseIdx = parts.findIndex(t => /^ELSE$/i.test(t));
+          const tTok = thenIdx >= 0 ? parts[thenIdx + 1] : null;
+          const fTok = elseIdx >= 0 ? parts[elseIdx + 1] : null;
+          const trueLabel  = tTok ? String(tTok).replace(/^@/, '') : null;
+          const falseLabel = fTok ? String(fTok).replace(/^@/, '') : null;
+
+          const entry = {
+            pc,
+            asmLine: line,
+            phases: [ {} ],                 // brak sygnałów – to tylko decyzja skoku
+            meta: { kind: 'CJUMP', flag, trueLabel, falseLabel }
+          };
+          program.push(entry);
+          labelsOfEntry.push([]); // ta linia sama nie definiuje etykiet
+          pc += 1;
+          continue;
+        }
+
+        // 2) Normalna linia mikro (opcjonalne etykiety na początku)
         const labels = [];
         while (parts[0] && parts[0].startsWith('@')) {
           labels.push(parts.shift().slice(1));
         }
 
-        // treat remaining tokens as a single phase (legacy micro input)
         const phase = {};
-        for (const sig of parts) {
-          const kw = sig.toUpperCase();
+        for (const tok of parts) {
+          const kw = tok.toUpperCase();
           if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') break;
-          phase[sig] = true;
+          phase[tok] = true;
         }
 
-        const entry = {
-          pc,
-          asmLine: '(micro)',
-          phases: [phase],
-          meta: { kind: 'NONE', labels },
-        };
+        const entry = { pc, asmLine: '(micro)', phases: [phase], meta: { kind: 'NONE' } };
         program.push(entry);
+        labelsOfEntry.push(labels);
         pc += 1;
       }
 
+      // 3) Rezolucja etykiet dla CJUMP
+      const labelToPc = new Map();
+      for (let i = 0; i < program.length; i++) {
+        for (const L of labelsOfEntry[i]) labelToPc.set(L.toLowerCase(), program[i].pc);
+      }
+      for (const entry of program) {
+        if (entry.meta?.kind === 'CJUMP') {
+          const t = entry.meta.trueLabel  ? labelToPc.get(entry.meta.trueLabel.toLowerCase())  : undefined;
+          const f = entry.meta.falseLabel ? labelToPc.get(entry.meta.falseLabel.toLowerCase()) : undefined;
+          entry.meta.trueTarget  = typeof t === 'number' ? t : entry.pc + 1;
+          entry.meta.falseTarget = typeof f === 'number' ? f : entry.pc + 1;
+        }
+      }
+
       this.compiledProgram = program;
-      this.compiledCode = rawLines; // keep for display/legacy
+      this.compiledCode = rawLines;
       this.codeCompiled = true;
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
@@ -1100,6 +1171,10 @@ export default {
       if (this.nextLine.has('wyak')) this.wyak();
       if (this.nextLine.has('wyx')) this.wyx();
       if (this.nextLine.has('wyy')) this.wyy();
+      if (this.nextLine.has('wyws')) this.wyws();
+      if (this.nextLine.has('wyls')) this.wyls();
+      if (this.nextLine.has('wyg'))  this.wyg();
+      if (this.nextLine.has('wyrb')) this.wyrb();
 
       if (this.nextLine.has('sa')) this.sa();
       if (this.nextLine.has('as')) this.as();
@@ -1133,6 +1208,10 @@ export default {
       if (this.nextLine.has('il')) this.il();
       if (this.nextLine.has('dl')) this.dl();
 
+      if (this.nextLine.has('iws'))  this.iws();
+      if (this.nextLine.has('dws'))  this.dws();
+      if (this.nextLine.has('werb')) this.werb();
+      if (this.nextLine.has('start')) this.start();
       this.nextLine.clear();
     },
 
@@ -1150,24 +1229,24 @@ export default {
     evaluateFlag(flag) {
       if (!flag) return false;
       const f = String(flag).toUpperCase();
+      const acc8 = this.ACC & 0xFF;
+      const SIGN = 0x80;
+
       switch (f) {
-        case 'Z':
+        case 'ZAK':
         case 'ZERO':
-          return this.ACC === 0;
-        case 'NZ':
-        case 'NZERO':
-          return this.ACC !== 0;
+        case 'Z':   return acc8 === 0;
         case 'NEG':
         case 'N':
-        case 'M':
-          return this.ACC < 0;
+        case 'M':   return (acc8 & SIGN) !== 0;
+        case 'NZ':
+        case 'NZERO': return acc8 !== 0;
         case 'POS':
-        case 'P':
-          return this.ACC >= 0;
-        default:
-          return false;
+        case 'P':   return (acc8 & SIGN) === 0;
+        default:    return false;
       }
     },
+
     runCode() {
       this.manualMode = false;
       this.clearActiveTimeouts();
@@ -1190,277 +1269,213 @@ export default {
     },
 
     /* COMMANDS */
-
     il() {
       this.signals.il = true;
       this.programCounter++;
-      const timeoutId = setTimeout(() => {
-        this.signals.il = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.il = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dl() {
       this.signals.dl = true;
       this.programCounter--;
-      const timeoutId = setTimeout(() => {
-        this.signals.dl = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.dl = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     wyl() {
       this.signals.wyl = true;
       this.signals.busA = true;
       this.BusA = this.programCounter;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyl = false;
-        this.signals.busA = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wyl = false; this.signals.busA = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     wel() {
       this.signals.wel = true;
       this.signals.busA = true;
       this.programCounter = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.wel = false;
-        this.signals.busA = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wel = false; this.signals.busA = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     wyad() {
       this.signals.wyad = true;
       this.signals.busA = true;
-      this.BusA = this.I;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyad = false;
-        this.signals.busA = false;
-      }, this.oddDelay);
+      this.BusA = this.I; // adres – bez maski 8-bit
+      const timeoutId = setTimeout(() => { this.signals.wyad = false; this.signals.busA = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     wei() {
       this.signals.wei = true;
       this.signals.busS = true;
-      this.I = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.wei = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      const mask = (1 << this.addresBits) - 1;
+      this.I = this.BusS & mask; // ładowanie argumentu (adresu)
+      const timeoutId = setTimeout(() => { this.signals.wei = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
+
     iak() {
       this.signals.iak = true;
-      this.ACC++;
-      const timeoutId = setTimeout(() => {
-        this.signals.iak = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.ACC + 1);
+      const timeoutId = setTimeout(() => { this.signals.iak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dak() {
       this.signals.dak = true;
-      this.ACC--;
-      const timeoutId = setTimeout(() => {
-        this.signals.dak = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.ACC - 1);
+      const timeoutId = setTimeout(() => { this.signals.dak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    weak() {
+
+    weak() { // JAML -> ACC (8-bit, U2)
       this.signals.weak = true;
-      this.ACC = this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.weak = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.weak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    weja() {
+    weja() { // BusS -> JAML (8-bit)
       this.signals.weja = true;
       this.signals.busS = true;
-      this.JAML = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.weja = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.JAML = this.to8(this.BusS);
+      const timeoutId = setTimeout(() => { this.signals.weja = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wyak() {
+    wyak() { // ACC -> BusS (8-bit)
       this.signals.wyak = true;
       this.signals.busS = true;
-      this.BusS = this.ACC;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyak = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.BusS = this.to8(this.ACC);
+      const timeoutId = setTimeout(() => { this.signals.wyak = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    dod() {
+
+    dod() { // JAML = JAML + ACC (8-bit)
       this.signals.dod = true;
-      this.JAML += this.ACC;
-      const timeoutId = setTimeout(() => {
-        this.signals.dod = false;
-      }, this.oddDelay);
+      this.JAML = this.to8(this.JAML + this.ACC);
+      const timeoutId = setTimeout(() => { this.signals.dod = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     ode() {
       this.signals.ode = true;
-      this.JAML -= this.ACC;
-      const timeoutId = setTimeout(() => {
-        this.signals.ode = false;
-      }, this.oddDelay);
+      this.JAML = this.to8(this.JAML - this.ACC);
+      const timeoutId = setTimeout(() => { this.signals.ode = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    przep() {
+    przep() { // JAML -> ACC (8-bit)
       this.signals.przep = true;
-      this.ACC = this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.przep = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.przep = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    mno() {
+
+    mno() { // ACC = ACC * JAML (8-bit)
       this.signals.mno = true;
-      this.ACC *= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.mno = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.ACC * this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    dziel() {
+    dziel() { // ACC = ACC / JAML (całk., 8-bit; dzielenie przez 0 -> 0)
       this.signals.dziel = true;
-      this.ACC /= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.dziel = false;
-      }, this.oddDelay);
+      const d = this.JAML & 0xFF;
+      this.ACC = this.to8(d === 0 ? 0 : Math.trunc(this.ACC / d));
+      const timeoutId = setTimeout(() => { this.signals.dziel = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    shr() {
+    shr() { // logiczne w prawo
       this.signals.shr = true;
-      this.ACC >>= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.shr = false;
-      }, this.oddDelay);
+      const sh = (this.JAML & 7);
+      this.ACC = this.to8((this.ACC & 0xFF) >>> sh);
+      const timeoutId = setTimeout(() => { this.signals.shr = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     shl() {
       this.signals.shl = true;
-      this.ACC <<= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.shl = false;
-      }, this.oddDelay);
+      const sh = (this.JAML & 7);
+      this.ACC = this.to8((this.ACC << sh));
+      const timeoutId = setTimeout(() => { this.signals.shl = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    neg() {
+    neg() { // U2
       this.signals.neg = true;
-      this.ACC = -this.ACC;
-      const timeoutId = setTimeout(() => {
-        this.signals.neg = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(-this.ACC);
+      const timeoutId = setTimeout(() => { this.signals.neg = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    lub() {
+    lub() { // OR (8-bit)
       this.signals.lub = true;
-      this.ACC |= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.lub = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.ACC | this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.lub = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    i() {
+    i() { // AND (8-bit)
       this.signals.i = true;
-      this.ACC &= this.JAML;
-      const timeoutId = setTimeout(() => {
-        this.signals.i = false;
-      }, this.oddDelay);
+      this.ACC = this.to8(this.ACC & this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.i = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wyx() {
+
+    wyx() { // X -> BusS (8-bit)
       this.signals.wyx = true;
       this.signals.busS = true;
-      this.BusS = this.X;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyx = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.BusS = this.to8(this.X);
+      const timeoutId = setTimeout(() => { this.signals.wyx = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wex() {
+    wex() { // BusS -> X (8-bit)
       this.signals.wex = true;
       this.signals.busS = true;
-      this.X = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.wex = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.X = this.to8(this.BusS);
+      const timeoutId = setTimeout(() => { this.signals.wex = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wyy() {
+    wyy() { // Y -> BusS (8-bit)
       this.signals.wyy = true;
       this.signals.busS = true;
-      this.BusS = this.Y;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyy = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.BusS = this.to8(this.Y);
+      const timeoutId = setTimeout(() => { this.signals.wyy = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wey() {
+    wey() { // BusS -> Y (8-bit)
       this.signals.wey = true;
       this.signals.busS = true;
-      this.Y = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.wey = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.Y = this.to8(this.BusS);
+      const timeoutId = setTimeout(() => { this.signals.wey = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
 
-    wea() {
+    wea() { // BusA -> A (adres)
       this.signals.wea = true;
       this.signals.busA = true;
-      this.A = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.wea = false;
-        this.signals.busA = false;
-      }, this.oddDelay);
+      this.A = this.BusA & this.addrMask();
+      const timeoutId = setTimeout(() => { this.signals.wea = false; this.signals.busA = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wes() {
+    wes() { // BusS -> S (8-bit)
       this.signals.wes = true;
       this.signals.busS = true;
-      this.S = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.wes = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.S = this.to8(this.BusS);
+      const timeoutId = setTimeout(() => { this.signals.wes = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    wys() {
+    wys() { // S -> BusS (8-bit)
       this.signals.wys = true;
       this.signals.busS = true;
-      this.BusS = this.S;
-      const timeoutId = setTimeout(() => {
-        this.signals.wys = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
+      this.BusS = this.to8(this.S);
+      const timeoutId = setTimeout(() => { this.signals.wys = false; this.signals.busS = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
+
     stop() {
       this.signals.stop = true;
-      const timeoutId = setTimeout(() => {
-        this.signals.pisz = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-
+      const id = setTimeout(() => { this.signals.stop = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
       this.codeCompiled = false;
       this.nextLine.clear();
     },
-    as() {
+
+    as() { // przenośnik między magistralami – zostawiam bez maski, by nie ucinać adresów
       this.signals.as = true;
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusS = this.BusA;
       const timeoutId = setTimeout(() => {
-        this.signals.as = false;
-        this.signals.busA = false;
-        this.signals.busS = false;
+        this.signals.as = false; this.signals.busA = false; this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
@@ -1470,29 +1485,85 @@ export default {
       this.signals.busS = true;
       this.BusA = this.BusS;
       const timeoutId = setTimeout(() => {
-        this.signals.sa = false;
-        this.signals.busA = false;
-        this.signals.busS = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    czyt() {
-      this.signals.czyt = true;
-      this.S = this.mem[this.A];
-      const timeoutId = setTimeout(() => {
-        this.signals.czyt = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    pisz() {
-      this.signals.pisz = true;
-      this.mem[this.A] = this.S;
-      const timeoutId = setTimeout(() => {
-        this.signals.pisz = false;
+        this.signals.sa = false; this.signals.busA = false; this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
 
+    czyt() { // S = MEM[A] (8-bit, A w zakresie pamięci)
+      this.signals.czyt = true;
+      const idx = this.A & this.addrMask();
+      this.S = this.to8(this.mem[idx] ?? 0);
+      const timeoutId = setTimeout(() => { this.signals.czyt = false; }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
+    },
+    pisz() { // MEM[A] = S (8-bit, A w zakresie pamięci)
+      this.signals.pisz = true;
+      const idx = this.A & this.addrMask();
+      this.mem[idx] = this.to8(this.S);
+      const timeoutId = setTimeout(() => { this.signals.pisz = false; }, this.oddDelay);
+      this.activeTimeouts.push(timeoutId);
+    },
+
+    wyws() { // WS -> BusA (adres)
+      this.signals.wyws = true;
+      this.signals.busA = true;
+      const mask = this.addrMask();
+      this.BusA = this.WS & mask;
+      const id = setTimeout(() => { this.signals.wyws = false; this.signals.busA = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    iws() {
+      this.signals.iws = true;
+      const size = 1 << this.memoryAddresBits;
+      this.WS = (this.WS + 1) % size;
+      const id = setTimeout(() => { this.signals.iws = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    dws() {
+      this.signals.dws = true;
+      const size = 1 << this.memoryAddresBits;
+      this.WS = (this.WS - 1 + size) % size;
+      const id = setTimeout(() => { this.signals.dws = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+
+    wyls() { // PC -> BusS (8-bit, bo to magistrala danych)
+      this.signals.wyls = true;
+      this.signals.busS = true;
+      this.BusS = this.to8(this.programCounter);
+      const id = setTimeout(() => { this.signals.wyls = false; this.signals.busS = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    wyg() {
+      this.signals.wyg = true;
+      this.signals.busS = true;
+      this.BusS = this.to8(this.DEV_READY ? 1 : 0);
+      const id = setTimeout(() => { this.signals.wyg = false; this.signals.busS = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    werb() {
+      this.signals.werb = true;
+      this.DEV_OUT = this.ACC & 0xFF;
+      const id = setTimeout(() => { this.signals.werb = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    wyrb() {
+      this.signals.wyrb = true;
+      this.signals.busS = true;
+      this.BusS = this.DEV_IN & 0xFF;
+      const id = setTimeout(() => { this.signals.wyrb = false; this.signals.busS = false; }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+    start() {
+      this.signals.start = true;
+      this.DEV_READY = 0;
+      const id = setTimeout(() => {
+        this.signals.start = false;
+        this.DEV_READY = 1;
+      }, this.oddDelay * 2);
+      this.activeTimeouts.push(id);
+    },
     resetValues() {
       // Clear any active timeouts first
       this.clearActiveTimeouts();
@@ -1560,7 +1631,7 @@ export default {
       // Clear console logs
       this.logs = [];
       this.hasConsoleErrors = false;
-
+      this.autocompleteEnabled = true;
       this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
     },
 

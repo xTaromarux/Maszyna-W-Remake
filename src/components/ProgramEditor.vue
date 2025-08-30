@@ -26,7 +26,7 @@
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
-    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" />
+    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" maxHeight='32rem' />
 
     <div v-else class="compiledCode">
       <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{ active: activeLine === index }">

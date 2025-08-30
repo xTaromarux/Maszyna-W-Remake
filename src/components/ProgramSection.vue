@@ -5,6 +5,9 @@
       v-model="programLocal"
       language="macroW"
       theme="macroTheme"
+      maxHeight='35.5rem'
+      :commandList="commandList"
+      :autocomplete-enabled="props.autocompleteEnabled"
       :programCompiled="programCompiled"
       :onCompile="compileProgram"
       :onEdit="uncompileProgram"
@@ -45,6 +48,7 @@ const props = defineProps({
   manualMode: { type: Boolean, required: true },
   commandList: { type: Array, required: true },
   program: { type: String, required: true },
+  autocompleteEnabled: { type: Boolean, default: true },
 });
 
 // Events to parent: update assembled code, log messages, initialize memory
@@ -71,39 +75,60 @@ function compileProgram() {
         initAssignments.push({ addr, val });
       }
     }
+
+    /* 3b. Argumenty rozkazów → pamięć programu pod PC=0,1,2…  */
+    let pcAddr = 0;
+    for (const node of analyzedNodes) {
+      if (node.type === 'Instruction') {
+        const argVal = node.operands?.[0]?.value ?? 0; // np. a=4, b=5
+        initAssignments.push({ addr: pcAddr, val: argVal & 0xff });
+        pcAddr++;
+      } else if (node.type === 'Directive' && (node.name?.toUpperCase() === 'ORG')) {
+        // opcjonalnie: jeśli wspierasz ORG dla kodu
+        pcAddr = node.operands?.[0]?.value ?? pcAddr;
+      }
+    }
+
     if (initAssignments.length) {
       emit('initMemory', initAssignments);
     }
 
     /* 4. Generowanie mikro‑programu */
-    const microProgram = generateMicroProgram(analyzedNodes);
+    const microProgram = generateMicroProgram(analyzedNodes, props.commandList);
     console.log('Wygenerowany mikro‑program:', microProgram);
 
     /* 5. Konwersja mikro‑instrukcji do tekstu (bez dyrektyw) */
     const asmFragments = [];
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
-        if (phase.conditional === true) {
-          const flag = phase.flag;
-          const trueSignals = Object.keys(phase.truePhases[0])
-            .filter((key) => phase.truePhases[0][key])
-            .join(' ');
-          const falseSignals = Object.keys(phase.falsePhases[0])
-            .filter((key) => phase.falsePhases[0][key])
-            .join(' ');
-          // Wymagany format z etykietami i domknięciem KONIEC
-          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero` + ` @zero ${trueSignals} KONIEC` + ` @niezero ${falseSignals}`);
+        if ((phase).conditional === true) {
+          const flag = (phase).flag;
+          const t = (phase).truePhases?.[0] ?? {};
+          const f = (phase).falsePhases?.[0] ?? {};
+          const trueSignals = Object.keys(t).filter(k => t[k]).join(' ');
+          const falseSignals = Object.keys(f).filter(k => f[k]).join(' ');
+          // 3 linie jak w commandList
+          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero;`);
+          asmFragments.push(`@zero ${trueSignals} KONIEC;`);
+          asmFragments.push(`@niezero ${falseSignals};`);
         } else {
           const signals = Object.keys(phase)
-            .filter((key) => phase[key] === true)
+            .filter((key) => (phase)[key] === true)
             .join(' ');
-          if (signals.trim()) asmFragments.push(signals);
+          if (signals.trim()) asmFragments.push(`${signals};`);
         }
+      }
+
+      // ↓↓↓ NOWE: dołóż ewentualne dodatkowe linie (np. "stop;")
+      const extra = (entry.meta)?.postAsm;
+      if (extra?.length) {
+        for (const line of extra) asmFragments.push(`${line};`);
       }
     }
 
-    /* 6. Emit wynik */
-    const finalMicroSignals = asmFragments.map((line) => `${line};`).join('\n');
+    // 6. Emit wynik
+    const finalMicroSignals = asmFragments.join('\n');
+
     console.log('Wygenerowany kod assemblera:', finalMicroSignals);
     // Emit both human-readable text and the structured micro program (with pc/meta)
     emit('update:code', { text: finalMicroSignals, program: microProgram });

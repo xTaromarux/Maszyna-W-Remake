@@ -1,5 +1,10 @@
 <template>
-  <div class="editor-wrapper" :class="{ 'full-screen': isFullScreen }" ref="editorWrapper">
+    <div
+      class="editor-wrapper"
+      :class="{ 'full-screen': isFullScreen }"
+      ref="editorWrapper"
+      :style="wrapperStyle"
+    >    
     <button v-if="language === 'macroW'" @click="toggleFullScreen" class="fullscreen-button">
       <svg
         v-if="!isFullScreen"
@@ -51,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits } from 'vue';
+import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits, computed } from 'vue';
 import { EditorView } from 'codemirror';
 import { EditorState, StateEffect } from '@codemirror/state';
 import {
@@ -71,8 +76,10 @@ import { javascript } from '@codemirror/lang-javascript';
 
 // Import custom languages and themes
 import { maszynaW } from '../codemirror-langs/maszynaW.support.js';
-import { macroW } from '../codemirror-langs/macroW.support.js';
 import { mwTheme, macroTheme } from '../codemirror-langs/themes.js';
+import { macroW } from '../codemirror-langs/macroW.support.js';
+import { macroWRuntimeHighlight, macroWRuntimeCompletions } from '../codemirror-langs/macroW.runtime';
+// import { stickyCompletion } from '../codemirror-langs/stickyCompletion.js';
 
 // Import icons for compilation buttons
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
@@ -129,7 +136,15 @@ const props = defineProps<{
   disable?: boolean;
   onCompile?: () => void;
   onEdit?: () => void;
+  autocompleteEnabled?: boolean;
+  commandList?: Array<{name:string; description?:string}>;
+  maxHeight?: string; 
+  devStickyCompletion?: boolean;
 }>();
+
+const wrapperStyle = computed(() => ({
+  '--editorMaxHeight': props.maxHeight ?? '32rem',
+}));
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
@@ -137,6 +152,14 @@ const emit = defineEmits<{
 
 const editorContainer = ref<HTMLDivElement | null>(null);
 let editorView: EditorView | null = null;
+
+function getAutocompleteExtensions() {
+  if (props.autocompleteEnabled === false) return [];
+  if (props.language === 'macroW') {
+    return macroWRuntimeCompletions(props.commandList || []);
+  }
+  return [];
+}
 
 function getLanguageExtension(language?: string) {
   switch (language) {
@@ -179,110 +202,6 @@ function createExtensions() {
     indentOnInput(),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 
-    // Autocompletion with better configuration
-    // autocompletion({
-    //   activateOnTyping: true,
-    //   override: [
-    //     // Custom completions for maszynaW
-    //     (context) => {
-    //       if (props.language === 'maszynaW') {
-    //         const word = context.matchBefore(/\w*/);
-    //         if (!word) return null;
-
-    //         const maszynaWKeywords = [
-    //           'il',
-    //           'dl',
-    //           'wyl',
-    //           'wel',
-    //           'wyad',
-    //           'wea',
-    //           'wei',
-    //           'wys',
-    //           'wes',
-    //           'czyt',
-    //           'pisz',
-    //           'as',
-    //           'sa',
-    //           'dod',
-    //           'ode',
-    //           'przep',
-    //           'mno',
-    //           'dziel',
-    //           'shr',
-    //           'shl',
-    //           'neg',
-    //           'lub',
-    //           'i',
-    //           'iak',
-    //           'dak',
-    //           'weak',
-    //           'weja',
-    //           'wyak',
-    //           'stop',
-    //         ];
-
-    //         const completions = maszynaWKeywords
-    //           .filter((keyword) => keyword.startsWith(word.text))
-    //           .map((keyword) => ({
-    //             label: keyword,
-    //             type: 'keyword',
-    //             info: `MaszynaW keyword: ${keyword}`,
-    //           }));
-
-    //         return {
-    //           from: word.from,
-    //           options: completions,
-    //         };
-    //       }
-    //       return null;
-    //     },
-
-    //     // Custom completions for macroW
-    //     (context) => {
-    //       if (props.language === 'macroW') {
-    //         const word = context.matchBefore(/\w*/);
-    //         if (!word) return null;
-
-    //         const macroWKeywords = [
-    //           'stp',
-    //           'dod',
-    //           'ode',
-    //           'pob',
-    //           'lad',
-    //           'sob',
-    //           'som',
-    //           'soz',
-    //           'dns',
-    //           'pwr',
-    //           'pzs',
-    //           'sdp',
-    //           'dzi',
-    //           'mno',
-    //           'wpr',
-    //           'wyp',
-    //           'IF',
-    //           'THEN',
-    //           'ELSE',
-    //         ];
-
-    //         const completions = macroWKeywords
-    //           .filter((keyword) => keyword.toLowerCase().startsWith(word.text.toLowerCase()))
-    //           .map((keyword) => ({
-    //             label: keyword,
-    //             type: 'keyword',
-    //             info: `MacroW keyword: ${keyword}`,
-    //           }));
-
-    //         return {
-    //           from: word.from,
-    //           options: completions,
-    //         };
-    //       }
-    //       return null;
-    //     },
-    //   ],
-    // }),
-
     closeBrackets(),
     highlightSelectionMatches(),
     search({ top: true }),
@@ -290,8 +209,7 @@ function createExtensions() {
     // Enhanced keymap with explicit undo/redo and useful shortcuts
     keymap.of([
       ...closeBracketsKeymap,
-      ...completionKeymap,
-      ...searchKeymap,
+      ...(props.autocompleteEnabled !== false ? completionKeymap : []),
       ...historyKeymap,
       { key: 'Ctrl-z', run: undo },
       { key: 'Ctrl-y', run: redo },
@@ -357,6 +275,9 @@ function createExtensions() {
     // Add language and theme LAST to ensure they override
     getLanguageExtension(props.language),
     ...getThemeExtension(props.theme),
+    ...getAutocompleteExtensions(),
+    ...(props.language === 'macroW' ? macroWRuntimeHighlight(props.commandList || []) : []),
+    // ...(props.language === 'macroW' && props.devStickyCompletion ? [stickyCompletion()] : []),
     EditorView.theme({
       '&': {
         fontSize: '14px',
@@ -408,21 +329,6 @@ function createExtensions() {
       // Active line highlighting
       '.cm-activeLine': {
         backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
-      },
-      // Autocomplete styling
-      '.cm-tooltip-autocomplete': {
-        border: '1px solid #555 !important',
-        backgroundColor: '#2d2d2d !important',
-        color: '#ffffff !important',
-      },
-      '.cm-completionLabel': {
-        color: '#ffffff !important',
-      },
-      '.cm-completionDetail': {
-        color: '#888 !important',
-      },
-      '.cm-tooltip-autocomplete .cm-completionIcon-keyword': {
-        color: '#003c7d !important',
       },
       // Search match highlighting
       '.cm-searchMatch': {
@@ -505,6 +411,27 @@ watch(
 );
 
 watch(
+  () => props.autocompleteEnabled,
+  () => {
+    if (editorView) {
+      editorView.dispatch({ effects: StateEffect.reconfigure.of(createExtensions()) });
+    }
+  }
+);
+
+ watch(
+   () => props.commandList,
+   () => {
+     if (editorView) {
+       editorView.dispatch({
+         effects: StateEffect.reconfigure.of(createExtensions()),
+       });
+     }
+   },
+   { deep: true }
+ );
+
+watch(
   () => props.disable,
   () => {
     if (editorView) {
@@ -557,14 +484,13 @@ watch(
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 35.8rem;
+  max-height: var(--editorMaxHeight, 32rem);
   transition:
     width 0.3s ease,
     height 0.3s ease,
     top 0.3s ease,
     left 0.3s ease;
 }
-
 
 @media (min-width: 675px) and (max-width: 1195px) {
   .editor-wrapper {
@@ -576,6 +502,11 @@ watch(
   .programEditor {
     width: 100%;
   }
+}
+
+:deep(.cm-content .cm-macrow-keyword) {
+  color: #0a84ff !important;
+  font-weight: 700;
 }
 
 .fullscreen-button {
@@ -608,6 +539,7 @@ watch(
   border: 1px solid var(--panelOutlineColor);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border-radius: 0 0 0 8px;
+  max-height: none;
 }
 
 .codemirror-container {
@@ -635,5 +567,110 @@ watch(
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* ============ AUTOCOMPLETE (CodeMirror 6) ============ */
+
+/* Główne pudło podpowiedzi */
+:deep(.cm-tooltip-autocomplete) {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+
+  /* żeby szerokość liczyła się razem z padding/border */
+  box-sizing: border-box !important;
+
+  /* opcjonalnie: zablokuj rozciąganie */
+  display: block !important;
+  overflow: hidden !important;
+
+  border: 4px solid #003c7d !important;
+  border-radius: 8px !important;
+
+  background: #ffffff !important;   /* light domyślnie */
+  color: #003c7d !important;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+}
+
+/* Wysokość i przewijanie listy */
+:deep(.cm-tooltip-autocomplete ul) {
+  width: 100% !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  padding: 6px 0 !important;
+  margin: 0 !important;
+}
+
+/* Elementy listy */
+:deep(.cm-tooltip-autocomplete li) {
+  display: grid !important;
+  grid-template-columns: 1fr auto;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  line-height: 1.2 !important;
+  white-space: wrap !important;
+}
+
+/* Zaznaczony element */
+:deep(.cm-tooltip-autocomplete li[aria-selected="true"]),
+:deep(.cm-tooltip-autocomplete .cm-completionSelected) {
+  background: #e6f0ff !important;
+  color: #003c7d !important;
+}
+
+/* Label (nazwa rozkazu) */
+:deep(.cm-tooltip-autocomplete .cm-completionLabel) {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  text-align: start;
+  padding-left: 20px;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-weight: 700 !important;
+}
+
+:deep(.cm-tooltip-autocomplete .cm-completionIcon ) {
+  grid-column: 2 !important;
+}
+
+/* Szczegóły (description) */
+:deep(.cm-tooltip-autocomplete .cm-completionDetail) {
+  opacity: 0.75 !important;
+  font-size: 12px !important;
+}
+
+/* Podświetlona część dopasowania */
+:deep(.cm-tooltip-autocomplete .cm-completionMatchedText) {
+  text-decoration: none !important;
+  font-weight: 700 !important;
+}
+
+/* Ikona „keyword” w kolorze projektu */
+:deep(.cm-tooltip-autocomplete .cm-completionIcon-keyword) {
+  color: #003c7d !important;
+}
+
+/* Pasek przewijania (opcjonalnie) */
+:deep(.cm-tooltip-autocomplete ul::-webkit-scrollbar) {
+  width: 8px;
+}
+:deep(.cm-tooltip-autocomplete ul::-webkit-scrollbar-thumb) {
+  background: #c7d7ff;
+  border-radius: 6px;
+}
+
+/* DARK MODE – aktywuje się jeśli masz body.darkMode */
+body.darkMode :deep(.cm-tooltip-autocomplete) {
+  background: #1f1f1f !important;
+  color: #eeeeee !important;
+}
+body.darkMode :deep(.cm-tooltip-autocomplete li[aria-selected="true"]),
+body.darkMode :deep(.cm-tooltip-autocomplete .cm-completionSelected) {
+  background: #003c7d33 !important;
+  color: #ffffff !important;
 }
 </style>

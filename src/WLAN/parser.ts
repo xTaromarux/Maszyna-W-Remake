@@ -4,11 +4,25 @@ import { WlanError, errorFromToken, errorAt } from './error';
 
 const REGISTER_REGEX = /^(A|S|L|I|AK|PC|IR)$/i;
 
+function parseNumberLiteral(text: string): number {
+  const neg = text.startsWith('-');
+  const raw = neg ? text.slice(1) : text;
+
+  let val: number;
+  if (/^0[xX]/.test(raw)) {
+    val = parseInt(raw.slice(2), 16);
+  } else if (/^0[bB]/.test(raw)) {
+    val = parseInt(raw.slice(2), 2);
+  } else {
+    val = parseInt(raw, 10);
+  }
+  return neg ? -val : val;
+}
+
 /**
  * Parser budujący AST:
  * - Program → LabelDefinition | Instruction | Directive | Conditional
  */
-
 export class Parser {
   tokens: Token[];
   pos: number;
@@ -68,6 +82,7 @@ export class Parser {
     }
     return { type: 'Program', body };
   }
+  
   parseLabelDefinition(): AstNode | AstNode[] {
     const nameTok = this.consume(); // IDENT
     this.expect(TokenType.COLON, ':');
@@ -172,7 +187,17 @@ export class Parser {
 
     if (tok.type === TokenType.NUMBER) {
       const t = this.consume();
-      return { type: 'Immediate', value: Number(t.text), line: t.line } as Operand;
+      const value = parseNumberLiteral(t.text);
+      if (Number.isNaN(value)) {
+        throw errorFromToken(
+          this.source,
+          t,
+          `Nie mogę zinterpretować liczby "${t.text}"`,
+          'PARSE_BAD_NUMBER',
+          'Obsługiwane formy: -123, 0xFF, -0b1010.'
+        );
+      }
+      return { type: 'Immediate', value, line: t.line } as Operand;
     }
 
     if (tok.type === TokenType.IDENT) {

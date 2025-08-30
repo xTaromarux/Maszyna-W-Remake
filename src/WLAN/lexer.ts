@@ -6,7 +6,7 @@ const tokenSpecs: [string, RegExp][] = [
   ['NEWLINE', /^\r?\n/],
   ['COMMENT_SLASH', /^\/\/[^\n]*/],
   ['COMMENT_SEMI', /^;[^\n]*/],
-  ['NUMBER', /^\d+/],
+  ['NUMBER', /^-?(?:0[xX][0-9A-Fa-f]+|0[bB][01]+|\d+)/],
   ['COLON', /^:/],
   ['SEMICOLON', /^;/],
   ['COMMA', /^,/],

@@ -1,14 +1,13 @@
 @top Program { statement* }
 
 @tokens {
-  Keyword { 
-    "STP" | "DOD" | "ODE" | "POB" | "LAD" | "SOB" | "SOM" | "SOZ" | "DNS" | 
-    "PWR" | "PZS" | "SDP" | "DZI" | "MNO" | "wpr" | "WYP"
-  }
+  instrWord { @asciiLetter (@asciiLetter | @digit | "_")* }
   
+  instruction { instrWord argument* }
+
   "IF" "THEN" "ELSE"
   
-  number { @digit+ }
+  number { "-"? ( "0x" $hex+ | "0b" $[01]+ | $[0-9]+ ) }
   
   labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
   

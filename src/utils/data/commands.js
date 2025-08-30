@@ -7,7 +7,7 @@ export const commandList = [
     // Linia4=czyt wys wei il;
     // Linia5=stop;
     {
-        name: "stp",
+        name: "STP",
         args: 0,
         description: "zakończenie programu",
         lines: "czyt wys wei il;\nstop;",
@@ -20,7 +20,7 @@ export const commandList = [
     // Linia4=wyad wea;
     // Linia5=czyt wys weja dod weak wyl wea;
     {
-        name: "dod",
+        name: "DOD",
         args: 0,
         description: "(Ak) + ((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;",
@@ -33,9 +33,9 @@ export const commandList = [
     // Linia4=wyad wea;
     // Linia5=czyt wys weja ode weak wyl wea;
     {
-        name: "ode",
+        name: "ODE",
         args: 0,
-        description: "(Ak) + ((Ad)) -> Ak",
+        description: "(Ak) - ((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja ode weak wyl wea;",
     },
     // [pob]
@@ -46,7 +46,7 @@ export const commandList = [
     // Linia4=wyad wea;
     // Linia5=czyt wys weja przep weak wyl wea;
     {
-        name: "pob",
+        name: "POB",
         args: 0,
         description: "((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja przep weak wyl wea;",
@@ -54,12 +54,12 @@ export const commandList = [
     // [lad]
     // Linie=5
     // Linia1=// (Ak)->(Ad)
-    // Linia2=ROZKAZ lAD;
+    // Linia2=ROZKAZ LAD;
     // Linia3=czyt wys wei il;
     // Linia4=wyad wea wyak wes;
     // Linia5=pisz wyl wea;
     {
-        name: "lad",
+        name: "LAD",
         args: 0,
         description: "(Ak) -> (Ad)",
         lines: "czyt wys wei il;\nwyad wea wyak wes;\npisz wyl wea;",
@@ -72,7 +72,7 @@ export const commandList = [
     // Linia4=czyt wys wei il;
     // Linia5=wyad wea wel;
     {
-        name: "sob",
+        name: "SOB",
         args: 1,
         description: "skok bezwarunkowy",
         lines: "czyt wys wei il;\nwyad wea wel;",
@@ -83,84 +83,89 @@ export const commandList = [
     Linia1=skok gdy (AK) < 0
     Linia2=ROZKAZ SOM;
     Linia3=czyt wys wei il;
-    Linia4=IF Z THEN @ujemne ELSE @dodatnie;
+    Linia4=IF N THEN @ujemne ELSE @dodatnie;
     Linia5=@ujemne wyad wea wel KONIEC;
     Linia6=@dodatnie wyl wea; */
     {
-        name: "som",
+        name: "SOM",
         args: 0,
         description: "skok gdy (AK) < 0",
         lines: `czyt wys wei il;\nIF N THEN @ujemne ELSE @dodatnie;\n@ujemne wyad wea wel KONIEC;\n@dodatnie wyl wea;`,
     },
-    // },
+
     // [soz]
     // Linie=6
     // Linia1=// skok gdy (AK) = 0
     // Linia2=ROZKAZ SOZ;
     // Linia3=czyt wys wei il;
-    // Linia4=IF zak THEN @zero ELSE @niezero;
+    // Linia4=IF Z THEN @zero ELSE @niezero;
     // Linia5=@zero wyad wea wel KONIEC;
     // Linia6=@niezero wyl wea;
     {
-        name: "soz",
+        name: "SOZ",
         args: 0,
         description: "skok gdy (AK) = 0",
         lines: `czyt wys wei il;\nIF Z THEN @zero ELSE @niezero;\n@zero wyad wea wel KONIEC;\n@niezero wyl wea;`,
     },
+
     // [dns]
     // Linie=6
     // Linia1=rozkaz dns;
-    // Linia2=argumenty 0;
+    // Linia2=Argumenty 0;
     // Linia3=czyt wys wei il;
     // Linia4=dws;
     // Linia5=wyws wea wyak wes;
     // Linia6=pisz wyl wea;
     {
-        name: "dns",
+        name: "DNS",
         args: 0,
         description: "rozkaz dns",
         lines: `czyt wys wei il;\ndws;\nwyws wea wyak wes;\npisz wyl wea;`,
     },
+
     // [pwr]
     // Linie=5
     // Linia1=rozkaz pwr;
-    // Linia2=argumenty 0;
+    // Linia2=Argumenty 0;
     // Linia3=czyt wys wei il;
     // Linia4=wyws wea iws;
     // Linia5=czyt wys as wea wel;
     {
-        name: "pwr",
+        name: "PWR",
         args: 0,
         description: "rozkaz pwr",
         lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys as wea wel;`,
     },
+
     // [pzs]
     // Linie=5
     // Linia1=rozkaz pzs;
-    // Linia2=argumenty 0;
+    // Linia2=Argumenty 0;
     // Linia3=czyt wys wei il;
     // Linia4=wyws wea iws;
     // Linia5=czyt wys weja przep weak wyl wea;
     {
-        name: "pzs",
+        name: "PZS",
         args: 0,
         description: "rozkaz pzs",
         lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys weja przep weak wyl wea;`,
     },
+
     // [sdp]
     // Linie=6
     // Linia1=rozkaz sdp;
-    // Linia2=argumenty 1;
+    // Linia2=Argumenty 1;
     // Linia3=czyt wys wei il;
     // Linia4=dws;
     // Linia5=wyws wea wyls wes;
     // Linia6=pisz wyad wel wea;
     {
-        name: "sdp",
+        name: "SDP",
         args: 1,
         description: "rozkaz sdp",
         lines: `czyt wys wei il;\ndws;\nwyws wea wyls wes;\npisz wyad wel wea;`,
     },
+
     // [dzi]
     // Linie=4
     // Linia1=ROZKAZ DZI;
@@ -168,11 +173,12 @@ export const commandList = [
     // Linia3=wyad wea;
     // Linia4=czyt wys weja dziel weak wyl wea;
     {
-        name: "dzi",
+        name: "DZI",
         args: 0,
         description: "ROZKAZ DZI",
         lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja dziel weak wyl wea;`,
     },
+
     // [mno]
     // Linie=5
     // Linia1=ROZKAZ MNO;
@@ -181,21 +187,42 @@ export const commandList = [
     // Linia4=czyt wys weja mno weak wyl wea;
     // Linia5=
     {
-        name: "mno",
+        name: "MNO",
         args: 0,
         description: "ROZKAZ MNO",
         lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja mno weak wyl wea;`,
     },
+
+    // [wpr]
+    // Linie=7
+    // Linia1=// wczytaj znak z urządzenia zewnętrznego
+    // Linia2=ROZKAZ WPR;
+    // Linia3=Argumenty 0;
+    // Linia4=czyt wys wei il;
+    // Linia5=wyak weja ode weak start;
+    // Linia6=@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;
+    // Linia7=@gotowe wyrb weja przep weak wyl wea;
     {
-        name: "wpr",
+        name: "WPR",
         args: 0,
         description: "wczytaj znak z urządzenia zewnętrznego",
         lines: `czyt wys wei il;\nwyak weja ode weak start;\n@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;\n@gotowe wyrb weja przep weak wyl wea;`,
     },
+
+    // [wyp]
+    // Linie=8
+    // Linia1=// wyprowadź znak na urządzenie zewnętrzne
+    // Linia2=ROZKAZ WYP;
+    // Linia3=Argumenty 0;
+    // Linia4=czyt wys wei il;
+    // Linia5=wyak weja werb start;
+    // Linia6=wyak wes weja ode weak;
+    // Linia7=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
+    // Linia8=@gotowe wys weja przep weak wyl wea;
     {
-        name: "wyp",
+        name: "WYP",
         args: 0,
         description: "wyprowadź znak na urządzenie zewnętrzne",
         lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
     },
-]
+];

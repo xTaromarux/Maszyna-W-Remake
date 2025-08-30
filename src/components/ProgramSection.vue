@@ -5,7 +5,7 @@
       v-model="programLocal"
       language="macroW"
       theme="macroTheme"
-      maxHeight='35.5rem'
+      maxHeight='35.6rem'
       :commandList="commandList"
       :autocomplete-enabled="props.autocompleteEnabled"
       :programCompiled="programCompiled"

@@ -1353,7 +1353,7 @@ export default {
     },
     ode() {
       this.signals.ode = true;
-      this.JAML = this.to8(this.JAML - this.ACC);
+      this.JAML = this.to8(this.ACC - this.JAML);
       const timeoutId = setTimeout(() => { this.signals.ode = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },

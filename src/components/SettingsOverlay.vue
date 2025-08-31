@@ -21,6 +21,7 @@
       :code-bits="codeBits"
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
+      :interrupts="interrupts"
       :extras="extras"
       :platform="platform"
       :memory-addres-bits="memoryAddresBits" 
@@ -37,6 +38,7 @@
       @open-command-list="$emit('open-command-list')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
       @update:memoryAddresBits="$emit('update:memoryAddresBits', $event)"
+      @update:interrupts="$emit('update:interrupts', $event)"
     />
   </div>
 </template>
@@ -65,15 +67,20 @@ export default {
         return ['xRegister', 'yRegister', 'dl', 'jamlExtras', 'busConnectors', 'showInvisibleRegisters'].every(k => k in obj)
       },
     },
+    interrupts: {
+      type: Object,
+      required: false,
+      default: () => ({ IE: false, IR: false, vectorBase: 0x10 }),
+    },
     creators: {
       type: Array,
       default: () => ([
         { name: 'Szymon Woźnica', linkedin: '', github: '', roles: [] },
         { name: 'Maja Kucab', linkedin: '', github: '', roles: [] },
-        { name: 'Kacper Sikorski', linkedin: '', github: '', roles: [] },
+        { name: 'Kacper Sikorski', linkedin: 'https://www.linkedin.com/in/kacper-sikorski-049b4a334/', github: 'https://github.com/Sikor915', roles: [] },
         { name: 'Sławomir Put', linkedin: 'https://www.linkedin.com/in/slawomir-put/', github: 'https://github.com/xTaromarux', roles: [] },
         { name: 'Paweł Linek', linkedin: 'https://www.linkedin.com/in/paweloslinek/', github: 'https://github.com/pawelos231', roles: [] },
-        { name: 'Bartek Faruga', linkedin: 'www.linkedin.com/in/bartosz-faruga', github: 'https://github.com/MrRooby', roles: [] },
+        { name: 'Bartek Faruga', linkedin: 'https://www.linkedin.com/in/bartosz-faruga/', github: 'https://github.com/MrRooby', roles: [] },
         { name: 'Marcin Ryt', linkedin: '', github: '', roles: [] },
         { name: 'Oskar Forreiter', linkedin: '', github: '', roles: [] },
         { name: 'Michał Kostrzewski', linkedin: '', github: '', roles: [] },
@@ -102,6 +109,7 @@ export default {
     'open-command-list',
     'update:memoryAddresBits',
     'update:autocompleteEnabled',
+    'update:interrupts',
   ],
   data() {
     return {

@@ -1,7 +1,7 @@
 <template>
     <div
       class="editor-wrapper"
-      :class="{ 'full-screen': isFullScreen }"
+      :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }"
       ref="editorWrapper"
       :style="wrapperStyle"
     >    
@@ -51,6 +51,7 @@
       </button>
     </div>
 
+    <div v-if="programCompiled" class="overlay-lock" aria-hidden="true" />
     <div ref="editorContainer" class="codemirror-container" />
   </div>
 </template>
@@ -270,7 +271,7 @@ function createExtensions() {
         },
       },
     ]),
-    EditorView.editable.of(!(props.readOnly || props.disable || false)),
+    EditorView.editable.of(!(props.readOnly || props.disable || props.programCompiled)),
     EditorView.lineWrapping,
     // Add language and theme LAST to ensure they override
     getLanguageExtension(props.language),
@@ -393,6 +394,17 @@ onUnmounted(() => {
     editorView = null;
   }
 });
+
+watch(
+  () => props.programCompiled,
+  () => {
+    if (editorView) {
+      editorView.dispatch({
+        effects: StateEffect.reconfigure.of(createExtensions()),
+      });
+    }
+  }
+);
 
 // 9. Watch for external changes to modelValue
 watch(
@@ -546,12 +558,20 @@ watch(
   width: 100%;
   height: 100%;
   border: none;
+  border-radius: 0.25rem;
   overflow: hidden;
   max-height: 40rem;
 }
 
 .codemirror-container :deep(.cm-editor) {
   height: 100%;
+  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  color: var(--fontColor) !important;
+}
+
+.codemirror-container :deep(.cm-gutters) {
+  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  color: var(--fontColor) !important;
 }
 
 .codemirror-container :deep(.cm-focused) {
@@ -587,8 +607,8 @@ watch(
   border: 4px solid #003c7d !important;
   border-radius: 8px !important;
 
-  background: #ffffff !important;   /* light domyślnie */
-  color: #003c7d !important;
+  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  color: var(--fontColor) !important;
 
   box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
 }
@@ -649,11 +669,6 @@ watch(
   font-weight: 700 !important;
 }
 
-/* Ikona „keyword” w kolorze projektu */
-:deep(.cm-tooltip-autocomplete .cm-completionIcon-keyword) {
-  color: #003c7d !important;
-}
-
 /* Pasek przewijania (opcjonalnie) */
 :deep(.cm-tooltip-autocomplete ul::-webkit-scrollbar) {
   width: 8px;
@@ -663,14 +678,21 @@ watch(
   border-radius: 6px;
 }
 
-/* DARK MODE – aktywuje się jeśli masz body.darkMode */
-body.darkMode :deep(.cm-tooltip-autocomplete) {
-  background: #1f1f1f !important;
-  color: #eeeeee !important;
+.editor-wrapper.dimmed .codemirror-container :deep(.cm-editor) {
+  filter: grayscale(0.6) brightness(0.95);
+  opacity: 0.85;
+  transition: opacity 0.2s ease, filter 0.2s ease;
 }
-body.darkMode :deep(.cm-tooltip-autocomplete li[aria-selected="true"]),
-body.darkMode :deep(.cm-tooltip-autocomplete .cm-completionSelected) {
-  background: #003c7d33 !important;
-  color: #ffffff !important;
+
+/* półtransparentna nakładka z napisem */
+.overlay-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.08);
+  display: grid;
+  place-items: center;
+  pointer-events: none; /* nie blokuj scrolla/selection */
+  z-index: 15;
 }
+
 </style>

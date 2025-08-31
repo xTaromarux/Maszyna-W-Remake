@@ -9,7 +9,7 @@ semi { ";" }
     "il" | "dl" | "wyl" | "wel" | "wyad" | "wea" | "wei" | "wys" | "wes" |
     "czyt" | "pisz" | "as" | "sa" | "dod" | "ode" | "przep" | "mno" | "dziel" |
     "shr" | "shl" | "neg" | "lub" | "i" | "iak" | "dak" | "weak" | "weja" |
-    "wyak" | "stop"
+    "wyak" | "stop" | "werb"| "wyg"
   }
 
   "IF" "THEN" "ELSE"

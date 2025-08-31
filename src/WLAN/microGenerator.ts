@@ -1,4 +1,3 @@
-// WLAN/microGenerator.ts
 import type { AstNode } from './model';
 import { buildFromCommandList } from './commandAdapter';
 import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
@@ -12,6 +11,85 @@ function toMicroPhaseFromSignalSet(set: SignalSet): MicroPhase {
   const phase: MicroPhase = {}; for (const k in set) if (set[k]) (phase as any)[k] = true; return phase;
 }
 const nameKey = (n: string) => (n || '').toLowerCase();
+
+type Phase = { op: string; [k: string]: any };
+
+type CJumpMeta = {
+  kind: 'CJUMP';
+  flagName: 'Z' | 'N' | 'C' | 'V';
+  truePhases: Phase[];
+  falsePhases: Phase[];
+  trueWhen: (flagValue: boolean) => boolean;
+  _branchLocked?: boolean;
+};
+
+const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
+
+function cutAtKoniec(phases: Phase[]): Phase[] {
+  const i = phases.findIndex(p => p.op === 'KONIEC' || p.op === 'END_BRANCH');
+  return i >= 0 ? phases.slice(0, i) : phases;
+}
+
+function collectBetweenLabels(lines: string[], startLabel: string): string[] {
+  const start = lines.findIndex(l => new RegExp(`^\\s*@${startLabel}\\b`, 'u').test(l));
+  if (start === -1) return [];
+  const body: string[] = [];
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^\s*@[\p{L}\w]+/u.test(lines[i])) break;
+    body.push(lines[i]);
+  }
+  return body;
+}
+
+// zamień pojedynczą linię DSL na fazy maszynowe:
+function tokenizeLineToPhases(line: string): Phase[] {
+  // tu wywołaj swoje istniejące tokenizowanie; przykład:
+  return line.split(/\s+/).filter(Boolean).map(tok => ({ op: tok }));
+}
+
+function linesToPhases(lines: string[]): Phase[] {
+  const out: Phase[] = [];
+  for (const l of lines) out.push(...tokenizeLineToPhases(l));
+  return out;
+}
+
+function splitBeforeIF(lines: string[]): { before: string[]; ifLineIdx: number } {
+  const idx = lines.findIndex(l => IF_RE.test(l));
+  if (idx === -1) return { before: lines.slice(), ifLineIdx: -1 };
+  return { before: lines.slice(0, idx), ifLineIdx: idx };
+}
+
+export function buildConditionalForInstr(lines: string[]): { meta?: CJumpMeta; phases?: Phase[] } {
+  const { before, ifLineIdx } = splitBeforeIF(lines);
+  if (ifLineIdx === -1) return {};
+
+  const m = lines[ifLineIdx].match(IF_RE);
+  if (!m) return {};
+
+  const flagName = m[1] as CJumpMeta['flagName'];
+  const trueLbl  = m[2];
+  const falseLbl = m[3];
+
+  const trueLines  = collectBetweenLabels(lines, trueLbl);
+  const falseLines = collectBetweenLabels(lines, falseLbl);
+
+  let truePhases  = linesToPhases(trueLines);
+  let falsePhases = linesToPhases(falseLines);
+
+  truePhases  = cutAtKoniec(truePhases).map(p => p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p);
+  falsePhases = cutAtKoniec(falsePhases).map(p => p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p);
+
+  const meta: CJumpMeta = {
+    kind: 'CJUMP',
+    flagName,
+    truePhases,
+    falsePhases,
+    trueWhen: (v: boolean) => v
+  };
+
+  const phases = linesToPhases(before);
+  return { meta, phases };
+}
 
 export function generateMicroProgram(ast: AstNode[], commandList: Array<{name:string;args:number;description?:string;lines:string}>): MicroProgramEntry[] {
   if (!Array.isArray(commandList) || commandList.length === 0) {
@@ -82,22 +160,18 @@ export function generateMicroProgram(ast: AstNode[], commandList: Array<{name:st
     const meta: MicroProgramEntry['meta'] = { kind: 'NONE' } as any;
 
     const upper = (node.name || '').toUpperCase();
+
     if (upper === 'SOB') {
       const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== 'number') throw new WlanError(`SOB bez adresu`, { code: 'GEN_SOB_NO_ADDR' });
+      if (typeof targetAddr !== 'number') {
+        throw new WlanError(`SOB bez adresu`, { code: 'GEN_SOB_NO_ADDR' });
+      }
       const targetPc = addrToPc.get(targetAddr);
-      if (targetPc === undefined) throw new WlanError(`SOB -> ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_SOB_BAD_ADDR' });
+      if (targetPc === undefined) {
+        throw new WlanError(`SOB -> ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_SOB_BAD_ADDR' });
+      }
       (meta as any).kind = 'JUMP';
       (meta as any).trueTarget = targetPc;
-    } else if (upper === 'SOZ' || upper === 'SOM') {
-      const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== 'number') throw new WlanError(`${upper} bez adresu`, { code: 'GEN_CJUMP_NO_ADDR' });
-      const targetPc = addrToPc.get(targetAddr);
-      if (targetPc === undefined) throw new WlanError(`${upper} -> ${targetAddr} nie wskazuje instrukcji`, { code: 'GEN_CJUMP_BAD_ADDR' });
-      (meta as any).kind = 'CJUMP';
-      (meta as any).flag = (upper === 'SOZ' ? 'Z' : 'N');
-      (meta as any).trueTarget = targetPc;
-      (meta as any).falseTarget = i + 1;
     }
 
     const extra = POSTASM[key];

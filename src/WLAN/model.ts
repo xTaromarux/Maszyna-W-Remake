@@ -46,9 +46,9 @@ export interface InstructionNode {
 
 export interface ConditionalNode {
   type: 'Conditional';
-  condition: 'Z' | 'N' | string; // Flaga warunku (Z=zero, N=negative)
-  thenBranch: Operand; // Etykieta do skoku gdy warunek spełniony
-  elseBranch: Operand | null; // Etykieta do skoku gdy warunek nie spełniony (opcjonalne)
+  condition: 'Z' | 'N' | string; 
+  thenBranch: Operand;
+  elseBranch: Operand | null;
   line: number;
 }
 
@@ -93,11 +93,13 @@ export type MicroSignalName =
   | 'call'
   | 'ret';
 
-export type MicroPhase = Partial<Record<MicroSignalName, boolean>> & { conditional?: undefined | boolean };
+export type MicroPhase = Partial<Record<MicroSignalName, boolean>> & {
+  conditional?: undefined | false;
+};
 
 export interface ConditionalPhase {
   conditional: true;
-  flag: 'Z' | 'N' | string;
+  flag: 'Z' | 'N' | 'C' | 'V';
   truePhases: MicroPhase[];
   falsePhases: MicroPhase[];
 }
@@ -105,14 +107,14 @@ export interface ConditionalPhase {
 export type Phase = MicroPhase | ConditionalPhase;
 
 export interface MicroProgramEntry {
-  pc: number; // indeks instrukcji
+  pc: number;
   asmLine: string;
   phases: Phase[];
   meta?: {
     kind?: 'JUMP' | 'CJUMP' | 'NONE';
-    trueTarget?: number; // indeks instrukcji (dla SOB/SOZ/SOM)
-    falseTarget?: number; // zwykle pc+1
-    flag?: 'Z' | 'N'; // dla SOZ/SOM
+    trueTarget?: number;
+    falseTarget?: number;
+    flag?: 'Z' | 'N' | 'C' | 'V';
   };
 }
 
@@ -125,7 +127,14 @@ export interface Store {
   Ak: number;
   magA: number;
   magS: number;
-  flags: { Z: boolean; N: boolean; IE: boolean; IR: boolean };
+  flags: {
+    Z: boolean;
+    N: boolean;
+    C?: boolean;
+    V?: boolean;
+    IE: boolean;
+    IR: boolean;
+  };
   mem: Uint8Array;
   dataStack: number[];
   callStack: Array<{ L: number; phaseIdx: number }>;

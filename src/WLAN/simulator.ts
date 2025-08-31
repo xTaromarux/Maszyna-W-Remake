@@ -1,6 +1,6 @@
 export const DEFAULT_VECTOR_BASE = 0x10;
 
-import type { Store, MicroProgramEntry } from './model';
+import type { Store, ConditionalPhase, Phase } from './model';
 
 export function initStore(
   memorySize = 256,
@@ -134,6 +134,11 @@ export function applySignals(phase: any, store: Store) {
   }
 }
 
+// Prosty type-guard do zawężania typu fazy
+function isCondPhase(p: Phase): p is ConditionalPhase {
+  return !!p && p.conditional === true && 'flag' in p && Array.isArray((p as any).truePhases);
+}
+
 export function stepMicro(store: Store) {
   if (store.flags.IE && store.flags.IR) {
     runISR(store);
@@ -145,15 +150,16 @@ export function stepMicro(store: Store) {
     throw new Error(`Brak mikroprogramu pod adresem ${store.L}`);
   }
 
-  const phase = entry.phases[store.phaseIdx];
+  const phase: any = entry.phases[store.phaseIdx];
 
-  if (phase.conditional) {
+  if (isCondPhase(phase)) {
     const conditionMet = store.flags[phase.flag] === true;
     const phases = conditionMet ? phase.truePhases : phase.falsePhases;
     for (const p of phases) applySignals(p, store);
   } else {
     applySignals(phase, store);
   }
+
 
   store.phaseIdx++;
   if (store.phaseIdx >= entry.phases.length) {
@@ -214,4 +220,14 @@ export function loadState(name: string): Store {
     return importStore(json);
   }
   throw new Error('LocalStorage nie jest dostępne');
+}
+
+export function evalFlag(vm: any, flag: 'Z'|'N'|'C'|'V'): boolean {
+  switch (flag) {
+    case 'Z': return (vm.Ak & 0xff) === 0;
+    case 'N': return !!(vm.Ak & 0x80);
+    case 'C': return !!vm.flags?.C;
+    case 'V': return !!vm.flags?.V;
+    default:  return false;
+  }
 }

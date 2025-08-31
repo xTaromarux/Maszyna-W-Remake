@@ -287,7 +287,7 @@ export default {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: #ccc;
+  background: var(--backgroundColorItem);
   transition: .4s
 }
 
@@ -298,7 +298,7 @@ export default {
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background: #fff;
+  background: var(--backgroundColorPartOfItem);
   transition: .4s
 }
 

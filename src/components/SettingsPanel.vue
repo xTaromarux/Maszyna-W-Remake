@@ -114,20 +114,58 @@
         </template>
       </div>
 
-     <div class="flexColumn">
-       <label>Edytor:</label>
-       <div class="module-toggle-wrapper">
-         <span class="module-label">Auto-uzupełnianie (podpowiedzi)</span>
-         <label class="switch">
-           <input
-             type="checkbox"
-             :checked="autocompleteEnabled"
-             @change="$emit('update:autocompleteEnabled', $event.target.checked)"
-           />
-           <span class="slider round"></span>
-         </label>
-       </div>
-     </div>
+      <div class="flexColumn">
+        <label>Przerwania (ISR):</label>
+
+        <div class="module-toggle-wrapper">
+          <span class="module-label">IE – globalne zezwolenie</span>
+          <label class="switch">
+            <input
+              type="checkbox"
+              :checked="interrupts.IE"
+              @change="$emit('update:interrupts', { ...interrupts, IE: $event.target.checked })"
+            />
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="module-toggle-wrapper">
+          <span class="module-label">IR – żądanie przerwania</span>
+          <label class="switch">
+            <input
+              type="checkbox"
+              :checked="interrupts.IR"
+              @change="$emit('update:interrupts', { ...interrupts, IR: $event.target.checked })"
+            />
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="module-toggle-wrapper">
+          <span class="module-label">Baza wektorów (PC)</span>
+          <input
+            type="number"
+            :value="interrupts.vectorBase"
+            :min="0"
+            :max="(1 << memoryAddresBits) - 1"
+            @input="$emit('update:interrupts', { ...interrupts, vectorBase: Math.max(0, Math.min((1 << memoryAddresBits) - 1, +$event.target.value||0)) })"
+          />
+        </div>
+
+        <div class="flexColumn">
+          <div class="module-toggle-wrapper">
+            <span class="module-label">Edytor: Auto-uzupełnianie</span>
+            <label class="switch">
+              <input
+                type="checkbox"
+                :checked="autocompleteEnabled"
+                @change="$emit('update:autocompleteEnabled', $event.target.checked)"
+              />
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
 
       <div class="flexColumn">
         <div class="flexColumn button-column">
@@ -176,6 +214,11 @@ export default {
     platform: { type: String, default: '' },
     autocompleteEnabled: { type: Boolean, default: true },
     memoryAddresBits: { type: Number, required: true },
+    interrupts: {
+      type: Object,
+      required: false,
+      default: () => ({ IE: false, IR: false, vectorBase: 0x10 }),
+    },
   },
   emits: [
     'close',
@@ -190,6 +233,7 @@ export default {
     'open-command-list',
     'update:memoryAddresBits',
     'update:autocompleteEnabled',
+    'update:interrupts',
   ],
   computed: {
     extrasLabels() {

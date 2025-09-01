@@ -1,10 +1,5 @@
 <template>
-    <div
-      class="editor-wrapper"
-      :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }"
-      ref="editorWrapper"
-      :style="wrapperStyle"
-    >    
+  <div class="editor-wrapper" :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }" ref="editorWrapper" :style="wrapperStyle">
     <button v-if="language === 'macroW'" @click="toggleFullScreen" class="fullscreen-button">
       <svg
         v-if="!isFullScreen"
@@ -71,7 +66,7 @@ import {
 } from '@codemirror/view';
 import { indentWithTab, history, historyKeymap, undo, redo } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
-import { searchKeymap, highlightSelectionMatches, search } from '@codemirror/search';
+import { highlightSelectionMatches, search } from '@codemirror/search';
 import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { javascript } from '@codemirror/lang-javascript';
 
@@ -138,8 +133,8 @@ const props = defineProps<{
   onCompile?: () => void;
   onEdit?: () => void;
   autocompleteEnabled?: boolean;
-  commandList?: Array<{name:string; description?:string}>;
-  maxHeight?: string; 
+  commandList?: Array<{ name: string; description?: string }>;
+  maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();
 
@@ -309,6 +304,8 @@ function createExtensions() {
       // Selection styling
       '.cm-selectionBackground': {
         backgroundColor: '#316AC5 !important',
+        marginTop: '-5px',
+        marginLeft: '-5px',
         opacity: '0.3 !important',
       },
       '.cm-focused .cm-selectionBackground': {
@@ -318,15 +315,15 @@ function createExtensions() {
       '&.cm-focused .cm-selectionBackground': {
         backgroundColor: '#316AC5 !important',
       },
-      // // Cursor styling
-      // '.cm-cursor': {
-      //   borderLeftColor: '#ffffff !important',
-      //   borderLeftWidth: '2px !important',
-      // },
-      // '.cm-dropCursor': {
-      //   borderLeftColor: '#316AC5 !important',
-      //   borderLeftWidth: '2px !important',
-      // },
+      // Cursor styling
+      '.cm-cursor': {
+        marginTop: '-4px',
+        marginLeft: '-4px',
+      },
+      '.cm-dropCursor': {
+        borderLeftColor: '#316AC5 !important',
+        borderLeftWidth: '2px !important',
+      },
       // Active line highlighting
       '.cm-activeLine': {
         backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
@@ -431,17 +428,17 @@ watch(
   }
 );
 
- watch(
-   () => props.commandList,
-   () => {
-     if (editorView) {
-       editorView.dispatch({
-         effects: StateEffect.reconfigure.of(createExtensions()),
-       });
-     }
-   },
-   { deep: true }
- );
+watch(
+  () => props.commandList,
+  () => {
+    if (editorView) {
+      editorView.dispatch({
+        effects: StateEffect.reconfigure.of(createExtensions()),
+      });
+    }
+  },
+  { deep: true }
+);
 
 watch(
   () => props.disable,
@@ -565,12 +562,12 @@ watch(
 
 .codemirror-container :deep(.cm-editor) {
   height: 100%;
-  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  background: var(--panelBackgroundColor) !important; /* light domyślnie */
   color: var(--fontColor) !important;
 }
 
 .codemirror-container :deep(.cm-gutters) {
-  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  background: var(--panelBackgroundColor) !important; /* light domyślnie */
   color: var(--fontColor) !important;
 }
 
@@ -607,10 +604,10 @@ watch(
   border: 4px solid #003c7d !important;
   border-radius: 8px !important;
 
-  background: var(--panelBackgroundColor) !important;   /* light domyślnie */
+  background: var(--panelBackgroundColor) !important; /* light domyślnie */
   color: var(--fontColor) !important;
 
-  box-shadow: 0 8px 24px rgba(0,0,0,.18) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
 }
 
 /* Wysokość i przewijanie listy */
@@ -636,7 +633,7 @@ watch(
 }
 
 /* Zaznaczony element */
-:deep(.cm-tooltip-autocomplete li[aria-selected="true"]),
+:deep(.cm-tooltip-autocomplete li[aria-selected='true']),
 :deep(.cm-tooltip-autocomplete .cm-completionSelected) {
   background: #e6f0ff !important;
   color: #003c7d !important;
@@ -653,7 +650,7 @@ watch(
   font-weight: 700 !important;
 }
 
-:deep(.cm-tooltip-autocomplete .cm-completionIcon ) {
+:deep(.cm-tooltip-autocomplete .cm-completionIcon) {
   grid-column: 2 !important;
 }
 
@@ -681,18 +678,19 @@ watch(
 .editor-wrapper.dimmed .codemirror-container :deep(.cm-editor) {
   filter: grayscale(0.6) brightness(0.95);
   opacity: 0.85;
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
 }
 
 /* półtransparentna nakładka z napisem */
 .overlay-lock {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.08);
+  background: rgba(0, 0, 0, 0.08);
   display: grid;
   place-items: center;
   pointer-events: none; /* nie blokuj scrolla/selection */
   z-index: 15;
 }
-
 </style>

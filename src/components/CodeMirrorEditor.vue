@@ -69,7 +69,8 @@ import {
   rectangularSelection,
   crosshairCursor,
 } from '@codemirror/view';
-import { indentWithTab, history, historyKeymap, undo, redo } from '@codemirror/commands';
+import { indentWithTab, history, historyKeymap, undo, 
+  redo, defaultKeymap, insertNewlineAndIndent } from '@codemirror/commands';
 import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import { searchKeymap, highlightSelectionMatches, search } from '@codemirror/search';
 import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
@@ -207,66 +208,57 @@ function createExtensions() {
     highlightSelectionMatches(),
     search({ top: true }),
 
+    EditorView.contentAttributes.of({ enterkeyhint: 'enter', autocapitalize: 'off' }),
+
     // Enhanced keymap with explicit undo/redo and useful shortcuts
+     // >>> ZMIENIONE: dołóż defaultKeymap i jawny Enter
     keymap.of([
+      ...defaultKeymap,
       ...closeBracketsKeymap,
       ...(props.autocompleteEnabled !== false ? completionKeymap : []),
       ...historyKeymap,
+
+      { key: 'Enter', run: insertNewlineAndIndent }, // gwarancja nowej linii
+      { key: 'Tab', run: indentWithTab.run },
+      { key: 'Shift-Tab', run: indentWithTab.run },
+
       { key: 'Ctrl-z', run: undo },
       { key: 'Ctrl-y', run: redo },
       { key: 'Ctrl-Shift-z', run: redo },
-      { key: 'Tab', run: indentWithTab.run },
-      { key: 'Shift-Tab', run: indentWithTab.run },
-      // Additional useful shortcuts
-      {
-        key: 'Ctrl-a',
+
+      { key: 'Ctrl-a',
         run: (view) => {
           view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
           return true;
         },
       },
-      {
-        key: 'Ctrl-/',
-        run: (view) => {
-          // Simple comment toggle - adds // at the beginning of lines
-          const { state } = view;
-          const changes = [];
 
+      { key: 'Ctrl-/', run: (view) => {
+          const { state } = view;
+          const changes:any[] = [];
           for (let i = 0; i < state.selection.ranges.length; i++) {
             const range = state.selection.ranges[i];
             const from = state.doc.lineAt(range.from).from;
             const to = state.doc.lineAt(range.to).to;
-
             for (let lineStart = from; lineStart <= to; ) {
               const line = state.doc.lineAt(lineStart);
               const lineText = line.text;
-
               if (lineText.trim().startsWith('//')) {
-                // Remove comment
-                const commentIndex = lineText.indexOf('//');
+                const idx = lineText.indexOf('//');
                 changes.push({
-                  from: line.from + commentIndex,
-                  to: line.from + commentIndex + 2 + (lineText[commentIndex + 2] === ' ' ? 1 : 0),
+                  from: line.from + idx,
+                  to: line.from + idx + 2 + (lineText[idx + 2] === ' ' ? 1 : 0),
                   insert: '',
                 });
               } else if (lineText.trim().length > 0) {
-                // Add comment
                 const firstNonSpace = lineText.search(/\S/);
                 const insertPos = firstNonSpace >= 0 ? line.from + firstNonSpace : line.from;
-                changes.push({
-                  from: insertPos,
-                  to: insertPos,
-                  insert: '// ',
-                });
+                changes.push({ from: insertPos, to: insertPos, insert: '// ' });
               }
-
               lineStart = line.to + 1;
             }
           }
-
-          if (changes.length > 0) {
-            view.dispatch({ changes });
-          }
+          if (changes.length > 0) view.dispatch({ changes });
           return true;
         },
       },

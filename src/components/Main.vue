@@ -374,7 +374,30 @@ export default {
     };
   },
   methods: {
+
+    _refreshHighlight() {
+      if (!this.codeCompiled) return;
+
+      // STRUKTURALNY mikro-program (compileCode2 / generator)
+      if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
+        let line = 0;
+        const instrIdx = Math.max(0, this.activeInstrIndex);
+        for (let i = 0; i < instrIdx; i++) {
+          const phasesLen = (this.compiledProgram[i]?.phases?.length || 1);
+          line += phasesLen;
+        }
+        const phaseIdx = Math.max(0, this.activePhaseIndex || 0);
+        this.activeLine = line + phaseIdx;
+        return;
+      }
+
+      // ŚCIEŻKA LEGACY (compileCode): aktywna linia nie może wyjść poza zakres
+      const max = (this.compiledCode?.length || 1) - 1;
+      this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
+    },
+
     to8(v) { return v & 0xFF; },
+
     addrMask() { return (1 << this.memoryAddresBits) - 1; },
 
     handleProgramSectionCompile(payload) {
@@ -1055,17 +1078,17 @@ export default {
       this.activePhaseIndex = 0;
     },
     executeLine() {
-      // --- Structured program path (compileCode2 albo generator) ---
+      // --- STRUKTURALNY mikro-program ---
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
-        // inicjalizacja
+        // Inicjalizacja
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
-          this.activePhaseIndex = 0;
+          this.activePhaseIndex  = 0;
           this._stepGuard = 0;
           this._branchJoin = null;
         }
 
-        // anty-pętla
+        // Anty-pętla
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
           this.addLog('Przerwano: przekroczono limit kroków (prawdopodobna pętla).', 'system');
@@ -1073,7 +1096,7 @@ export default {
           return;
         }
 
-        // koniec
+        // Koniec programu
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
@@ -1082,15 +1105,13 @@ export default {
 
         const instr = this.compiledProgram[this.activeInstrIndex];
 
-        // numer linii do podświetlenia
-        let totalPhases = 0;
-        for (let i = 0; i < this.activeInstrIndex; i++) totalPhases += this.compiledProgram[i].phases.length;
-        this.activeLine = totalPhases + this.activePhaseIndex;
+        // Podświetl dokładnie to, co ZARAZ wykonamy
+        this._refreshHighlight();
 
-        // 1) CJUMP (z compileCode2): decyzja i ustawienie punktu złączenia
+        // 1) Skok warunkowy CJUMP (z compileCode2)
         if (instr.meta?.kind === 'CJUMP') {
           const flag = (instr.meta.flag || 'Z').toUpperCase();
-          const takeTrue = this.evaluateFlag(flag); // <<< używamy ACC
+          const takeTrue = this.evaluateFlag(flag);
           const target = takeTrue ? instr.meta.trueTarget : instr.meta.falseTarget;
 
           const joinTarget =
@@ -1105,34 +1126,33 @@ export default {
 
           this.activeInstrIndex = (typeof target === 'number') ? target : (this.activeInstrIndex + 1);
           this.activePhaseIndex = 0;
+
+          // Po zmianie wskaźników — zaktualizuj highlight i wyjdź (kolejny krok wykona następną linię)
+          this._refreshHighlight();
           return;
         }
 
-        // 2) Faza bieżąca
+        // 2) Zwykła faza lub faza warunkowa (generator)
         const rawPhase = instr.phases[this.activePhaseIndex] || {};
 
-        // 2a) ConditionalPhase z generatora (phases.truePhases/falsePhases)
+        // 2a) Faza warunkowa z listami truePhases/falsePhases
         if (rawPhase && rawPhase.conditional === true) {
-          const flag = rawPhase.flag;
-          const cond = this.evaluateFlag(flag);
+          const cond = this.evaluateFlag(rawPhase.flag);
           const branch = cond ? rawPhase.truePhases : rawPhase.falsePhases;
 
-          // sprawdź, czy w gałęzi jest 'wel' (skok przez PC)
           const hasWel = Array.isArray(branch) && branch.some(p => p && p.wel === true);
 
-          // wykonaj wszystkie fazy gałęzi
           for (const p of (branch || [])) {
             const signals = new Set(Object.keys(p || {}).filter(k => p[k] === true));
             this.nextLine = signals;
             this.executeSignalsFromNextLine();
           }
 
-          // przesuwamy się o jedną „faze logiczną” (ConditionalPhase zajmuje 1 slot w instr.phases)
+          // Przesuwamy „logicznie” o 1 fazę (sam ConditionalPhase zajmuje 1 slot)
           this.activePhaseIndex += 1;
 
-          // jeśli gałąź wykonała 'wel' – ustaw nowy PC wg programCounter
           if (hasWel) {
-            const target = Number(this.programCounter) | 0; // <<< KLUCZOWE: bierzemy nowy PC z programCounter
+            const target = Number(this.programCounter) | 0;
             if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
               this.addLog(`(branch) wel -> PC=${target}`, 'system');
               this.activeInstrIndex = target;
@@ -1142,10 +1162,10 @@ export default {
               this.activeInstrIndex += 1;
               this.activePhaseIndex = 0;
             }
+            this._refreshHighlight();
             return;
           }
 
-          // brak wel w gałęzi – sprawdzamy, czy koniec instrukcji
           if (this.activePhaseIndex >= instr.phases.length) {
             this.activeInstrIndex += 1;
             this.activePhaseIndex = 0;
@@ -1154,63 +1174,58 @@ export default {
           if (this.activeInstrIndex >= this.compiledProgram.length) {
             this.uncompileCode();
             this.addLog('Kod zakończony', 'kompilator rozkazów');
+          } else {
+            this._refreshHighlight();
           }
           return;
         }
 
-        // 2b) Zwykła (nie-warunkowa) faza
-        const resolvedPhase = rawPhase;
-
-        if (resolvedPhase.END_BRANCH === true) {
+        // 2b) Zwykła faza niewarunkowa
+        if (rawPhase.END_BRANCH === true) {
           this.activeInstrIndex++;
           this.activePhaseIndex = 0;
+          this._refreshHighlight();
           return;
         }
-        if (resolvedPhase.stop === true) {
+        if (rawPhase.stop === true) {
           this.uncompileCode();
           this.addLog('STOP – program zatrzymany', 'kompilator rozkazów');
           return;
         }
 
-        // wykonaj sygnały tej fazy
         {
-          const signalsSet = new Set(Object.keys(resolvedPhase).filter((k) => resolvedPhase[k] === true));
+          const signalsSet = new Set(Object.keys(rawPhase).filter(k => rawPhase[k] === true));
           this.nextLine = signalsSet;
           this.executeSignalsFromNextLine();
         }
 
-        // Specjalnie: 'wel' działa tylko, jeśli NIE jesteśmy w środku gałęzi CJUMP
-        if (resolvedPhase.wel === true && !this._branchJoin) {
-          const target = Number(this.programCounter) | 0; // <<< TU BYŁ BUG: było this.L
+        // wel (skok przez PC) – tylko gdy nie jesteśmy w trakcie łączenia gałęzi
+        if (rawPhase.wel === true && !this._branchJoin) {
+          const target = Number(this.programCounter) | 0;
           if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
             this.addLog(`wel -> PC=${target}`, 'system');
             this.activeInstrIndex = target;
             this.activePhaseIndex = 0;
-            return;
           } else {
             this.addLog(`wel: niepoprawny cel skoku L=${target} (poza programem)`, 'Błąd');
             this.activeInstrIndex += 1;
             this.activePhaseIndex = 0;
-            return;
           }
+          this._refreshHighlight();
+          return;
         }
 
-        // 3) Następna faza / instrukcja
+        // Następna faza / instrukcja
         this.activePhaseIndex += 1;
 
         if (this.activePhaseIndex >= instr.phases.length) {
-          // jeśli właśnie byliśmy w gałęzi z CJUMP – przejdź do punktu złączenia
           if (this._branchJoin != null) {
             const join = this._branchJoin | 0;
             this._branchJoin = null;
             this.addLog(`join -> PC=${join}`, 'system');
             this.activeInstrIndex = join;
             this.activePhaseIndex = 0;
-            return;
-          }
-
-          // skok bezwarunkowy (jeśli generator nadał meta.kind === 'JUMP' np. dla SOB)
-          if (instr.meta?.kind === 'JUMP') {
+          } else if (instr.meta?.kind === 'JUMP') {
             const target = instr.meta.trueTarget ?? (this.activeInstrIndex + 1);
             this.activeInstrIndex = target;
             this.activePhaseIndex = 0;
@@ -1224,11 +1239,14 @@ export default {
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
+          return;
         }
+
+        this._refreshHighlight();
         return;
       }
 
-      // --- Legacy path (compileCode) ---
+      // --- ŚCIEŻKA LEGACY (compileCode) ---
       if (!this.manualMode) {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
@@ -1236,20 +1254,26 @@ export default {
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
+        // Najpierw ustaw linie do podświetlenia -> potem wykonaj
         const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
         this.nextLine.clear();
         for (const c of commands) this.nextLine.add(c);
-      }
-      this.executeSignalsFromNextLine();
-      if (!this.manualMode) {
+
+        this.executeSignalsFromNextLine();
+
         this.activeLine++;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
+        } else {
+          this._refreshHighlight();
         }
+      } else {
+        // manualMode + legacy — tylko wykonaj bieżącą linię nextLine
+        this.executeSignalsFromNextLine();
+        this._refreshHighlight();
       }
     },
-
 
     executeSignalsFromNextLine() {
       // Clear all active timeouts to prevent signal overlap

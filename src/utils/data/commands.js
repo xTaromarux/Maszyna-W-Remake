@@ -21,7 +21,7 @@ export const commandList = [
     // Linia5=czyt wys weja dod weak wyl wea;
     {
         name: "DOD",
-        args: 0,
+        args: 1,
         description: "(Ak) + ((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;",
     },
@@ -34,7 +34,7 @@ export const commandList = [
     // Linia5=czyt wys weja ode weak wyl wea;
     {
         name: "ODE",
-        args: 0,
+        args: 1,
         description: "(Ak) - ((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja ode weak wyl wea;",
     },
@@ -47,7 +47,7 @@ export const commandList = [
     // Linia5=czyt wys weja przep weak wyl wea;
     {
         name: "POB",
-        args: 0,
+        args: 1,
         description: "((Ad)) -> Ak",
         lines: "czyt wys wei il;\nwyad wea;\nczyt wys weja przep weak wyl wea;",
     },
@@ -60,7 +60,7 @@ export const commandList = [
     // Linia5=pisz wyl wea;
     {
         name: "LAD",
-        args: 0,
+        args: 1,
         description: "(Ak) -> (Ad)",
         lines: "czyt wys wei il;\nwyad wea wyak wes;\npisz wyl wea;",
     },
@@ -88,7 +88,7 @@ export const commandList = [
     Linia6=@dodatnie wyl wea; */
     {
         name: "SOM",
-        args: 0,
+        args: 1,
         description: "skok gdy (AK) < 0",
         lines: `czyt wys wei il;\nIF N THEN @ujemne ELSE @dodatnie;\n@ujemne wyad wea wel KONIEC;\n@dodatnie wyl wea;`,
     },
@@ -103,7 +103,7 @@ export const commandList = [
     // Linia6=@niezero wyl wea;
     {
         name: "SOZ",
-        args: 0,
+        args: 1,
         description: "skok gdy (AK) = 0",
         lines: `czyt wys wei il;\nIF Z THEN @zero ELSE @niezero;\n@zero wyad wea wel KONIEC;\n@niezero wyl wea;`,
     },
@@ -174,7 +174,7 @@ export const commandList = [
     // Linia4=czyt wys weja dziel weak wyl wea;
     {
         name: "DZI",
-        args: 0,
+        args: 1,
         description: "ROZKAZ DZI",
         lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja dziel weak wyl wea;`,
     },
@@ -188,7 +188,7 @@ export const commandList = [
     // Linia5=
     {
         name: "MNO",
-        args: 0,
+        args: 1,
         description: "ROZKAZ MNO",
         lines: `czyt wys wei il;\nwyad wea;\nczyt wys weja mno weak wyl wea;`,
     },
@@ -204,7 +204,7 @@ export const commandList = [
     // Linia7=@gotowe wyrb weja przep weak wyl wea;
     {
         name: "WPR",
-        args: 0,
+        args: 1,
         description: "wczytaj znak z urządzenia zewnętrznego",
         lines: `czyt wys wei il;\nwyak weja ode weak start;\n@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;\n@gotowe wyrb weja przep weak wyl wea;`,
     },
@@ -221,7 +221,7 @@ export const commandList = [
     // Linia8=@gotowe wys weja przep weak wyl wea;
     {
         name: "WYP",
-        args: 0,
+        args: 1,
         description: "wyprowadź znak na urządzenie zewnętrzne",
         lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
     },

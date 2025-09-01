@@ -1,6 +1,7 @@
 // semanticAnalyzer.ts – analiza semantyczna dla Maszyny W
 import type { ProgramAst, AstNode, DirectiveNode } from './model';
 import { WlanError } from './error';
+import { commandList } from '../utils/data/commands';
 
 /* =========================
    CASE-INSENSITIVE SYMBOLS
@@ -38,6 +39,24 @@ export class SymbolTable {
   has(name: string) {
     return this.table.has(this.norm(name));
   }
+}
+
+type CmdSpec = { name: string; args?: number; argsMin?: number; argsMax?: number; description?: string; lines?: string };
+const COMMAND_SPECS = new Map<string, CmdSpec>(
+  commandList.map(c => [String(c.name).toUpperCase(), c as CmdSpec])
+);
+
+function getArity(name: string): { min: number; max: number } {
+  const spec = COMMAND_SPECS.get(name.toUpperCase());
+  if (!spec) return { min: 0, max: 0 };
+  const hasRange = typeof spec.argsMin === 'number' || typeof spec.argsMax === 'number';
+  if (hasRange) {
+    const min = (spec.argsMin ?? spec.args ?? 0) as number;
+    const max = (spec.argsMax ?? spec.args ?? min) as number;
+    return { min, max };
+  }
+  const exact = (spec.args ?? 0) as number;
+  return { min: exact, max: exact };
 }
 
 /**
@@ -196,9 +215,6 @@ export function resolveLabelRefs(nodes: AstNode[], symtab: SymbolTable) {
   }
 }
 
-/* Instrukcje, których operand traktujemy jako ADRES/ETYKIETĘ */
-const ADDRESSING_OPS = new Set(['POB', 'LAD', 'SOB', 'SOM', 'SOZ', 'DNS', 'PWR', 'PZS', 'SDP']);
-
 /* helpers */
 function readNumber(op: any): number | null {
   if (typeof op === 'number') return op;
@@ -223,26 +239,26 @@ function toImmediate(v: number, line?: number) {
   return { type: 'Immediate', value: v, line };
 }
 
-/**
- * Kluczowa część: dla POB/LAD/..., operand zamieniamy na adres (Immediate).
- * - liczba -> Immediate
- * - identyfikator -> lookup w tablicy symboli (case-insensitive)
- * - Register -> jeżeli istnieje etykieta o tej nazwie, traktujemy jak etykietę; inaczej błąd
- */
 function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
   for (const n of nodes) {
     if ((n as any).type !== 'Instruction') continue;
 
     const opName = String((n as any).name || '').toUpperCase();
-    if (!ADDRESSING_OPS.has(opName)) continue;
+    const { min, max } = getArity(opName);
 
+    // sprawdzenie liczby operandów wg commandList
     const ops = (n as any).operands || [];
-    if (ops.length === 0) {
-      throw new WlanError(`Instrukcja ${opName} wymaga jednego argumentu (adres/etykieta).`, {
-        code: 'SEM_MISSING_OPERAND',
-      });
+    if (ops.length < min) {
+      throw new WlanError(`Instrukcja ${opName} wymaga co najmniej ${min} argumentów.`, { code: 'SEM_MISSING_OPERAND' });
+    }
+    if (ops.length > max) {
+      throw new WlanError(`Instrukcja ${opName} przyjmuje najwyżej ${max} argumentów.`, { code: 'SEM_TOO_MANY_OPERANDS' });
     }
 
+    // Jeżeli rozkaz nie ma operandów wg specyfikacji — nic nie robimy (np. PWR: args=0)
+    if (max === 0 || ops.length === 0) continue;
+
+    // Dla Twojego ISA zakładamy, że operand 0 (jeśli istnieje) to adres/etykieta
     const op0 = ops[0];
 
     // 1) liczba → Immediate
@@ -253,27 +269,24 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
       continue;
     }
 
-    // 2) Register → najpierw sprawdź, czy istnieje etykieta o tej nazwie
+    // 2) rejestr → dozwolone tylko, jeśli istnieje etykieta o tej nazwie (case-insensitive)
     if (op0?.type === 'Register' && typeof op0.name === 'string') {
       const name = op0.name;
       if (symtab.has(name)) {
-        const addr = symtab.lookup(name);
-        ops[0] = toImmediate(addr, op0?.line);
+        ops[0] = toImmediate(symtab.lookup(name), op0?.line);
         (n as any).operands = ops;
         continue;
       }
-      // brak takiej etykiety — to rzeczywiście rejestr, a nie adres
       throw new WlanError(
-        `Operand instrukcji ${opName} musi wskazywać *adres* (liczba/etykieta), a nie rejestr ${name}.`,
-        { code: 'SEM_BAD_OPERAND_TYPE', hint: `Użyj np.: "${opName} a" (etykieta) albo "${opName} 12" (adres).` }
+        `Operand instrukcji ${opName} musi wskazywać adres (liczba/etykieta), a nie rejestr ${name}.`,
+        { code: 'SEM_BAD_OPERAND_TYPE', hint: `Użyj np.: "${opName} a" albo "${opName} 12".` }
       );
     }
 
     // 3) identyfikator/etykieta → lookup
     const name = readIdent(op0);
     if (name) {
-      const addr = symtab.lookup(name);
-      ops[0] = toImmediate(addr, op0?.line);
+      ops[0] = toImmediate(symtab.lookup(name), op0?.line);
       (n as any).operands = ops;
       continue;
     }

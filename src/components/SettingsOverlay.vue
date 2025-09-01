@@ -70,10 +70,10 @@ export default {
       default: () => ([
         { name: 'Szymon Woźnica', linkedin: '', github: '', roles: [] },
         { name: 'Maja Kucab', linkedin: '', github: '', roles: [] },
-        { name: 'Kacper Sikorski', linkedin: '', github: '', roles: [] },
+        { name: 'Kacper Sikorski', linkedin: 'https://www.linkedin.com/in/kacper-sikorski-049b4a334/', github: 'https://github.com/Sikor915', roles: [] },
         { name: 'Sławomir Put', linkedin: 'https://www.linkedin.com/in/slawomir-put/', github: 'https://github.com/xTaromarux', roles: [] },
         { name: 'Paweł Linek', linkedin: 'https://www.linkedin.com/in/paweloslinek/', github: 'https://github.com/pawelos231', roles: [] },
-        { name: 'Bartek Faruga', linkedin: 'www.linkedin.com/in/bartosz-faruga', github: 'https://github.com/MrRooby', roles: [] },
+        { name: 'Bartek Faruga', linkedin: 'https://www.linkedin.com/in/bartosz-faruga/', github: 'https://github.com/MrRooby', roles: [] },
         { name: 'Marcin Ryt', linkedin: '', github: '', roles: [] },
         { name: 'Oskar Forreiter', linkedin: '', github: '', roles: [] },
         { name: 'Michał Kostrzewski', linkedin: '', github: '', roles: [] },

@@ -28,8 +28,14 @@
 
     <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" maxHeight='32rem' />
 
-    <div v-else class="compiledCode">
-      <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{ active: activeLine === index }">
+    <div v-else class="compiledCode" ref="compiledEl">
+      <span
+        v-for="(line, index) in compiledCode"
+        :key="index"
+        class="flexRow"
+        :class="{ active: activeLine === index }"
+        :data-row="index"
+      >
         <span>{{ index }}</span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
@@ -49,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'   // ⬅️ nextTick dodany
 import SegmentedToggle from './SegmentedToggle.vue'
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
 
@@ -65,17 +71,19 @@ const props = defineProps({
 const emit = defineEmits(['update:code', 'setManualMode'])
 
 const codeLocal = ref(props.code)
+const compiledEl = ref(null)
 
-watch(codeLocal, (v) => {
-  emit('update:code', v)
+watch(codeLocal, (v) => emit('update:code', v))
+
+watch(() => props.code, (v) => {
+  if (v !== codeLocal.value) codeLocal.value = v
 })
 
-watch(
-  () => props.code,
-  (v) => {
-    if (v !== codeLocal.value) codeLocal.value = v
-  }
-)
+watch(() => props.activeLine, async (row) => {
+  await nextTick()
+  const rowEl = compiledEl.value?.querySelector(`[data-row="${row}"]`)
+  if (rowEl?.scrollIntoView) rowEl.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+})
 </script>
 
 <style scoped>
@@ -153,7 +161,6 @@ watch(
   padding: 0.25rem;
   border-radius: 3px;
   transition: background-color 0.2s ease;
-  min-height: 1.5em;
   align-items: center;
   display: flex;
   flex-direction: row;

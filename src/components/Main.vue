@@ -100,6 +100,7 @@
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
       :extras="extras"
+      :interrupts="interrupts"
       :autocomplete-enabled="autocompleteEnabled"
       :memory-addres-bits="memoryAddresBits" 
       @close="closePopups('settingsOpen')"
@@ -114,6 +115,7 @@
       @open-command-list="openCommandList()"
       @update:memoryAddresBits="memoryAddresBits = $event"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
+      @update:interrupts="val => (interrupts = { ...interrupts, ...val })"
     />
 
     <CommandList
@@ -190,6 +192,9 @@ export default {
 
   data() {
     return {
+      _irqWarned: false,
+      interrupts: { IE: false, IR: false, vectorBase: 0x10 },
+      isrStack: [], // [{ pc:number, phaseIdx:number }]
       autocompleteEnabled: true,
       isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
@@ -378,7 +383,6 @@ export default {
     _refreshHighlight() {
       if (!this.codeCompiled) return;
 
-      // STRUKTURALNY mikro-program (compileCode2 / generator)
       if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
         let line = 0;
         const instrIdx = Math.max(0, this.activeInstrIndex);
@@ -391,7 +395,6 @@ export default {
         return;
       }
 
-      // ŚCIEŻKA LEGACY (compileCode): aktywna linia nie może wyjść poza zakres
       const max = (this.compiledCode?.length || 1) - 1;
       this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
     },
@@ -401,37 +404,37 @@ export default {
     addrMask() { return (1 << this.memoryAddresBits) - 1; },
 
     handleProgramSectionCompile(payload) {
-      // Accept both legacy string and structured payload from ProgramSection
+      // 1) Stary tryb: ktoś podał już gotowy mikro-tekst (string)
       if (typeof payload === 'string') {
         this.code = payload;
-        this.compiledCode = payload
-          .split('\n')
-          .map((l) => l.replace(/;\s*$/, ''))
-          .filter((l) => l.trim() !== '');
+        // czyść stan i kompiluj mikro-tekst -> compiledProgram + compiledCode (po ;)
+        this.codeCompiled = false;
         this.compiledProgram = [];
-        this.codeCompiled = true;
         this.activeLine = -1;
         this.activeInstrIndex = -1;
         this.activePhaseIndex = 0;
         this.nextLine.clear();
+        this.compileCode2(); // USTAWI compiledCode = rawLines i 1:1 z compiledProgram
         return;
       }
 
-      const { text, program } = payload || {};
+      // 2) Nowy tryb z ProgramSection: preferujemy 'text' (mikro po ';')
+      const { text } = payload || {};
       if (typeof text === 'string') {
         this.code = text;
-        this.compiledCode = text
-          .split('\n')
-          .map((l) => l.replace(/;\s*$/, ''))
-          .filter((l) => l.trim() !== '');
+        this.codeCompiled = false;
+        this.compiledProgram = [];
+        this.activeLine = -1;
+        this.activeInstrIndex = -1;
+        this.activePhaseIndex = 0;
+        this.nextLine.clear();
+        this.compileCode2(); // zrobimy listing i wykonanie z mikro-tekstu
+        this.addLog('Program skompilowany (mikro, z tekstu).', 'kompilator rozkazów');
+        return;
       }
-      this.compiledProgram = Array.isArray(program) ? program : [];
-      this.codeCompiled = true;
-      this.activeLine = -1;
-      this.activeInstrIndex = -1;
-      this.activePhaseIndex = 0;
-      this.nextLine.clear();
-      this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
+
+      // Fallback (gdyby kiedyś nie było pola text)
+      this.addLog('Brak tekstu mikro do zbudowania listingu.', 'Warning');
     },
 
     applyInitMemory(assignments) {
@@ -588,41 +591,6 @@ export default {
       this.suppressBroadcast = false;
     },
 
-    checkConflict(signalName) {
-      // Groups of mutually conflicting signals:
-      const groups = [
-        ['wyad', 'wyl'],
-        ['wys', 'wyak'],
-        ['il', 'wel'],
-        ['czyt', 'pisz'],
-        ['iak', 'dak'],
-      ];
-      // One JAML Operation at a Time Group:
-      const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
-
-      for (const group of groups) {
-        if (group.includes(signalName)) {
-          for (const other of group) {
-            if (other === signalName) continue;
-            if (this.signals[other]) {
-              return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
-            }
-          }
-        }
-      }
-
-      if (jalOperations.includes(signalName)) {
-        for (const other of jalOperations) {
-          if (other === signalName) continue;
-          if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
-          }
-        }
-      }
-
-      return null;
-    },
-
     handleSignalToggle(signalName) {
       if (!this.manualMode) return;
 
@@ -738,6 +706,7 @@ export default {
           'lightMode',
           'registerFormats',
           'autocompleteEnabled',
+          'interrupts'
         ];
 
         settingsToRestore.forEach((setting) => {
@@ -745,6 +714,14 @@ export default {
             this[setting] = parsed[setting];
           }
         });
+
+        if (parsed.interrupts) {
+          this.interrupts = {
+            IE: !!parsed.interrupts.IE,
+            IR: !!parsed.interrupts.IR,
+            vectorBase: (parsed.interrupts.vectorBase ?? this.interrupts.vectorBase) | 0,
+          };
+        }
 
         // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
         if (this.memoryAddresBits > 10) {
@@ -894,7 +871,7 @@ export default {
         return;
       }
 
-      let signalslist = new Set([
+      const signalslist = new Set([
         ...this.avaiableSignals.always,
         ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
         ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
@@ -903,22 +880,45 @@ export default {
         ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
       ]);
 
-      // Build structured micro-program from simple micro lines separated by ';'
+      // Rozdziel mikro-linie po ';'
       const rawLines = this.code
         .split(';')
         .map((l) => l.replace(/\n/g, ' ').trim())
         .filter((l) => l.length > 0);
 
-      // Basic validation (ignore labels that start with '@' and IF/THEN/ELSE tokens)
+      // Walidacja – ignoruj etykiety (@...), IF/THEN/ELSE, flagi i dopuszczaj "wel <etykieta>"
       for (let [lineIdx, line] of rawLines.entries()) {
         const parts = line.split(/\s+/).filter(Boolean);
-        for (const token of parts) {
-          if (token.startsWith('@')) continue;
+
+        for (let i = 0; i < parts.length; i++) {
+          const token = parts[i];
           const kw = token.toUpperCase();
-          // temp solution, for now will do
-          // TODO: change to something more robust in the future
-          const control = new Set(['IF','THEN','ELSE','KONIEC','Z','N','M','ZERO','NEG']);
-          if (control.has(kw)) continue;          
+
+          // etykiety (np. @zero) – dozwolone
+          if (token.startsWith('@')) continue;
+
+          // słowa sterujące (IF/THEN/ELSE) – dozwolone
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE') continue;
+
+          // flagi CJUMP – dozwolone
+          if (['Z', 'N', 'M', 'ZERO', 'NEG'].includes(kw)) continue;
+
+          // POJEDYNCZY "KONIEC" jako pseudorozkaz – zaakceptuj
+          if (kw === 'KONIEC') continue;
+
+          // POZWÓL na "wel <etykieta>" i "wel KONIEC"
+          if (
+            kw === 'WEL' &&
+            parts[i + 1] &&
+            (parts[i + 1].startsWith('@') ||
+            /^[A-Za-z_]\w*$/i.test(parts[i + 1]) ||
+            /^KONIEC$/i.test(parts[i + 1]))
+          ) {
+            i += 1; // przeskocz nazwę etykiety lub 'KONIEC'
+            continue;
+          }
+
+          // zwykłe sygnały muszą być znane
           if (!signalslist.has(token)) {
             this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
             return;
@@ -926,32 +926,32 @@ export default {
         }
       }
 
+
       const program = [];
       let pc = 0;
 
-      // zbierz etykiety -> pc po zbudowaniu programu
-      const labelsOfEntry = []; // parallel array do program: labels z tej linii
-      const pendingJumps = [];  // wpisy CJUMP do późniejszej rezolucji
+      // labelsOfEntry – lista etykiet przypiętych do każdej pozycji programu
+      const labelsOfEntry = [];
 
       for (const line of rawLines) {
         const parts = line.split(/\s+/).filter(Boolean);
         if (parts.length === 0) continue;
 
-        // 1) IF <flag> THEN @t [ELSE @f]
+        // 1) IF <flag> THEN @t [ELSE @f]  => warunkowy skok (CJUMP)
         if (/^IF$/i.test(parts[0])) {
-          const flag = (parts[1] || '').toUpperCase();    // 'Z' | 'N' | 'M'...
-          const thenIdx = parts.findIndex(t => /^THEN$/i.test(t));
-          const elseIdx = parts.findIndex(t => /^ELSE$/i.test(t));
+          const flag = (parts[1] || '').toUpperCase(); // 'Z' | 'N' | 'M' | ...
+          const thenIdx = parts.findIndex((t) => /^THEN$/i.test(t));
+          const elseIdx = parts.findIndex((t) => /^ELSE$/i.test(t));
           const tTok = thenIdx >= 0 ? parts[thenIdx + 1] : null;
           const fTok = elseIdx >= 0 ? parts[elseIdx + 1] : null;
-          const trueLabel  = tTok ? String(tTok).replace(/^@/, '') : null;
+          const trueLabel = tTok ? String(tTok).replace(/^@/, '') : null;
           const falseLabel = fTok ? String(fTok).replace(/^@/, '') : null;
 
           const entry = {
             pc,
             asmLine: line,
-            phases: [ {} ],                 // brak sygnałów – to tylko decyzja skoku
-            meta: { kind: 'CJUMP', flag, trueLabel, falseLabel }
+            phases: [{}], // brak sygnałów – to tylko decyzja skoku
+            meta: { kind: 'CJUMP', flag, trueLabel, falseLabel },
           };
           program.push(entry);
           labelsOfEntry.push([]); // ta linia sama nie definiuje etykiet
@@ -965,42 +965,142 @@ export default {
           labels.push(parts.shift().slice(1));
         }
 
+        // ⬇️ obsługa "wel <etykieta>" (z @ lub bez) jako skoku strukturalnego
+        let pendingJumpLabel = null;
+
         const phase = {};
-        for (const tok of parts) {
+        for (let i = 0; i < parts.length; i++) {
+          const tok = parts[i];
           const kw = tok.toUpperCase();
-          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') break;
+
+          // nie traktujemy już "KONIEC" jako słowa kluczowego – może być nazwą etykiety
+          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE') break;
+
+          if (
+            kw === 'WEL' &&
+            parts[i + 1] &&
+            (parts[i + 1].startsWith('@') || /^[A-Za-z_]\w*$/i.test(parts[i + 1]) || /^KONIEC$/i.test(parts[i + 1]))
+          ) {
+            pendingJumpLabel = parts[i + 1].replace(/^@/, ''); // np. 'KONIEC' lub nazwa etykiety
+            i += 1; // przeskocz nazwę etykiety
+            continue;
+          }
+
+          if (kw === 'KONIEC') {
+            pendingJumpLabel = 'KONIEC';
+            continue;
+          }
+
           phase[tok] = true;
         }
 
-        const entry = { pc, asmLine: '(micro)', phases: [phase], meta: { kind: 'NONE' } };
+        const entry = { pc, asmLine: line, phases: [phase], meta: { kind: 'NONE' } };
+        if (pendingJumpLabel) {
+          entry.meta = { kind: 'JUMP', pendingLabel: pendingJumpLabel };
+        }
+
         program.push(entry);
         labelsOfEntry.push(labels);
         pc += 1;
       }
 
-      // 3) Rezolucja etykiet dla CJUMP
-      // 3) Rezolucja etykiet dla CJUMP
+      // 3) Zbuduj mapę etykiet -> PC
       const labelToPc = new Map();
       for (let i = 0; i < program.length; i++) {
         for (const L of labelsOfEntry[i]) labelToPc.set(L.toLowerCase(), program[i].pc);
       }
 
-      for (const entry of program) {
+      // Dodatkowo zostaw w this, gdybyś chciał debugować
+      this.labelToPc = Object.fromEntries(labelToPc);
+
+      // Najbliższe wystąpienie etykiety ZA bieżącą linią (forward search)
+      const resolveForward = (fromIdx, name) => {
+        if (!name) return undefined;
+        const want = String(name).toLowerCase();
+        for (let j = fromIdx + 1; j < program.length; j++) {
+          const labs = labelsOfEntry[j] || [];
+          if (labs.some(L => String(L).toLowerCase() === want)) {
+            return program[j].pc;
+          }
+        }
+        return undefined;
+      };
+
+      // (opcjonalnie) ustaw ISR, jeśli istnieje etykieta "ISR"
+      const isrPc = labelToPc.get('isr');
+      if (typeof isrPc === 'number') {
+        this.interrupts = { ...this.interrupts, vectorBase: isrPc };
+        this.addLog(`[INT] vectorBase ustawiony na @ISR = ${isrPc}`, 'system');
+      }
+
+      // 4) Rozwiąż CJUMP
+      for (let i = 0; i < program.length; i++) {
+        const entry = program[i];
         if (entry.meta?.kind === 'CJUMP') {
-          const t = entry.meta.trueLabel  ? labelToPc.get(entry.meta.trueLabel.toLowerCase())  : undefined;
-          const f = entry.meta.falseLabel ? labelToPc.get(entry.meta.falseLabel.toLowerCase()) : undefined;
+          // 1) spróbuj najpierw najbliżej wprzód, 2) potem globalna mapa, 3) fallback: pc+1
+          const tFwd = entry.meta.trueLabel  ? resolveForward(i, entry.meta.trueLabel)  : undefined;
+          const fFwd = entry.meta.falseLabel ? resolveForward(i, entry.meta.falseLabel) : undefined;
+
+          const tMap = entry.meta.trueLabel  ? labelToPc.get(entry.meta.trueLabel.toLowerCase())  : undefined;
+          const fMap = entry.meta.falseLabel ? labelToPc.get(entry.meta.falseLabel.toLowerCase()) : undefined;
+
+          const t = Number.isFinite(tFwd) ? tFwd : tMap;
+          const f = Number.isFinite(fFwd) ? fFwd : fMap;
 
           entry.meta.trueTarget  = (typeof t === 'number') ? t : (entry.pc + 1);
           entry.meta.falseTarget = (typeof f === 'number') ? f : (entry.pc + 1);
 
-          // punkt złączenia = pierwszy PC po obydwu gałęziach (zakładamy po 1 linii na gałąź)
+          // prosty punkt złączenia – pierwszy PC po "dalszym" celu
           const jt = Math.max(entry.meta.trueTarget, entry.meta.falseTarget) + 1;
           entry.meta.joinTarget = Number.isFinite(jt) ? jt : (entry.pc + 1);
         }
       }
 
+      // 5) Rozwiąż bezwarunkowe JUMP-y (z "wel <etykieta>")
+      for (let i = 0; i < program.length; i++) {
+        const entry = program[i];
+        if (entry.meta?.kind === 'JUMP' && entry.meta.pendingLabel) {
+          const lab = entry.meta.pendingLabel.toLowerCase();
+
+          if (lab === 'koniec') {
+            // znajdź najbliższy poprzedni CJUMP (jeśli jest)
+            let prevCjump = null;
+            for (let j = i - 1; j >= 0; j--) {
+              if (program[j].meta?.kind === 'CJUMP') { prevCjump = program[j]; break; }
+            }
+            // jeśli CJUMP istnieje -> skacz do jego joinTarget
+            // jeśli nie ma -> przejdź do następnej instrukcji (pc + 1)
+            const target =
+              (prevCjump && typeof prevCjump.meta?.joinTarget === 'number')
+                ? prevCjump.meta.joinTarget
+                : (entry.pc + 1);   // fallback: następna instrukcja
+            entry.meta.trueTarget = target;
+            if (entry.phases?.[0]) delete entry.phases[0].wel;
+            delete entry.meta.pendingLabel;
+            continue;
+          }
+
+          // zwykła etykieta
+          const tFwd = resolveForward(i, lab);
+          const tMap = labelToPc.get(lab);
+          const t = Number.isFinite(tFwd) ? tFwd : tMap;
+
+          if (typeof t === 'number') {
+            entry.meta.trueTarget = t;
+            if (entry.phases?.[0]) delete entry.phases[0].wel;
+          } else {
+            this.addLog(`Nieznana etykieta skoku: ${entry.meta.pendingLabel}`, 'Błąd');
+          }
+          delete entry.meta.pendingLabel;
+
+        }
+      }
+
+      this._irqWarned = false;
+
+      // 6) Finalizacja
       this.compiledProgram = program;
-      this.compiledCode = rawLines;
+      this.compiledCode = program.map(e => e.asmLine ?? '');
       this.codeCompiled = true;
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
@@ -1008,7 +1108,7 @@ export default {
       this.nextLine.clear();
       this.executeLine();
 
-      this.addLog('Kod skompilowany pomyślnie (strukturalny)', 'kompilator rozkazów');
+      this.addLog('Kod skompilowany pomyślnie (strukturalny)', 'kompilator rozkazów')
     },
 
     compileCode() {
@@ -1086,6 +1186,29 @@ export default {
           this.activePhaseIndex  = 0;
           this._stepGuard = 0;
           this._branchJoin = null;
+          this._refreshHighlight();
+        }
+
+        // ISR: jeśli IE & IR -> próbuj wejść do wektora
+        if (this.interrupts.IE && this.interrupts.IR) {
+          const vb = this.interrupts.vectorBase | 0;
+
+          if (vb < 0 || vb >= this.compiledProgram.length) {
+            if (!this._irqWarned) {
+              this.addLog(`[INT] vectorBase=${vb} poza programem – ignoruję IRQ`, 'Warning');
+              this._irqWarned = true;
+            }
+          } else {
+            // faktycznie wchodzimy do ISR
+            this.isrStack.push({ pc: this.activeInstrIndex, phaseIdx: this.activePhaseIndex });
+            this.interrupts.IE = false;   // zamaskuj
+            this.interrupts.IR = false;   // skonsumuj
+            this.addLog(`[INT] wejście do ISR @PC=${vb}`, 'system');
+            this.activeInstrIndex = vb;
+            this.activePhaseIndex = 0;
+            this._refreshHighlight(); 
+            return;
+          }
         }
 
         // Anty-pętla
@@ -1104,8 +1227,6 @@ export default {
         }
 
         const instr = this.compiledProgram[this.activeInstrIndex];
-
-        // Podświetl dokładnie to, co ZARAZ wykonamy
         this._refreshHighlight();
 
         // 1) Skok warunkowy CJUMP (z compileCode2)
@@ -1126,8 +1247,6 @@ export default {
 
           this.activeInstrIndex = (typeof target === 'number') ? target : (this.activeInstrIndex + 1);
           this.activePhaseIndex = 0;
-
-          // Po zmianie wskaźników — zaktualizuj highlight i wyjdź (kolejny krok wykona następną linię)
           this._refreshHighlight();
           return;
         }
@@ -1157,10 +1276,12 @@ export default {
               this.addLog(`(branch) wel -> PC=${target}`, 'system');
               this.activeInstrIndex = target;
               this.activePhaseIndex = 0;
+              this._refreshHighlight();
             } else {
               this.addLog(`(branch) wel: niepoprawny cel L=${target}`, 'Błąd');
               this.activeInstrIndex += 1;
               this.activePhaseIndex = 0;
+              this._refreshHighlight(); 
             }
             this._refreshHighlight();
             return;
@@ -1230,9 +1351,11 @@ export default {
             this.activeInstrIndex = target;
             this.activePhaseIndex = 0;
             this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
+            this._refreshHighlight(); 
           } else {
             this.activeInstrIndex += 1;
             this.activePhaseIndex = 0;
+            this._refreshHighlight(); 
           }
         }
 
@@ -1686,6 +1809,10 @@ export default {
       // Clear any active timeouts first
       this.clearActiveTimeouts();
 
+      this.interrupts.IE = false;
+      this.interrupts.IR = false;
+      this.isrStack = [];
+
       // Reset all register values to 0
       this.programCounter = 0;
       this.I = 0;
@@ -1717,6 +1844,8 @@ export default {
 
     restoreDefaults() {
       // Reset to default settings
+      this.interrupts = { IE: false, IR: false, vectorBase: 0x10 };
+      this.isrStack = [];
       this.memoryAddresBits = 6;
       this.codeBits = 6;
       this.addresBits = 4;
@@ -1852,6 +1981,10 @@ export default {
     },
     memoryAddresBits() {
       this.resizeMemory();
+      const maxPc = (1 << this.memoryAddresBits) - 1;
+      if (this.interrupts.vectorBase > maxPc) {
+        this.interrupts.vectorBase = maxPc;
+      }
     },
     lightMode() {
       // add lightMode or darkMode class to body
@@ -1863,7 +1996,14 @@ export default {
         document.body.classList.remove('lightMode');
       }
     },
-
+    interrupts: {
+      deep: true,
+      handler(n, o = {}) {
+        if (n.IE !== o.IE) this.addLog(`IE ${n.IE ? '=1 (przerwania włączone)' : '=0 (wyłączone)'}`, 'system');
+        if (n.IR !== o.IR) this.addLog(`IR ${n.IR ? '=1 (żądanie przerwania)' : '=0'}`, 'system');
+        if (n.vectorBase !== o.vectorBase) this.addLog(`vectorBase = ${n.vectorBase}`, 'system');
+      },
+    },
     signals: {
       deep: true,
       handler() {

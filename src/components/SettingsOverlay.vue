@@ -21,6 +21,7 @@
       :code-bits="codeBits"
       :addres-bits="addresBits"
       :odd-delay="oddDelay"
+      :interrupts="interrupts"
       :extras="extras"
       :platform="platform"
       :memory-addres-bits="memoryAddresBits" 
@@ -37,6 +38,7 @@
       @open-command-list="$emit('open-command-list')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
       @update:memoryAddresBits="$emit('update:memoryAddresBits', $event)"
+      @update:interrupts="$emit('update:interrupts', $event)"
     />
   </div>
 </template>
@@ -64,6 +66,11 @@ export default {
       validator(obj) {
         return ['xRegister', 'yRegister', 'dl', 'jamlExtras', 'busConnectors', 'showInvisibleRegisters'].every(k => k in obj)
       },
+    },
+    interrupts: {
+      type: Object,
+      required: false,
+      default: () => ({ IE: false, IR: false, vectorBase: 0x10 }),
     },
     creators: {
       type: Array,
@@ -102,6 +109,7 @@ export default {
     'open-command-list',
     'update:memoryAddresBits',
     'update:autocompleteEnabled',
+    'update:interrupts',
   ],
   data() {
     return {

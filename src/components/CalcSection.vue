@@ -34,6 +34,7 @@
       @update:number-format="$emit('update:numberFormat', $event)"
       />
     <div class="jamlSignals">
+      <SignalButton id="weak" :signal="signals.weak" label="weak" spanClassNames="arrowRightOnBottom" @click="handleClick('weak')" />
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
       <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
       <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowRightOnBottom" @click="handleClick('ode')" />

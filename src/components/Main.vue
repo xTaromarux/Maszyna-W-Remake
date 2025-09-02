@@ -1481,17 +1481,16 @@ export default {
       const timeoutId = setTimeout(() => { this.signals.przep = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-
-    mno() { // ACC = ACC * JAML (8-bit)
+    mno() {
       this.signals.mno = true;
-      this.ACC = this.to8(this.ACC * this.JAML);
+      this.JAML = this.to8(this.ACC * this.JAML);
       const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-    dziel() { // ACC = ACC / JAML (całk., 8-bit; dzielenie przez 0 -> 0)
+    dziel() {
       this.signals.dziel = true;
       const d = this.JAML & 0xFF;
-      this.ACC = this.to8(d === 0 ? 0 : Math.trunc(this.ACC / d));
+      this.JAML = this.to8(d === 0 ? 0 : Math.trunc(this.ACC / d));
       const timeoutId = setTimeout(() => { this.signals.dziel = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },

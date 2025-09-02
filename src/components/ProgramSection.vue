@@ -5,7 +5,7 @@
       v-model="programLocal"
       language="macroW"
       theme="macroTheme"
-      maxHeight='35.6rem'
+      maxHeight="35.6rem"
       :commandList="commandList"
       :autocomplete-enabled="props.autocompleteEnabled"
       :programCompiled="programCompiled"
@@ -61,13 +61,9 @@ const programCompiled = ref(false);
 // Compile high-level commands into assembler code using WLAN system
 function compileProgram() {
   try {
-    /* 1. AST */
     const ast = parse(programLocal.value);
-
-    /* 2. Analiza semantyczna */
     const analyzedNodes = analyzeSemantics(ast);
 
-    /* 3. Wyodrębnij inicjalizacje pamięci na podstawie dyrektyw RST/RPA */
     const initAssignments = [];
     for (const node of analyzedNodes) {
       if (node.type === 'Directive' && node._initMemory) {
@@ -81,9 +77,10 @@ function compileProgram() {
     for (const node of analyzedNodes) {
       if (node.type === 'Instruction') {
         const argVal = node.operands?.[0]?.value ?? 0; // np. a=4, b=5
-        initAssignments.push({ addr: pcAddr, val: argVal & 0xff });
+        // Note: No masking here - let the parent handle it with proper wordMask()
+        initAssignments.push({ addr: pcAddr, val: argVal });
         pcAddr++;
-      } else if (node.type === 'Directive' && (node.name?.toUpperCase() === 'ORG')) {
+      } else if (node.type === 'Directive' && node.name?.toUpperCase() === 'ORG') {
         // opcjonalnie: jeśli wspierasz ORG dla kodu
         pcAddr = node.operands?.[0]?.value ?? pcAddr;
       }
@@ -101,46 +98,46 @@ function compileProgram() {
     const asmFragments = [];
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
-        if ((phase).conditional === true) {
-          const flag = (phase).flag;
-          const t = (phase).truePhases?.[0] ?? {};
-          const f = (phase).falsePhases?.[0] ?? {};
-          const trueSignals = Object.keys(t).filter(k => t[k]).join(' ');
-          const falseSignals = Object.keys(f).filter(k => f[k]).join(' ');
+        if (phase.conditional === true) {
+          const flag = phase.flag;
+          const t = phase.truePhases?.[0] ?? {};
+          const f = phase.falsePhases?.[0] ?? {};
+          const trueSignals = Object.keys(t)
+            .filter((k) => t[k])
+            .join(' ');
+          const falseSignals = Object.keys(f)
+            .filter((k) => f[k])
+            .join(' ');
           // 3 linie jak w commandList
           asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero;`);
           asmFragments.push(`@zero ${trueSignals} KONIEC;`);
           asmFragments.push(`@niezero ${falseSignals};`);
         } else {
           const signals = Object.keys(phase)
-            .filter((key) => (phase)[key] === true)
+            .filter((key) => phase[key] === true)
             .join(' ');
           if (signals.trim()) asmFragments.push(`${signals};`);
         }
       }
 
-      // ↓↓↓ NOWE: dołóż ewentualne dodatkowe linie (np. "stop;")
-      const extra = (entry.meta)?.postAsm;
+      const extra = entry.meta?.postAsm;
       if (extra?.length) {
         for (const line of extra) asmFragments.push(`${line};`);
       }
     }
 
-    // 6. Emit wynik
     const finalMicroSignals = asmFragments.join('\n');
 
     console.log('Wygenerowany kod assemblera:', finalMicroSignals);
     // Emit both human-readable text and the structured micro program (with pc/meta)
     emit('update:code', { text: finalMicroSignals, program: microProgram });
 
-    /* 7. Sukces */
     programCompiled.value = true;
     emit('log', {
       message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN',
       class: 'kompilator rozkazów',
     });
   } catch (error) {
-    // For WlanError or BaseAppError, pass the full error object for enhanced display
     if (error && (error.level || error.code || error.hint || error.loc || error.frame)) {
       emit('log', {
         message: `Błąd kompilacji: ${error.message || String(error)}`,

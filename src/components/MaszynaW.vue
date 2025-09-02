@@ -158,6 +158,7 @@
           :extras="extras"
           :ACC="ACC"
           :JAML="JAML"
+          :word-bits="wordBits"
           :numberFormat="registerFormats.ACC"
           :formatNumber="formatNumber"
           :acc-format="registerFormats.ACC"
@@ -229,6 +230,7 @@ export default {
     mem: { type: Array, required: true },
     X: { type: Number, required: true },
     Y: { type: Number, required: true },
+    wordBits: { type: Number, default: 8 },
     decToCommand: { type: Function, required: true },
     decToArgument: { type: Function, required: true },
   },

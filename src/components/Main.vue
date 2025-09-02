@@ -1533,24 +1533,17 @@ export default {
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-
     mno() {
-      // ACC = ACC * JAML (dynamic word size)
       this.signals.mno = true;
-      this.ACC = this.toWord(this.ACC * this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.mno = false;
-      }, this.oddDelay);
+      this.JAML = this.to8(this.ACC * this.JAML);
+      const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dziel() {
-      // ACC = ACC / JAML (całk., dynamic word size; dzielenie przez 0 -> 0)
       this.signals.dziel = true;
-      const d = this.JAML & this.wordMask();
-      this.ACC = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
-      const timeoutId = setTimeout(() => {
-        this.signals.dziel = false;
-      }, this.oddDelay);
+      const d = this.JAML & 0xFF;
+      this.JAML = this.to8(d === 0 ? 0 : Math.trunc(this.ACC / d));
+      const timeoutId = setTimeout(() => { this.signals.dziel = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     shr() {

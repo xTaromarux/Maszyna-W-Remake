@@ -2,8 +2,8 @@
   <div id="calc">
     <div v-if="extras.jamlExtras" id="flags">
       FLAGI:
-      <div title="Negative number in Acc" v-if="ACC < 0">N</div>
-      <div title="Zero in Acc" v-if="ACC === 0">Z</div>
+      <div title="Negative number in Acc" v-if="nFlag">N</div>
+      <div title="Zero in Acc" v-if="zFlag">Z</div>
     </div>
 
     <div class="accSignals">
@@ -38,7 +38,6 @@
       <SignalButton id="przep" :signal="signals.przep" label="przep" spanClassNames="arrowRightOnBottom" @click="handleClick('przep')" />
       <SignalButton id="dod" :signal="signals.dod" label="dod" spanClassNames="arrowRightOnBottom" @click="handleClick('dod')" />
       <SignalButton id="ode" :signal="signals.ode" label="ode" spanClassNames="arrowRightOnBottom" @click="handleClick('ode')" />
-      <SignalButton id="przp" :signal="signals.przp" label="przp" spanClassNames="arrowRightOnBottom" @click="handleClick('przp')" />
       <SignalButton
         v-if="extras.jamlExtras"
         id="mno"
@@ -159,6 +158,17 @@ export default {
       type: Function,
       required: true,
     },
+    wordBits: { 
+      type: Number, 
+      default: 8 
+    },
+  },
+  computed: {
+    _mask()     { return (1 << this.wordBits) - 1 },
+    _signMask() { return 1 << (this.wordBits - 1) },
+    _accU()     { return this.ACC & this._mask },     // ACC zawinięte do wordBits
+    nFlag()     { return (this._accU & this._signMask) !== 0 },
+    zFlag()     { return this._accU === 0 },
   },
   data() {
     return {

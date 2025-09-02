@@ -24,6 +24,7 @@
       :mem="mem"
       :X="X"
       :Y="Y"
+      :word-bits="codeBits + addresBits"
       :decToCommand="decToCommand"
       :decToArgument="decToArgument"
       @clickItem="handleSignalToggle"
@@ -265,7 +266,6 @@ export default {
           'weak',
           'dod',
           'ode',
-          'przp',
           'wyak',
           'stop',
           'wyws',
@@ -313,7 +313,6 @@ export default {
 
         dod: false,
         ode: false,
-        przp: false,
         mno: false,
         dziel: false,
         shr: false,
@@ -1536,14 +1535,14 @@ export default {
     },
     mno() {
       this.signals.mno = true;
-      this.JAML = this.to8(this.ACC * this.JAML);
+      this.JAML = this.toWord(this.ACC * this.JAML);
       const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dziel() {
       this.signals.dziel = true;
       const d = this.JAML & 0xFF;
-      this.JAML = this.to8(d === 0 ? 0 : Math.trunc(this.ACC / d));
+      this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
       const timeoutId = setTimeout(() => { this.signals.dziel = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },

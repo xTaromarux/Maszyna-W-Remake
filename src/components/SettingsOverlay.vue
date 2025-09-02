@@ -68,7 +68,7 @@ export default {
     creators: {
       type: Array,
       default: () => ([
-        { name: 'Szymon Woźnica', linkedin: '', github: '', roles: [] },
+        { name: 'Szymon Woźnica', linkedin: 'https://pl.linkedin.com/in/szymon-wo%C5%BAnica-b46b7b201', github: '', roles: [] },
         { name: 'Maja Kucab', linkedin: '', github: '', roles: [] },
         { name: 'Kacper Sikorski', linkedin: 'https://www.linkedin.com/in/kacper-sikorski-049b4a334/', github: 'https://github.com/Sikor915', roles: [] },
         { name: 'Sławomir Put', linkedin: 'https://www.linkedin.com/in/slawomir-put/', github: 'https://github.com/xTaromarux', roles: [] },

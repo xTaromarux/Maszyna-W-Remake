@@ -32,7 +32,15 @@
             <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
             <div :class="{ selected: A === index }" class="inputWrapper">
               <span>{{ formatNumber(mem[index]) }}</span>
-              <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" v-model="mem[index]" />
+              <input
+                inputmode="numeric"
+                pattern="[0-9]*"
+                type="number"
+                class="hoverInput"
+                :value="mem[index]"
+                @input="updateMemoryValue($event, index)"
+                @blur="onMemoryBlur($event, index)"
+              />
             </div>
             <span :class="{ selected: A === index }">
               {{ decToCommand(value) ? decToCommand(value).name : 'EMPTY' }}
@@ -54,7 +62,6 @@
       :number-format="sFormat"
       @update:number-format="$emit('update:sFormat', $event)"
     />
-
 
     <div id="operations" v-if="!isMobile">
       <SignalButton id="czyt" :signal="signals.czyt" label="czyt" spanClassNames="lineLeftOnBottom" @click="handleClick('czyt')" />
@@ -89,6 +96,17 @@ import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
 export default {
   name: 'MemoryContent',
+  inject: {
+    validateRegisterValue: {
+      default: null,
+    },
+    showToast: {
+      default: null,
+    },
+    getMaxValueForRegister: {
+      default: null,
+    },
+  },
   props: {
     A: {
       type: Number,
@@ -127,7 +145,7 @@ export default {
       required: true,
     },
   },
-  emits: ['update:A', 'update:S', 'clickItem', 'update:aFormat', 'update:sFormat'],
+  emits: ['update:A', 'update:S', 'update:mem', 'clickItem', 'update:aFormat', 'update:sFormat'],
   components: {
     SignalButton,
     RegisterComponent,
@@ -151,6 +169,52 @@ export default {
     },
     updateWindowWidth() {
       this.windowWidth = window.innerWidth;
+    },
+    updateMemoryValue(event, index) {
+      const value = parseInt(event.target.value, 10);
+      if (!isNaN(value)) {
+        // Use injected validation function if available
+        if (this.validateRegisterValue) {
+          if (this.validateRegisterValue(value, 'memory', `Pamięć[${index}]`)) {
+            // update memory by creating new array to trigger reactivity
+            const newMem = [...this.mem];
+            newMem[index] = value;
+            this.$emit('update:mem', newMem);
+          } else {
+            // if validation fails, reset input to current value
+            event.target.value = this.mem[index];
+          }
+        } else {
+          // fallback validation for memory (max 255 for 8-bit)
+          if (value > 255) {
+            if (this.showToast) {
+              this.showToast(`Wartość ${value} przekracza maksymalną dozwoloną wartość 255 dla pamięci (8 bitów).`);
+            }
+            event.target.value = this.mem[index];
+            return;
+          }
+          if (value < 0) {
+            if (this.showToast) {
+              this.showToast(`Wartość nie może być ujemna dla pamięci.`);
+            }
+            event.target.value = this.mem[index];
+            return;
+          }
+
+          const newMem = [...this.mem];
+          newMem[index] = value;
+          this.$emit('update:mem', newMem);
+        }
+      }
+    },
+    onMemoryBlur(event, index) {
+      // Set to 0 if field is empty
+      if (event.target.value === '' || event.target.value === null) {
+        event.target.value = 0;
+        const newMem = [...this.mem];
+        newMem[index] = 0;
+        this.$emit('update:mem', newMem);
+      }
     },
   },
   mounted() {

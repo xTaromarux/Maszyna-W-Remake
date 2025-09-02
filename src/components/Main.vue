@@ -882,8 +882,9 @@ export default {
 
       this.nextLine.clear();
 
-      if (!this.manualMode) {
+      if (this.manualMode) {
         this.uncompileCode();
+        this.addLog('Przejście w tryb ręczny – program wstrzymany i wyczyszczony.', 'system');
       }
     },
     closePopups(popupName) {

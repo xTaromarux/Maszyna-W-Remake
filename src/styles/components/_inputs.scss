@@ -52,6 +52,7 @@
 
 @media (max-width: 1195px) {
   #inputs {
+    flex-direction: column-reverse;
     justify-content: center;
     align-items: flex-start;
   }

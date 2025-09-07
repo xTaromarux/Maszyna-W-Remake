@@ -114,7 +114,8 @@ export interface MicroProgramEntry {
     kind?: 'JUMP' | 'CJUMP' | 'NONE';
     trueTarget?: number;
     falseTarget?: number;
-    flag?: 'Z' | 'N' | 'C' | 'V';
+    flag?: 'Z' | 'N' | 'C' | 'V' | 'M';
+    postAsm?: string[];
   };
 }
 

@@ -55,7 +55,7 @@
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
         :code="code"
-        @compile="compileCode2"
+        @compile="compileCode"
         @edit="uncompileCode"
         @step="executeLine"
         @run="runCode"
@@ -154,6 +154,7 @@ import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
+import { compileCodeExternal } from '@/WLAN/compiler';
 
 export default {
   name: 'MainComponent',
@@ -190,6 +191,7 @@ export default {
 
   data() {
     return {
+      _condState: null,
       autocompleteEnabled: true,
       isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
@@ -372,27 +374,6 @@ export default {
     };
   },
   methods: {
-    _refreshHighlight() {
-      if (!this.codeCompiled) return;
-
-      // STRUKTURALNY mikro-program (compileCode2 / generator)
-      if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
-        let line = 0;
-        const instrIdx = Math.max(0, this.activeInstrIndex);
-        for (let i = 0; i < instrIdx; i++) {
-          const phasesLen = this.compiledProgram[i]?.phases?.length || 1;
-          line += phasesLen;
-        }
-        const phaseIdx = Math.max(0, this.activePhaseIndex || 0);
-        this.activeLine = line + phaseIdx;
-        return;
-      }
-
-      // ŚCIEŻKA LEGACY (compileCode): aktywna linia nie może wyjść poza zakres
-      const max = (this.compiledCode?.length || 1) - 1;
-      this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
-    },
-
     to8(v) {
       return v & 0xff;
     },
@@ -898,205 +879,108 @@ export default {
       }
     },
 
-    compileCode2() {
-      if (!this.code) {
-        this.addLog('Brak kodu do kompilacji', 'Błąd');
-        return;
-      }
-
-      let signalslist = new Set([
-        ...this.avaiableSignals.always,
-        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
-        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
-        ...(this.extras.dl ? this.avaiableSignals.dl : []),
-        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
-        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
-      ]);
-
-      // Build structured micro-program from simple micro lines separated by ';'
-      const rawLines = this.code
-        .split(';')
-        .map((l) => l.replace(/\n/g, ' ').trim())
-        .filter((l) => l.length > 0);
-
-      // Basic validation (ignore labels that start with '@' and IF/THEN/ELSE tokens)
-      for (let [lineIdx, line] of rawLines.entries()) {
-        const parts = line.split(/\s+/).filter(Boolean);
-        for (const token of parts) {
-          if (token.startsWith('@')) continue;
-          const kw = token.toUpperCase();
-          // temp solution, for now will do
-          // TODO: change to something more robust in the future
-          const control = new Set(['IF', 'THEN', 'ELSE', 'KONIEC', 'Z', 'N', 'M', 'ZERO', 'NEG']);
-          if (control.has(kw)) continue;
-          if (!signalslist.has(token)) {
-            this.addLog(`Sygnał "${token}" nie został rozpoznany w linii ${lineIdx + 1}`, 'Błąd parsera kodu');
-            return;
-          }
-        }
-      }
-
-      const program = [];
-      let pc = 0; // program counter
-
-      const labelsOfEntry = [];
-      // const pendingJumps = [];
-
-      for (const line of rawLines) {
-        const parts = line.split(/\s+/).filter(Boolean);
-        if (parts.length === 0) continue;
-
-        // 1) IF <flag> THEN @t [ELSE @f]
-        if (/^IF$/i.test(parts[0])) {
-          const flag = (parts[1] || '').toUpperCase(); // 'Z' | 'N' | 'M'...
-          const thenIdx = parts.findIndex((t) => /^THEN$/i.test(t));
-          const elseIdx = parts.findIndex((t) => /^ELSE$/i.test(t));
-          const tTok = thenIdx >= 0 ? parts[thenIdx + 1] : null;
-          const fTok = elseIdx >= 0 ? parts[elseIdx + 1] : null;
-          const trueLabel = tTok ? String(tTok).replace(/^@/, '') : null;
-          const falseLabel = fTok ? String(fTok).replace(/^@/, '') : null;
-
-          const entry = {
-            pc,
-            asmLine: line,
-            phases: [{}], // no signals – this is just a jump decision
-            meta: { kind: 'CJUMP', flag, trueLabel, falseLabel },
-          };
-          program.push(entry);
-          labelsOfEntry.push([]); // this line does not define labels
-          pc += 1;
-          continue;
-        }
-
-        const labels = [];
-        while (parts[0] && parts[0].startsWith('@')) {
-          labels.push(parts.shift().slice(1));
-        }
-
-        const phase = {};
-        for (const tok of parts) {
-          const kw = tok.toUpperCase();
-          if (kw === 'IF' || kw === 'THEN' || kw === 'ELSE' || kw === 'KONIEC') break;
-          phase[tok] = true;
-        }
-
-        const entry = { pc, asmLine: '(micro)', phases: [phase], meta: { kind: 'NONE' } };
-        program.push(entry);
-        labelsOfEntry.push(labels);
-        pc += 1;
-      }
-
-      // resolve CJUMP labels
-      const labelToPc = new Map();
-      for (let i = 0; i < program.length; i++) {
-        for (const L of labelsOfEntry[i]) labelToPc.set(L.toLowerCase(), program[i].pc);
-      }
-
-      for (const entry of program) {
-        if (entry.meta?.kind === 'CJUMP') {
-          const t = entry.meta.trueLabel ? labelToPc.get(entry.meta.trueLabel.toLowerCase()) : undefined;
-          const f = entry.meta.falseLabel ? labelToPc.get(entry.meta.falseLabel.toLowerCase()) : undefined;
-
-          entry.meta.trueTarget = typeof t === 'number' ? t : entry.pc + 1;
-          entry.meta.falseTarget = typeof f === 'number' ? f : entry.pc + 1;
-
-          // pytanie na przyszłość: O co tutaj chodzi?
-          // punkt złączenia = pierwszy PC po obydwu gałęziach (zakładamy po 1 linii na gałąź)
-          const jt = Math.max(entry.meta.trueTarget, entry.meta.falseTarget) + 1;
-          entry.meta.joinTarget = Number.isFinite(jt) ? jt : entry.pc + 1;
-        }
-      }
-
-      this.compiledProgram = program;
-      this.compiledCode = rawLines;
-      this.codeCompiled = true;
-      this.activeInstrIndex = -1;
-      this.activePhaseIndex = 0;
-      this.activeLine = -1;
-      this.nextLine.clear();
-      this.executeLine();
-
-      this.addLog('Kod skompilowany pomyślnie (strukturalny)', 'kompilator rozkazów');
-    },
-
     compileCode() {
-      if (!this.code) {
-        this.addLog('Brak kodu do kompilacji', 'Błąd');
-        return;
-      }
-
-      let ast;
       try {
-        ast = parse(this.code); // parsujemy cały mikroprogram
-      } catch (e) {
-        const parts = [`Błąd parsera: ${e?.message || String(e)}`];
-        if (e && e.frame) parts.push('\n' + e.frame);
-        if (e && e.hint) parts.push(`\nPodpowiedź: ${e.hint}`);
-        this.addLog(parts.join(''), 'Błąd parsera kodu');
-        return;
-      }
+        const { program, rawLines } = compileCodeExternal(this.code, {
+          availableSignals: this.avaiableSignals,
+          extras: this.extras,
+        });
 
-      // zbiór wszystkich dopuszczalnych sygnałów
-      const signalsList = new Set([
-        ...this.avaiableSignals.always,
-        ...(this.extras.xRegister ? this.avaiableSignals.xRegister : []),
-        ...(this.extras.yRegister ? this.avaiableSignals.yRegister : []),
-        ...(this.extras.dl ? this.avaiableSignals.dl : []),
-        ...(this.extras.jamlExtras ? this.avaiableSignals.jamlExtras : []),
-        ...(this.extras.busConnectors ? this.avaiableSignals.busConnectors : []),
-      ]);
+        // 1) Ustawiamy program + surowe linie do podglądu
+        this.compiledProgram = Array.isArray(program) ? program : [];
+        this.compiledCode    = Array.isArray(rawLines) ? rawLines : [];
 
-      const compiledLines = [];
+        // 2) PRZYPISANIE srcLine
+        //    Dla zwykłej fazy: +1 linia
+        //    Dla fazy warunkowej: +3 linie (IF, @zero, @niezero)
+        //    Po każdej instrukcji doliczamy jej postAsm (jeśli były dopisane linie w assemblerze)
+        let linePtr = 0;
+        for (const entry of this.compiledProgram) {
+          if (!entry || !Array.isArray(entry.phases)) continue;
 
-      // przejdź po każdej instrukcji w AST
-      for (const node of ast.body) {
-        if (node.type === 'Instruction') {
-          // flatten: nazwa + wszystkie argumenty (string lub LabelRef)
-          const parts = [node.name, ...node.args.map((arg) => (typeof arg === 'string' ? arg : arg.name))];
+          for (const phase of entry.phases) {
+            if (phase && phase.conditional === true) {
+              // IF
+              phase.srcLine = linePtr;
 
-          // walidacja: każdy element musi być znanym sygnałem
-          for (const sig of parts) {
-            if (!signalsList.has(sig)) {
-              this.addLog(`Sygnał "${sig}" nie został rozpoznany w instrukcji "${node.name}"`, 'Błąd parsera kodu');
-              return;
+              // pierwsze pod-fazy — nadajemy im "wirtualne" źródła do poprawnego highlightu
+              const t0 = phase.truePhases && phase.truePhases[0];
+              const f0 = phase.falsePhases && phase.falsePhases[0];
+              if (t0) t0.srcLine = linePtr + 1;   // linia z @zero ...
+              if (f0) f0.srcLine = linePtr + 2;   // linia z @niezero ...
+
+              linePtr += 3;
+            } else {
+              // zwykła faza
+              if (phase) phase.srcLine = linePtr;
+              linePtr += 1;
             }
           }
 
-          compiledLines.push(parts.join(' '));
-        } else if (node.type === 'Directive') {
-          // todo: dodać obsługę dyrektyw
-          this.addLog(`Dyrektywa "${node.name}" nie jest obsługiwana w tej wersji`, 'Błąd parsera kodu');
-          return;
+          // jeśli generator dopisał tekstowe linie po instrukcji (postAsm),
+          // to w podglądzie one istnieją, więc licznik też trzeba przesunąć
+          const extra = entry.meta?.postAsm;
+          if (Array.isArray(extra) && extra.length) {
+            linePtr += extra.length;
+          }
+
+          // bazowy srcLine wpisu — „pierwsza” linia wpisu (pomocniczo)
+          if (entry.phases?.length && Number.isFinite(entry.phases[0]?.srcLine)) {
+            entry.srcLine = entry.phases[0].srcLine;
+          } else {
+            entry.srcLine = entry.srcLine ?? 0;
+          }
         }
+
+        // 3) Reset stanu i start jak wcześniej
+        this.codeCompiled = true;
+        this.activeInstrIndex = -1;
+        this.activePhaseIndex = 0;
+        this.activeLine = -1;
+        this._condState = null;
+        this._branchJoin = null;
+        this._stepGuard = 0;
+        this.nextLine.clear();
+
+        this.executeLine();
+        this.addLog('Kod skompilowany pomyślnie (mikro-ASM)', 'kompilator rozkazów');
+      } catch (e) {
+        this.addLog(`Błąd kompilacji ASM: ${e?.message || String(e)}`, 'Error');
       }
-
-      // ustawienie wynikowego microprogramu
-      this.compiledCode = compiledLines;
-      this.codeCompiled = true;
-      this.activeLine = -1;
-      this.nextLine.clear();
-      this.executeLine();
-
-      this.addLog('Kod skompilowany pomyślnie', 'kompilator rozkazów');
     },
+
     uncompileCode() {
       this.codeCompiled = false;
       this.nextLine.clear();
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
+      this._condState = null; 
+      this._branchJoin = null;
+      this._stepGuard = 0;
     },
+
     executeLine() {
-      // --- STRUKTURALNY mikro-program ---
+      // helper do ustawiania podświetlenia
+      const hlFrom = (obj, fallback, pick) => {
+        if (obj && Number.isFinite(obj.srcLine)) {
+          this.activeLine = obj.srcLine;
+          return;
+        }
+
+        // 3) awaryjnie policz „po kolei”
+        this._refreshHighlight();
+      };
+
+      // --- tryb mikro-programu ---
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
-        // Inicjalizacja
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
           this.activePhaseIndex = 0;
           this._stepGuard = 0;
           this._branchJoin = null;
+          this._condState = null;
         }
 
-        // Anty-pętla
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
           this.addLog('Przerwano: przekroczono limit kroków (prawdopodobna pętla).', 'system');
@@ -1104,7 +988,6 @@ export default {
           return;
         }
 
-        // Koniec programu
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
@@ -1112,54 +995,70 @@ export default {
         }
 
         const instr = this.compiledProgram[this.activeInstrIndex];
+        const rawPhase = instr.phases?.[this.activePhaseIndex] || {};
 
-        // Podświetl dokładnie to, co ZARAZ wykonamy
-        this._refreshHighlight();
-
-        // 1) Skok warunkowy CJUMP (z compileCode2)
-        if (instr.meta?.kind === 'CJUMP') {
-          const flag = (instr.meta.flag || 'Z').toUpperCase();
-          const takeTrue = this.evaluateFlag(flag);
-          const target = takeTrue ? instr.meta.trueTarget : instr.meta.falseTarget;
-
-          const joinTarget =
-            instr.meta.joinTarget ??
-            Math.max(
-              Number(instr.meta.trueTarget ?? this.activeInstrIndex + 1),
-              Number(instr.meta.falseTarget ?? this.activeInstrIndex + 1)
-            ) + 1;
-
-          this._branchJoin = Number.isFinite(joinTarget) ? joinTarget : null;
-          this.addLog(`[CJUMP ${flag}] ${takeTrue ? 'TRUE' : 'FALSE'} -> PC=${target} (join=${this._branchJoin})`, 'system');
-
-          this.activeInstrIndex = typeof target === 'number' ? target : this.activeInstrIndex + 1;
-          this.activePhaseIndex = 0;
-
-          // Po zmianie wskaźników — zaktualizuj highlight i wyjdź (kolejny krok wykona następną linię)
-          this._refreshHighlight();
-          return;
-        }
-
-        // 2) Zwykła faza lub faza warunkowa (generator)
-        const rawPhase = instr.phases[this.activePhaseIndex] || {};
-
-        // 2a) Faza warunkowa z listami truePhases/falsePhases
+        // --- FAZA WARUNKOWA ---
         if (rawPhase && rawPhase.conditional === true) {
-          const cond = this.evaluateFlag(rawPhase.flag);
-          const branch = cond ? rawPhase.truePhases : rawPhase.falsePhases;
+          // 1) Pierwszy klik: pokaż IF i NIC nie wykonuj
+          if (!this._condState) {
+            const cond = this.evaluateFlag(rawPhase.flag);
+            const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
+            
+            this._condState = {
+              list,
+              idx: 0,
+              pick: cond ? 'T' : 'F',
+              phaseRef: rawPhase,
+              stage: 'SHOW_IF',
+            };
 
-          const hasWel = Array.isArray(branch) && branch.some((p) => p && p.wel === true);
-
-          for (const p of branch || []) {
-            const signals = new Set(Object.keys(p || {}).filter((k) => p[k] === true));
-            this.nextLine = signals;
-            this.executeSignalsFromNextLine();
+            rawPhase.srcLine = list[0]
+            hlFrom(rawPhase);
+            return;
           }
 
-          // Przesuwamy „logicznie” o 1 fazę (sam ConditionalPhase zajmuje 1 slot)
-          this.activePhaseIndex += 1;
+          const st = this._condState;
+          const curr = st.list[st.idx];
 
-          if (hasWel) {
+          // Brak ciała gałęzi → zamknij fazę warunkową i przejdź dalej
+          if (!curr) {
+            this._condState = null;
+            this.activePhaseIndex += 1;
+
+            if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
+              if (this._branchJoin != null) {
+                const join = this._branchJoin | 0;
+                this._branchJoin = null;
+                this.addLog(`join -> PC=${join}`, 'system');
+                this.activeInstrIndex = join;
+              } else if (instr.meta?.kind === 'JUMP') {
+                const target = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+                this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
+                this.activeInstrIndex = target;
+              } else {
+                this.activeInstrIndex += 1;
+              }
+              this.activePhaseIndex = 0;
+            }
+
+            if (this.activeInstrIndex < this.compiledProgram.length) {
+              const ni = this.compiledProgram[this.activeInstrIndex];
+              const np = ni?.phases?.[this.activePhaseIndex];
+              hlFrom(np ?? ni);
+            } else {
+              this.uncompileCode();
+              this.addLog('Kod zakończony', 'kompilator rozkazów');
+            }
+            return;
+          }
+
+          // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
+          const signals = new Set(Object.keys(curr).filter(k => curr[k] === true));
+          this.nextLine = signals;
+          this.executeSignalsFromNextLine();
+
+          // Skok bezpośredni z gałęzi?
+          if (curr.wel === true) {
             const target = Number(this.programCounter) | 0;
             if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
               this.addLog(`(branch) wel -> PC=${target}`, 'system');
@@ -1170,44 +1069,79 @@ export default {
               this.activeInstrIndex += 1;
               this.activePhaseIndex = 0;
             }
-            this._refreshHighlight();
+            this._condState = null;
+            const ai = this.compiledProgram[this.activeInstrIndex];
+            const ap = ai?.phases?.[this.activePhaseIndex];
+            hlFrom(ap ?? ai);
             return;
           }
 
-          if (this.activePhaseIndex >= instr.phases.length) {
-            this.activeInstrIndex += 1;
-            this.activePhaseIndex = 0;
+          // Przejdź do następnej pod-fazy tej samej gałęzi albo zamknij gałąź
+          st.idx += 1;
+
+          if (st.idx >= st.list.length) {
+            // zamknij IF i przejdź dalej
+            this._condState = null;
+            this.activePhaseIndex += 1;
+
+            if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
+              if (this._branchJoin != null) {
+                const join = this._branchJoin | 0;
+                this._branchJoin = null;
+                this.addLog(`join -> PC=${join}`, 'system');
+                this.activeInstrIndex = join;
+              } else if (instr.meta?.kind === 'JUMP') {
+                const target = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
+                this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
+                this.activeInstrIndex = target;
+              } else {
+                this.activeInstrIndex += 1;
+              }
+              this.activePhaseIndex = 0;
+            }
+
+            if (this.activeInstrIndex < this.compiledProgram.length) {
+              const ni = this.compiledProgram[this.activeInstrIndex];
+              const np = ni?.phases?.[this.activePhaseIndex];
+              hlFrom(np ?? ni);
+            } else {
+              this.uncompileCode();
+              this.addLog('Kod zakończony', 'kompilator rozkazów');
+            }
+            return;
           }
 
-          if (this.activeInstrIndex >= this.compiledProgram.length) {
-            this.uncompileCode();
-            this.addLog('Kod zakończony', 'kompilator rozkazów');
-          } else {
-            this._refreshHighlight();
-          }
+          // Jest kolejna pod-faza w tej samej gałęzi – tylko podświetl ją (wykona się w następnym kroku)
+          const nextSub = st.list[st.idx];
+          hlFrom(nextSub, st.phaseRef, st.pick);
           return;
         }
 
-        // 2b) Zwykła faza niewarunkowa
+        // --- zwykła faza ---
         if (rawPhase.END_BRANCH === true) {
-          this.activeInstrIndex++;
+          this.activeInstrIndex += 1;
           this.activePhaseIndex = 0;
-          this._refreshHighlight();
+          const ni = this.compiledProgram[this.activeInstrIndex];
+          const np = ni?.phases?.[this.activePhaseIndex];
+          hlFrom(np ?? ni);
           return;
         }
         if (rawPhase.stop === true) {
+          hlFrom(rawPhase);
           this.uncompileCode();
           this.addLog('STOP – program zatrzymany', 'kompilator rozkazów');
           return;
         }
 
+        // Podświetl i wykonaj
+        hlFrom(rawPhase);
         {
-          const signalsSet = new Set(Object.keys(rawPhase).filter((k) => rawPhase[k] === true));
+          const signalsSet = new Set(Object.keys(rawPhase).filter(k => rawPhase[k] === true));
           this.nextLine = signalsSet;
           this.executeSignalsFromNextLine();
         }
 
-        // wel (skok przez PC) – tylko gdy nie jesteśmy w trakcie łączenia gałęzi
+        // Skok wel
         if (rawPhase.wel === true && !this._branchJoin) {
           const target = Number(this.programCounter) | 0;
           if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
@@ -1219,29 +1153,24 @@ export default {
             this.activeInstrIndex += 1;
             this.activePhaseIndex = 0;
           }
-          this._refreshHighlight();
+          const ai = this.compiledProgram[this.activeInstrIndex];
+          const ap = ai?.phases?.[this.activePhaseIndex];
+          hlFrom(ap ?? ai);
           return;
         }
 
         // Następna faza / instrukcja
         this.activePhaseIndex += 1;
-
-        if (this.activePhaseIndex >= instr.phases.length) {
+        if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
           if (this._branchJoin != null) {
             const join = this._branchJoin | 0;
             this._branchJoin = null;
             this.addLog(`join -> PC=${join}`, 'system');
             this.activeInstrIndex = join;
-            this.activePhaseIndex = 0;
-          } else if (instr.meta?.kind === 'JUMP') {
-            const target = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
-            this.activeInstrIndex = target;
-            this.activePhaseIndex = 0;
-            this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
           } else {
             this.activeInstrIndex += 1;
-            this.activePhaseIndex = 0;
           }
+          this.activePhaseIndex = 0;
         }
 
         if (this.activeInstrIndex >= this.compiledProgram.length) {
@@ -1250,11 +1179,13 @@ export default {
           return;
         }
 
-        this._refreshHighlight();
+        const ni = this.compiledProgram[this.activeInstrIndex];
+        const np = ni?.phases?.[this.activePhaseIndex];
+        hlFrom(np ?? ni);
         return;
       }
 
-      // --- ŚCIEŻKA LEGACY (compileCode) ---
+      // --- legacy (tekstowe fazy po średnikach) ---
       if (!this.manualMode) {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
@@ -1262,13 +1193,11 @@ export default {
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
-        // Najpierw ustaw linie do podświetlenia -> potem wykonaj
+        this._refreshHighlight();
         const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
         this.nextLine.clear();
         for (const c of commands) this.nextLine.add(c);
-
         this.executeSignalsFromNextLine();
-
         this.activeLine++;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
@@ -1277,10 +1206,71 @@ export default {
           this._refreshHighlight();
         }
       } else {
-        // manualMode + legacy — tylko wykonaj bieżącą linię nextLine
         this.executeSignalsFromNextLine();
         this._refreshHighlight();
       }
+    },
+
+    _refreshHighlight() {
+      if (!this.codeCompiled) return;
+
+    if (this._condState) {
+      const st = this._condState;
+      // 1) pierwszy klik – SHOW_IF
+      if (st.stage === 'SHOW_IF') {
+        if (Number.isFinite(st.phaseRef?.srcLine)) {
+          this.activeLine = st.phaseRef.srcLine;
+          return;
+        }
+      }
+      // 2) drugi i kolejne – RUN_BRANCH
+      const idx = Math.min(st.idx ?? 0, (st.list?.length ?? 1) - 1);
+      const curr = st.list?.[idx];
+      if (curr && Number.isFinite(curr.srcLine)) {
+        this.activeLine = curr.srcLine;
+        return;
+      }
+      // awaryjnie – offset względem IF
+      if (Number.isFinite(st.phaseRef?.srcLine)) {
+        this.activeLine = st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2);
+        return;
+      }
+    }
+
+      // Jeżeli mamy przypięte srcLine — to ich używamy.
+      if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
+        const instr = this.compiledProgram[this.activeInstrIndex];
+        const phase = instr?.phases?.[this.activePhaseIndex];
+
+        if (phase && Number.isFinite(phase.srcLine)) {
+          this.activeLine = phase.srcLine;
+          return;
+        }
+        if (instr && Number.isFinite(instr.srcLine)) {
+          this.activeLine = instr.srcLine;
+          return;
+        }
+      }
+
+      // awaryjnie: licznik faz „na piechotę”
+      let line = 0;
+      const instrIdx = Math.max(0, this.activeInstrIndex);
+      for (let i = 0; i < instrIdx; i++) {
+        const phs = this.compiledProgram[i]?.phases || [];
+        for (const p of phs) line += (p && p.conditional === true) ? 3 : 1;
+        const extra = this.compiledProgram[i]?.meta?.postAsm;
+        if (Array.isArray(extra)) line += extra.length;
+      }
+      const currPh = this.compiledProgram[instrIdx]?.phases || [];
+      for (let k = 0; k < Math.max(0, this.activePhaseIndex); k++) {
+        const p = currPh[k];
+        line += (p && p.conditional === true) ? 3 : 1;
+      }
+      this.activeLine = line;
+
+      // legacy zakres
+      const max = (this.compiledCode?.length || 1) - 1;
+      this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
     },
 
     executeSignalsFromNextLine() {

@@ -242,7 +242,7 @@ export function generateMicroProgram(
         const flag = (
           (tplPhase as any).flag === "M" ? "N" : (tplPhase as any).flag
         ) as "Z" | "N" | string;
-        return {
+        const rp: any = {
           conditional: true,
           flag,
           truePhases: (tplPhase as any).truePhases.map(
@@ -251,7 +251,10 @@ export function generateMicroProgram(
           falsePhases: (tplPhase as any).falsePhases.map(
             toMicroPhaseFromSignalSet
           ),
-        } as RuntimePhase;
+        };
+        if ((tplPhase as any).__labels) rp.__labels = (tplPhase as any).__labels;
+        if ((tplPhase as any).__prefix) rp.__prefix = (tplPhase as any).__prefix;
+        return rp as RuntimePhase;
       }
       return toMicroPhaseFromSignalSet(tplPhase as any);
     });

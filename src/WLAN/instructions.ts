@@ -14,7 +14,7 @@ export type Signal =
   | 'call' | 'ret'
   | 'pushAcc' | 'popAcc'
   | 'wyws' | 'iws' | 'dws' | 'wyls'
-  | 'wyg' | 'werb' | 'wyrb';
+  | 'wyg' | 'werb' | 'wyrb' | 'start';
 
 export type SignalSet = Partial<Record<Signal, true>>;
 
@@ -40,7 +40,7 @@ const SIGNALS: Set<string> = new Set<Signal>([
   'call','ret',
   'pushAcc','popAcc',
   'wyws','iws','dws','wyls',
-  'wyg','werb','wyrb',
+  'wyg','werb','wyrb','start',
 ]);
 
 type Cmd = {

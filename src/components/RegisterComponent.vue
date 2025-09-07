@@ -78,6 +78,13 @@ export default {
         S: 'Rejestr S',
         A: 'Rejestr A',
         JAML: 'Rejestr JAML',
+        RZ: 'Rejestr zgłoszeń przerwań',
+        RP: 'Rejestr priorytetów przerwań',
+        AP: 'Rejestr adresu przerwania',
+        RM: 'Rejestr maski przerwań',
+        G:  'Rejestr gotowości urządzenia',
+        RB: 'Rejestr bufora urządzenia',
+        WS: 'Wskaźnik stosu', 
       };
       return names[this.label] || this.label;
     },
@@ -102,6 +109,13 @@ export default {
         L: 'programCounter',
         S: 'S',
         A: 'A',
+        WS: 'WS', 
+        RZ: 'RZ', 
+        RP: 'RP', 
+        AP: 'AP', 
+        RM: 'RM', 
+        G: 'G', 
+        RB: 'RB', 
         JAML: 'JAML',
       };
       return typeMap[this.label] || this.label;

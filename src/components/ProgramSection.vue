@@ -94,33 +94,36 @@ function compileProgram() {
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
         if ((phase).conditional === true) {
-          const flag = (phase).flag;
+          const cond = phase;
+          const flag = cond.flag;
+          const labels = cond.__labels || {};
+          const tLabel = labels.t || 'zero';
+          const fLabel = labels.f || 'niezero';
+          const prefixArr = cond.__prefix;
 
-          // IF
-          (phase).srcLine = lineNo;
-          asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero;`);
+          const t = cond.truePhases?.[0] ?? {};
+          const f = cond.falsePhases?.[0] ?? {};
+          const trueSignals = Object.keys(t).filter(k => t[k]).join(' ');
+          const falseSignals = Object.keys(f).filter(k => f[k]).join(' ');
+
+          const prefix = (prefixArr && prefixArr.length) ? (prefixArr.join(' ') + ' ') : '';
+
+          // linia z IF – z etykietą gałęzi false i prefiksem w tej samej linii
+          cond.srcLine = lineNo;
+          asmFragments.push(`@${fLabel} ${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
           lineNo++;
 
-          // @zero ...
-          const t = (phase).truePhases?.[0] ?? {};
-          const f = (phase).falsePhases?.[0] ?? {};
-
-          const trueSignals = Object.keys(t).filter(k => (t)[k]).join(' ');
-          const falseSignals = Object.keys(f).filter(k => (f)[k]).join(' ');
-
-          (t).srcLine = lineNo; // ⬅ przypięcie @zero
-          asmFragments.push(
-            trueSignals ? `@zero ${trueSignals} KONIEC;` : `@zero;`
-          );
+          // gałąź true – bez dopisywania "KONIEC" na siłę
+          (t).srcLine = lineNo;
+          asmFragments.push(trueSignals ? `@${tLabel} ${trueSignals};` : `@${tLabel};`);
           lineNo++;
 
-          // @niezero …
-          (f).srcLine = lineNo; // ⬅ przypięcie @niezero
-          asmFragments.push(
-            falseSignals ? `@niezero ${falseSignals};` : `@niezero;`
-          );
-          lineNo++;
-
+          // gałąź false – drukuj tylko jeśli coś w niej jest
+          if (falseSignals) {
+            (f).srcLine = lineNo;
+            asmFragments.push(`@${fLabel} ${falseSignals};`);
+            lineNo++;
+          }
         } else {
           // zwykła faza
           const signals = Object.keys(phase).filter((key) => (phase)[key] === true).join(' ');

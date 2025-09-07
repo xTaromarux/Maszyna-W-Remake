@@ -3,7 +3,7 @@
     user-select: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine)  {
   .signal:hover:not(.bus) {
     --signal: var(--signal-hover) !important;
     --signalText: var(--signal-hover) !important;

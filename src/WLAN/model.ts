@@ -91,7 +91,15 @@ export type MicroSignalName =
   | 'pushAcc'
   | 'popAcc'
   | 'call'
-  | 'ret';
+  | 'ret'
+  | 'wyws'
+  | 'iws'
+  | 'dws'
+  | 'wyls'
+  | 'wyg'
+  | 'werb'
+  | 'wyrb'
+  | 'start';
 
 export type MicroPhase = Partial<Record<MicroSignalName, boolean>> & {
   conditional?: undefined | false;

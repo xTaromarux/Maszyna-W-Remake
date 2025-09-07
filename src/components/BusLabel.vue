@@ -1,5 +1,5 @@
 <template>
-  <span v-if="showInvisibleRegisters && !mobileView">
+  <span v-if="showInvisibleRegisters && !mobileView" style="margin-right: 5px;">
     {{ busName }} : {{ formatNumber(busValue) }}
   </span>
   <span v-if="!mobileView">
@@ -14,7 +14,7 @@ export default {
     busName: { type: String, required: true },
     busValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
-    mobileView: { type: Boolean, required: true },
+    mobileView: { type: Boolean, required: false },
     formatNumber: { type: Function, required: true },
   },
 };

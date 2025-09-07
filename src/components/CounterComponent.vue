@@ -21,15 +21,20 @@
       class="long pathDownOnLeft"
       spanClassNames="arrowLeftOnBottom"
     />
-
-    <SignalButton
-      id="wel"
-      :signal="signals.wel"
-      @click="handleClick('wel')"
-      label="wel"
-      class="impulse pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
-    />
+    <div 
+      class="wylsSignalsConteiner"
+      :class="extras?.stack?.wylsSignal ? 'wylsSignalsConteinerContent' : 'wylsSignalsConteinerContentEnd'">
+      <div v-if="extras?.stack?.wylsSignal" class="wylsSignalsExt">
+      </div>
+      <SignalButton
+        id="wel"
+        :signal="signals.wel"
+        @click="handleClick('wel')"
+        label="wel"
+        class="impulse pathUpOnRight"
+        spanClassNames="arrowRightOnBottom"
+      />
+    </div>
   </div>
 </template>
 

@@ -24,6 +24,14 @@
       :mem="mem"
       :X="X"
       :Y="Y"
+      :RB="RB"
+      :G="G"
+      :RZ="RZ"
+      :RP="RP"
+      :RM="RM"
+      :AP="AP"
+      :WS="WS"
+      :rz-inputs="RZInputs"
       :word-bits="codeBits + addresBits"
       :decToCommand="decToCommand"
       :decToArgument="decToArgument"
@@ -36,6 +44,14 @@
       @update:S="S = $event"
       @update:X="X = $event"
       @update:Y="Y = $event"
+      @update:RB="RB = $event"
+      @update:G="G = $event"
+      @update:RZ="RZ = $event"
+      @update:rz-inputs="RZInputs = $event"
+      @update:RP="RP = $event"
+      @update:RM="RM = $event"
+      @update:AP="AP = $event"
+      @update:WS="WS = $event"
       @update:number-format="({ field, value }) => (registerFormats[field] = value)"
     />
 
@@ -108,7 +124,7 @@
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
-      @update:extras="extras = $event"
+      @update:extras="(patch) => extras = mergeExtras(extras, patch)"
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
@@ -204,9 +220,16 @@ export default {
       mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
       programCounter: 0,
       JAML: 0,
+      RZInputs: [0,0,0,0],
 
       X: 0,
       Y: 0,
+      RB: 0,
+      G: 0,
+      RM: 0,
+      AP: 0,
+      RP: 0,
+      RZ: 0,
       ACC: 0,
       I: 0,
       A: 0,
@@ -246,6 +269,13 @@ export default {
         S: 'dec',
         X: 'dec',
         Y: 'dec',
+        RB: 'dec',
+        G: 'dec',
+        RZ: 'dec',
+        RP: 'dec',
+        RM: 'dec',
+        AP: 'dec',
+        WS: 'dec',
         JAML: 'dec',
         BusA: 'dec',
         BusS: 'dec',
@@ -343,20 +373,19 @@ export default {
         wyws: false,
         iws: false,
         dws: false,
+        werm: false,
+        wyap: false,
+        wews: false,
+        wyrm: false,
         wyls: false,
         wyg: false,
         werb: false,
         wyrb: false,
+        rint: false,
+        eni: false,
         start: false,
       },
-      extras: {
-        xRegister: false,
-        yRegister: false,
-        dl: false,
-        jamlExtras: false,
-        busConnectors: false,
-        showInvisibleRegisters: false,
-      },
+      extras: this.getDefaultExtras(),
       logs: [],
 
       manualMode: true,
@@ -374,6 +403,44 @@ export default {
     };
   },
   methods: {
+    getDefaultExtras() {
+      return {
+        xRegister: false,
+        yRegister: false,
+        io: { rbRegister: false, gRegister: false },
+        stack: { 
+          wsRegister: false,
+          wylsSignal: false  
+        },
+        interrupts: { 
+          rzRegister: false, 
+          rpRegister: false, 
+          rmRegister: false, 
+          apRegister: false, 
+          rintSignal: false,
+          eniSignal: false, 
+        },
+        dl: false,
+        jamlExtras: false,
+        busConnectors: false,
+        showInvisibleRegisters: false,
+      };
+    },
+
+    mergeExtras(current, patch) {
+      const base = this.getDefaultExtras();
+      const src = current || {};
+      const p   = patch || {};
+      return {
+        ...base,
+        ...src,
+        ...p,
+        io:         { ...base.io,         ...(src.io || {}),         ...(p.io || {}) },
+        stack:      { ...base.stack,      ...(src.stack || {}),      ...(p.stack || {}) },
+        interrupts: { ...base.interrupts, ...(src.interrupts || {}), ...(p.interrupts || {}) },
+      };
+    },
+
     to8(v) {
       return v & 0xff;
     },
@@ -515,10 +582,10 @@ export default {
       ];
 
       // Sygnały używające magistrali A
-      const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa', 'wyws'];
+      const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa', 'wyws', 'wyap', 'wyrm', 'werm'];
 
       // Sygnały używające magistrali S
-      const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa', 'wyls', 'wyg', 'wyrb'];
+      const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa', 'wyls', 'wyg', 'wyrb', 'werb', 'start'];
 
       // One JAML Operation at a Time Group:
       const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
@@ -732,7 +799,11 @@ export default {
 
         settingsToRestore.forEach((setting) => {
           if (parsed[setting] !== undefined) {
-            this[setting] = parsed[setting];
+            if (setting === 'extras') {
+              this.extras = this.mergeExtras(this.extras, parsed.extras);
+            } else {
+              this[setting] = parsed[setting];
+            }
           }
         });
 
@@ -750,6 +821,13 @@ export default {
         this.I = 0;
         this.X = 0;
         this.Y = 0;
+        this.RM = 0;
+        this.RZ = 0;
+        this.AP = 0;
+        this.RP = 0;
+        this.WS = 0;
+        this.G = 0;
+        this.RB = 0;
         this.S = 0;
         this.BusA = 0;
         this.BusS = 0;
@@ -1810,6 +1888,13 @@ export default {
       this.S = 0;
       this.X = 0;
       this.Y = 0;
+      this.RM = 0;
+      this.RZ = 0;
+      this.AP = 0;
+      this.RP = 0;
+      this.WS = 0;
+      this.G = 0;
+      this.RB = 0;
       this.JAML = 0;
       this.BusA = 0;
       this.BusS = 0;
@@ -1846,18 +1931,18 @@ export default {
         S: 'dec',
         X: 'dec',
         Y: 'dec',
+        RB: 'dec',
+        G: 'dec',
+        RZ: 'dec',
+        RP: 'dec',
+        RM: 'dec',
+        AP: 'dec',
+        WS: 'dec',
         JAML: 'dec',
         BusA: 'dec',
         BusS: 'dec',
       };
-      this.extras = {
-        xRegister: false,
-        yRegister: false,
-        dl: false,
-        jamlExtras: false,
-        busConnectors: false,
-        showInvisibleRegisters: false,
-      };
+      this.extras = this.getDefaultExtras();
 
       // Resize memory according to new settings
       this.resizeMemory();

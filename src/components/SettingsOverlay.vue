@@ -62,7 +62,7 @@ export default {
       type: Object,
       required: true,
       validator(obj) {
-        return ['xRegister', 'yRegister', 'dl', 'jamlExtras', 'busConnectors', 'showInvisibleRegisters'].every(k => k in obj)
+        return ['xRegister', 'yRegister', 'dl', 'jamlExtras', 'busConnectors', 'showInvisibleRegisters', 'interrupts', 'io', 'stack'].every(k => k in obj)
       },
     },
     creators: {

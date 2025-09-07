@@ -2,25 +2,49 @@
     display: grid;
     grid-template-areas:
         "il c c dl"
-        ". wel wyl .";
+        "cont cont wyl .";
     grid-template-rows: auto 3rem;
     grid-template-columns: auto 1fr 1fr auto;
     justify-content: stretch;
     align-items: stretch;
 }
 
+.calcConteiner{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+#wsRegister {
+    display: grid;
+    grid-template-areas:
+        ". wyws wews busS"    
+        "il c c dl";
+    grid-template-rows: auto 3rem;
+    grid-template-columns: auto 1fr 1fr auto;
+    justify-content: stretch;
+    align-items: stretch;
+}
+
+#wsRegister #busS{
+    grid-area: busS;
+}
+
+#wsRegister #iws,
 #counter #il {
     grid-area: il;
     justify-self: right;
     align-self: center;
 }
 
+#wsRegister #dws,
 #counter #dl {
     grid-area: dl;
     justify-self: left;
     align-self: center;
 }
 
+#wsRegister .register,
 #counter .register {
     grid-area: c;
     border: 1px solid var(--panelOutlineColor, black);
@@ -28,8 +52,14 @@
     border-radius:  0.5rem;
 }
 
-#counter #wel {
-    grid-area: wel;
+#wylsSignalsConteiner #wel {
+    padding-bottom: 20px;
+    margin-right: 5px !important;
+    margin-right: 0.25rem;
+}
+
+#wylsSignalsConteiner #wyls {
+    grid-area: wyls;
     padding-bottom: 20px;
     margin-right: 5px !important;
     margin-right: 0.25rem;
@@ -41,3 +71,15 @@
     margin-left: 15px !important;
     margin-left: 0.25rem;
 }
+
+#wsRegister #wews {
+    grid-area: wews;
+    padding-bottom: 10px;
+    margin-left: 15px !important;
+}
+
+#wsRegister #wyws {
+    grid-area: wyws;
+    padding-bottom: 20px;
+}
+

@@ -183,7 +183,9 @@
   }
 
   .wylsBusExt{
-    width: 4px;
+    width: 3px;
+    background-color: var(--signal, black);
+    border-right: 0px solid var(--signal, black);
   }
 
   .wylsBusDiv{

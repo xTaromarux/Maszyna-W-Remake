@@ -14,7 +14,7 @@
         </div>
     </header>
 
-    <div class="settings-content">
+    <div class="settingsContent">
       <div class="flexColumn">
         <SegmentedToggle
           :options="[
@@ -103,15 +103,80 @@
 
       <div class="extras" v-if="platform !== 'esp'">
         <label>Dodatki:</label>
-        <template v-for="(label, key) in extrasLabels" :key="key">
+
+        <!-- PROSTE BOOLEANY -->
+        <template v-for="key in booleanKeys" :key="key">
           <div class="module-toggle-wrapper">
-            <span class="module-label">{{ label }}</span>
+            <span class="module-label">{{ extrasLabels[key] }}</span>
             <label class="switch">
-              <input type="checkbox" :checked="extras[key]" @change="$emit('update:extras', { ...extras, [key]: $event.target.checked })" />
+              <input
+                type="checkbox"
+                :checked="extras[key]"
+                @change="$emit('update:extras', { [key]: $event.target.checked })"
+              />
               <span class="slider round"></span>
             </label>
           </div>
         </template>
+
+        <!-- GRUPY Z DZIEĆMI -->
+        <div
+          v-for="group in groupDefs"
+          :key="group.key"
+          class="settingsGroup"
+          :class="{ open: isOpen(group.key) }"
+        >
+          <!-- Nagłówek: rola przycisku + klawiatura -->
+          <div
+            class="settingsGroupHeader"
+            role="button"
+            :aria-expanded="isOpen(group.key)"
+            tabindex="0"
+            @click="toggleOpen(group.key)"
+            @keydown.enter.prevent="toggleOpen(group.key)"
+            @keydown.space.prevent="toggleOpen(group.key)"
+          >
+            <span class="chevron" aria-hidden="true"></span>
+            <span class="group-title">{{ group.label }}</span>
+
+            <!-- MASTER SWITCH -->
+            <label class="switch" @click.stop>
+              <input
+                type="checkbox"
+                :checked="isGroupAllOn(group)"
+                @change="toggleGroup(group, $event.target.checked)"
+              />
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- Płynna animacja wysokości -->
+          <transition
+            name="collapse"
+            @enter="onEnter"
+            @after-enter="onAfterEnter"
+            @leave="onLeave"
+            @after-leave="onAfterLeave"
+          >
+            <div v-show="isOpen(group.key)" class="collapsible">
+              <div
+                v-for="child in group.children"
+                :key="child.key"
+                class="module-toggle-wrapper"
+              >
+                <span class="module-label">{{ child.label }}</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    :checked="extras?.[group.key]?.[child.key]"
+                    @change="$emit('update:extras', { [group.key]: { [child.key]: $event.target.checked } })"
+                  />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+          </transition>
+        </div>
       </div>
 
      <div class="flexColumn">
@@ -177,6 +242,11 @@ export default {
     autocompleteEnabled: { type: Boolean, default: true },
     memoryAddresBits: { type: Number, required: true },
   },
+  data() {
+    return {
+      openMap: {}, // { [groupKey]: boolean }
+    }
+  },
   emits: [
     'close',
     'update:lightMode',
@@ -199,8 +269,53 @@ export default {
         dl: 'DL',
         jamlExtras: 'Dodatki JAML',
         busConnectors: 'Łączniki magistrali',
-        showInvisibleRegisters: 'Pokaż niewidoczne rejestry',
-      }
+        showInvisibleRegisters: 'Pokaż niewidoczne rejestry magistral',
+        interrupts: 'Przerwania',
+        stack: 'Obsługa stosu',
+        io: 'Urządzenia wejścia/wyjścia',
+      };
+    },
+    booleanKeys() {
+      return [
+        'xRegister',
+        'yRegister',
+        'dl',
+        'jamlExtras',
+        'busConnectors',
+        'showInvisibleRegisters',
+      ];
+    },
+    groupDefs() {
+      return [
+        {
+          key: 'io',
+          label: this.extrasLabels.io,
+          children: [
+            { key: 'rbRegister', label: 'Rejestr RB' },
+            { key: 'gRegister',  label: 'Rejestr G'  },
+          ],
+        },
+        {
+          key: 'stack',
+          label: this.extrasLabels.stack,
+          children: [
+            { key: 'wsRegister', label: 'Rejestr WS' },
+            { key: 'wylsSignal', label: 'Sygnał wyls' },
+          ],
+        },
+        {
+          key: 'interrupts',
+          label: this.extrasLabels.interrupts,
+          children: [
+            { key: 'rzRegister', label: 'Rejestr RZ' },
+            { key: 'rpRegister', label: 'Rejestr RP' },
+            { key: 'rmRegister', label: 'Rejestr RM' },
+            { key: 'apRegister', label: 'Rejestr AP' },
+            { key: 'rintSignal', label: 'Sygnał rint' },
+            { key: 'eniSignal', label: 'Sygnał eni' },
+          ],
+        },
+      ];
     },
   },
   methods: {
@@ -210,11 +325,48 @@ export default {
       const rules = {
         codeBits: { min: 1, max: 16 },
         addresBits: { min: 1, max: 32 },
-        memoryAddresBits: { min: 1, max: 10 }, // <--- DODANE (np. do 1024 komórek)
+        memoryAddresBits: { min: 1, max: 10 },
         oddDelay: { min: 0, max: 10000 },
       }[key]
       if (!rules) { if (n >= 0) this.$emit(`update:${key}`, n); return }
       if (n >= rules.min && n <= rules.max) this.$emit(`update:${key}`, n)
+    },
+
+    isGroupAllOn(group) {
+      const obj = this.extras?.[group.key] || {}
+      return group.children.every(ch => !!obj[ch.key])
+    },
+    toggleGroup(group, checked) {
+      const patch = {}
+      for (const ch of group.children) patch[ch.key] = !!checked
+      this.$emit('update:extras', { [group.key]: patch })
+    },
+
+    isOpen(key) {
+      return !!this.openMap[key]
+    },
+    toggleOpen(key) {
+      this.openMap = { ...this.openMap, [key]: !this.openMap[key] }
+    },
+
+    onEnter(el) {
+      el.style.height = '0px'
+      el.style.overflow = 'hidden'
+      void el.offsetHeight
+      el.style.height = el.scrollHeight + 'px'
+    },
+    onAfterEnter(el) {
+      el.style.height = 'auto'
+      el.style.overflow = ''
+    },
+    onLeave(el) {
+      el.style.height = el.scrollHeight + 'px'
+      el.style.overflow = 'hidden'
+      void el.offsetHeight
+      el.style.height = '0px'
+    },
+    onAfterLeave(el) {
+      el.style.overflow = ''
     },
   },
 }
@@ -246,7 +398,7 @@ export default {
   transform: translateX(100%)
 }
 
-.settings-content {
+.settingsContent {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
@@ -263,6 +415,43 @@ export default {
   background: #003c7d;
   color: #fff;
 }
+
+.settingsGroup{
+  text-align: start;
+}
+
+.settingsGroup.open .chevron { transform: rotate(90deg); }
+
+.settingsGroupHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto; 
+  align-items: center;
+  gap: .5rem;
+  padding: 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.settingsGroupHeader .chevron {
+  width: 0; height: 0;
+  border-left: 6px solid var(--fontColor);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform .22s ease;
+  margin-right: 2px;
+}
+
+.settingsGroupHeader .group-title {
+  color: var(--fontColor);
+  font-weight: 600;
+}
+
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: height .25s ease;
+}
+
+.collapsible { overflow: hidden; }
 
 .settingsHeader h1 {
   font-size: 1.25rem;

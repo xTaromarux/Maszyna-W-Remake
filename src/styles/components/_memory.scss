@@ -1,5 +1,8 @@
 #xRegister,
-#yRegister {
+#yRegister,
+#gRegister,
+#rpRegister,
+#rbRegister {
   display: grid;
   grid-template-areas:
     "in out"
@@ -8,8 +11,53 @@
   padding-bottom: 20px;
 }
 
+#rzRegister {
+  display: grid;
+  grid-template-areas:
+    "b"
+    "r";
+  padding-bottom: 20px;
+}
+
+#rmRegister {
+  display: grid;
+  grid-template-areas:
+    "r r"
+    "in out";
+  gap: 0 0.5rem;
+}
+
+@media (max-width: 675px) {
+  #rmRegister {
+    gap: 0 0;
+  }
+  
+  #rbRegister, 
+  #gRegister {
+    grid-template-areas:
+      "r r"
+      "in out";
+    padding-bottom: 0;
+  }
+}
+
+#apRegister {
+  display: grid;
+  grid-template-areas:
+    "r r"
+    "out .";
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.5rem;
+}
+
 #xRegister .register,
-#yRegister .register {
+#yRegister .register,
+#gRegister .register,
+#rzRegister .register,
+#rpRegister .register,
+#rmRegister .register,
+#apRegister .register,
+#rbRegister .register {
   grid-area: r;
   border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
@@ -19,19 +67,20 @@
   border-radius: 0.5rem;
 }
 
-#wyy {
+#wyy, #wex, #werb, #start, #wyrm, #wyg{
   padding-bottom: 10px;
 }
 
-#wey {
+#wyx, #wyrb, #start {
   padding-bottom: 20px;
 }
 
-#wyx {
+ #werm, #wey {
+  margin-left: 15px !important;
   padding-bottom: 20px;
 }
 
-#wex {
+#wyap{
   padding-bottom: 10px;
 }
 
@@ -56,12 +105,124 @@
   height: 0.125rem;
 }
 
+#iRegister .signals,
+#iRegister #wei,
+#iRegister #stop {
+  height: auto; /* nadpisuje poprzednie 0.125rem */
+}
+
+#iRegister .signals {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch; 
+  align-content: stretch;
+  flex-grow: 1;
+}
+
 #iRegister #wyad {
   margin-right: 2rem;
 }
 
 #iRegister #wei {
+  flex-grow: 1;
   margin-left: 2rem;
+}
+
+.stopConteiner {
+  display: flex;
+  width: 80px;
+  margin-right: 20px;
+  align-items: center;
+}
+
+@media (max-width: 675px) {
+  .stopConteiner {
+   margin-right: 0;
+   width: 50px;
+   padding-bottom: 60px;
+  }
+
+  #iRegister #wei {
+    margin-left: 1rem;
+  }
+}
+
+#stop {
+  margin-left: 0rem;
+}
+
+.wylsConteiner {
+  display: flex;
+  width: 80px;
+  align-items: stretch; 
+  align-content: stretch;
+}
+
+.wylsBusConteiner {
+  display: flex;
+  align-items: stretch; 
+  align-content: stretch;
+}
+
+.wylsBusDiv {
+  width: 55px; 
+  height: 2px;
+} 
+
+.wylsBusExt,
+.wylsSignalsExt {
+  width: 42.11px;
+  height: 100%;
+  border-right: 3px solid var(--wylsExtColor, black);
+  transition: none;
+}
+
+@media (max-width: 675px) {
+  .wylsSignalsExt {
+    margin-right: 5px;
+  }
+
+  .wylsBusExt{
+    width: 3px;
+  }
+
+  .wylsBusDiv{
+    width: 10px;
+  }
+
+  #wyls {
+    margin-left: 0 !important;
+  }
+
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #W:has(#wyls.signal:hover) {
+    --wylsExtColor: var(--signal-hover);
+  }
+}
+
+/* Aktywny (klik/tap) – działa wszędzie */
+#W:has(#wyls.signal.active) {
+  --wylsExtColor: var(--signal-active);
+}
+
+.wylsSignalsConteiner{
+  grid-area: cont;
+  display: flex;
+  flex-direction: row;
+}
+
+.wylsSignalsConteinerContent{
+  justify-content: space-between;
+}
+
+.wylsSignalsConteinerContentEnd{
+  justify-content: flex-end;
+}
+
+.wylsBusConteiner .bus {
+  width: 100%;
 }
 
 #sa {
@@ -96,6 +257,7 @@
 /* -------- MEMORY SECTION (cały grid) -------- */
 #memory {
   display: grid;
+  height: 100%;
   align-items: stretch;
   justify-items: center;
   grid-template-areas:
@@ -148,7 +310,8 @@
   overflow: hidden;
   min-width: 15rem;
   min-height: 15rem;
-  height: 20rem;
+  height: auto;
+  max-height: 22rem;
   width: 100%;
 }
 
@@ -159,7 +322,7 @@
   border-right: 1px solid var(--panelOutlineColor, black);
   border-radius: 0.5rem;
   overflow-y: auto;
-  height: 90%;
+  height: 94%;
   margin: 10px 10px;
 }
 

@@ -15,14 +15,25 @@
       :number-format="numberFormat"
       @update:number-format="$emit('update:numberFormat', $event)"
     />
-    <SignalButton
-      id="wei"
-      :signal="signals.wei"
-      label="wei"
-      divClassNames="impulse pathUpOnLeft"
-      spanClassNames="arrowLeftOnBottom"
-      @click="handleClick('wei')"
-    />
+    <div class="signals">
+      <SignalButton
+        id="wei"
+        :signal="signals.wei"
+        label="wei"
+        divClassNames="impulse pathUpOnLeft"
+        spanClassNames="arrowLeftOnBottom"
+        @click="handleClick('wei')"
+      />
+      <div class="stopConteiner" >
+        <SignalButton 
+          id="stop" 
+          :signal="signals.stop" 
+          @click="handleClick('stop')" 
+          label="stop" 
+          spanClassNames="lineLeftOnBottom additionalInterruptsSignal" 
+          />
+        </div>
+    </div>  
   </div>
 </template>
 

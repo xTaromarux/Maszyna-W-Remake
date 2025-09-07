@@ -19,7 +19,7 @@ export default {
   components: { BusLabel },
   props: {
     signalStatus: { type: Boolean, required: true },
-    mobileView: { type: Boolean, required: true },
+    mobileView: { type: Boolean, required: false },
     busValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
     busName: { type: String, required: true },

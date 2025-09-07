@@ -4,7 +4,7 @@ type Cmd = { name: string; args: number; description?: string; lines: string };
 
 const KNOWN: ReadonlySet<string> = new Set([
   'czyt','wys','wei','il','wyad','wea','wyl','wel','weja','weak','przep','dod','ode','mno','dziel',
-  'shr','shl','neg','lub','i','as','sa','pisz','wes','wyak','wyws','iws','wyg','werb','wyrb','wyls','dws',
+  'shr','shl','neg','lub','i','as','sa','pisz','wes','wyak','wyws','iws','wyg','werb','wyrb','wyls','dws','start',
   'readIO','writeIO','call','ret','pushAcc','popAcc'
 ]);
 
@@ -81,13 +81,12 @@ export function buildFromCommandList(list: Cmd[]): Built {
 
       // 0) jeśli w środku wiersza mamy coś przed IF – dodajemy to jako zwykłą fazę
       const split = splitChunkAtIF(ln);
+      let prefixArr: Signal[] | undefined;
       if (split.before) {
         const arr = toSignalArray(cutKONIEC(split.before));
-        if (arr.length) phases.push(arr);
+        if (arr.length) prefixArr = arr;
       }
-      if (split.ifPart) {
-        ln = split.ifPart; // od teraz ln to czysty "IF Z THEN ... ELSE ..."
-      }
+      if (split.ifPart) ln = split.ifPart;
 
       // 1) Czysta linia IF <FLAG> THEN @t ELSE @f
       if (IF_LINE_RE.test(ln)) {
@@ -109,12 +108,15 @@ export function buildFromCommandList(list: Cmd[]): Built {
         if (truePhases.length) i++;
         if (falsePhases.length) i++;
 
-        const conditional: ConditionalPhase = {
+        const conditional: ConditionalPhase & { __labels?: any; __prefix?: Signal[] } = {
           conditional: true,
           flag,
           truePhases,
           falsePhases,
         };
+        conditional.__labels = { t: tLabel, f: fLabel };
+        if (prefixArr?.length) conditional.__prefix = prefixArr;
+
         phases.push(conditional);
         continue;
       }

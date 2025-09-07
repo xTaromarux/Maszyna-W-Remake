@@ -14,11 +14,7 @@
 
     <teleport to="body">
       <transition name="fade">
-        <div
-          v-if="showMobileModal"
-          class="mobile-overlay"
-          @click.self="closeMobileModal"
-        >
+        <div v-if="showMobileModal" class="mobile-overlay" @click.self="closeMobileModal">
           <transition name="scale">
             <div class="mobileModalContent" role="dialog" aria-modal="true">
               <MemoryContent
@@ -35,11 +31,10 @@
                 @update:s-format="$emit('update:sFormat', $event)"
                 @update:A="$emit('update:A', $event)"
                 @update:S="$emit('update:S', $event)"
+                @update:mem="$emit('update:mem', $event)"
                 @clickItem="handleClick"
               />
-              <button class="closeBtn closeButtonModal" @click="closeMobileModal" aria-label="Zamknij modal">
-                &times;
-              </button>
+              <button class="closeBtn closeButtonModal" @click="closeMobileModal" aria-label="Zamknij modal">&times;</button>
             </div>
           </transition>
         </div>
@@ -61,6 +56,7 @@
       @update:s-format="$emit('update:sFormat', $event)"
       @update:A="$emit('update:A', $event)"
       @update:S="$emit('update:S', $event)"
+      @update:mem="$emit('update:mem', $event)"
       @clickItem="handleClick"
     />
   </div>
@@ -88,7 +84,7 @@ export default {
     busSValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
   },
-  emits: ['clickItem', 'update:A', 'update:S', 'update:aFormat', 'update:sFormat'],
+  emits: ['clickItem', 'update:A', 'update:S', 'update:mem', 'update:aFormat', 'update:sFormat'],
   data() {
     return {
       windowWidth: window.innerWidth,

@@ -173,7 +173,7 @@
 .wylsSignalsExt {
   width: 42.11px;
   height: 100%;
-  border-right: 3px solid var(--wylsExtColor, black);
+  border-right: 3px solid var(--signal, black);
   transition: none;
 }
 
@@ -187,7 +187,7 @@
   }
 
   .wylsBusDiv{
-    width: 10px;
+    width: 9px;
   }
 
   #wyls {

@@ -1,24 +1,13 @@
 <template>
   <div :id="id" :class="[classNames, edgeClass, 'register-container']">
     <div v-if="isEnableEditValue" class="register-container">
-      <span   
-        :title="fullName" 
-        @mouseenter="handleMouseEnter" 
-        @mouseleave="handleMouseLeave">{{ label }}</span
-      ><span>:</span>
+      <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span>
+      <span>:</span>
       
       <div class="inputWrapper">
         <span>{{ formattedValue }}</span>
-        <input
-          inputmode="numeric"
-          pattern="[0-9]*"
-          type="number"
-          class="hoverInput"
-          :value="model"
-          @input="updateValue"
-          @blur="onBlur"
-        />
-        </div>
+        <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" @blur="onBlur" />
+      </div>
     </div>
     <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
       <button class="format-button" @click.stop="toggleFormatMenu">
@@ -39,6 +28,17 @@ import KogWheelIcon from '@/assets/svg/KogWheelIcon.vue';
 export default {
   name: 'RegisterComponent',
   components: { KogWheelIcon },
+  inject: {
+    validateRegisterValue: {
+      default: null,
+    },
+    showToast: {
+      default: null,
+    },
+    getMaxValueForRegister: {
+      default: null,
+    },
+  },
   props: {
     label: String,
     id: String,
@@ -92,14 +92,52 @@ export default {
       };
       return (formatters[this.numberFormat] || formatters.dec)(this.model);
     },
+     registerType() {
+      // Map label to register type for validation
+      const typeMap = {
+        AK: 'ACC',
+        X: 'X',
+        Y: 'Y',
+        I: 'I',
+        L: 'programCounter',
+        S: 'S',
+        A: 'A',
+        JAML: 'JAML',
+      };
+      return typeMap[this.label] || this.label;
+    },
   },
   methods: {
     updateValue(event) {
       const value = parseInt(event.target.value, 10);
       if (!isNaN(value)) {
-        this.$emit('update:model', value); // poprawione
+        // Use injected validation function if available
+        if (this.validateRegisterValue) {
+          const registerName = this.fullName || this.label;
+          if (this.validateRegisterValue(value, this.registerType, registerName)) {
+            this.$emit('update:model', value);
+          } else {
+            // if validation fails then reset input to current model value
+            event.target.value = this.model;
+          }
+        } else {
+          // fallback to basic validation using  getMaxValueForRegister
+          if (this.getMaxValueForRegister) {
+            const maxValue = this.getMaxValueForRegister(this.registerType);
+            if (value > maxValue) {
+              if (this.showToast) {
+                this.showToast(
+                  `Wartość ${value} przekracza maksymalną dozwoloną wartość ${maxValue} dla rejestru ${this.fullName || this.label}.`
+                );
+              }
+              event.target.value = this.model;
+              return;
+            }
+          }
+          this.$emit('update:model', value);
+        }
       } else {
-        this.$emit('update:model', null);  // pozwalamy onBlur wykryć puste
+        this.$emit('update:model', null);
       }
     },
     onBlur(e) {

@@ -6,10 +6,10 @@
         :programCounter="programCounter"
         :formatNumber="formatNumber"
         :number-format="registerFormats.L"
-        @update:number-format="val => $emit('update:number-format', { field: 'L', value: val })"
+        @update:number-format="(val) => $emit('update:number-format', { field: 'L', value: val })"
         :extras="extras"
         @update:programCounter="$emit('update:programCounter', $event)"
-        @clickItem="name => $emit('clickItem', name)"
+        @clickItem="(name) => $emit('clickItem', name)"
       />
     </div>
     <BusSignal
@@ -20,7 +20,7 @@
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusA"
-      @update:number-format="val => $emit('update:number-format', { field: 'BusA', value: val })"
+      @update:number-format="(val) => $emit('update:number-format', { field: 'BusA', value: val })"
     />
 
     <div class="layer">
@@ -29,9 +29,9 @@
         :signals="signals"
         :formatNumber="formatNumber"
         :number-format="registerFormats.I"
-        @update:number-format="val => $emit('update:number-format', { field: 'I', value: val })"
+        @update:number-format="(val) => $emit('update:number-format', { field: 'I', value: val })"
         @update:I="$emit('update:I', $event)"
-        @clickItem="name => $emit('clickItem', name)"
+        @clickItem="(name) => $emit('clickItem', name)"
       />
 
       <template v-if="!isMobile">
@@ -43,13 +43,13 @@
           :formatNumber="formatNumber"
           :numberFormat="registerFormats.ACC"
           :acc-format="registerFormats.ACC"
-          @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
+          @update:acc-format="(val) => $emit('update:number-format', { field: 'ACC', value: val })"
           :jaml-format="registerFormats.JAML"
-          @update:number-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
-          @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
+          @update:number-format="(val) => $emit('update:number-format', { field: 'ACC', value: val })"
+          @update:jaml-format="(val) => $emit('update:number-format', { field: 'JAML', value: val })"
           @update:ACC="$emit('update:ACC', $event)"
           @update:JAML="$emit('update:JAML', $event)"
-          @clickItem="name => $emit('clickItem', name)"
+          @clickItem="(name) => $emit('clickItem', name)"
         />
       </template>
 
@@ -82,12 +82,13 @@
         :decToCommand="decToCommand"
         :decToArgument="decToArgument"
         :a-format="registerFormats.A"
-        @update:a-format="val => $emit('update:number-format', { field: 'A', value: val })"
+        @update:a-format="(val) => $emit('update:number-format', { field: 'A', value: val })"
         :s-format="registerFormats.S"
-        @update:s-format="val => $emit('update:number-format', { field: 'S', value: val })"
+        @update:s-format="(val) => $emit('update:number-format', { field: 'S', value: val })"
         @update:A="$emit('update:A', $event)"
         @update:S="$emit('update:S', $event)"
-        @clickItem="name => $emit('clickItem', name)"
+        @update:mem="$emit('update:mem', $event)"
+        @clickItem="(name) => $emit('clickItem', name)"
         :mobileView="isMobile"
         :busAValue="BusA"
         :busSValue="BusS"
@@ -103,7 +104,7 @@
       :showInvisibleRegisters="extras.showInvisibleRegisters"
       :formatNumber="formatNumber"
       :number-format="registerFormats.BusS"
-      @update:number-format="val => $emit('update:number-format', { field: 'BusS', value: val })"
+      @update:number-format="(val) => $emit('update:number-format', { field: 'BusS', value: val })"
     />
 
     <div id="layer3" class="layer layerCenter">
@@ -113,9 +114,9 @@
         :signals="signals"
         :formatNumber="formatNumber"
         :number-format="registerFormats.X"
-        @update:number-format="val => $emit('update:number-format', { field: 'X', value: val })"
+        @update:number-format="(val) => $emit('update:number-format', { field: 'X', value: val })"
         @update:X="$emit('update:X', $event)"
-        @clickItem="name => $emit('clickItem', name)"
+        @clickItem="(name) => $emit('clickItem', name)"
       />
 
       <template v-if="isMobile">
@@ -145,9 +146,9 @@
         :signals="signals"
         :formatNumber="formatNumber"
         :number-format="registerFormats.Y"
-        @update:number-format="val => $emit('update:number-format', { field: 'Y', value: val })"
+        @update:number-format="(val) => $emit('update:number-format', { field: 'Y', value: val })"
         @update:Y="$emit('update:Y', $event)"
-        @clickItem="name => $emit('clickItem', name)"
+        @clickItem="(name) => $emit('clickItem', name)"
       />
     </div>
 
@@ -162,12 +163,12 @@
           :numberFormat="registerFormats.ACC"
           :formatNumber="formatNumber"
           :acc-format="registerFormats.ACC"
-          @update:acc-format="val => $emit('update:number-format', { field: 'ACC', value: val })"
           :jaml-format="registerFormats.JAML"
-          @update:jaml-format="val => $emit('update:number-format', { field: 'JAML', value: val })"
+          @update:acc-format="(val) => $emit('update:number-format', { field: 'ACC', value: val })"
+          @update:jaml-format="(val) => $emit('update:number-format', { field: 'JAML', value: val })"
           @update:ACC="$emit('update:ACC', $event)"
           @update:JAML="$emit('update:JAML', $event)"
-          @clickItem="name => $emit('clickItem', name)"
+          @clickItem="(name) => $emit('clickItem', name)"
         />
       </div>
     </template>
@@ -176,14 +177,14 @@
 </template>
 
 <script>
-import CounterComponent from '@/components/CounterComponent.vue'
-import BusSignal from '@/components/BusSignal.vue'
-import SignalButton from '@/components/SignalButton.vue'
-import MemorySection from '@/components/MemorySection.vue'
-import CalcSection from '@/components/CalcSection.vue'
-import RegisterISection from '@/components/RegisterISection.vue'
-import XRegisterSection from '@/components/XRegisterSection.vue'
-import YRegisterSection from '@/components/YRegisterSection.vue'
+import CounterComponent from '@/components/CounterComponent.vue';
+import BusSignal from '@/components/BusSignal.vue';
+import SignalButton from '@/components/SignalButton.vue';
+import MemorySection from '@/components/MemorySection.vue';
+import CalcSection from '@/components/CalcSection.vue';
+import RegisterISection from '@/components/RegisterISection.vue';
+import XRegisterSection from '@/components/XRegisterSection.vue';
+import YRegisterSection from '@/components/YRegisterSection.vue';
 
 export default {
   name: 'MaszynaW',
@@ -204,14 +205,14 @@ export default {
   },
   methods: {
     checkMobile() {
-      this.isMobile = window.innerWidth <= 768
-    }
+       this.isMobile = window.innerWidth <= 768;
+    },
   },
   mounted() {
-    window.addEventListener('resize', this.checkMobile)
+    window.addEventListener('resize', this.checkMobile);
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.checkMobile)
+    window.removeEventListener('resize', this.checkMobile);
   },
   props: {
     manualMode: { type: Boolean, required: true },
@@ -242,11 +243,12 @@ export default {
     'update:JAML',
     'update:A',
     'update:S',
+    'update:mem',
     'update:X',
     'update:Y',
     'update:number-format',
   ],
-}
+};
 </script>
 
 <style scoped>

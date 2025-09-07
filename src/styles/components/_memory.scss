@@ -180,6 +180,9 @@
 @media (max-width: 675px) {
   .wylsSignalsExt {
     margin-right: 5px;
+    width: 3px;
+    background-color: var(--signal, black);
+    border-right: 0px solid var(--signal, black);
   }
 
   .wylsBusExt{

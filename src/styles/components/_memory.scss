@@ -178,8 +178,12 @@
 }
 
 @media (max-width: 675px) {
+  #counter #wyl {
+     margin-left: 5px !important;
+  }
+
   .wylsSignalsExt {
-    margin-right: 5px;
+    margin-right: 2px;
     width: 3px;
     background-color: var(--signal, black);
     border-right: 0px solid var(--signal, black);

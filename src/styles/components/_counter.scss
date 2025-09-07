@@ -54,12 +54,11 @@
 
 #wylsSignalsConteiner #wel {
     padding-bottom: 20px;
-    margin-right: 5px !important;
     margin-right: 0.25rem;
 }
 
 #wylsSignalsConteiner #wyls {
-    grid-area: wyls;
+    width: 3px;
     padding-bottom: 20px;
     margin-right: 5px !important;
     margin-right: 0.25rem;
@@ -69,7 +68,6 @@
     grid-area: wyl;
     padding-bottom: 10px;
     margin-left: 15px !important;
-    margin-left: 0.25rem;
 }
 
 #wsRegister #wews {

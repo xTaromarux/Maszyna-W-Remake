@@ -38,12 +38,11 @@ import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 
-// Import WLAN compilation modules
+// WLAN
 import { parse } from '@/WLAN/parser';
 import { analyzeSemantics } from '@/WLAN/semanticAnalyzer';
-import { generateMicroProgram } from '@/WLAN/microGenerator';
+import { generateMicroProgram, injectCJumpMeta } from '@/WLAN/microGenerator';
 
-// Props from parent
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
   commandList: { type: Array, required: true },
@@ -51,19 +50,17 @@ const props = defineProps({
   autocompleteEnabled: { type: Boolean, default: true },
 });
 
-// Events to parent: update assembled code, log messages, initialize memory
 const emit = defineEmits(['update:code', 'log', 'initMemory']);
 
-// Local state
 const programLocal = ref(props.program);
 const programCompiled = ref(false);
 
-// Compile high-level commands into assembler code using WLAN system
 function compileProgram() {
   try {
     const ast = parse(programLocal.value);
     const analyzedNodes = analyzeSemantics(ast);
 
+    // --- Dyrektywy inicjalizacji pamięci -> do rodzica
     const initAssignments = [];
     for (const node of analyzedNodes) {
       if (node.type === 'Directive' && node._initMemory) {
@@ -71,72 +68,84 @@ function compileProgram() {
         initAssignments.push({ addr, val });
       }
     }
-
-    /* 3b. Argumenty rozkazów → pamięć programu pod PC=0,1,2…  */
+    // Argumenty rozkazów -> pamięć programu PC=0,1,2…
     let pcAddr = 0;
     for (const node of analyzedNodes) {
       if (node.type === 'Instruction') {
-        const argVal = node.operands?.[0]?.value ?? 0; // np. a=4, b=5
-        // Note: No masking here - let the parent handle it with proper wordMask()
+        const argVal = node.operands?.[0]?.value ?? 0;
         initAssignments.push({ addr: pcAddr, val: argVal });
         pcAddr++;
       } else if (node.type === 'Directive' && node.name?.toUpperCase() === 'ORG') {
-        // opcjonalnie: jeśli wspierasz ORG dla kodu
         pcAddr = node.operands?.[0]?.value ?? pcAddr;
       }
     }
+    if (initAssignments.length) emit('initMemory', initAssignments);
 
-    if (initAssignments.length) {
-      emit('initMemory', initAssignments);
-    }
+    // --- Mikro-program
+    let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
 
-    /* 4. Generowanie mikro‑programu */
-    const microProgram = generateMicroProgram(analyzedNodes, props.commandList);
-    console.log('Wygenerowany mikro‑program:', microProgram);
+    // (opcjonalne) wstrzyknięcie metadanych CJUMP (zachowujemy srcLine później)
+    microProgram = injectCJumpMeta(microProgram);
 
-    /* 5. Konwersja mikro‑instrukcji do tekstu (bez dyrektyw) */
+    // --- Konwersja na tekst + PRECYZYJNE mapowanie srcLine
     const asmFragments = [];
+    let lineNo = 0;
+
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
-        if (phase.conditional === true) {
-          const flag = phase.flag;
-          const t = phase.truePhases?.[0] ?? {};
-          const f = phase.falsePhases?.[0] ?? {};
-          const trueSignals = Object.keys(t)
-            .filter((k) => t[k])
-            .join(' ');
-          const falseSignals = Object.keys(f)
-            .filter((k) => f[k])
-            .join(' ');
-          // 3 linie jak w commandList
+        if ((phase).conditional === true) {
+          const flag = (phase).flag;
+
+          // IF
+          (phase).srcLine = lineNo;
           asmFragments.push(`IF ${flag} THEN @zero ELSE @niezero;`);
-          asmFragments.push(`@zero ${trueSignals} KONIEC;`);
-          asmFragments.push(`@niezero ${falseSignals};`);
+          lineNo++;
+
+          // @zero ...
+          const t = (phase).truePhases?.[0] ?? {};
+          const f = (phase).falsePhases?.[0] ?? {};
+
+          const trueSignals = Object.keys(t).filter(k => (t)[k]).join(' ');
+          const falseSignals = Object.keys(f).filter(k => (f)[k]).join(' ');
+
+          (t).srcLine = lineNo; // ⬅ przypięcie @zero
+          asmFragments.push(
+            trueSignals ? `@zero ${trueSignals} KONIEC;` : `@zero;`
+          );
+          lineNo++;
+
+          // @niezero …
+          (f).srcLine = lineNo; // ⬅ przypięcie @niezero
+          asmFragments.push(
+            falseSignals ? `@niezero ${falseSignals};` : `@niezero;`
+          );
+          lineNo++;
+
         } else {
-          const signals = Object.keys(phase)
-            .filter((key) => phase[key] === true)
-            .join(' ');
-          if (signals.trim()) asmFragments.push(`${signals};`);
+          // zwykła faza
+          const signals = Object.keys(phase).filter((key) => (phase)[key] === true).join(' ');
+          if (signals.trim()) {
+            (phase).srcLine = lineNo;             // <-- mapowanie 1:1 faza → linia
+            asmFragments.push(`${signals};`);
+            lineNo++;
+          }
         }
       }
 
-      const extra = entry.meta?.postAsm;
+      const extra = (entry).meta?.postAsm;
       if (extra?.length) {
-        for (const line of extra) asmFragments.push(`${line};`);
+        for (const line of extra) {
+          asmFragments.push(`${line};`);
+          lineNo++; // te linie nie mają odpowiadających faz – ale zajmują miejsce w liście tekstowej
+        }
       }
     }
 
     const finalMicroSignals = asmFragments.join('\n');
-
-    console.log('Wygenerowany kod assemblera:', finalMicroSignals);
-    // Emit both human-readable text and the structured micro program (with pc/meta)
     emit('update:code', { text: finalMicroSignals, program: microProgram });
 
     programCompiled.value = true;
-    emit('log', {
-      message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN',
-      class: 'kompilator rozkazów',
-    });
+    emit('log', { message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN', class: 'kompilator rozkazów' });
   } catch (error) {
     if (error && (error.level || error.code || error.hint || error.loc || error.frame)) {
       emit('log', {
@@ -145,7 +154,6 @@ function compileProgram() {
         error: error,
       });
     } else {
-      // Legacy error handling for unknown error types
       const parts = [`Błąd kompilacji: ${error?.message || String(error)}`];
       if (error && error.frame) parts.push('\n' + error.frame);
       if (error && error.hint) parts.push(`\nPodpowiedź: ${error.hint}`);
@@ -154,13 +162,9 @@ function compileProgram() {
   }
 }
 
-// Unlock for editing
 function uncompileProgram() {
   programCompiled.value = false;
-  emit('log', {
-    message: 'Program odblokowany do edycji',
-    class: 'system',
-  });
+  emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
 }
 </script>
 
@@ -177,23 +181,14 @@ function uncompileProgram() {
 }
 
 @media (min-width: 1380px) {
-  #program {
-    width: 20rem;
-  }
+  #program { width: 20rem; }
 }
-
 @media (min-width: 1255px) and (max-width: 1380px) {
-  #program {
-    width: 12rem;
-  }
+  #program { width: 12rem; }
 }
-
 @media (min-width: 1165px) and (max-width: 1255px) {
-  #program {
-    width: 8rem;
-  }
+  #program { width: 8rem; }
 }
-
 @media (min-width: 675px) and (max-width: 1195px) {
   #program {
     width: 100%;
@@ -202,11 +197,8 @@ function uncompileProgram() {
     margin: 20px 0;
   }
 }
-
 @media (max-width: 675px) {
-  #program {
-    margin: 20px 0;
-  }
+  #program { margin: 20px 0; }
 }
 
 .flexRow {

@@ -210,6 +210,14 @@
           </button>
         </div>
       </div>
+
+      <ColorPicker
+        v-if="platform == 'esp'"
+        v-model="color"
+        v-model:brightness="ledPower"
+        :size="260"
+        @change="onColorChange"
+      />
       <PeopleSection :isMobile="isMobile" title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
       <PeopleSection :isMobile="isMobile" title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
     </div>
@@ -223,10 +231,11 @@ import RefreshIcon from '@/assets/svg/RefreshIcon.vue'
 import CommandListIcon from '@/assets/svg/CommandListIcon.vue'
 import SegmentedToggle from './SegmentedToggle.vue'
 import PeopleSection from './PeopleSection.vue'
+import ColorPicker from './ColorPicker.vue'
 
 export default {
   name: 'SettingsPanel',
-  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle, PeopleSection },
+  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle, PeopleSection, ColorPicker },
   props: {
     isAnimated: { type: Boolean, default: false },
     lightMode: { type: Boolean, required: true },
@@ -244,6 +253,8 @@ export default {
   },
   data() {
     return {
+      color: '#ff00ff',
+      ledPower: 1,
       openMap: {}, // { [groupKey]: boolean }
     }
   },
@@ -319,6 +330,11 @@ export default {
     },
   },
   methods: {
+    onColorChange({ hex, rgb, hsv, brightness }) {
+      // przykład: podbij akcent w CSS i wyślij wartości do kontrolera LED
+      document.documentElement.style.setProperty('--accentColor', hex)
+      // brightness = ledPower (0..1), hsv.v = jasność koloru
+    },
     updateNumber(key, value) {
       const n = parseInt(value, 10)
       if (Number.isNaN(n)) return

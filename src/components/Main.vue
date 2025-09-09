@@ -10,6 +10,7 @@
     <MaszynaW
       :manual-mode="manualMode"
       :signals="signals"
+      :dec-signed="decSigned"
       :programCounter="programCounter"
       :formatNumber="formatNumber"
       :registerFormats="registerFormats"
@@ -114,6 +115,7 @@
       :number-format="numberFormat"
       :code-bits="codeBits"
       :addres-bits="addresBits"
+      :dec-signed="decSigned"
       :odd-delay="oddDelay"
       :extras="extras"
       :autocomplete-enabled="autocompleteEnabled"
@@ -121,6 +123,7 @@
       @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
+      @update:decSigned="decSigned = $event"
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
@@ -207,6 +210,7 @@ export default {
 
   data() {
     return {
+      decSigned: false,
       _condState: null,
       autocompleteEnabled: true,
       isMobile: window.innerWidth <= 768,
@@ -403,6 +407,13 @@ export default {
     };
   },
   methods: {
+    toSigned(value, bits) {
+      const mod = 1 << bits;
+      const mask = mod - 1;
+      const sign = 1 << (bits - 1);
+      const v = value & mask;
+      return (v & sign) ? v - mod : v;
+    },
     getDefaultExtras() {
       return {
         xRegister: false,
@@ -795,6 +806,7 @@ export default {
           'lightMode',
           'registerFormats',
           'autocompleteEnabled',
+          'decSigned',
         ];
 
         settingsToRestore.forEach((setting) => {
@@ -898,7 +910,12 @@ export default {
       }
 
       const formatters = {
-        dec: () => number,
+        dec: () => {
+          if (this.decSigned) {
+            return this.toSigned(number, this.codeBits + this.addresBits);
+          }
+           return number | 0;
+        },        
         hex: () => '0x' + Math.floor(number).toString(16).toUpperCase(),
         bin: () => '0b' + Math.floor(number).toString(2),
       };

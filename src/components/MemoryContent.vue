@@ -34,10 +34,11 @@
               <span>{{ formatNumber(mem[index]) }}</span>
               <input
                 inputmode="numeric"
-                pattern="[0-9]*"
                 type="number"
                 class="hoverInput"
-                :value="mem[index]"
+                :value="displayValue(mem[index])"
+                :min="signedDec ? -(1 << (wordBits - 1)) : 0"
+                :max="signedDec ?  ((1 << (wordBits - 1)) - 1) : wordMask()"
                 @input="updateMemoryValue($event, index)"
                 @blur="onMemoryBlur($event, index)"
               />
@@ -144,6 +145,14 @@ export default {
       type: String,
       required: true,
     },
+    signedDec: { 
+      type: Boolean, 
+      default: false 
+    },
+    wordBits:  { 
+      type: Number,  
+      default: 8 
+    }, 
   },
   emits: ['update:A', 'update:S', 'update:mem', 'clickItem', 'update:aFormat', 'update:sFormat'],
   components: {
@@ -164,6 +173,18 @@ export default {
     },
   },
   methods: {
+    wordMask() {
+      return (1 << this.wordBits) - 1;
+    },
+    toSigned(v) {
+      const mod = 1 << this.wordBits;
+      const sign = 1 << (this.wordBits - 1);
+      const m = v & (mod - 1);
+      return (m & sign) ? (m - mod) : m;
+    },
+    displayValue(raw) {
+      return this.signedDec ? this.toSigned(raw) : (raw & this.wordMask());
+    },
     handleClick(id) {
       this.$emit('clickItem', id);
     },
@@ -171,48 +192,60 @@ export default {
       this.windowWidth = window.innerWidth;
     },
     updateMemoryValue(event, index) {
-      const value = parseInt(event.target.value, 10);
-      if (!isNaN(value)) {
-        // Use injected validation function if available
-        if (this.validateRegisterValue) {
-          if (this.validateRegisterValue(value, 'memory', `Pamięć[${index}]`)) {
-            // update memory by creating new array to trigger reactivity
-            const newMem = [...this.mem];
-            newMem[index] = value;
-            this.$emit('update:mem', newMem);
-          } else {
-            // if validation fails, reset input to current value
-            event.target.value = this.mem[index];
+      const txt = String(event.target.value).trim();
+      if (txt === '' || txt === '-' ) return; 
+
+      const val = parseInt(txt, 10);
+      if (Number.isNaN(val)) {
+        event.target.value = this.displayValue(this.mem[index]);
+        return;
+      }
+
+      if (this.validateRegisterValue) {
+        const ok = this.validateRegisterValue(
+          val,
+          'memory',
+          `Pamięć[${index}]`,
+        );
+        if (!ok) {
+          event.target.value = this.displayValue(this.mem[index]);
+          return;
+        }
+      } else {
+        const min = this.signedDec ? -(1 << (this.wordBits - 1)) : 0;
+        const max = this.signedDec ?  ((1 << (this.wordBits - 1)) - 1) : this.wordMask();
+        if (val < min || val > max) {
+          if (this.showToast) {
+            this.showToast(
+              `Wartość ${val} poza zakresem ${min}..${max} (słowo ${this.wordBits}-bit${this.wordBits===1?'owe':'owe'}).`
+            );
           }
-        } else {
-          // fallback validation for memory (max 255 for 8-bit)
-          if (value > 255) {
-            if (this.showToast) {
-              this.showToast(`Wartość ${value} przekracza maksymalną dozwoloną wartość 255 dla pamięci (8 bitów).`);
-            }
-            event.target.value = this.mem[index];
-            return;
-          }
-          if (value < 0) {
-            if (this.showToast) {
-              this.showToast(`Wartość nie może być ujemna dla pamięci.`);
-            }
-            event.target.value = this.mem[index];
-            return;
-          }
-          const newMem = [...this.mem];
-          newMem[index] = value;
-          this.$emit('update:mem', newMem);
+          event.target.value = this.displayValue(this.mem[index]);
+          return;
         }
       }
+
+      let stored;
+      if (this.signedDec && val < 0) {
+        stored = (val + (1 << this.wordBits)) & this.wordMask();
+      } else {
+        stored = val & this.wordMask();
+      }
+
+      const newMem = [...this.mem];
+      newMem[index] = stored;
+      this.$emit('update:mem', newMem);
     },
     onMemoryBlur(event, index) {
-      // Set to 0 if field is empty
-      if (event.target.value === '' || event.target.value === null) {
-        event.target.value = 0;
+      const txt = String(event.target.value).trim();
+      if (txt === '' || txt === '-') {
         const newMem = [...this.mem];
         newMem[index] = 0;
         this.$emit('update:mem', newMem);
+        event.target.value = this.displayValue(0);
+      } else {
+        // wyrównaj prezentację do trybu signed/unsigned
+        event.target.value = this.displayValue(this.mem[index]);
       }
     },
   },

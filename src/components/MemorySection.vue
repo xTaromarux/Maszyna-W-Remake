@@ -51,8 +51,10 @@
       :decToCommand="decToCommand"
       :decToArgument="decToArgument"
       :a-format="aFormat"
-      @update:a-format="$emit('update:aFormat', $event)"
       :s-format="sFormat"
+      :signed-dec="signedDec"
+      :word-bits="wordBits"
+      @update:a-format="$emit('update:aFormat', $event)"
       @update:s-format="$emit('update:sFormat', $event)"
       @update:A="$emit('update:A', $event)"
       @update:S="$emit('update:S', $event)"
@@ -83,6 +85,8 @@ export default {
     busAValue: { type: Number, required: true },
     busSValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
+    signedDec: { type: Boolean, default: false },
+    wordBits:  { type: Number,  default: 8 }, 
   },
   emits: ['clickItem', 'update:A', 'update:S', 'update:mem', 'update:aFormat', 'update:sFormat'],
   data() {

@@ -118,6 +118,8 @@
             :ACC="ACC"
             :JAML="JAML"
             :WS="WS"
+            :dec-signed="decSigned"
+            :word-bits="wordBits"
             :formatNumber="formatNumber"
             :numberFormat="registerFormats.WS"
             :acc-format="registerFormats.ACC"
@@ -171,6 +173,8 @@
           :mobileView="isMobile"
           :busAValue="BusA"
           :busSValue="BusS"
+          :signed-dec="decSigned"
+          :word-bits="wordBits"
           :showInvisibleRegisters="extras.showInvisibleRegisters"
         />
       </div>
@@ -261,6 +265,8 @@
           :ACC="ACC"
           :JAML="JAML"
           :WS="WS"
+          :dec-signed="decSigned"
+          :word-bits="wordBits"
           :formatNumber="formatNumber"
           :numberFormat="registerFormats.WS"
           :acc-format="registerFormats.ACC"
@@ -413,6 +419,7 @@ export default {
     WS: { type: Number, required: true },
     rzInputs: { type: Array, default: () => [0,0,0,0] },
     wordBits: { type: Number, default: 8 },
+    decSigned: { type: Boolean, default: false },
     decToCommand: { type: Function, required: true },
     decToArgument: { type: Function, required: true },
   },

@@ -23,11 +23,13 @@
       :odd-delay="oddDelay"
       :extras="extras"
       :platform="platform"
+      :dec-signed="decSigned"
       :memory-addres-bits="memoryAddresBits" 
       :autocomplete-enabled="autocompleteEnabled"  
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
+      @update:decSigned="$emit('update:decSigned', $event)"
       @update:codeBits="$emit('update:codeBits', $event)"
       @update:addresBits="$emit('update:addresBits', $event)"
       @update:oddDelay="$emit('update:oddDelay', $event)"
@@ -58,6 +60,7 @@ export default {
     memoryAddresBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
+    decSigned: { type: Boolean, default: false },
     extras: {
       type: Object,
       required: true,
@@ -101,6 +104,7 @@ export default {
     'defaultSettings',
     'open-command-list',
     'update:memoryAddresBits',
+    'update:decSigned',
     'update:autocompleteEnabled',
   ],
   data() {

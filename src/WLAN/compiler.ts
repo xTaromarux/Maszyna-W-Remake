@@ -73,20 +73,39 @@ function sigsFromTokens(
 }
 
 function parseIF(tokens: string[]) {
-  // IF Z THEN @zero ELSE @niezero
-  if (tokens.length < 6) return null;
-  if (!/^if$/i.test(tokens[0])) return null;
-  const flagRaw = tokens[1]?.toUpperCase();
-  const thenIdx = tokens.findIndex((t) => /^then$/i.test(t));
-  const elseIdx = tokens.findIndex((t) => /^else$/i.test(t));
-  if (thenIdx < 0 || elseIdx < 0) return null;
+  // znajdź 'IF' gdziekolwiek
+  const ifIdx = tokens.findIndex((t) => /^if$/i.test(t));
+  if (ifIdx < 0) return null;
+
+  const flagRaw = tokens[ifIdx + 1]?.toUpperCase();
+  const thenIdx = tokens.findIndex((t, k) => k > ifIdx && /^then$/i.test(t));
+  const elseIdx = tokens.findIndex((t, k) => k > ifIdx && /^else$/i.test(t));
+  if (!flagRaw || thenIdx < 0 || elseIdx < 0) return null;
+
   const tTok = tokens[thenIdx + 1];
   const fTok = tokens[elseIdx + 1];
-  if (!tTok || !fTok || !tTok.startsWith("@") || !fTok.startsWith("@"))
-    return null;
+  if (!tTok || !fTok || !tTok.startsWith("@") || !fTok.startsWith("@")) return null;
 
-  const flag = flagRaw === "M" || flagRaw === "NEG" ? "N" : flagRaw; // M→N
-  return { flag, trueLabel: tTok.slice(1), falseLabel: fTok.slice(1) };
+  // mapowanie aliasów flag
+  const flagNorm = (() => {
+    const f = flagRaw;
+    if (f === "M") return "N";
+    if (f === "NEG") return "N";
+    if (f === "NZERO") return "NZ";
+    if (f === "ZERO") return "Z";
+    if (f === "POS") return "P";
+    return f; // Z, N, NZ, P itd.
+  })();
+
+  // prefiks (sygnały) przed IF — nie egzekwujemy tu (tylko ignorujemy przy walidacji)
+  const prefix = tokens.slice(0, ifIdx);
+
+  return {
+    flag: flagNorm,
+    trueLabel: tTok.slice(1),
+    falseLabel: fTok.slice(1),
+    prefix, // opcjonalnie do dalszego użycia tekstowego
+  };
 }
 
 /* =============================
@@ -132,30 +151,14 @@ export function compileCodeExternal(
     const line = rawLines[i];
     const tokens0 = tokenize(line);
 
-    // Valida uproszczona (pozwala na IF / @etykiety / KONIEC)
-    if (!/^if$/i.test(tokens0[0])) {
-      const { rest } = stripLabels(tokens0);
-      for (const tok of rest) {
-        const up = tok.toUpperCase();
-        if (up === "IF" || up === "THEN" || up === "ELSE" || up === "KONIEC")
-          continue;
-        if (!KNOWN.has(tok)) {
-          // to nie sygnał – potraktujmy jako pusty tekst (np. sama etykieta)
-          // ale jeśli linia nie była IF i nie ma żadnego znanego sygnału – przejdź dalej
-        }
-      }
-    }
+    // zdejmij ewentualne wiodące etykiety
+    const { labels: leadingLabels, rest } = stripLabels(tokens0);
 
-    // 1) IF … THEN @x ELSE @y  → ConditionalPhase w bieżącym wpisie
-    const ifSpec = parseIF(tokens0);
+    // 1) Najpierw spróbuj IF (obsługuje też prefiks przed 'IF')
+    const ifSpec = parseIF(rest);
     if (ifSpec) {
       if (!current) {
-        current = {
-          pc: program.length,
-          asmLine: "(micro)",
-          phases: [],
-          meta: { kind: "NONE" },
-        };
+        current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
       }
 
       const tLine = rawLines[i + 1] ?? "";
@@ -167,10 +170,8 @@ export function compileCodeExternal(
       const tLbl = stripLabels(tTok);
       const fLbl = stripLabels(fTok);
 
-      const tBodyOk =
-        tLbl.labels[0]?.toLowerCase() === ifSpec.trueLabel.toLowerCase();
-      const fBodyOk =
-        fLbl.labels[0]?.toLowerCase() === ifSpec.falseLabel.toLowerCase();
+      const tBodyOk = tLbl.labels[0]?.toLowerCase() === ifSpec.trueLabel.toLowerCase();
+      const fBodyOk = fLbl.labels[0]?.toLowerCase() === ifSpec.falseLabel.toLowerCase();
 
       const tSignals = tBodyOk ? sigsFromTokens(tLbl.rest, KNOWN) : {};
       const fSignals = fBodyOk ? sigsFromTokens(fLbl.rest, KNOWN) : {};
@@ -180,58 +181,46 @@ export function compileCodeExternal(
         flag: ifSpec.flag,
         truePhases: tBodyOk ? [toMicroPhaseFromSet(tSignals)] : [],
         falsePhases: fBodyOk ? [toMicroPhaseFromSet(fSignals)] : [],
-        srcLine: i, // ⬅ IF
+        srcLine: i,
+        __prefix: ifSpec.prefix?.slice() || [], // opcjonalnie, do późniejszego użycia tekstowego
       };
 
-      if (tBodyOk && condPhase.truePhases[0]) {
-        (condPhase.truePhases[0] as any).srcLine = i + 1; // ⬅ @zero
-      }
-      if (fBodyOk && condPhase.falsePhases[0]) {
-        (condPhase.falsePhases[0] as any).srcLine = i + 2; // ⬅ @niezero
-      }
+      if (tBodyOk && condPhase.truePhases[0]) (condPhase.truePhases[0] as any).srcLine = i + 1;
+      if (fBodyOk && condPhase.falsePhases[0]) (condPhase.falsePhases[0] as any).srcLine = i + 2;
 
       current.phases.push(condPhase);
 
       if (tBodyOk) i += 1;
       if (fBodyOk) i += 1;
-      continue;
+      continue; // <<< ważne: nie walidujemy już tej linii ogólną walidacją
     }
 
-    // 2) Zwykła faza
-    const { rest } = stripLabels(tokens0);
-    const sigSet = new Set(
-      rest.map((t) => t.toLowerCase()).filter((t) => KNOWN.has(t))
-    );
+    // 2) Linia NIE-będąca IF — twarda walidacja pisowni
+    for (const tok of rest) {
+      const up = tok.toUpperCase();
+      if (up === "KONIEC") continue;
+      if (!KNOWN.has(tok.toLowerCase())) {
+        throw new Error(`Nieznany symbol „${tok}” w linii ${i + 1}: ${line}`);
+      }
+    }
+
+    // 3) Zwykła faza
+    const sigSet = new Set(rest.map((t) => t.toLowerCase()).filter((t) => KNOWN.has(t)));
 
     if (isFetchPhase(sigSet)) {
       finishCurrent();
-      current = {
-        pc: program.length,
-        asmLine: "(micro)",
-        phases: [],
-        meta: { kind: "NONE" },
-      };
+      current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
     } else if (!current) {
-      current = {
-        pc: program.length,
-        asmLine: "(micro)",
-        phases: [],
-        meta: { kind: "NONE" },
-      };
+      current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
     }
 
     if (sigSet.size === 0) continue;
 
-    // <<< ZAMIANA: dopisujemy srcLine do zwykłej fazy >>>
     const phaseObj: any = sigsFromTokens(rest, KNOWN);
-    phaseObj.srcLine = i; // przypnij numer linii
+    phaseObj.srcLine = i;
     current.phases.push(toMicroPhaseFromSet(phaseObj));
 
-    // STOP może spokojnie kończyć wpis (ale to nie jest wymagane)
-    if (phaseObj.stop) {
-      // zamknij wpis – kolejne fetch’e i tak otworzą następny
-      finishCurrent();
-    }
+    if (phaseObj.stop) finishCurrent();
   }
 
   // domknij ostatni wpis

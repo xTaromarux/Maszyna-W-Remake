@@ -47,7 +47,7 @@
     </div>
 
     <div v-if="programCompiled" class="overlay-lock" aria-hidden="true" />
-    <div ref="editorContainer" class="codemirror-container" />
+    <div ref="editorContainer" class="codemirror-container"  :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }"/>
   </div>
 </template>
 
@@ -523,8 +523,8 @@ watch(
   top: 10px;
   right: 10px;
   z-index: 20;
-  background-color: transparent;
-  border: none;
+  background-color: rgba(222, 221, 255);
+  border: rgba(222, 221, 255);
   cursor: pointer;
   padding: 1px;
   display: flex;
@@ -543,9 +543,10 @@ watch(
   left: 65vw !important;
   width: 35vw !important;
   height: 100vh !important;
+  padding: 15px;
   z-index: 999;
   background-color: var(--backgroundColor);
-  border: 1px solid var(--panelOutlineColor);
+  border: 3px solid #003c7d;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border-radius: 0 0 0 8px;
   max-height: none;
@@ -558,6 +559,10 @@ watch(
   border-radius: 0.25rem;
   overflow: hidden;
   max-height: 40rem;
+}
+
+.codemirror-container.full-screen {
+  max-height: 93% !important;
 }
 
 .codemirror-container :deep(.cm-editor) {

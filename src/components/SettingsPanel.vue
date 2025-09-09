@@ -212,6 +212,7 @@
       </div>
 
       <ColorPicker
+        v-if="platform == 'esp'"
         v-model="color"
         v-model:brightness="ledPower"
         :size="260"

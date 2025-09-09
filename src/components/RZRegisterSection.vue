@@ -106,8 +106,8 @@ export default {
 .rz-input {
   appearance: none;
   border: 1px solid var(--panelOutlineColor);
-  background: #d9d9d9;
-  color: #333;
+  background: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
   font-weight: 600;
   padding: .25rem 0;
   border-radius: 2px;

@@ -54,9 +54,9 @@
 import { ref, reactive, watch, onMounted, computed } from 'vue'
 
 const props = defineProps({
-    modelValue: { type: String, default: '#ff00ff' }, // kolor wyjściowy HEX
+    modelValue: { type: String, default: '#ff00ff' },
     size: { type: Number, default: 240 },
-    brightness: { type: Number, default: 1 }          // global brightness 0..1
+    brightness: { type: Number, default: 1 }
 })
 const emit = defineEmits(['update:modelValue', 'update:brightness', 'change'])
 
@@ -72,10 +72,10 @@ const rgb = reactive({ r: 255, g: 0, b: 255 })
 const hex = computed(() => rgbToHex(rgb))
 const hexPure = computed(() => rgbToHex(hsvToRgb(hsv.h, hsv.s, 1)))
 
-// wskaźnik na kole
+// wskaźnik
 const indicator = reactive({ x: size / 2, y: size / 2 })
 
-// płynne przeciąganie
+// przeciąganie
 let picking = false
 let rafId = 0
 let lastEvent = null
@@ -85,7 +85,7 @@ const swatches = [
     '#ff00ff', '#c0c0c0', '#808080', '#8b4513', '#ff69b4', '#7fff00', '#40e0d0', '#8a2be2'
 ]
 
-// power (LED)
+// global brightness
 const brightnessLocal = ref(clamp01(props.brightness))
 watch(() => props.brightness, v => { brightnessLocal.value = clamp01(v) })
 
@@ -96,22 +96,27 @@ onMounted(() => {
 
 function drawWheel() {
     const ctx = wheel.value.getContext('2d')
-    const r = (size * scale) / 2
-    const cx = r, cy = r
-    const img = ctx.createImageData(size * scale, size * scale)
+    const W = Math.round(size * scale)
+    const H = W
+    const cx = W / 2 - 3
+    const cy = H / 2 - 3
+    const r  = W / 2 - 0.5   // klucz: -0.5 usuwa półprzezroczysty ring
+    const img = ctx.createImageData(W, H)
 
-    for (let y = 0; y < 2 * r; y++) {
-        for (let x = 0; x < 2 * r; x++) {
+    for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
             const dx = x - cx, dy = y - cy
             const dist = Math.hypot(dx, dy)
-            const i = (y * (2 * r) + x) * 4
+            const i = (y * W + x) * 4
             if (dist <= r) {
                 let ang = Math.atan2(dy, dx); if (ang < 0) ang += Math.PI * 2
                 const h = ang * 180 / Math.PI
                 const s = Math.min(1, dist / r)
                 const { r: rr, g: gg, b: bb } = hsvToRgb(h, s, 1)
                 img.data[i] = rr; img.data[i + 1] = gg; img.data[i + 2] = bb; img.data[i + 3] = 255
-            } else img.data[i + 3] = 0
+            } else {
+                img.data[i + 3] = 0
+            }
         }
     }
     ctx.putImageData(img, 0, 0)
@@ -119,12 +124,11 @@ function drawWheel() {
 }
 
 function localPoint(e) {
-    // ZAWSZE aktualny rect z hitboxa (działa przy scroll/transform)
     const r = (hit.value || wheel.value).getBoundingClientRect()
     return { x: e.clientX - r.left, y: e.clientY - r.top }
 }
 
-// --- przeciąganie (pointer capture + rAF) ---
+// pointer capture + rAF
 function startPick(e) {
     e.preventDefault()
     picking = true
@@ -167,21 +171,9 @@ function updateFromHSV() {
     const out = rgbToHex(rgb)
     emit('update:modelValue', out)
 
-    // RGB przeskalowane globalną mocą LED (0..255) – gotowe pod PWM
-    const scale = brightnessLocal.value
-    const rgbScaled = {
-        r: Math.round(rgb.r * scale),
-        g: Math.round(rgb.g * scale),
-        b: Math.round(rgb.b * scale)
-    }
-    emit('change', {
-        hex: out,
-        rgb: { ...rgb },
-        hsv: { ...hsv },
-        brightness: scale,
-        rgbScaled,
-        pwm: rgbScaled
-    })
+    const s = brightnessLocal.value
+    const rgbScaled = { r: Math.round(rgb.r * s), g: Math.round(rgb.g * s), b: Math.round(rgb.b * s) }
+    emit('change', { hex: out, rgb: { ...rgb }, hsv: { ...hsv }, brightness: s, rgbScaled, pwm: rgbScaled })
 }
 
 function updateIndicator() {
@@ -196,20 +188,8 @@ function onPowerInput(e) {
     const v = clamp01(parseFloat(e.target.value))
     brightnessLocal.value = v
     emit('update:brightness', v)
-
-    const rgbScaled = {
-        r: Math.round(rgb.r * v),
-        g: Math.round(rgb.g * v),
-        b: Math.round(rgb.b * v)
-    }
-    emit('change', {
-        hex: hex.value,
-        rgb: { ...rgb },
-        hsv: { ...hsv },
-        brightness: v,
-        rgbScaled,
-        pwm: rgbScaled
-    })
+    const rgbScaled = { r: Math.round(rgb.r * v), g: Math.round(rgb.g * v), b: Math.round(rgb.b * v) }
+    emit('change', { hex: hex.value, rgb: { ...rgb }, hsv: { ...hsv }, brightness: v, rgbScaled, pwm: rgbScaled })
 }
 
 function applyHex(h) {
@@ -244,15 +224,8 @@ function rgbToHsv(r, g, b) {
     const s = max === 0 ? 0 : d / max, v = max
     return { h, s, v }
 }
-function rgbToHex({ r, g, b }) {
-    const to = x => x.toString(16).padStart(2, '0')
-    return `#${to(r)}${to(g)}${to(b)}`
-}
-function hexToRgb(h) {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h || '')
-    if (!m) return null
-    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) }
-}
+function rgbToHex({ r, g, b }) { const to = x => x.toString(16).padStart(2, '0'); return `#${to(r)}${to(g)}${to(b)}` }
+function hexToRgb(h) { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h || ''); if (!m) return null; return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } }
 function isValidHex(h) { return /^#?[0-9a-fA-F]{6}$/.test(h || '') }
 function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)) }
 </script>
@@ -264,16 +237,22 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     user-select: none;
 }
 
-.cp-wheel-wrap {
-    position: relative;
-    margin: 0 auto 12px auto;
-    cursor: crosshair;
+.cp-wheel-wrap{
+  position: relative;
+  margin: 0 auto 12px auto;
+  cursor: crosshair;
+
+  /* obramowanie i maska KOŁA na wrapperze */
+  border: 3px solid #003c7d;
+  border-radius: 50%;
+  overflow: hidden;            /* utnie wszystko poza kołem */
+  background-clip: padding-box;
 }
 
-.cp-wheel {
-    display: block;
-    border-radius: 9999px;
-    box-shadow: 0 0 0 1px var(--panelOutlineColor);
+.cp-wheel{
+  display:block;
+  border: none;
+  border-radius: 0;            /* już niepotrzebne */
 }
 
 .cp-hitbox {
@@ -282,12 +261,12 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     touch-action: none;
 }
 
-/* brak scroll/gest pinch na kole */
+/* interakcja po całym kole */
 .cp-indicator {
     position: absolute;
     width: 14px;
     height: 14px;
-    border: 2px solid #fff;
+    border: 3px solid #003c7d;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, .6);
     border-radius: 9999px;
     transform: translate(-50%, -50%);
@@ -340,7 +319,7 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     height: 18px;
     border-radius: 9999px;
     background: #fff;
-    border: 2px solid #000;
+    border: 3px solid #003c7d;
     margin-top: -5px;
 }
 
@@ -355,7 +334,7 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     height: 18px;
     border-radius: 9999px;
     background: #fff;
-    border: 2px solid #000;
+    border: 2px solid #003c7d;
 }
 
 .cp-swatches {
@@ -369,8 +348,7 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     width: 26px;
     height: 26px;
     border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, .6);
-    box-shadow: 0 0 0 1px var(--panelOutlineColor) inset;
+    border: 3px solid #003c7d;
     cursor: pointer;
 }
 
@@ -378,6 +356,7 @@ function clamp01(x) { return Math.max(0, Math.min(1, Number.isFinite(x) ? x : 0)
     margin-top: 14px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
 }
 

@@ -43,6 +43,8 @@
       <RegisterComponent 
         id="accumulator" 
         label="AK" 
+        :signed-dec="decSigned"
+        :word-bits="wordBits"
         :model="ACC" 
         @update:model="$emit('update:ACC', $event)" 
         :number-format="accFormat"
@@ -171,6 +173,14 @@ export default {
       type: Number,
       required: true,
     },
+    decSigned: { 
+      type: Boolean, 
+      default: false 
+    },
+    wordBits: { 
+      type: Number, 
+      default: 12 
+    }, 
     accFormat: {
       type: String,
       required: true,

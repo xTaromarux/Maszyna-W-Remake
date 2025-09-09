@@ -40,6 +40,18 @@
           :class="{ active: lightMode }"
         />
       </div>
+      <div class="flexColumn" v-if="numberFormat === 'dec'">
+        <label>Wyświetlanie DEC:</label>
+        <SegmentedToggle
+          :options="[
+            { label: 'Bez znaku', value: false },
+            { label: 'U2 (ze znakiem)', value: true }
+          ]"
+          :model-value="decSigned"
+          @update:model-value="$emit('update:decSigned', $event)"
+        />
+        <p>U2 używa szerokości słowa {{ codeBits + addresBits }} bitów (np. 4027 → −69).</p>
+      </div>
 
       <div class="flexColumn">
         <label for="commandBits">Bity kodu:</label>
@@ -250,6 +262,7 @@ export default {
     platform: { type: String, default: '' },
     autocompleteEnabled: { type: Boolean, default: true },
     memoryAddresBits: { type: Number, required: true },
+    decSigned: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -271,6 +284,7 @@ export default {
     'open-command-list',
     'update:memoryAddresBits',
     'update:autocompleteEnabled',
+    'update:decSigned',
   ],
   computed: {
     extrasLabels() {

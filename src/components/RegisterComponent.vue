@@ -51,6 +51,8 @@ export default {
       type: String,
       default: 'dec',
     },
+    signedDec: { type: Boolean, default: false },
+    wordBits: { type: Number, default: 12 }, 
     showFormatSelector: {
       type: Boolean,
       default: true,
@@ -92,8 +94,18 @@ export default {
       if (typeof this.model !== 'number' || isNaN(this.model)) {
         return 'Błąd';
       }
+      console.log(this.signedDec);
+      
+      const toSigned = (value, bits) => {
+        const mod = 1 << bits;
+        const mask = mod - 1;
+         const sign = 1 << (bits - 1);
+         const v = value & mask;
+         return (v & sign) ? v - mod : v;
+       };
+       
       const formatters = {
-        dec: (num) => num.toString(),
+        dec: (num) => (this.signedDec ? toSigned(num, this.wordBits) : num).toString(),
         hex: (num) => '0x' + num.toString(16).toUpperCase(),
         bin: (num) => '0b' + num.toString(2),
       };

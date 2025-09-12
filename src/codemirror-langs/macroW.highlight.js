@@ -1,12 +1,13 @@
 import { styleTags, tags as t } from '@lezer/highlight';
 
 export const macroWHighlight = styleTags({
-  Keyword: t.keyword,
+  instrWord: t.keyword,
   number: t.number,
-  identifier: t.variableName,
+  word: t.variableName,
   labelDef: t.labelName,
   labelRef: t.labelName,
   delimiter: t.punctuation,
   LineComment: t.lineComment,
   newline: t.content,
 });
+

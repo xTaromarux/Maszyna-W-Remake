@@ -3,7 +3,9 @@
     @open-chat="aiChatOpen = true"
     @open-settings="settingsOpen = true"
     @toggle-console="toggleConsole"
+    @ws-reconnect="reconnectWS"
     :hasConsoleErrors="hasConsoleErrors"
+    :ws-status="wsStatus"
   />
 
   <div id="wLayout">
@@ -210,6 +212,9 @@ export default {
 
   data() {
     return {
+      ws: null,
+      wsStatus: 'disconnected', // 'connecting' | 'connected' | 'error'
+      wsPingTimer: null,
       decSigned: false,
       _condState: null,
       autocompleteEnabled: true,
@@ -260,7 +265,9 @@ export default {
       activeTimeouts: [],
 
       // DEFAULT IS 100ms
-      oddDelay: 100, // Delay for odd commands in ms
+      oddDelay: 400,
+      busHoldMs: 200,
+      _busHoldTimers: { A: null, S: null },
 
       commandList,
 
@@ -407,6 +414,32 @@ export default {
     };
   },
   methods: {
+    reconnectWS() {
+      try {
+        if (this.ws) {
+          try { this.ws.close(); } catch (_) {}
+          this.ws = null;
+        }
+        this.wsStatus = 'connecting';
+        // malutkie opóźnienie żeby zamknąć stary socket „do końca”
+        setTimeout(() => this.initWebsocket(), 150);
+      } catch (e) {
+        this.wsStatus = 'error';
+        this.addLog('[WS] Reconnect failed', 'Error', { message: String(e) });
+      }
+    },
+
+    holdBus(which){ // 'A' lub 'S'
+      const key = which === 'A' ? 'busA' : 'busS';
+      this.signals[key] = true;
+      const slot = which === 'A' ? 'A' : 'S';
+      if (this._busHoldTimers[slot]) clearTimeout(this._busHoldTimers[slot]);
+      this._busHoldTimers[slot] = setTimeout(() => {
+        this.signals[key] = false;
+        this._busHoldTimers[slot] = null;
+      }, this.busHoldMs);
+    },
+
     toSigned(value, bits) {
       const mod = 1 << bits;
       const mask = mod - 1;
@@ -522,53 +555,57 @@ export default {
       this.addLog(`Zastosowano inicjalizację pamięci (${assignments.length} wpisów)`, 'system');
     },
     initWebsocket() {
-      // Local Test
-      this.ws = new WebSocket('ws://localhost:8080');
-      // ESP32
-      // this.ws = new WebSocket('ws://192.168.4.1:80/ws');
-      this.ws.binaryType = 'arraybuffer';
-      this.ws.addEventListener('open', () => {
-        console.log('[WS] Connected to server');
-        this.sendFullDataToESP();
-      });
+      try {
+        this.wsStatus = 'connecting';
+        this.ws = new WebSocket('ws://localhost:8080'); // lub IP ESP32
+        this.ws.binaryType = 'arraybuffer';
 
-      this.ws.addEventListener('error', (err) => {
-        console.error('[WS] Connection error', err);
-      });
+        this.ws.addEventListener('open', () => {
+          this.wsStatus = 'connected';
+          this.addLog('[WS] Connected to server', 'system');
+          this.sendFullDataToESP();
 
-      this.ws.addEventListener('message', async ({ data }) => {
-        let text;
-        if (data instanceof Blob) {
-          text = await data.text();
-        } else if (data instanceof ArrayBuffer) {
-          text = new TextDecoder().decode(data);
-        } else {
-          text = data;
-        }
+          // prosty ping, by utrzymać i weryfikować połączenie
+          this.wsPingTimer && clearInterval(this.wsPingTimer);
+          this.wsPingTimer = setInterval(() => {
+            if (this.ws?.readyState === WebSocket.OPEN) {
+              this.ws.send(JSON.stringify({ type: 'ping', t: Date.now() }));
+            }
+          }, 10000);
+        });
 
-        console.log('[WS] Text received:', text);
-        let msg;
-        try {
-          msg = JSON.parse(text);
-        } catch (e) {
-          console.warn('[WS] Nieprawidłowy JSON:', text);
-          return;
-        }
+        this.ws.addEventListener('close', () => {
+          this.wsStatus = 'disconnected';
+          this.addLog('[WS] Disconnected', 'system');
+          this.wsPingTimer && clearInterval(this.wsPingTimer);
+          this.wsPingTimer = null;
+        });
 
-        // Local Test
-        // if (msg.type === 'signal-toggle') {
-        //   console.log('[WS] Received toggle:', msg.id, msg.value);
-        //   this.handleRemoteToggleLocalWebSocket(msg.id, msg.value);
-        // } else if (msg.type === 'mem-update') {
-        //   this.handleRemoteMemUpdate(msg.index, msg.value);
-        // }
+        this.ws.addEventListener('error', (err) => {
+          this.wsStatus = 'error';
+          this.addLog('[WS] Connection error', 'Error', { message: String(err) });
+        });
 
-        // ESP32
-        if (msg.type === 'button_press') {
-          console.log('[WS] Received toggle:', msg);
-          this.handleRemoteToggleESPWebSocket(msg.buttonName);
-        }
-      });
+        this.ws.addEventListener('message', async ({ data }) => {
+          let text;
+          if (data instanceof Blob) text = await data.text();
+          else if (data instanceof ArrayBuffer) text = new TextDecoder().decode(data);
+          else text = data;
+
+          let msg;
+          try { msg = JSON.parse(text); } catch (_) { return; }
+
+          if (msg.type === 'pong') return;
+
+          // ESP32 sygnały z przycisków
+          if (msg.type === 'button_press') {
+            this.handleRemoteToggleESPWebSocket(msg.buttonName);
+          }
+        });
+      } catch (e) {
+        this.wsStatus = 'error';
+        this.addLog('[WS] Init failed', 'Error', { message: String(e) });
+      }
     },
 
     handleRemoteToggleLocalWebSocket(id, value) {
@@ -1507,9 +1544,10 @@ export default {
       this.BusA = this.programCounter;
       const timeoutId = setTimeout(() => {
         this.signals.wyl = false;
-        this.signals.busA = false;
+        // this.signals.busA = false; // przedłużamy przez holdBus
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
     },
     wel() {
       this.signals.wel = true;
@@ -1517,9 +1555,10 @@ export default {
       this.programCounter = this.BusA;
       const timeoutId = setTimeout(() => {
         this.signals.wel = false;
-        this.signals.busA = false;
+        // this.signals.busA = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
     },
     wyad() {
       this.signals.wyad = true;
@@ -1527,9 +1566,10 @@ export default {
       this.BusA = this.I; // adres – bez maski 8-bit
       const timeoutId = setTimeout(() => {
         this.signals.wyad = false;
-        this.signals.busA = false;
+        // this.signals.busA = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
     },
     wei() {
       this.signals.wei = true;
@@ -1538,9 +1578,10 @@ export default {
       this.I = this.BusS & mask; // ładowanie argumentu (adresu)
       const timeoutId = setTimeout(() => {
         this.signals.wei = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
 
     iak() {
@@ -1576,9 +1617,10 @@ export default {
       this.JAML = this.toWord(this.BusS);
       const timeoutId = setTimeout(() => {
         this.signals.weja = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
     wyak() {
       // ACC -> BusS (dynamic word size)
@@ -1587,9 +1629,10 @@ export default {
       this.BusS = this.toWord(this.ACC);
       const timeoutId = setTimeout(() => {
         this.signals.wyak = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
 
     dod() {
@@ -1685,9 +1728,10 @@ export default {
       this.BusS = this.toWord(this.X);
       const timeoutId = setTimeout(() => {
         this.signals.wyx = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
     wex() {
       // BusS -> X (dynamic word size)
@@ -1696,9 +1740,10 @@ export default {
       this.X = this.toWord(this.BusS);
       const timeoutId = setTimeout(() => {
         this.signals.wex = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
     wyy() {
       // Y -> BusS (dynamic word size)
@@ -1707,9 +1752,10 @@ export default {
       this.BusS = this.toWord(this.Y);
       const timeoutId = setTimeout(() => {
         this.signals.wyy = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
     wey() {
       // BusS -> Y (dynamic word size)
@@ -1718,9 +1764,10 @@ export default {
       this.Y = this.toWord(this.BusS);
       const timeoutId = setTimeout(() => {
         this.signals.wey = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
 
     wea() {
@@ -1730,9 +1777,10 @@ export default {
       this.A = this.BusA & this.addrMask();
       const timeoutId = setTimeout(() => {
         this.signals.wea = false;
-        this.signals.busA = false;
+        // this.signals.busA = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
     },
     wes() {
       // BusS -> S (dynamic word size)
@@ -1741,9 +1789,10 @@ export default {
       this.S = this.toWord(this.BusS);
       const timeoutId = setTimeout(() => {
         this.signals.wes = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
     wys() {
       // S -> BusS (dynamic word size)
@@ -1752,9 +1801,10 @@ export default {
       this.BusS = this.toWord(this.S);
       const timeoutId = setTimeout(() => {
         this.signals.wys = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('S');
     },
 
     stop() {
@@ -1768,17 +1818,19 @@ export default {
     },
 
     as() {
-      // przenośnik między magistralami – zostawiam bez maski, by nie ucinać adresów
+      // przenośnik między magistralami – bez maski
       this.signals.as = true;
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusS = this.BusA;
       const timeoutId = setTimeout(() => {
         this.signals.as = false;
-        this.signals.busA = false;
-        this.signals.busS = false;
+        // this.signals.busA = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
+      this.holdBus('S');
     },
     sa() {
       this.signals.sa = true;
@@ -1787,10 +1839,12 @@ export default {
       this.BusA = this.BusS;
       const timeoutId = setTimeout(() => {
         this.signals.sa = false;
-        this.signals.busA = false;
-        this.signals.busS = false;
+        // this.signals.busA = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
+      this.holdBus('A');
+      this.holdBus('S');
     },
 
     czyt() {
@@ -1822,9 +1876,10 @@ export default {
       this.BusA = this.WS & mask;
       const id = setTimeout(() => {
         this.signals.wyws = false;
-        this.signals.busA = false;
+        // this.signals.busA = false;
       }, this.oddDelay);
       this.activeTimeouts.push(id);
+      this.holdBus('A');
     },
     iws() {
       this.signals.iws = true;
@@ -1852,9 +1907,10 @@ export default {
       this.BusS = this.toWord(this.programCounter);
       const id = setTimeout(() => {
         this.signals.wyls = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(id);
+      this.holdBus('S');
     },
     wyg() {
       this.signals.wyg = true;
@@ -1862,9 +1918,10 @@ export default {
       this.BusS = this.toWord(this.DEV_READY ? 1 : 0);
       const id = setTimeout(() => {
         this.signals.wyg = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(id);
+      this.holdBus('S');
     },
     werb() {
       this.signals.werb = true;
@@ -1880,9 +1937,10 @@ export default {
       this.BusS = this.DEV_IN & this.wordMask();
       const id = setTimeout(() => {
         this.signals.wyrb = false;
-        this.signals.busS = false;
+        // this.signals.busS = false;
       }, this.oddDelay);
       this.activeTimeouts.push(id);
+      this.holdBus('S');
     },
     start() {
       this.signals.start = true;
@@ -1892,6 +1950,7 @@ export default {
         this.DEV_READY = 1;
       }, this.oddDelay * 2);
       this.activeTimeouts.push(id);
+      // jeśli start podaje coś na S (u Ciebie nie), dodaj ewentualnie holdBus('S')
     },
     resetValues() {
       // Clear any active timeouts first
@@ -2033,7 +2092,7 @@ export default {
         code: 'LEX_UNKNOWN_CHAR',
         hint: "Usuń lub popraw znak. Jeżeli to komentarz, użyj '/\/' lub rozpocznij linię średnikiem ';'.",
         loc: { line: 5, col: 12, length: 1 },
-        frame: '    3 | LAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
+        frame: '    3 | ŁAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
       };
 
       this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);
@@ -2166,8 +2225,8 @@ export default {
   },
 
   beforeDestroy() {
-    // Remove event listener for key presses
     window.removeEventListener('keydown', this.handleKeyPress);
+    if (this.wsPingTimer) clearInterval(this.wsPingTimer);
   },
 };
 </script>

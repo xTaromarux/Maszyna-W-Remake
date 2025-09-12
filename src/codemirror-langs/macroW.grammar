@@ -2,7 +2,17 @@
 
 @tokens {
   // mnemonic rozkazu
-  instrWord { @asciiLetter (@asciiLetter | @digit | "_")* }
+
+  PLUpper { "Ą" | "Ć" | "Ę" | "Ł" | "Ń" | "Ó" | "Ś" | "Ź" | "Ż" }
+  PLLower { "ą" | "ć" | "ę" | "ł" | "ń" | "ó" | "ś" | "ź" | "ż" }
+  UnicodeLetter { @asciiLetter | PLUpper | PLLower }
+  WordChar { UnicodeLetter | @digit | "_" }
+
+
+  instrWord { UnicodeLetter WordChar* }
+  labelDef  { UnicodeLetter WordChar* ":" }
+  labelRef  { "@" UnicodeLetter WordChar* }
+  identifier { UnicodeLetter WordChar* }
 
   // słowa kluczowe IF/THEN/ELSE jako osobne tokeny
   IF { "IF" }
@@ -10,9 +20,6 @@
   ELSE { "ELSE" }
 
   number   { @digit+ }
-  labelDef { @asciiLetter (@asciiLetter | @digit | "_")* ":" }
-  labelRef { "@" @asciiLetter (@asciiLetter | @digit | "_")* }
-  identifier { @asciiLetter (@asciiLetter | @digit | "_")* }
 
   ";" "," "."
 

@@ -93,17 +93,6 @@ import AiChatTrashIcon from '@/components/AiChatTrashIcon.vue'
 
 const chatWorker = new Worker(new URL('@/workers/chat.worker.js', import.meta.url), { type: 'module' })
 
-chatWorker.onmessage = (e) => {
-  const { aiIndex, char, done } = e.data
-  const msg = messages.value[aiIndex]
-  if (!msg) return
-  if (char) msg.text += char
-  if (done) {
-    aiTyping.value = false
-    currentAiIndex.value = null
-  }
-}
-
 const isHide = ref(false)
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -132,6 +121,40 @@ const typingTimer = ref(null)
 const currentAiIndex = ref(null)
 const panelWidth = ref(Number(localStorage.getItem(WIDTH_KEY)) || 650)
 
+/* =========================
+   AUTOSCROLL (z throttlingiem)
+   ========================= */
+let rafQueued = false
+function scrollToBottom(behavior = 'auto') {
+  const el = conversationEl.value
+  if (!el) return
+  el.scrollTo({ top: el.scrollHeight, behavior })
+}
+function scheduleScroll(behavior = 'auto') {
+  if (rafQueued) return
+  rafQueued = true
+  requestAnimationFrame(() => {
+    rafQueued = false
+    nextTick(() => scrollToBottom(behavior))
+  })
+}
+
+/* Worker: dopisuje znaki i przewija w dół */
+chatWorker.onmessage = (e) => {
+  const { aiIndex, char, done } = e.data
+  const msg = messages.value[aiIndex]
+  if (!msg) return
+  if (char) {
+    msg.text += char
+    scheduleScroll('auto')
+  }
+  if (done) {
+    aiTyping.value = false
+    currentAiIndex.value = null
+    scheduleScroll('smooth')
+  }
+}
+
 const sessionId = (() => {
   let s = localStorage.getItem(SESSION_KEY)
   if (!s) {
@@ -146,12 +169,19 @@ onMounted(() => {
   if (saved) {
     try { messages.value = JSON.parse(saved) } catch { messages.value = [] }
   }
+  nextTick(() => scheduleScroll('auto'))
 })
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     isHide.value = true
-    nextTick(() => setTimeout(() => textInput.value?.focus(), 1000))
+    // dajemy chwilę na animację i render, potem focus + scroll
+    nextTick(() => {
+      setTimeout(() => {
+        textInput.value?.focus()
+        scheduleScroll('auto')
+      }, 250)
+    })
   }
 })
 
@@ -167,6 +197,7 @@ const resetConversation = () => {
   localStorage.removeItem(STORAGE_KEY)
   requestTimestamps.value = []
   cancelResponse()
+  scheduleScroll('auto')
 }
 
 const formatTime = (ts) =>
@@ -260,11 +291,13 @@ async function sendUserMessage() {
   const userQuery = text.value.trim()
   messages.value.push({ sender: 'user', text: userQuery, timestamp: now })
   text.value = ''
+  scheduleScroll('smooth')
 
   aiTyping.value = true
   messages.value.push({ sender: 'assistant', text: '', timestamp: Date.now() })
   const aiIndex = messages.value.length - 1
   currentAiIndex.value = aiIndex
+  scheduleScroll('smooth')
 
   const prior = messages.value.slice(0, Math.max(0, messages.value.length - 2))
   const history = prior
@@ -287,11 +320,13 @@ function cancelResponse() {
   }
   try { chatWorker.postMessage({ type: 'cancel' }) } catch {}
   aiTyping.value = false
+  scheduleScroll('auto')
 }
 
+/* Dodatkowa asekuracja: gdy zmienia się liczba wiadomości — doscrolluj */
 watch(
   () => messages.value.length,
-  () => nextTick(() => conversationEl.value?.scrollTo(0, conversationEl.value.scrollHeight))
+  () => nextTick(() => scheduleScroll('auto'))
 )
 
 let startX = 0
@@ -335,22 +370,22 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: .5rem;
   padding: 0 0 .35rem;
-  background: transparent; /* brak tła */
+  background: transparent;
 }
 
 .messageHtml :deep(.code-lang) {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: .04em;
-  color: #6b7280; /* gray-500 */
+  color: #6b7280;
 }
 .messageHtml :deep(.code-lang.no-lang) { opacity: .6; }
 
 .messageHtml :deep(.copy-btn) {
   appearance: none;
-  border: 3px solid #003c7d; /* gray-300 */
-  background: var(--panelBackgroundColor, #ffffff);       /* gray-50 */
-  color: var(--fontColor, black);;            /* gray-900 */
+  border: 3px solid #003c7d;
+  background: var(--panelBackgroundColor, #ffffff);
+  color: var(--fontColor, black);
   font-size: 0.8rem;
   padding: .25rem .6rem;
   border-radius: 6px;
@@ -359,21 +394,21 @@ onBeforeUnmount(() => {
 }
 .messageHtml :deep(.copy-btn:hover) { background: #f3f4f6; }
 .messageHtml :deep(.copy-btn.copied) {
-  background: #d1fae5; /* emerald-100 */
-  border-color: #10b981; /* emerald-500 */
-  color: #065f46; /* emerald-800 */
+  background: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
 }
 
 /* RAMKA tylko na PRE (kod) */
 .messageHtml :deep(.code-block) {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  background: #0f172a; /* slate-900 */
-  color: #e5e7eb;      /* gray-200 */
+  background: #0f172a;
+  color: #e5e7eb;
   border-radius: 8px;
   padding: 0.8rem 1rem;
   overflow: auto;
   line-height: 1.45;
-  border: 1px solid #1f2937; /* slate-800 */
+  border: 1px solid #1f2937;
 }
 
 /* inline code */

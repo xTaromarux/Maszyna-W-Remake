@@ -59,7 +59,7 @@ export const commandList = [
     // Linia4=wyad wea wyak wes;
     // Linia5=pisz wyl wea;
     {
-        name: "LAD",
+        name: "ŁAD",
         args: 1,
         description: "(Ak) -> (Ad)",
         lines: "czyt wys wei il;\nwyad wea wyak wes;\npisz wyl wea;",

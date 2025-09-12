@@ -10,7 +10,7 @@ function escapeRx(s: string) {
 }
 
 function matchCase(s: string, pattern: string) {
-  if (pattern && /[A-Za-z]/.test(pattern[0])) {
+  if (pattern && /\p{L}/u.test(pattern[0])) {
     return pattern[0] === pattern[0].toUpperCase() ? s.toUpperCase() : s.toLowerCase();
   }
   return s;
@@ -29,7 +29,11 @@ export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension
     return [empty] as const;
   }
 
-  const rx = new RegExp(`\\b(?:${words.map(escapeRx).join('|')})\\b`, 'gi');
+  const boundary = "[\\p{L}\\p{N}_]";
+  const rx = new RegExp(
+    `(?<!${boundary})(?:${words.map(escapeRx).join("|")})(?!${boundary})`,
+    "giu"
+  );
   const deco = Decoration.mark({ class: 'cm-macrow-keyword' });
 
   const field = StateField.define<DecorationSet>({
@@ -67,15 +71,17 @@ export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
     .map(c => ({ name: c.name, description: c.description || 'rozkaz' }));
 
   function source(ctx: CompletionContext): CompletionResult | null {
-    const word = ctx.matchBefore(/\w*/);
+    // Unicode: litery/cyfry/podkreślenie
+    const word = ctx.matchBefore(/[\p{L}\p{N}_]*/u);
     if (!word) return null;
+    // (opcjonalnie) jeśli chcesz mieć podpowiedzi tylko gdy coś wpisano:
+    // if (word.from == word.to && !ctx.explicit) return null;
 
     const opts = base.map(({ name, description }) => ({
       label: matchCase(name, word.text),
       type: 'keyword' as const,
       detail: description,
     }));
-
     return { from: word.from, options: opts };
   }
 

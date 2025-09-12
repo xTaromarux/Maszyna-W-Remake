@@ -2033,7 +2033,7 @@ export default {
         code: 'LEX_UNKNOWN_CHAR',
         hint: "Usuń lub popraw znak. Jeżeli to komentarz, użyj '/\/' lub rozpocznij linię średnikiem ';'.",
         loc: { line: 5, col: 12, length: 1 },
-        frame: '    3 | LAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
+        frame: '    3 | ŁAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
       };
 
       this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);

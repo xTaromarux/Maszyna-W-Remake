@@ -12,7 +12,11 @@
 .calcConteiner{
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
+}
+
+.calcConteinerAdditionalSpace{
+    justify-content: space-between !important;
 }
 
 #wsRegister {

@@ -1,5 +1,5 @@
 <template>
-  <div class="calcConteiner">
+  <div class="calcConteiner" :class="extras?.stack?.wsRegister ? 'calcConteinerAdditionalSpace' : ''">
     <WSRegisterSection
       v-if="!isMobile"
       :WS="WS"

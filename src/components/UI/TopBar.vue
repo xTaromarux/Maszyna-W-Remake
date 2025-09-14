@@ -14,7 +14,7 @@
           'ws--off'     : wsStatus === 'disconnected'
         }"
         :title="wsTitle"
-        aria-label="Status połączenia z urządzeniem"
+        aria-label="Status połączenia z maszyną fizyczną"
         @click="$emit('ws-reconnect')"
       >
         <span class="dot" :class="{ spin: wsStatus === 'connecting' }" />
@@ -72,10 +72,10 @@ defineEmits(['open-chat', 'open-settings', 'toggle-console', 'ws-reconnect'])
 
 const wsLabel = computed(() => {
   switch (props.wsStatus) {
-    case 'connected':   return 'Połączono';
+    case 'connected':   return 'Połączono z maszyną fizyczną';
     case 'connecting':  return 'Łączenie…';
-    case 'error':       return 'Błąd połączenia';
-    default:            return 'Brak połączenia';
+    case 'error':       return 'Błąd połączenia z maszyną fizyczną';
+    default:            return 'Brak połączenia z maszyną fizyczną';
   }
 })
 

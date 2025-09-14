@@ -94,7 +94,6 @@ export default {
       if (typeof this.model !== 'number' || isNaN(this.model)) {
         return 'Błąd';
       }
-      console.log(this.signedDec);
       
       const toSigned = (value, bits) => {
         const mod = 1 << bits;

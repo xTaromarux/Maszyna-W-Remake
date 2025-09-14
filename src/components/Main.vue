@@ -212,6 +212,7 @@ export default {
 
   data() {
     return {
+      platform: import.meta.env.VITE_APP_PLATFORM,
       ws: null,
       wsStatus: 'disconnected', // 'connecting' | 'connected' | 'error'
       wsPingTimer: null,
@@ -2212,7 +2213,9 @@ export default {
   },
 
   mounted() {
-    this.initWebsocket();
+    if(this.platform === 'esp'){
+      this.initWebsocket();
+    }
     this.loadFromLS();
     this.resizeMemory();
 

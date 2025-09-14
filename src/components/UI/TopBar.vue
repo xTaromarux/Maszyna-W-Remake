@@ -5,6 +5,7 @@
     <div class="flexRow">
       <!-- WS status badge -->
       <button
+        v-if="platform === 'esp'"
         class="wsBadge"
         :class="{
           'ws--ok'      : wsStatus === 'connected',

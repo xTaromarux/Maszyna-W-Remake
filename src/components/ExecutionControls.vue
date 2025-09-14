@@ -4,28 +4,56 @@
     <button
       v-if="!codeCompiled"
       @click="$emit('compile')"
-      :disabled="manualMode || code === ''"
+      :disabled="isRunning || !code || !code.trim()"
       class="execution-btn execution-btn--compile"
+      title="Skompiluj program"
     >
       <CompileIcon />
       <span>Kompiluj</span>
     </button>
 
-    <button v-else @click="$emit('edit')" :disabled="manualMode && codeCompiled" class="execution-btn execution-btn--edit">
+    <button
+      v-else
+      @click="$emit('edit')"
+      :disabled="isRunning"
+      class="execution-btn execution-btn--edit"
+      title="Wróć do edycji"
+    >
       <EditIcon />
       <span>Edytuj</span>
     </button>
 
-    <!-- Single‑step execution -->
-    <button @click="$emit('step')" :disabled="!manualMode && !codeCompiled" class="execution-btn execution-btn--step">
+    <!-- Single-step execution -->
+    <button
+      @click="$emit('step')"
+      :disabled="isRunning || (!manualMode && !codeCompiled)"
+      class="execution-btn execution-btn--step"
+      title="Krok wykonania"
+    >
       <NextLineIcon />
       <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj rozkaz' }}</span>
     </button>
 
-    <!-- Run program -->
-    <button @click="$emit('run')" :disabled="manualMode || !code" class="execution-btn execution-btn--run">
+    <!-- Run / Stop -->
+    <button
+      v-if="!isRunning"
+      @click="$emit('run')"
+      :disabled="manualMode || !codeCompiled"
+      class="execution-btn execution-btn--run"
+      title="Uruchom program"
+    >
       <RunIcon />
       <span>Uruchom</span>
+    </button>
+
+    <button
+      v-else
+      @click="$emit('stop')"
+      class="execution-btn execution-btn--run"
+      title="Zatrzymaj wykonywanie"
+    >
+      <RunIcon />
+      <span>Stop</span>
     </button>
   </div>
 </template>
@@ -38,19 +66,13 @@ import RunIcon from '@/assets/svg/RunIcon.vue';
 
 export default {
   name: 'ExecutionControls',
-  components: {
-    CompileIcon,
-    EditIcon,
-    NextLineIcon,
-    RunIcon,
-  },
+  components: { CompileIcon, EditIcon, NextLineIcon, RunIcon },
   props: {
-    manualMode: { type: Boolean, required: true },
+    manualMode:   { type: Boolean, required: true },
     codeCompiled: { type: Boolean, required: true },
-    code: { type: String, required: true },
+    code:         { type: String,  required: true },
+    isRunning:    { type: Boolean, required: true },
   },
-  emits: ['compile', 'edit', 'step', 'run'],
+  emits: ['compile', 'edit', 'step', 'run', 'stop'],
 };
 </script>
-
-<style scoped></style>

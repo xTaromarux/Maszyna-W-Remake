@@ -1,5 +1,3 @@
-// server/index.js (albo Twój plik z backendem proxy)
-
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'

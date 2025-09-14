@@ -129,7 +129,7 @@
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
-      @update:extras="(patch) => extras = mergeExtras(extras, patch)"
+      @update:extras="(patch) => (extras = mergeExtras(extras, patch))"
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
@@ -230,7 +230,7 @@ export default {
       mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
       programCounter: 0,
       JAML: 0,
-      RZInputs: [0,0,0,0],
+      RZInputs: [0, 0, 0, 0],
 
       X: 0,
       Y: 0,
@@ -418,7 +418,9 @@ export default {
     reconnectWS() {
       try {
         if (this.ws) {
-          try { this.ws.close(); } catch (_) {}
+          try {
+            this.ws.close();
+          } catch (_) {}
           this.ws = null;
         }
         this.wsStatus = 'connecting';
@@ -430,7 +432,8 @@ export default {
       }
     },
 
-    holdBus(which){ // 'A' lub 'S'
+    holdBus(which) {
+      // 'A' lub 'S'
       const key = which === 'A' ? 'busA' : 'busS';
       this.signals[key] = true;
       const slot = which === 'A' ? 'A' : 'S';
@@ -446,24 +449,24 @@ export default {
       const mask = mod - 1;
       const sign = 1 << (bits - 1);
       const v = value & mask;
-      return (v & sign) ? v - mod : v;
+      return v & sign ? v - mod : v;
     },
     getDefaultExtras() {
       return {
         xRegister: false,
         yRegister: false,
         io: { rbRegister: false, gRegister: false },
-        stack: { 
+        stack: {
           wsRegister: false,
-          wylsSignal: false  
+          wylsSignal: false,
         },
-        interrupts: { 
-          rzRegister: false, 
-          rpRegister: false, 
-          rmRegister: false, 
-          apRegister: false, 
+        interrupts: {
+          rzRegister: false,
+          rpRegister: false,
+          rmRegister: false,
+          apRegister: false,
           rintSignal: false,
-          eniSignal: false, 
+          eniSignal: false,
         },
         dl: false,
         jamlExtras: false,
@@ -475,13 +478,13 @@ export default {
     mergeExtras(current, patch) {
       const base = this.getDefaultExtras();
       const src = current || {};
-      const p   = patch || {};
+      const p = patch || {};
       return {
         ...base,
         ...src,
         ...p,
-        io:         { ...base.io,         ...(src.io || {}),         ...(p.io || {}) },
-        stack:      { ...base.stack,      ...(src.stack || {}),      ...(p.stack || {}) },
+        io: { ...base.io, ...(src.io || {}), ...(p.io || {}) },
+        stack: { ...base.stack, ...(src.stack || {}), ...(p.stack || {}) },
         interrupts: { ...base.interrupts, ...(src.interrupts || {}), ...(p.interrupts || {}) },
       };
     },
@@ -594,7 +597,11 @@ export default {
           else text = data;
 
           let msg;
-          try { msg = JSON.parse(text); } catch (_) { return; }
+          try {
+            msg = JSON.parse(text);
+          } catch (_) {
+            return;
+          }
 
           if (msg.type === 'pong') return;
 
@@ -634,7 +641,24 @@ export default {
       const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa', 'wyws', 'wyap', 'wyrm', 'werm'];
 
       // Sygnały używające magistrali S
-      const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa', 'wyls', 'wyg', 'wyrb', 'werb', 'start'];
+      const busSSignals = [
+        'wei',
+        'weja',
+        'wyak',
+        'wyx',
+        'wex',
+        'wyy',
+        'wey',
+        'wes',
+        'wys',
+        'as',
+        'sa',
+        'wyls',
+        'wyg',
+        'wyrb',
+        'werb',
+        'start',
+      ];
 
       // One JAML Operation at a Time Group:
       const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
@@ -952,8 +976,8 @@ export default {
           if (this.decSigned) {
             return this.toSigned(number, this.codeBits + this.addresBits);
           }
-           return number | 0;
-        },        
+          return number | 0;
+        },
         hex: () => '0x' + Math.floor(number).toString(16).toUpperCase(),
         bin: () => '0b' + Math.floor(number).toString(2),
       };
@@ -1018,10 +1042,11 @@ export default {
           availableSignals: this.avaiableSignals,
           extras: this.extras,
         });
+        console.log(program, rawLines);
 
         // 1) Ustawiamy program + surowe linie do podglądu
         this.compiledProgram = Array.isArray(program) ? program : [];
-        this.compiledCode    = Array.isArray(rawLines) ? rawLines : [];
+        this.compiledCode = Array.isArray(rawLines) ? rawLines : [];
 
         // 2) PRZYPISANIE srcLine
         //    Dla zwykłej fazy: +1 linia
@@ -1039,8 +1064,8 @@ export default {
               // pierwsze pod-fazy — nadajemy im "wirtualne" źródła do poprawnego highlightu
               const t0 = phase.truePhases && phase.truePhases[0];
               const f0 = phase.falsePhases && phase.falsePhases[0];
-              if (t0) t0.srcLine = linePtr + 1;   // linia z @zero ...
-              if (f0) f0.srcLine = linePtr + 2;   // linia z @niezero ...
+              if (t0) t0.srcLine = linePtr + 1; // linia z @zero ...
+              if (f0) f0.srcLine = linePtr + 2; // linia z @niezero ...
 
               linePtr += 3;
             } else {
@@ -1087,7 +1112,7 @@ export default {
       this.nextLine.clear();
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
-      this._condState = null; 
+      this._condState = null;
       this._branchJoin = null;
       this._stepGuard = 0;
     },
@@ -1136,7 +1161,7 @@ export default {
           if (!this._condState) {
             const cond = this.evaluateFlag(rawPhase.flag);
             const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
-            
+
             this._condState = {
               list,
               idx: 0,
@@ -1145,7 +1170,7 @@ export default {
               stage: 'SHOW_IF',
             };
 
-            rawPhase.srcLine = list[0]
+            rawPhase.srcLine = list[0];
             hlFrom(rawPhase);
             return;
           }
@@ -1186,7 +1211,7 @@ export default {
           }
 
           // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
-          const signals = new Set(Object.keys(curr).filter(k => curr[k] === true));
+          const signals = new Set(Object.keys(curr).filter((k) => curr[k] === true));
           this.nextLine = signals;
           this.executeSignalsFromNextLine();
 
@@ -1269,7 +1294,7 @@ export default {
         // Podświetl i wykonaj
         hlFrom(rawPhase);
         {
-          const signalsSet = new Set(Object.keys(rawPhase).filter(k => rawPhase[k] === true));
+          const signalsSet = new Set(Object.keys(rawPhase).filter((k) => rawPhase[k] === true));
           this.nextLine = signalsSet;
           this.executeSignalsFromNextLine();
         }
@@ -1347,28 +1372,28 @@ export default {
     _refreshHighlight() {
       if (!this.codeCompiled) return;
 
-    if (this._condState) {
-      const st = this._condState;
-      // 1) pierwszy klik – SHOW_IF
-      if (st.stage === 'SHOW_IF') {
+      if (this._condState) {
+        const st = this._condState;
+        // 1) pierwszy klik – SHOW_IF
+        if (st.stage === 'SHOW_IF') {
+          if (Number.isFinite(st.phaseRef?.srcLine)) {
+            this.activeLine = st.phaseRef.srcLine;
+            return;
+          }
+        }
+        // 2) drugi i kolejne – RUN_BRANCH
+        const idx = Math.min(st.idx ?? 0, (st.list?.length ?? 1) - 1);
+        const curr = st.list?.[idx];
+        if (curr && Number.isFinite(curr.srcLine)) {
+          this.activeLine = curr.srcLine;
+          return;
+        }
+        // awaryjnie – offset względem IF
         if (Number.isFinite(st.phaseRef?.srcLine)) {
-          this.activeLine = st.phaseRef.srcLine;
+          this.activeLine = st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2);
           return;
         }
       }
-      // 2) drugi i kolejne – RUN_BRANCH
-      const idx = Math.min(st.idx ?? 0, (st.list?.length ?? 1) - 1);
-      const curr = st.list?.[idx];
-      if (curr && Number.isFinite(curr.srcLine)) {
-        this.activeLine = curr.srcLine;
-        return;
-      }
-      // awaryjnie – offset względem IF
-      if (Number.isFinite(st.phaseRef?.srcLine)) {
-        this.activeLine = st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2);
-        return;
-      }
-    }
 
       // Jeżeli mamy przypięte srcLine — to ich używamy.
       if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
@@ -1390,14 +1415,14 @@ export default {
       const instrIdx = Math.max(0, this.activeInstrIndex);
       for (let i = 0; i < instrIdx; i++) {
         const phs = this.compiledProgram[i]?.phases || [];
-        for (const p of phs) line += (p && p.conditional === true) ? 3 : 1;
+        for (const p of phs) line += p && p.conditional === true ? 3 : 1;
         const extra = this.compiledProgram[i]?.meta?.postAsm;
         if (Array.isArray(extra)) line += extra.length;
       }
       const currPh = this.compiledProgram[instrIdx]?.phases || [];
       for (let k = 0; k < Math.max(0, this.activePhaseIndex); k++) {
         const p = currPh[k];
-        line += (p && p.conditional === true) ? 3 : 1;
+        line += p && p.conditional === true ? 3 : 1;
       }
       this.activeLine = line;
 
@@ -1665,14 +1690,18 @@ export default {
     mno() {
       this.signals.mno = true;
       this.JAML = this.toWord(this.ACC * this.JAML);
-      const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
+      const timeoutId = setTimeout(() => {
+        this.signals.mno = false;
+      }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dziel() {
       this.signals.dziel = true;
-      const d = this.JAML & 0xFF;
+      const d = this.JAML & 0xff;
       this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
-      const timeoutId = setTimeout(() => { this.signals.dziel = false; }, this.oddDelay);
+      const timeoutId = setTimeout(() => {
+        this.signals.dziel = false;
+      }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     shr() {
@@ -2213,7 +2242,7 @@ export default {
   },
 
   mounted() {
-    if(this.platform === 'esp'){
+    if (this.platform === 'esp') {
       this.initWebsocket();
     }
     this.loadFromLS();

@@ -1,3 +1,5 @@
+// server/index.js (albo Twój plik z backendem proxy)
+
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
@@ -44,7 +46,7 @@ app.use(cors({
     if (ORIGINS.includes(origin)) return cb(null, true)
     cb(new Error('Not allowed by CORS: ' + origin))
   },
-  methods: ['POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'OPTIONS'],                    // ⟵ dopuszczamy też GET (dla /health)
   allowedHeaders: ['Content-Type', 'X-Session-Id', 'Authorization'],
   credentials: false
 }))
@@ -59,7 +61,61 @@ app.use('/api/chat', limiter)
 
 app.options('/api/chat', (req, res) => res.sendStatus(204))
 
-app.get('/health', (req, res) => res.json({ ok: true, upstream: UPSTREAM }))
+// Prosty helper do fetch z timeoutem
+async function fetchWithTimeout(url, opts = {}, timeoutMs = 15000) {
+  const controller = new AbortController()
+  const t = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const r = await fetch(url, { ...opts, signal: controller.signal })
+    return r
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// Health: sprawdź i opcjonalnie „obudź” upstream
+app.get('/health', async (req, res) => {
+  const wake = String(req.query.wake || '0') === '1'
+  const info = {
+    ok: true,
+    upstream: UPSTREAM,
+    upstream_ok: null,
+    woke: false,
+    status: null,
+  }
+
+  if (!UPSTREAM) {
+    info.upstream_ok = false
+    info.status = 'NO_UPSTREAM_SET'
+    return res.json(info)
+  }
+
+  try {
+    // „Lekkie” POST, takie samo body jak /api/chat; to też „budzi” Space (cold start)
+    const r = await fetchWithTimeout(UPSTREAM, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: wake ? '' : '[health-check]', history: [] })
+    }, wake ? 25000 : 10000) // przy wake daj trochę więcej czasu
+
+    info.upstream_ok = r.ok
+    info.status = `HTTP_${r.status}`
+    info.woke = wake && r.ok
+    const ct = r.headers.get('content-type') || ''
+    if (ct.includes('application/json')) {
+      // przeczytaj, ale nie zwracaj odpowiedzi – tylko diagnostyka
+      await r.json().catch(() => {})
+    } else {
+      await r.text().catch(() => {})
+    }
+  } catch (e) {
+    info.upstream_ok = false
+    info.status = 'FETCH_ERROR'
+    info.detail = String(e.message || e)
+  }
+
+  res.json(info)
+})
 
 app.post('/api/chat', async (req, res) => {
   try {

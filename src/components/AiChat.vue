@@ -131,15 +131,8 @@ const panelWidth = ref(Number(localStorage.getItem(WIDTH_KEY)) || 650)
 /* ====== HEALTH / WAKE ====== */
 const apiState = ref('idle') // 'idle' | 'checking' | 'waking'
 
-const API_URL = (() => {
-  const envUrl = (import.meta?.env?.VITE_API_URL) || ''
-  if (envUrl) return envUrl
-  const { protocol, hostname } = window.location
-  const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)
-  const isDev = hostname === 'localhost' || isIp
-  return isDev ? `${protocol}//${hostname}:8787/api/chat` : '/api/chat'
-})()
-const HEALTH_URL = API_URL.replace(/\/api\/chat\/?$/, '/health')
+const API_URL = import.meta.env.VITE_API_URL || ''
+const HEALTH_URL = API_URL ? API_URL.replace(/\/api\/chat\/?$/, '/health') : ''
 
 async function healthCheckAndWake() {
   try {

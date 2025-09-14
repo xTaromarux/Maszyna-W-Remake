@@ -66,18 +66,31 @@
         :compiled-code="compiledCode"
         :active-line="activeLine"
         :next-line="nextLine"
+
+        :show-io="extras?.io?.rbRegister"
+        :dev-in="DEV_IN"
+        :dev-out="DEV_OUT"
+        :dev-ready="DEV_READY"
+        :word-bits="codeBits + addresBits"
+        :format-number="formatNumber"
+
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="(code) => (this.code = code)"
+
+        @update:devIn="(v) => { DEV_IN = v; DEV_READY = v ? 0 : 1 }"
+        @update:devReady="(v) => { DEV_READY = v }"
       />
       <!--HACK WITH COMPILE CODE 2, it is an old version of the compile code function-->
       <ExecutionControls
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
         :code="code"
+        :is-running="isRunning"
         @compile="compileCode"
         @edit="uncompileCode"
         @step="executeLine"
         @run="runCode"
+        @stop="stopRun"
       />
     </div>
 
@@ -212,6 +225,9 @@ export default {
 
   data() {
     return {
+      _lastLogKey: null,
+      _lastLogCount: 0,
+      _lastLogTs: 0,
       platform: import.meta.env.VITE_APP_PLATFORM,
       ws: null,
       wsStatus: 'disconnected', // 'connecting' | 'connected' | 'error'
@@ -247,9 +263,13 @@ export default {
       BusA: 0,
       BusS: 0,
       WS: 0,
-      DEV_READY: 0,
+      DEV_READY: 1,
       DEV_IN: 0,
       DEV_OUT: 0,
+      DEV_BUSY: false,
+
+      runLoopTimer: null,
+      isRunning: false,
 
       code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
       program: 'DOD',
@@ -907,7 +927,31 @@ export default {
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
     addLog(message, classification = 'info', errorObj = null) {
+
       const timestamp = new Date();
+      const key = `${classification}|${message}`;
+      const now = timestamp.getTime();
+
+      // reset liczników po przerwie > 1000 ms
+      if (now - (this._lastLogTs || 0) > 1000) {
+        this._lastLogKey = null;
+        this._lastLogCount = 0;
+      }
+
+      if (this._lastLogKey === key) {
+        this._lastLogCount += 1;
+        const last = this.logs[this.logs.length - 1];
+        if (last) {
+          last.message = `${message} ×${this._lastLogCount + 1}`;
+          last.timestamp = timestamp;
+        }
+        this._lastLogTs = now;
+        return; // nie dopisujemy nowej pozycji
+      } else {
+        this._lastLogKey = key;
+        this._lastLogCount = 0;
+        this._lastLogTs = now;
+      }
 
       // Enhanced log entry structure that supports both legacy and new error formats
       const logEntry = {
@@ -1501,25 +1545,50 @@ export default {
       }
     },
 
+    stopRun() {
+      this._stopRun();
+      this.addLog('Wykonanie przerwane przyciskiem STOP.', 'system');
+    },
+
     runCode() {
+      if (this.isRunning || !this.codeCompiled) return; 
       this.manualMode = false;
       this.clearActiveTimeouts();
 
-      if (this.compiledProgram && this.compiledProgram.length > 0) {
-        let safety = 100000;
-        if (this.activeInstrIndex < 0) {
-          this.activeInstrIndex = 0;
-          this.activePhaseIndex = 0;
-        }
-        while (this.codeCompiled && this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length && safety-- > 0) {
-          this.executeLine();
-        }
-      } else if (this.compiledCode && this.compiledCode.length > 0) {
-        this.activeLine = Math.max(this.activeLine, 0);
-        while (this.activeLine < this.compiledCode.length) {
-          this.executeLine();
-        }
+      this.isRunning = true;
+      let stepsLeft = 100000;
+      const CHUNK = 1;                           // było 200
+      const TICK_MS = Math.max(1, this.oddDelay); // było 0
+
+      if (this.compiledProgram && this.compiledProgram.length > 0 && this.activeInstrIndex < 0) {
+        this.activeInstrIndex = 0;
+        this.activePhaseIndex = 0;
       }
+
+      const tick = () => {
+        if (!this.codeCompiled || !this.isRunning) return this._stopRun();
+
+        let i = 0;
+        while (i++ < CHUNK && stepsLeft-- > 0 && this.codeCompiled &&
+              this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length) {
+          this.executeLine();
+        }
+
+        if (!this.codeCompiled || this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length) {
+          return this._stopRun();
+        }
+        if (stepsLeft <= 0) {
+          this.addLog('Przerwano: limit kroków RUN osiągnięty.', 'system');
+          return this._stopRun();
+        }
+        this.runLoopTimer = setTimeout(tick, TICK_MS);
+      };
+
+      this.runLoopTimer = setTimeout(tick, TICK_MS);
+    },
+    _stopRun() {
+      if (this.runLoopTimer) { clearTimeout(this.runLoopTimer); this.runLoopTimer = null; }
+      this.isRunning = false;
     },
 
     /* COMMANDS */
@@ -1916,42 +1985,59 @@ export default {
     wyg() {
       this.signals.wyg = true;
       this.signals.busS = true;
+      // 1 = BUSY, 0 = READY (tak oczekuje assembler z IF Z THEN ...)
+      const g = this.DEV_READY ? 1 : 0;
       this.BusS = this.toWord(this.DEV_READY ? 1 : 0);
-      const id = setTimeout(() => {
-        this.signals.wyg = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      this.G = this.DEV_READY ? 1 : 0;
+      const id = setTimeout(() => { this.signals.wyg = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
       this.holdBus('S');
     },
     werb() {
       this.signals.werb = true;
-      this.DEV_OUT = this.ACC & this.wordMask();
-      const id = setTimeout(() => {
-        this.signals.werb = false;
-      }, this.oddDelay);
+      const v = this.ACC & this.wordMask();
+      this.DEV_OUT = v;
+      this.RB = v;
+      const id = setTimeout(() => { this.signals.werb = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
     },
     wyrb() {
       this.signals.wyrb = true;
       this.signals.busS = true;
-      this.BusS = this.DEV_IN & this.wordMask();
-      const id = setTimeout(() => {
-        this.signals.wyrb = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+
+      const canRead = (this.DEV_READY === 0);     // tylko gdy READY
+      const v = canRead ? (this.DEV_IN & this.wordMask()) : 0;
+
+      this.BusS = v;
+      this.RB   = v;
+
+      if (canRead) {
+        this.DEV_IN = 0;           // znak skonsumowany
+        this.DEV_READY = 1;        // teraz nie ma danych – czekamy na następny
+        this.G = 1;
+      }
+
+      const id = setTimeout(() => { this.signals.wyrb = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
       this.holdBus('S');
     },
     start() {
+      if (this.DEV_BUSY) return;
+      this.DEV_BUSY = true;
       this.signals.start = true;
-      this.DEV_READY = 0;
+
+      // podczas „pracy” urządzenia: brak danych
+      this.DEV_READY = this.DEV_IN ? 0 : 1; // możesz zostawić 1; kluczowe jest zakończenie
+
       const id = setTimeout(() => {
         this.signals.start = false;
-        this.DEV_READY = 1;
+        this.DEV_BUSY = false;
+        // po „przygotowaniu” – jeżeli użytkownik wpisał znak, to READY=0
+        this.DEV_READY = this.DEV_IN ? 0 : 1;
+        this.G = this.DEV_READY ? 1 : 0;
       }, this.oddDelay * 2);
+
       this.activeTimeouts.push(id);
-      // jeśli start podaje coś na S (u Ciebie nie), dodaj ewentualnie holdBus('S')
     },
     resetValues() {
       // Clear any active timeouts first

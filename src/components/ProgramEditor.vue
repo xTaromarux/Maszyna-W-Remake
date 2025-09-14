@@ -1,20 +1,25 @@
 <template>
   <div class="programEditor">
-    <!-- Manual / Program toggle -->
-    <!-- <div class="toggleButtonDiv toggleButtonProgram" :class="{ active: manualMode }">
-      <span @click="$emit('setManualMode', true)">Tryb ręczny</span>
-      <span @click="$emit('setManualMode', false)">Program</span>
-    </div> -->
-  <SegmentedToggle
-    :options="[
-      { label: 'Tryb ręczny', value: true },
-      { label: 'Program', value: false }
-    ]"
-    :model-value="manualMode"
-    @update:model-value="$emit('setManualMode', $event)"
-    class="toggleButtonProgram"
-  />
-
+    <SegmentedToggle
+      :options="[
+        { label: 'Tryb ręczny', value: true },
+        { label: 'Program', value: false }
+      ]"
+      :model-value="manualMode"
+      @update:model-value="$emit('setManualMode', $event)"
+      class="toggleButtonProgram"
+    />
+    <IOPanel
+      v-if="showIo"
+      :dev-in="devIn"
+      :dev-out="devOut"
+      :dev-ready="devReady"
+      :word-bits="wordBits"
+      :format-number="formatNumber"
+      @update:devIn="$emit('update:devIn', $event)"
+      @update:devReady="$emit('update:devReady', $event)"
+      class="mb-2"
+    />
 
     <!-- Placeholder for future program chooser -->
     <div class="chooseProgram">
@@ -26,7 +31,7 @@
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
-    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" maxHeight='32rem' />
+    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" :maxHeight=" showIo ? '18.3rem' : '32rem' " />
 
     <div v-else class="compiledCode" ref="compiledEl">
       <span
@@ -55,9 +60,10 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'   // ⬅️ nextTick dodany
+import { ref, watch, nextTick } from 'vue'
 import SegmentedToggle from './SegmentedToggle.vue'
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
+import IOPanel from '@/components/IOPanel.vue'   // ⬅️ NOWE
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -65,19 +71,26 @@ const props = defineProps({
   code: { type: String, required: true },
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true } // Set
+  nextLine: { type: Object, required: true }, // Set
+
+  showIo: { type: Boolean, default: false },
+  devIn: { type: Number, default: 0 },
+  devOut: { type: Number, default: 0 },
+  devReady: { type: Number, default: 1 },
+  wordBits: { type: Number, required: true },
+  formatNumber: { type: Function, required: true }
 })
 
-const emit = defineEmits(['update:code', 'setManualMode'])
+const emit = defineEmits([
+  'update:code', 'setManualMode',
+  'update:devIn', 'update:devReady'
+])
 
 const codeLocal = ref(props.code)
 const compiledEl = ref(null)
 
 watch(codeLocal, (v) => emit('update:code', v))
-
-watch(() => props.code, (v) => {
-  if (v !== codeLocal.value) codeLocal.value = v
-})
+watch(() => props.code, (v) => { if (v !== codeLocal.value) codeLocal.value = v })
 
 watch(() => props.activeLine, async (row) => {
   await nextTick()
@@ -242,7 +255,7 @@ watch(() => props.activeLine, async (row) => {
   justify-content: center;
   padding: 1rem;
   border-radius: var(--default-border-radius, 0.25rem);
-  border: 5px solid #003c7d;
+  border: 4px solid #003c7d;
   background-color: var(--panelBackgroundColor, white);
   color: var(--fontColor, black);
   font-style: italic;

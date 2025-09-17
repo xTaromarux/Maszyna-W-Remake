@@ -55,6 +55,29 @@
       <RunIcon />
       <span>Stop</span>
     </button>
+
+    <button
+      v-if="!isRunning"
+      @click="$emit('run-fast')"
+      :disabled="manualMode || !codeCompiled"
+      class="execution-btn execution-btn--run"
+      title="Uruchom całość (bez animacji)"
+    >
+      <RunIcon />
+      <span>Uruchom (bez animacji)</span>
+    </button>
+
+    <!-- Kiedy trwa run-fast, pokaż „zajętość” i % -->
+    <button
+      v-else-if="isFastRunning"
+      @click="$emit('stop')"
+      class="execution-btn execution-btn--run"
+      title="Zatrzymaj wykonywanie"
+    >
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Pracuję… {{ fastProgress }}%</span>
+    </button>
+
   </div>
 </template>
 
@@ -72,7 +95,24 @@ export default {
     codeCompiled: { type: Boolean, required: true },
     code:         { type: String,  required: true },
     isRunning:    { type: Boolean, required: true },
+    isFastRunning:{ type: Boolean, required: false, default: false },
+    fastProgress: { type: Number,  required: false, default: 0 },
   },
-  emits: ['compile', 'edit', 'step', 'run', 'stop'],
+  emits: ['compile', 'edit', 'step', 'run', 'run-fast', 'stop'],
 };
 </script>
+
+<style scoped>
+.spinner {
+  width: 1em; height: 1em;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: .5rem;
+  animation: sp 0.6s linear infinite;
+  vertical-align: -0.15em;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+
+</style>

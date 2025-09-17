@@ -21,12 +21,10 @@
       class="mb-2"
     />
 
-    <!-- Placeholder for future program chooser -->
     <div class="chooseProgram">
       <slot name="chooseProgram"></slot>
     </div>
 
-    <!-- Manual mode instruction -->
     <div v-if="manualMode" class="manualModeInstruction">
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
@@ -47,7 +45,6 @@
       </span>
     </div>
 
-    <!-- Preview of next-line signals (manual execution) -->
     <div class="nextLine" v-if="manualMode">
       <p class="nextLineTitle">Sygnały następnej linii:</p>
       <div class="flexRow">
@@ -63,7 +60,7 @@
 import { ref, watch, nextTick } from 'vue'
 import SegmentedToggle from './SegmentedToggle.vue'
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
-import IOPanel from '@/components/IOPanel.vue'   // ⬅️ NOWE
+import IOPanel from '@/components/IOPanel.vue'
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -71,7 +68,7 @@ const props = defineProps({
   code: { type: String, required: true },
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
-  nextLine: { type: Object, required: true }, // Set
+  nextLine: { type: Object, required: true },
 
   showIo: { type: Boolean, default: false },
   devIn: { type: Number, default: 0 },

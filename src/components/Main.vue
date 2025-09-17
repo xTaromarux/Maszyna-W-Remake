@@ -86,9 +86,12 @@
         :code-compiled="codeCompiled"
         :code="code"
         :is-running="isRunning"
+        :is-fast-running="isFastRunning"
+        :fast-progress="fastProgress"
         @compile="compileCode"
         @edit="uncompileCode"
         @step="executeLine"
+        @run-fast="runToEndFast"
         @run="runCode"
         @stop="stopRun"
       />
@@ -225,6 +228,9 @@ export default {
 
   data() {
     return {
+      _headless: false,
+      isFastRunning: false,
+      fastProgress: 0,
       _lastLogKey: null,
       _lastLogCount: 0,
       _lastLogTs: 0,
@@ -1137,14 +1143,12 @@ export default {
     },
 
     executeLine() {
-      // helper do ustawiania podświetlenia
-      const hlFrom = (obj, fallback, pick) => {
+      const hlFrom = (obj) => {
+        if (this._headless) return;
         if (obj && Number.isFinite(obj.srcLine)) {
           this.activeLine = obj.srcLine;
           return;
         }
-
-        // 3) awaryjnie policz „po kolei”
         this._refreshHighlight();
       };
 
@@ -1379,12 +1383,12 @@ export default {
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
-        } else {
+        } else if (!this._headless){
           this._refreshHighlight();
-        }
+        } 
       } else {
         this.executeSignalsFromNextLine();
-        this._refreshHighlight();
+        if (!this._headless) this._refreshHighlight();
       }
     },
 
@@ -1451,8 +1455,9 @@ export default {
     },
 
     executeSignalsFromNextLine() {
+      
       // Clear all active timeouts to prevent signal overlap
-      this.clearActiveTimeouts();
+      if (!this.isFastRunning) this.clearActiveTimeouts();
 
       // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
@@ -1571,6 +1576,8 @@ export default {
         let i = 0;
         while (i++ < CHUNK && stepsLeft-- > 0 && this.codeCompiled &&
               this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length) {
+          // jeżeli w trakcie ktoś kliknie STOP – przerwij natychmiast
+          if (!this.isRunning) return this._stopRun();
           this.executeLine();
         }
 
@@ -1581,163 +1588,256 @@ export default {
           this.addLog('Przerwano: limit kroków RUN osiągnięty.', 'system');
           return this._stopRun();
         }
-        this.runLoopTimer = setTimeout(tick, TICK_MS);
+
+        // <<< TU ZMIANA: planuj następny tik tylko gdy nadal isRunning >>>
+        if (this.isRunning) {
+          this.runLoopTimer = setTimeout(tick, TICK_MS);
+        } else {
+          this._stopRun();
+        }
       };
 
       this.runLoopTimer = setTimeout(tick, TICK_MS);
     },
     _stopRun() {
       if (this.runLoopTimer) { clearTimeout(this.runLoopTimer); this.runLoopTimer = null; }
+
       this.isRunning = false;
+      this.isFastRunning = false;
+      this.fastProgress = 0;
+
+      // WYŁĄCZ tryb headless i broadcast
+      this._headless = false;
+      this.suppressBroadcast = false;
+
+      // natychmiast zgaś wszystkie timeouty sygnałów
+      this.clearActiveTimeouts();
+
+      // zatrzymaj „holdy” magistral A/S
+      if (this._busHoldTimers?.A) { clearTimeout(this._busHoldTimers.A); this._busHoldTimers.A = null; }
+      if (this._busHoldTimers?.S) { clearTimeout(this._busHoldTimers.S); this._busHoldTimers.S = null; }
+      this.signals.busA = false;
+      this.signals.busS = false;
+
+      this.nextLine.clear();
+    },
+
+
+    async runToEndFast() {
+      if (!this.codeCompiled) return;
+
+      // jeżeli coś „biegnie”, najpierw to ukróć
+      this._stopRun();
+
+      this.manualMode = false;
+      this.clearActiveTimeouts();
+
+      // tryb bez-animacji: brak highlightów, brak timeoutów, brak broadcastów WS
+      this._headless = true;
+      this.suppressBroadcast = true;
+
+      this.isRunning = true;
+      this.isFastRunning = true;
+      this.fastProgress = 0;
+
+      const prevTitle = document.title;
+      document.title = '▶️ Running…';
+
+      try {
+        const hasStructured = Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0;
+        const totalInstr = hasStructured ? this.compiledProgram.length : (this.compiledCode?.length || 0);
+
+        if (hasStructured && this.activeInstrIndex < 0) {
+          this.activeInstrIndex = 0;
+          this.activePhaseIndex = 0;
+        } else if (!hasStructured) {
+          this.activeLine = Math.max(this.activeLine, 0);
+        }
+
+        let safety = 200_000;
+        const CHUNK = 1200;
+
+        while (this.codeCompiled && safety > 0) {
+          for (let i = 0; i < CHUNK && safety > 0 && this.codeCompiled; i++, safety--) {
+            if (hasStructured) {
+              if (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length) {
+                this.uncompileCode();
+                break;
+              }
+              this.executeLine(/* headless → patrz niżej */);
+            } else {
+              if (this.activeLine >= this.compiledCode.length) {
+                this.uncompileCode();
+                break;
+              }
+              this.executeLine();
+            }
+          }
+
+          // progres bez malowania UI (tylko liczba)
+          if (hasStructured) {
+            const cur = Math.max(0, Math.min(this.activeInstrIndex, totalInstr));
+            this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
+          } else {
+            const cur = Math.max(0, Math.min(this.activeLine, totalInstr));
+            this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
+          }
+
+          // daj event loopowi odetchnąć
+          await new Promise(r => setTimeout(r, 0));s
+
+          if (!this.codeCompiled) break;
+          if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) break;
+          if (!hasStructured && this.activeLine >= this.compiledCode.length) break;
+        }
+
+        if (safety <= 0) this.addLog('Przerwano: limit kroków RUN-FAST osiągnięty.', 'system');
+      } finally {
+        this._headless = false;           // ← WRÓĆ do normalnego trybu
+        this.suppressBroadcast = false;   // ← ponownie pozwól na WS
+        this.isFastRunning = false;
+        this.isRunning = false;
+        this.fastProgress = 0;
+        document.title = prevTitle;
+      }
+    },
+
+    // natychmiastowy tryb – używany przez runToEndFast (bez sygnałów i bez timeoutów)
+    _instant(fn) {
+      if (this.isFastRunning) { fn(); return true; }
+      return false;
     },
 
     /* COMMANDS */
     il() {
+      if (this._instant(() => { this.programCounter++; })) return;
       this.signals.il = true;
       this.programCounter++;
-      const timeoutId = setTimeout(() => {
-        this.signals.il = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.il = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dl() {
+      if (this._instant(() => { this.programCounter--; })) return;
       this.signals.dl = true;
       this.programCounter--;
-      const timeoutId = setTimeout(() => {
-        this.signals.dl = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.dl = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     wyl() {
+      if (this._instant(() => { this.BusA = this.programCounter; })) return;
       this.signals.wyl = true;
       this.signals.busA = true;
       this.BusA = this.programCounter;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyl = false;
-        // this.signals.busA = false; // przedłużamy przez holdBus
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wyl = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('A');
     },
     wel() {
+      if (this._instant(() => { this.programCounter = this.BusA; })) return;
       this.signals.wel = true;
       this.signals.busA = true;
       this.programCounter = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.wel = false;
-        // this.signals.busA = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wel = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('A');
     },
     wyad() {
+      if (this._instant(() => { this.BusA = this.I; })) return;
       this.signals.wyad = true;
       this.signals.busA = true;
-      this.BusA = this.I; // adres – bez maski 8-bit
-      const timeoutId = setTimeout(() => {
-        this.signals.wyad = false;
-        // this.signals.busA = false;
-      }, this.oddDelay);
+      this.BusA = this.I;
+      const timeoutId = setTimeout(() => { this.signals.wyad = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('A');
     },
     wei() {
+      if (this._instant(() => {
+        const mask = (1 << this.addresBits) - 1;
+        this.I = this.BusS & mask;
+      })) return;
       this.signals.wei = true;
       this.signals.busS = true;
       const mask = (1 << this.addresBits) - 1;
-      this.I = this.BusS & mask; // ładowanie argumentu (adresu)
-      const timeoutId = setTimeout(() => {
-        this.signals.wei = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      this.I = this.BusS & mask;
+      const timeoutId = setTimeout(() => { this.signals.wei = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
 
     iak() {
+      if (this._instant(() => { this.ACC = this.toWord(this.ACC + 1); })) return;
       this.signals.iak = true;
       this.ACC = this.toWord(this.ACC + 1);
-      const timeoutId = setTimeout(() => {
-        this.signals.iak = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.iak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dak() {
+      if (this._instant(() => { this.ACC = this.toWord(this.ACC - 1); })) return;
       this.signals.dak = true;
       this.ACC = this.toWord(this.ACC - 1);
-      const timeoutId = setTimeout(() => {
-        this.signals.dak = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.dak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
 
     weak() {
-      // JAML -> ACC (dynamic word size, U2)
+      if (this._instant(() => { this.ACC = this.toWord(this.JAML); })) return;
       this.signals.weak = true;
       this.ACC = this.toWord(this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.weak = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.weak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     weja() {
-      // BusS -> JAML (dynamic word size)
+      if (this._instant(() => { this.JAML = this.toWord(this.BusS); })) return;
       this.signals.weja = true;
       this.signals.busS = true;
       this.JAML = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.weja = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.weja = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
     wyak() {
-      // ACC -> BusS (dynamic word size)
+      if (this._instant(() => { this.BusS = this.toWord(this.ACC); })) return;
       this.signals.wyak = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyak = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wyak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
 
     dod() {
-      // JAML = JAML + ACC (dynamic word size)
+      if (this._instant(() => { this.JAML = this.toWord(this.JAML + this.ACC); })) return;
       this.signals.dod = true;
       this.JAML = this.toWord(this.JAML + this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.dod = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.dod = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     ode() {
+      if (this._instant(() => { this.JAML = this.toWord(this.ACC - this.JAML); })) return;
       this.signals.ode = true;
       this.JAML = this.toWord(this.ACC - this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.ode = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.ode = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     przep() {
-      // JAML -> ACC (dynamic word size)
+      if (this._instant(() => { this.ACC = this.toWord(this.JAML); })) return;
       this.signals.przep = true;
       this.ACC = this.toWord(this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.przep = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.przep = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     mno() {
+      if (this._instant(() => { this.JAML = this.toWord(this.ACC * this.JAML); })) return;
       this.signals.mno = true;
       this.JAML = this.toWord(this.ACC * this.JAML);
       const timeoutId = setTimeout(() => { this.signals.mno = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     dziel() {
+      if (this._instant(() => {
+        const d = this.JAML & 0xFF;
+        this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
+      })) return;
       this.signals.dziel = true;
       const d = this.JAML & 0xFF;
       this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
@@ -1745,247 +1845,224 @@ export default {
       this.activeTimeouts.push(timeoutId);
     },
     shr() {
-      // logiczne w prawo
+      if (this._instant(() => {
+        const sh = this.JAML & 7;
+        this.ACC = this.toWord((this.ACC & this.wordMask()) >>> sh);
+      })) return;
       this.signals.shr = true;
       const sh = this.JAML & 7;
       this.ACC = this.toWord((this.ACC & this.wordMask()) >>> sh);
-      const timeoutId = setTimeout(() => {
-        this.signals.shr = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.shr = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     shl() {
+      if (this._instant(() => {
+        const sh = this.JAML & 7;
+        this.ACC = this.toWord(this.ACC << sh);
+      })) return;
       this.signals.shl = true;
       const sh = this.JAML & 7;
       this.ACC = this.toWord(this.ACC << sh);
-      const timeoutId = setTimeout(() => {
-        this.signals.shl = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.shl = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     neg() {
-      // U2
+      if (this._instant(() => { this.ACC = this.toWord(-this.ACC); })) return;
       this.signals.neg = true;
       this.ACC = this.toWord(-this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.neg = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.neg = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     lub() {
-      // OR (dynamic word size)
+      if (this._instant(() => { this.ACC = this.toWord(this.ACC | this.JAML); })) return;
       this.signals.lub = true;
       this.ACC = this.toWord(this.ACC | this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.lub = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.lub = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     i() {
-      // AND (dynamic word size)
+      if (this._instant(() => { this.ACC = this.toWord(this.ACC & this.JAML); })) return;
       this.signals.i = true;
       this.ACC = this.toWord(this.ACC & this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.i = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.i = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
 
     wyx() {
-      // X -> BusS (dynamic word size)
+      if (this._instant(() => { this.BusS = this.toWord(this.X); })) return;
       this.signals.wyx = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.X);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyx = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wyx = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
     wex() {
-      // BusS -> X (dynamic word size)
+      if (this._instant(() => { this.X = this.toWord(this.BusS); })) return;
       this.signals.wex = true;
       this.signals.busS = true;
       this.X = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wex = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wex = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
     wyy() {
-      // Y -> BusS (dynamic word size)
+      if (this._instant(() => { this.BusS = this.toWord(this.Y); })) return;
       this.signals.wyy = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.Y);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyy = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wyy = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
     wey() {
-      // BusS -> Y (dynamic word size)
+      if (this._instant(() => { this.Y = this.toWord(this.BusS); })) return;
       this.signals.wey = true;
       this.signals.busS = true;
       this.Y = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wey = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wey = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
 
     wea() {
-      // BusA -> A (adres)
+      if (this._instant(() => { this.A = this.BusA & this.addrMask(); })) return;
       this.signals.wea = true;
       this.signals.busA = true;
       this.A = this.BusA & this.addrMask();
-      const timeoutId = setTimeout(() => {
-        this.signals.wea = false;
-        // this.signals.busA = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wea = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('A');
     },
     wes() {
-      // BusS -> S (dynamic word size)
+      if (this._instant(() => { this.S = this.toWord(this.BusS); })) return;
       this.signals.wes = true;
       this.signals.busS = true;
       this.S = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wes = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wes = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
     wys() {
-      // S -> BusS (dynamic word size)
+      if (this._instant(() => { this.BusS = this.toWord(this.S); })) return;
       this.signals.wys = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.S);
-      const timeoutId = setTimeout(() => {
-        this.signals.wys = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.wys = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
 
     stop() {
+      if (this._instant(() => {
+        // zatrzymaj natychmiast w szybkim trybie
+        this._stopRun();
+        this.codeCompiled = false;
+        this.nextLine.clear();
+      })) return;
+
       this.signals.stop = true;
-      const id = setTimeout(() => {
-        this.signals.stop = false;
-      }, this.oddDelay);
+      const id = setTimeout(() => { this.signals.stop = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
+
+      this._stopRun();
       this.codeCompiled = false;
       this.nextLine.clear();
     },
 
     as() {
-      // przenośnik między magistralami – bez maski
+      if (this._instant(() => { this.BusS = this.BusA; })) return;
       this.signals.as = true;
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusS = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.as = false;
-        // this.signals.busA = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.as = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-      this.holdBus('S');
+      this.holdBus('A'); this.holdBus('S');
     },
     sa() {
+      if (this._instant(() => { this.BusA = this.BusS; })) return;
       this.signals.sa = true;
       this.signals.busA = true;
       this.signals.busS = true;
       this.BusA = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.sa = false;
-        // this.signals.busA = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.sa = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-      this.holdBus('S');
+      this.holdBus('A'); this.holdBus('S');
     },
 
     czyt() {
-      // S = MEM[A] (dynamic word size, A w zakresie pamięci)
+      if (this._instant(() => {
+        const idx = this.A & this.addrMask();
+        this.S = this.toWord(this.mem[idx] ?? 0);
+      })) return;
       this.signals.czyt = true;
       const idx = this.A & this.addrMask();
       this.S = this.toWord(this.mem[idx] ?? 0);
-      const timeoutId = setTimeout(() => {
-        this.signals.czyt = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.czyt = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
     pisz() {
-      // MEM[A] = S (dynamic word size, A w zakresie pamięci)
+      if (this._instant(() => {
+        const idx = this.A & this.addrMask();
+        this.mem[idx] = this.toWord(this.S);
+      })) return;
       this.signals.pisz = true;
       const idx = this.A & this.addrMask();
       this.mem[idx] = this.toWord(this.S);
-      const timeoutId = setTimeout(() => {
-        this.signals.pisz = false;
-      }, this.oddDelay);
+      const timeoutId = setTimeout(() => { this.signals.pisz = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
 
     wyws() {
-      // WS -> BusA (adres)
+      if (this._instant(() => { this.BusA = this.WS & this.addrMask(); })) return;
       this.signals.wyws = true;
       this.signals.busA = true;
-      const mask = this.addrMask();
-      this.BusA = this.WS & mask;
-      const id = setTimeout(() => {
-        this.signals.wyws = false;
-        // this.signals.busA = false;
-      }, this.oddDelay);
+      this.BusA = this.WS & this.addrMask();
+      const id = setTimeout(() => { this.signals.wyws = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
       this.holdBus('A');
     },
     iws() {
+      if (this._instant(() => {
+        const size = 1 << this.memoryAddresBits;
+        this.WS = (this.WS + 1) % size;
+      })) return;
       this.signals.iws = true;
       const size = 1 << this.memoryAddresBits;
       this.WS = (this.WS + 1) % size;
-      const id = setTimeout(() => {
-        this.signals.iws = false;
-      }, this.oddDelay);
+      const id = setTimeout(() => { this.signals.iws = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
     },
     dws() {
+      if (this._instant(() => {
+        const size = 1 << this.memoryAddresBits;
+        this.WS = (this.WS - 1 + size) % size;
+      })) return;
       this.signals.dws = true;
       const size = 1 << this.memoryAddresBits;
       this.WS = (this.WS - 1 + size) % size;
-      const id = setTimeout(() => {
-        this.signals.dws = false;
-      }, this.oddDelay);
+      const id = setTimeout(() => { this.signals.dws = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
     },
 
     wyls() {
-      // PC -> BusS (dynamic word size, bo to magistrala danych)
+      if (this._instant(() => { this.BusS = this.toWord(this.programCounter); })) return;
       this.signals.wyls = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.programCounter);
-      const id = setTimeout(() => {
-        this.signals.wyls = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
+      const id = setTimeout(() => { this.signals.wyls = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
       this.holdBus('S');
     },
     wyg() {
+      if (this._instant(() => {
+        const g = this.DEV_READY ? 1 : 0;
+        this.BusS = this.toWord(g);
+        this.G = g;
+      })) return;
       this.signals.wyg = true;
       this.signals.busS = true;
-      // 1 = BUSY, 0 = READY (tak oczekuje assembler z IF Z THEN ...)
       const g = this.DEV_READY ? 1 : 0;
       this.BusS = this.toWord(this.DEV_READY ? 1 : 0);
       this.G = this.DEV_READY ? 1 : 0;
@@ -1994,51 +2071,57 @@ export default {
       this.holdBus('S');
     },
     werb() {
+      if (this._instant(() => {
+        const v = this.ACC & this.wordMask();
+        this.DEV_OUT = v; this.RB = v;
+      })) return;
       this.signals.werb = true;
       const v = this.ACC & this.wordMask();
-      this.DEV_OUT = v;
-      this.RB = v;
+      this.DEV_OUT = v; this.RB = v;
       const id = setTimeout(() => { this.signals.werb = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
     },
     wyrb() {
+      if (this._instant(() => {
+        const canRead = (this.DEV_READY === 0);
+        const v = canRead ? (this.DEV_IN & this.wordMask()) : 0;
+        this.BusS = v; this.RB = v;
+        if (canRead) { this.DEV_IN = 0; this.DEV_READY = 1; this.G = 1; }
+      })) return;
       this.signals.wyrb = true;
       this.signals.busS = true;
-
-      const canRead = (this.DEV_READY === 0);     // tylko gdy READY
+      const canRead = (this.DEV_READY === 0);
       const v = canRead ? (this.DEV_IN & this.wordMask()) : 0;
-
-      this.BusS = v;
-      this.RB   = v;
-
-      if (canRead) {
-        this.DEV_IN = 0;           // znak skonsumowany
-        this.DEV_READY = 1;        // teraz nie ma danych – czekamy na następny
-        this.G = 1;
-      }
-
+      this.BusS = v; this.RB = v;
+      if (canRead) { this.DEV_IN = 0; this.DEV_READY = 1; this.G = 1; }
       const id = setTimeout(() => { this.signals.wyrb = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
       this.holdBus('S');
     },
     start() {
+      if (this._instant(() => {
+        if (this.DEV_BUSY) return;
+        // w szybkim trybie „symulujemy” natychmiastowe przygotowanie
+        this.DEV_BUSY = true;
+        this.DEV_READY = this.DEV_IN ? 0 : 1;
+        this.DEV_BUSY = false;
+        this.DEV_READY = this.DEV_IN ? 0 : 1;
+        this.G = this.DEV_READY ? 1 : 0;
+      })) return;
+
       if (this.DEV_BUSY) return;
       this.DEV_BUSY = true;
       this.signals.start = true;
-
-      // podczas „pracy” urządzenia: brak danych
-      this.DEV_READY = this.DEV_IN ? 0 : 1; // możesz zostawić 1; kluczowe jest zakończenie
-
+      this.DEV_READY = this.DEV_IN ? 0 : 1;
       const id = setTimeout(() => {
         this.signals.start = false;
         this.DEV_BUSY = false;
-        // po „przygotowaniu” – jeżeli użytkownik wpisał znak, to READY=0
         this.DEV_READY = this.DEV_IN ? 0 : 1;
         this.G = this.DEV_READY ? 1 : 0;
       }, this.oddDelay * 2);
-
       this.activeTimeouts.push(id);
     },
+
     resetValues() {
       // Clear any active timeouts first
       this.clearActiveTimeouts();

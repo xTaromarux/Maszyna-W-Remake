@@ -98,6 +98,7 @@ label {
 input {
     height: 28px;
     padding: 2px 8px;
+    width: 100%;
     background-color: var(--backgroundColor);
     border: 1px solid var(--panelOutlineColor);
     border-radius: 4px;

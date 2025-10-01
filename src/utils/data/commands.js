@@ -180,12 +180,11 @@ export const commandList = [
   },
 
   // [mno]
-  // Linie=5
+  // Linie=4
   // Linia1=ROZKAZ MNO;
   // Linia2=czyt wys wei il;
   // Linia3=wyad wea;
   // Linia4=czyt wys weja mno weak wyl wea;
-  // Linia5=
   {
     name: 'MNO',
     args: 1,
@@ -197,7 +196,7 @@ export const commandList = [
   // Linie=7
   // Linia1=// wczytaj znak z urządzenia zewnętrznego
   // Linia2=ROZKAZ WPR;
-  // Linia3=Argumenty 0;
+  // Linia3=Argumenty 1;
   // Linia4=czyt wys wei il;
   // Linia5=wyak weja ode weak start;
   // Linia6=@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;
@@ -213,7 +212,7 @@ export const commandList = [
   // Linie=8
   // Linia1=// wyprowadź znak na urządzenie zewnętrzne
   // Linia2=ROZKAZ WYP;
-  // Linia3=Argumenty 0;
+  // Linia3=Argumenty 1;
   // Linia4=czyt wys wei il;
   // Linia5=wyak weja werb start;
   // Linia6=wyak wes weja ode weak;
@@ -224,5 +223,76 @@ export const commandList = [
     args: 1,
     description: 'wyprowadź znak na urządzenie zewnętrzne',
     lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
+  },
+
+  // [mas]
+  // Linie=4
+  // Linia1=// Rozkaz maskowania adresowanie natychmiastowe
+  // Linia2=ROZKAZ MAS;
+  // Linia3=czyt wys wei il;
+  // Linia4=wyad werm; wyl wea;
+  {
+    name: 'MAS',
+    args: 1,
+    description: 'Rozkaz maskowania adresowanie natychmiastowe',
+    lines: `czyt wys wei il;\nwyad werm;\nwyl wea;`,
+  },
+
+  // [msk]
+  // Linie=5
+  // Linia1=// Rozkaz maskowania adresowanie bezpośrednie
+  // Linia2=ROZKAZ MSK;
+  // Linia3=czyt wys wei il;
+  // Linia4=wyad wea;
+  // Linia5=czyt wys sa werm; wyl wea;
+  {
+    name: 'MSK',
+    args: 1,
+    description: 'Rozkaz maskowania adresowanie bezpośrednie',
+    lines: `czyt wys wei il;\nwyad wea;\nczyt wys sa werm\nwyl wea;`,
+  },
+
+  // [czm]
+  // Linie=5
+  // Linia1=// Odczyt rejestru maski
+  // Linia2=ROZKAZ CZM;
+  // Linia3=czyt wys wei il;
+  // Linia4=wyad wea;
+  // Linia5=wyrm as wes; pisz wyl wea;
+  {
+    name: 'CZM',
+    args: 1,
+    description: 'Odczyt rejestru maski',
+    lines: `czyt wys wei il;\nwyad wea;\nwyrm as wes;\npisz wyl wea;`,
+  },
+
+  // [wpr2]
+  // Linie=6
+  // Linia1=// Wczytanie znaku z urządzenia zewnętrznego o numerze podanym jako argument
+  // Linia2=ROZKAZ WPR2;
+  // Linia3=czyt wys wei il;
+  // Linia4=start wyak weja ode weak;
+  // Linia5=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
+  // Linia6=@gotowe wyrb weja przep weak wyl wea;
+  {
+    name: 'WPR2',
+    args: 1,
+    description: 'Wczytanie znaku z urządzenia zewnętrznego o numerze podanym jako argument',
+    lines: `czyt wys wei il;\nstart wyak weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wyrb weja przep weak wyl wea;`,
+  },
+
+  // [wyp2]
+  // Linie=6
+  // Linia1=// Wypisanie znaku znajdującego się w akumulatorze na urządzenie zewnętrzne o numerze podanym jako argument
+  // Linia2=ROZKAZ WYP2;
+  // Linia3=czyt wys wei il;
+  // Linia4=wyak weja ode weak wes werb start;
+  // Linia5=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
+  // Linia6=@gotowe wys weja przep weak wyl wea;
+  {
+    name: 'WYP2',
+    args: 1,
+    description: 'Wypisanie znaku znajdującego się w akumulatorze na urządzenie zewnętrzne o numerze podanym jako argument',
+    lines: `czyt wys wei il;\nwyak weja ode weak wes werb start;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
   },
 ];

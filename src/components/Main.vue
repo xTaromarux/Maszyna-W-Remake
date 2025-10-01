@@ -69,15 +69,16 @@
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="(code) => (this.code = code)"
       />
-      <!--HACK WITH COMPILE CODE 2, it is an old version of the compile code function-->
       <ExecutionControls
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
         :code="code"
+        :is-auto-stepping="isAutoStepping"
         @compile="compileCode"
         @edit="uncompileCode"
         @step="executeLine"
         @run="runCode"
+        @toggleAutoStep="toggleAutoStep"
       />
     </div>
 
@@ -119,6 +120,7 @@
       :addres-bits="addresBits"
       :dec-signed="decSigned"
       :odd-delay="oddDelay"
+      :step-delay="stepDelay"
       :extras="extras"
       :autocomplete-enabled="autocompleteEnabled"
       :memory-addres-bits="memoryAddresBits"
@@ -129,6 +131,7 @@
       @update:codeBits="codeBits = $event"
       @update:addresBits="addresBits = $event"
       @update:oddDelay="oddDelay = $event"
+      @update:stepDelay="stepDelay = $event"
       @update:extras="(patch) => (extras = mergeExtras(extras, patch))"
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
@@ -267,6 +270,9 @@ export default {
 
       // DEFAULT IS 100ms
       oddDelay: 400,
+      stepDelay: 500, // Delay between auto steps in ms
+      isAutoStepping: false,
+      autoStepInterval: null,
       busHoldMs: 200,
       _busHoldTimers: { A: null, S: null },
 
@@ -863,6 +869,7 @@ export default {
           'codeBits',
           'memoryAddresBits',
           'oddDelay',
+          'stepDelay',
           'numberFormat',
           'extras',
           'lightMode',
@@ -1042,7 +1049,7 @@ export default {
           availableSignals: this.avaiableSignals,
           extras: this.extras,
         });
-        console.log(program, rawLines);
+        // console.log(program, rawLines);
 
         // 1) Ustawiamy program + surowe linie do podglądu
         this.compiledProgram = Array.isArray(program) ? program : [];
@@ -1108,6 +1115,7 @@ export default {
     },
 
     uncompileCode() {
+      this.stopAutoStep(); // Stop auto stepping when uncompiling
       this.codeCompiled = false;
       this.nextLine.clear();
       this.activeInstrIndex = -1;
@@ -1125,11 +1133,11 @@ export default {
           return;
         }
 
-        // 3) awaryjnie policz „po kolei”
         this._refreshHighlight();
       };
 
       // --- tryb mikro-programu ---
+      console.log(this.compiledProgram);
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
@@ -1178,7 +1186,7 @@ export default {
           const st = this._condState;
           const curr = st.list[st.idx];
 
-          // Brak ciała gałęzi → zamknij fazę warunkową i przejdź dalej
+          // Brak ciała gałęzi -> zamknij fazę warunkową i przejdź dalej
           if (!curr) {
             this._condState = null;
             this.activePhaseIndex += 1;
@@ -1287,7 +1295,7 @@ export default {
         if (rawPhase.stop === true) {
           hlFrom(rawPhase);
           this.uncompileCode();
-          this.addLog('STOP – program zatrzymany', 'kompilator rozkazów');
+          this.addLog('STOP - program zatrzymany', 'kompilator rozkazów');
           return;
         }
 
@@ -1343,7 +1351,7 @@ export default {
         return;
       }
 
-      // --- legacy (tekstowe fazy po średnikach) ---
+      //  (tekstowe fazy po średnikach) ---
       if (!this.manualMode) {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
@@ -1526,9 +1534,51 @@ export default {
       }
     },
 
+    toggleAutoStep() {
+      if (this.isAutoStepping) {
+        this.stopAutoStep();
+      } else {
+        this.startAutoStep();
+      }
+    },
+
+    startAutoStep() {
+      if (!this.codeCompiled || this.manualMode) return;
+
+      this.isAutoStepping = true;
+
+      // Initialize if needed
+      if (this.compiledProgram && this.compiledProgram.length > 0 && this.activeInstrIndex < 0) {
+        this.activeInstrIndex = 0;
+        this.activePhaseIndex = 0;
+      }
+      if (this.compiledCode && this.compiledCode.length > 0 && this.activeLine < 0) {
+        this.activeLine = 0;
+      }
+
+      this.executeLine();
+
+      this.autoStepInterval = setInterval(() => {
+        if (!this.codeCompiled) {
+          this.stopAutoStep();
+          return;
+        }
+        this.executeLine();
+      }, this.stepDelay);
+    },
+
+    stopAutoStep() {
+      this.isAutoStepping = false;
+      if (this.autoStepInterval) {
+        clearInterval(this.autoStepInterval);
+        this.autoStepInterval = null;
+      }
+    },
+
     runCode() {
       this.manualMode = false;
       this.clearActiveTimeouts();
+      this.stopAutoStep();
 
       if (this.compiledProgram && this.compiledProgram.length > 0) {
         let safety = 100000;

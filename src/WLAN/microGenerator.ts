@@ -1,12 +1,8 @@
-import type { AstNode } from "./model";
-import { buildFromCommandList } from "./commandAdapter";
-import type { Phase as TemplatePhase, Signal, SignalSet } from "./instructions";
-import type {
-  MicroProgramEntry,
-  MicroPhase,
-  Phase as RuntimePhase,
-} from "./model";
-import { WlanError } from "./error";
+import type { AstNode } from './model';
+import { buildFromCommandList } from './commandAdapter';
+import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
+import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './model';
+import { WlanError } from './error';
 
 /* =============================
    POMOCNICZE
@@ -21,14 +17,14 @@ function toMicroPhaseFromSignalSet(set: SignalSet): MicroPhase {
   for (const k in set) if (set[k]) (phase as any)[k] = true;
   return phase;
 }
-const nameKey = (n: string) => (n || "").toLowerCase();
+const nameKey = (n: string) => (n || '').toLowerCase();
 
 type Phase = { op: string; [k: string]: any };
 
 /** Meta dodawane do wpisu, gdy występuje IF */
 type CJumpMeta = {
-  kind: "CJUMP";
-  flagName: "Z" | "N" | "C" | "V" | "M";
+  kind: 'CJUMP';
+  flagName: 'Z' | 'N' | 'C' | 'V' | 'M';
   /** opcjonalnie: indeksy docelowe (nie wymagane przez Twój runner, ale zostawiamy) */
   trueTarget?: number;
   falseTarget?: number;
@@ -40,18 +36,15 @@ type CJumpMeta = {
 };
 
 /* IF Z THEN @zero ELSE @niezero; */
-const IF_RE =
-  /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
+const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
 
 function cutAtKoniec(phases: Phase[]): Phase[] {
-  const i = phases.findIndex((p) => p.op === "KONIEC" || p.op === "END_BRANCH");
+  const i = phases.findIndex((p) => p.op === 'KONIEC' || p.op === 'END_BRANCH');
   return i >= 0 ? phases.slice(0, i) : phases;
 }
 
 function collectBetweenLabels(lines: string[], startLabel: string): string[] {
-  const start = lines.findIndex((l) =>
-    new RegExp(`^\\s*@${startLabel}\\b`, "u").test(l)
-  );
+  const start = lines.findIndex((l) => new RegExp(`^\\s*@${startLabel}\\b`, 'u').test(l));
   if (start === -1) return [];
   const body: string[] = [];
   for (let i = start + 1; i < lines.length; i++) {
@@ -105,7 +98,7 @@ export function buildConditionalForInstr(lines: string[]): {
   const m = lines[ifLineIdx].match(IF_RE);
   if (!m) return {};
 
-  const flagName = (m[1] as CJumpMeta["flagName"]) || "Z";
+  const flagName = (m[1] as CJumpMeta['flagName']) || 'Z';
   const trueLbl = m[2];
   const falseLbl = m[3];
 
@@ -116,15 +109,11 @@ export function buildConditionalForInstr(lines: string[]): {
   let falsePhases = linesToPhases(falseLines);
 
   // wytnij za KONIEC/END_BRANCH
-  truePhases = cutAtKoniec(truePhases).map((p) =>
-    p.op === "KONIEC" ? { op: "END_BRANCH" } : p
-  );
-  falsePhases = cutAtKoniec(falsePhases).map((p) =>
-    p.op === "KONIEC" ? { op: "END_BRANCH" } : p
-  );
+  truePhases = cutAtKoniec(truePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
+  falsePhases = cutAtKoniec(falsePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
 
   const meta: CJumpMeta = {
-    kind: "CJUMP",
+    kind: 'CJUMP',
     flagName,
   };
 
@@ -138,15 +127,14 @@ export function buildConditionalForInstr(lines: string[]): {
     const sigs: SignalSet = {};
     for (const p of px) {
       const op = p.op?.toLowerCase();
-      if (op && op !== "koniec" && op !== "end_branch")
-        sigs[op as Signal] = true;
+      if (op && op !== 'koniec' && op !== 'end_branch') sigs[op as Signal] = true;
     }
     return [toMicroPhaseFromSignalSet(sigs)];
   };
 
   const condPhase: RuntimePhase = {
     conditional: true,
-    flag: flagName === "M" ? "N" : flagName, // M → N (u Ciebie to synonim)
+    flag: flagName === 'M' ? 'N' : flagName, // M → N (u Ciebie to synonim)
     truePhases: toMicro(truePhases),
     falsePhases: toMicro(falsePhases),
   };
@@ -167,17 +155,13 @@ export function generateMicroProgram(
   }>
 ): MicroProgramEntry[] {
   if (!Array.isArray(commandList) || commandList.length === 0) {
-    throw new WlanError(
-      "Pusta lista rozkazów – brak definicji do generowania mikroprogramu.",
-      {
-        code: "GEN_EMPTY_CMDLIST",
-      }
-    );
+    throw new WlanError('Pusta lista rozkazów – brak definicji do generowania mikroprogramu.', {
+      code: 'GEN_EMPTY_CMDLIST',
+    });
   }
 
   // Zbuduj mapę z listy rozkazów (obsługuje też gotowe „template phases”)
-  const { templates: TEMPLATES, postAsm: POSTASM } =
-    buildFromCommandList(commandList);
+  const { templates: TEMPLATES, postAsm: POSTASM } = buildFromCommandList(commandList);
 
   /* PASS 1 — mapowanie adres → PC (żeby JUMP/SOB miał do czego skakać) */
   let currentAddr = 0,
@@ -187,16 +171,16 @@ export function generateMicroProgram(
 
   for (const node of ast) {
     switch (node.type) {
-      case "Directive": {
+      case 'Directive': {
         const name = (node as any).name?.toUpperCase();
-        if (name === "RST" || name === "RPA" || name === "DATA") {
+        if (name === 'RST' || name === 'RPA' || name === 'DATA') {
           currentAddr += Math.max(1, (node as any).operands?.length ?? 1);
-        } else if (name === "ORG") {
+        } else if (name === 'ORG') {
           currentAddr = (node as any).operands?.[0]?.value ?? currentAddr;
         }
         break;
       }
-      case "Instruction": {
+      case 'Instruction': {
         addrToPc.set(currentAddr, pc);
         instrNodes[pc] = node;
         currentAddr += 1;
@@ -213,44 +197,34 @@ export function generateMicroProgram(
 
   for (let i = 0; i < instrNodes.length; i++) {
     const node = instrNodes[i];
-    const key = nameKey(node.name || "");
+    const key = nameKey(node.name || '');
     const template = TEMPLATES[key];
 
     if (!template) {
-      throw new WlanError(
-        `Brak definicji w commandList dla instrukcji "${(node.name || "").toUpperCase()}"`,
-        {
-          code: "GEN_NO_TEMPLATE",
-          hint: "Sprawdź nazwę rozkazu w edytorze listy rozkazów lub dodaj wpis.",
-        }
-      );
+      throw new WlanError(`Brak definicji w commandList dla instrukcji "${(node.name || '').toUpperCase()}"`, {
+        code: 'GEN_NO_TEMPLATE',
+        hint: 'Sprawdź nazwę rozkazu w edytorze listy rozkazów lub dodaj wpis.',
+      });
     }
 
     const asmLine =
-      `${(node.name || "").toUpperCase()}` +
-      `${node.operands?.length ? " " + node.operands.map((op: any) => op.name ?? op.value).join(", ") : ""}`;
+      `${(node.name || '').toUpperCase()}` +
+      `${node.operands?.length ? ' ' + node.operands.map((op: any) => op.name ?? op.value).join(', ') : ''}`;
 
     // 1) Próbujmy najpierw „twardych” template’ów (mogą już mieć conditional:true)
     let phases: RuntimePhase[] = [];
     let hasConditional = false;
 
     phases = (template as TemplatePhase[]).map((tplPhase: TemplatePhase) => {
-      if (Array.isArray(tplPhase))
-        return toMicroPhaseFromSignals(tplPhase as any);
+      if (Array.isArray(tplPhase)) return toMicroPhaseFromSignals(tplPhase as any);
       if ((tplPhase as any).conditional === true) {
         hasConditional = true;
-        const flag = (
-          (tplPhase as any).flag === "M" ? "N" : (tplPhase as any).flag
-        ) as "Z" | "N" | string;
+        const flag = ((tplPhase as any).flag === 'M' ? 'N' : (tplPhase as any).flag) as 'Z' | 'N' | string;
         const rp: any = {
           conditional: true,
           flag,
-          truePhases: (tplPhase as any).truePhases.map(
-            toMicroPhaseFromSignalSet
-          ),
-          falsePhases: (tplPhase as any).falsePhases.map(
-            toMicroPhaseFromSignalSet
-          ),
+          truePhases: (tplPhase as any).truePhases.map(toMicroPhaseFromSignalSet),
+          falsePhases: (tplPhase as any).falsePhases.map(toMicroPhaseFromSignalSet),
         };
         if ((tplPhase as any).__labels) rp.__labels = (tplPhase as any).__labels;
         if ((tplPhase as any).__prefix) rp.__prefix = (tplPhase as any).__prefix;
@@ -261,9 +235,7 @@ export function generateMicroProgram(
 
     // 2) Jeśli template nie zawierało „conditional:true”, spróbuj sparsować linie tekstowe
     if (!hasConditional) {
-      const rawLines = (TEMPLATES as any)[`__raw__${key}`] as
-        | string[]
-        | undefined;
+      const rawLines = (TEMPLATES as any)[`__raw__${key}`] as string[] | undefined;
       // buildFromCommandList może schować oryginalny tekst; jeśli nie — spróbuj z commandList
       const fallbackLines: string[] | undefined = rawLines
         ? rawLines
@@ -271,8 +243,8 @@ export function generateMicroProgram(
             const rec = commandList.find((c) => nameKey(c.name) === key);
             if (!rec?.lines) return undefined;
             return rec.lines
-              .split("\n")
-              .map((l) => l.replace(/;\s*$/g, "").trim())
+              .split('\n')
+              .map((l) => l.replace(/;\s*$/g, '').trim())
               .filter(Boolean);
           })();
 
@@ -296,27 +268,27 @@ export function generateMicroProgram(
     }
 
     // meta (domyślnie brak)
-    const meta: MicroProgramEntry["meta"] = { kind: "NONE" } as any;
+    const meta: MicroProgramEntry['meta'] = { kind: 'NONE' } as any;
 
     // SOB → bezwarunkowy skok
-    if ((node.name || "").toUpperCase() === "SOB") {
+    if ((node.name || '').toUpperCase() === 'SOB') {
       const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== "number") {
-        throw new WlanError(`SOB bez adresu`, { code: "GEN_SOB_NO_ADDR" });
+      if (typeof targetAddr !== 'number') {
+        throw new WlanError(`SOB bez adresu`, { code: 'GEN_SOB_NO_ADDR' });
       }
       const targetPc = addrToPc.get(targetAddr);
       if (targetPc === undefined) {
         throw new WlanError(`SOB -> ${targetAddr} nie wskazuje instrukcji`, {
-          code: "GEN_SOB_BAD_ADDR",
+          code: 'GEN_SOB_BAD_ADDR',
         });
       }
-      (meta as any).kind = "JUMP";
+      (meta as any).kind = 'JUMP';
       (meta as any).trueTarget = targetPc;
     }
 
     // jeśli w tym wpisie wystąpiła faza warunkowa — zaznacz w meta CJUMP
     if (phases.some((p) => (p as any).conditional === true)) {
-      (meta as CJumpMeta).kind = "CJUMP";
+      (meta as CJumpMeta).kind = 'CJUMP';
       // true/false/joinTarget ustawiasz później, gdy mapujesz na PC — runner ich NIE wymaga
     }
 
@@ -329,39 +301,26 @@ export function generateMicroProgram(
   return program;
 }
 
-/**
- * Opcjonalny „dopiekacz” metadanych CJUMP.
- * Jeśli masz układ: [IF], [@zero…], [@niezero…], [END_BRANCH],
- * to tu możesz dopisać trueTarget/falseTarget/joinTarget (dla debugu/logów).
- *
- * Uwaga: Twój runner **nie potrzebuje** tych targetów do działania,
- * ale meta.kind='CJUMP' przydaje się do diagnostyki.
- */
-export function injectCJumpMeta(
-  program: MicroProgramEntry[]
-): MicroProgramEntry[] {
+export function injectCJumpMeta(program: MicroProgramEntry[]): MicroProgramEntry[] {
   for (let i = 0; i < program.length; i++) {
     const ent = program[i];
 
-    // jeżeli JUŻ mamy conditional w fazach — dopilnuj, by meta.kind było CJUMP
     if (ent?.phases?.some((p) => (p as any)?.conditional === true)) {
-      if (!ent.meta || ent.meta.kind === "NONE") {
-        ent.meta = { ...(ent.meta || {}), kind: "CJUMP" } as any;
+      if (!ent.meta || ent.meta.kind === 'NONE') {
+        ent.meta = { ...(ent.meta || {}), kind: 'CJUMP' } as any;
       }
       continue;
     }
 
-    // Drugi wariant (rzadziej u Ciebie): IF wydzielony jako osobny wpis tekstowy
-    if (typeof ent?.asmLine === "string" && /^IF\s+/i.test(ent.asmLine)) {
+    if (typeof ent?.asmLine === 'string' && /^IF\s+/i.test(ent.asmLine)) {
       const trueTarget = i + 1;
       const falseTarget = i + 2;
       const joinTarget = i + 3;
       const m = ent.asmLine.match(/^IF\s+([A-Za-z]+)/);
-      const flagName =
-        ((m?.[1] || "Z").toUpperCase() as CJumpMeta["flagName"]) || "Z";
+      const flagName = ((m?.[1] || 'Z').toUpperCase() as CJumpMeta['flagName']) || 'Z';
       ent.meta = {
         ...(ent.meta || {}),
-        kind: "CJUMP",
+        kind: 'CJUMP',
         flagName,
         trueTarget,
         falseTarget,

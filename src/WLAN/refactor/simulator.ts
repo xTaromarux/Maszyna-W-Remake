@@ -1,6 +1,8 @@
 export const DEFAULT_VECTOR_BASE = 0x10;
 
-import type { Store, ConditionalPhase, Phase } from './model';
+import type { Store, ConditionalPhase, Phase } from '../model';
+
+//Entire section of a code must be reavaluated after changes in #151
 
 export function initStore(
   memorySize = 256,
@@ -160,7 +162,6 @@ export function stepMicro(store: Store) {
     applySignals(phase, store);
   }
 
-
   store.phaseIdx++;
   if (store.phaseIdx >= entry.phases.length) {
     store.phaseIdx = 0;
@@ -222,12 +223,17 @@ export function loadState(name: string): Store {
   throw new Error('LocalStorage nie jest dostępne');
 }
 
-export function evalFlag(vm: any, flag: 'Z'|'N'|'C'|'V'): boolean {
+export function evalFlag(vm: any, flag: 'Z' | 'N' | 'C' | 'V'): boolean {
   switch (flag) {
-    case 'Z': return (vm.Ak & 0xff) === 0;
-    case 'N': return !!(vm.Ak & 0x80);
-    case 'C': return !!vm.flags?.C;
-    case 'V': return !!vm.flags?.V;
-    default:  return false;
+    case 'Z':
+      return (vm.Ak & 0xff) === 0;
+    case 'N':
+      return !!(vm.Ak & 0x80);
+    case 'C':
+      return !!vm.flags?.C;
+    case 'V':
+      return !!vm.flags?.V;
+    default:
+      return false;
   }
 }

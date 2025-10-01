@@ -22,6 +22,16 @@
       <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj rozkaz' }}</span>
     </button>
 
+    <!-- Auto step (loop) -->
+    <button
+      @click="$emit('toggleAutoStep')"
+      :disabled="manualMode || !codeCompiled"
+      :class="['execution-btn', 'execution-btn--auto-step', { active: isAutoStepping }]"
+    >
+      <RunIcon />
+      <span>{{ isAutoStepping ? 'Zatrzymaj krokowy' : 'Uruchom krokowy' }}</span>
+    </button>
+
     <!-- Run program -->
     <button @click="$emit('run')" :disabled="manualMode || !code" class="execution-btn execution-btn--run">
       <RunIcon />
@@ -48,8 +58,9 @@ export default {
     manualMode: { type: Boolean, required: true },
     codeCompiled: { type: Boolean, required: true },
     code: { type: String, required: true },
+    isAutoStepping: { type: Boolean, default: false },
   },
-  emits: ['compile', 'edit', 'step', 'run'],
+  emits: ['compile', 'edit', 'step', 'run', 'toggleAutoStep'],
 };
 </script>
 

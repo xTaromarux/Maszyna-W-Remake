@@ -4,9 +4,6 @@ import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
 import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './model';
 import { WlanError } from './error';
 
-/* =============================
-   POMOCNICZE
-   ============================= */
 function toMicroPhaseFromSignals(signals: Signal[]): MicroPhase {
   const phase: MicroPhase = {};
   for (const s of signals) phase[s] = true;
@@ -21,17 +18,13 @@ const nameKey = (n: string) => (n || '').toLowerCase();
 
 type Phase = { op: string; [k: string]: any };
 
-/** Meta dodawane do wpisu, gdy występuje IF */
 type CJumpMeta = {
   kind: 'CJUMP';
   flagName: 'Z' | 'N' | 'C' | 'V' | 'M';
-  /** opcjonalnie: indeksy docelowe (nie wymagane przez Twój runner, ale zostawiamy) */
   trueTarget?: number;
   falseTarget?: number;
   joinTarget?: number;
-  /** wewn.: do peasant debugów */
   _branchLocked?: boolean;
-  /** źródłowa linia (dla podświetlania IF); ustawiana w ProgramSection, ale tu zostawiamy pole */
   srcLine?: number;
 };
 
@@ -54,7 +47,6 @@ function collectBetweenLabels(lines: string[], startLabel: string): string[] {
   return body;
 }
 
-// bardzo prosty tokenizer – zamienia pojedynczą linię DSL na „fazy”
 function tokenizeLineToPhases(line: string): Phase[] {
   return line
     .split(/\s+/)
@@ -78,15 +70,6 @@ function splitBeforeIF(lines: string[]): {
   return { before: lines.slice(0, idx), ifLineIdx: idx };
 }
 
-/**
- * Próbuje zbudować „fazy” i metadane dla jednego rozkazu na podstawie
- * TEKSTOWEJ listy linii z `commandList` (z IF/@zero/@niezero).
- *
- * Zwraca:
- * - meta: {kind:'CJUMP', flagName:…}
- * - phases: zwykłe fazy PRZED IF (jeśli takie były)
- * - condPhase: jedna faza warunkowa dla IF
- */
 export function buildConditionalForInstr(lines: string[]): {
   meta?: CJumpMeta;
   phases?: Phase[];
@@ -108,7 +91,6 @@ export function buildConditionalForInstr(lines: string[]): {
   let truePhases = linesToPhases(trueLines);
   let falsePhases = linesToPhases(falseLines);
 
-  // wytnij za KONIEC/END_BRANCH
   truePhases = cutAtKoniec(truePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
   falsePhases = cutAtKoniec(falsePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
 
@@ -117,13 +99,10 @@ export function buildConditionalForInstr(lines: string[]): {
     flagName,
   };
 
-  // fazy przed IF (jeśli są)
   const phases = linesToPhases(before);
 
-  // zamień „Phase {op: '…'}” na MicroPhase’y dla gałęzi
   const toMicro = (px: Phase[]): MicroPhase[] => {
     if (!px || px.length === 0) return [];
-    // sklejamy sygnały w jedną „pod-fazę” na krok (tak masz w runnerze)
     const sigs: SignalSet = {};
     for (const p of px) {
       const op = p.op?.toLowerCase();
@@ -134,7 +113,7 @@ export function buildConditionalForInstr(lines: string[]): {
 
   const condPhase: RuntimePhase = {
     conditional: true,
-    flag: flagName === 'M' ? 'N' : flagName, // M → N (u Ciebie to synonim)
+    flag: flagName === 'M' ? 'N' : flagName,
     truePhases: toMicro(truePhases),
     falsePhases: toMicro(falsePhases),
   };
@@ -142,9 +121,6 @@ export function buildConditionalForInstr(lines: string[]): {
   return { meta, phases, condPhase };
 }
 
-/* =============================
-   GŁÓWNY GENERATOR
-   ============================= */
 export function generateMicroProgram(
   ast: AstNode[],
   commandList: Array<{
@@ -155,15 +131,13 @@ export function generateMicroProgram(
   }>
 ): MicroProgramEntry[] {
   if (!Array.isArray(commandList) || commandList.length === 0) {
-    throw new WlanError('Pusta lista rozkazów – brak definicji do generowania mikroprogramu.', {
+    throw new WlanError('Pusta lista rozkazów - brak definicji do generowania mikroprogramu.', {
       code: 'GEN_EMPTY_CMDLIST',
     });
   }
 
-  // Zbuduj mapę z listy rozkazów (obsługuje też gotowe „template phases”)
   const { templates: TEMPLATES, postAsm: POSTASM } = buildFromCommandList(commandList);
 
-  /* PASS 1 — mapowanie adres → PC (żeby JUMP/SOB miał do czego skakać) */
   let currentAddr = 0,
     pc = 0;
   const addrToPc = new Map<number, number>();
@@ -192,7 +166,6 @@ export function generateMicroProgram(
     }
   }
 
-  /* PASS 2 — budowa wpisów mikro-programu */
   const program: MicroProgramEntry[] = [];
 
   for (let i = 0; i < instrNodes.length; i++) {
@@ -211,7 +184,6 @@ export function generateMicroProgram(
       `${(node.name || '').toUpperCase()}` +
       `${node.operands?.length ? ' ' + node.operands.map((op: any) => op.name ?? op.value).join(', ') : ''}`;
 
-    // 1) Próbujmy najpierw „twardych” template’ów (mogą już mieć conditional:true)
     let phases: RuntimePhase[] = [];
     let hasConditional = false;
 
@@ -233,10 +205,8 @@ export function generateMicroProgram(
       return toMicroPhaseFromSignalSet(tplPhase as any);
     });
 
-    // 2) Jeśli template nie zawierało „conditional:true”, spróbuj sparsować linie tekstowe
     if (!hasConditional) {
       const rawLines = (TEMPLATES as any)[`__raw__${key}`] as string[] | undefined;
-      // buildFromCommandList może schować oryginalny tekst; jeśli nie — spróbuj z commandList
       const fallbackLines: string[] | undefined = rawLines
         ? rawLines
         : (() => {
@@ -252,7 +222,6 @@ export function generateMicroProgram(
         const parsed = buildConditionalForInstr(fallbackLines);
         if (parsed.meta && parsed.condPhase) {
           hasConditional = true;
-          // dołóż fazy sprzed IF
           const beforeSet: SignalSet = {};
           for (const p of parsed.phases || []) {
             const op = p.op?.toLowerCase();
@@ -261,16 +230,13 @@ export function generateMicroProgram(
           if (Object.keys(beforeSet).length) {
             phases.unshift(toMicroPhaseFromSignalSet(beforeSet));
           }
-          // i dołóż jedną fazę warunkową
           phases.push(parsed.condPhase);
         }
       }
     }
 
-    // meta (domyślnie brak)
     const meta: MicroProgramEntry['meta'] = { kind: 'NONE' } as any;
 
-    // SOB → bezwarunkowy skok
     if ((node.name || '').toUpperCase() === 'SOB') {
       const targetAddr = node.operands?.[0]?.value;
       if (typeof targetAddr !== 'number') {
@@ -286,10 +252,8 @@ export function generateMicroProgram(
       (meta as any).trueTarget = targetPc;
     }
 
-    // jeśli w tym wpisie wystąpiła faza warunkowa — zaznacz w meta CJUMP
     if (phases.some((p) => (p as any).conditional === true)) {
       (meta as CJumpMeta).kind = 'CJUMP';
-      // true/false/joinTarget ustawiasz później, gdy mapujesz na PC — runner ich NIE wymaga
     }
 
     const extra = POSTASM[key];

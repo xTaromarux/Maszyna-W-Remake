@@ -124,17 +124,17 @@ export const commandList = [
   },
 
   // [pwr]
-  // Linie=5
+  // Linie=4
   // Linia1=rozkaz pwr;
   // Linia2=Argumenty 0;
   // Linia3=czyt wys wei il;
-  // Linia4=wyws wea iws;
-  // Linia5=czyt wys as wea wel;
+  // Linia4=wyws wea;
+  // Linia5=czyt wys sa wel iws;
   {
     name: 'PWR',
     args: 0,
     description: 'rozkaz pwr',
-    lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys as wea wel;`,
+    lines: `czyt wys wei il;\nwyws wea;\nczyt wys sa wel iws;`,
   },
 
   // [pzs]
@@ -142,13 +142,13 @@ export const commandList = [
   // Linia1=rozkaz pzs;
   // Linia2=Argumenty 0;
   // Linia3=czyt wys wei il;
-  // Linia4=wyws wea iws;
-  // Linia5=czyt wys weja przep weak wyl wea;
+  // Linia4=wyws wea;
+  // Linia5=czyt wys weja przep weak iws wyl wea;
   {
     name: 'PZS',
     args: 0,
     description: 'rozkaz pzs',
-    lines: `czyt wys wei il;\nwyws wea iws;\nczyt wys weja przep weak wyl wea;`,
+    lines: `czyt wys wei il;\nwyws wea;\nczyt wys weja przep weak iws wyl wea;`,
   },
 
   // [sdp]
@@ -227,15 +227,16 @@ export const commandList = [
 
   // [mas]
   // Linie=4
-  // Linia1=// Rozkaz maskowania adresowanie natychmiastowe
+  // Linia1=// Rozkaz maskowania - ustaw maskę RM = argument instrukcji (adresowanie bezpośrednie)
   // Linia2=ROZKAZ MAS;
   // Linia3=czyt wys wei il;
-  // Linia4=wyad werm; wyl wea;
+  // Linia4=wyad sa werm;
+  // Linia5=wyl wea;
   {
     name: 'MAS',
     args: 1,
-    description: 'Rozkaz maskowania adresowanie natychmiastowe',
-    lines: `czyt wys wei il;\nwyad werm;\nwyl wea;`,
+    description: 'Rozkaz maskowania - ustaw maskę RM = argument instrukcji (adresowanie bezpośrednie)',
+    lines: `czyt wys wei il;\nwyad sa werm;\nwyl wea;`,
   },
 
   // [msk]
@@ -244,26 +245,26 @@ export const commandList = [
   // Linia2=ROZKAZ MSK;
   // Linia3=czyt wys wei il;
   // Linia4=wyad wea;
-  // Linia5=czyt wys sa werm; wyl wea;
+  // Linia5=czyt wys werm;
+  // Linia6=wyl wea;
   {
     name: 'MSK',
     args: 1,
     description: 'Rozkaz maskowania adresowanie bezpośrednie',
-    lines: `czyt wys wei il;\nwyad wea;\nczyt wys sa werm\nwyl wea;`,
+    lines: `czyt wys wei il;\nwyad wea;\nczyt wys werm;\nwyl wea;`,
   },
 
   // [czm]
-  // Linie=5
-  // Linia1=// Odczyt rejestru maski
+  // Linie=4
+  // Linia1=// Wyczyść bit w rejestrze maski (odblokuj przerwanie)
   // Linia2=ROZKAZ CZM;
   // Linia3=czyt wys wei il;
-  // Linia4=wyad wea;
-  // Linia5=wyrm as wes; pisz wyl wea;
+  // Linia4=wyad czrm; wyl wea;
   {
     name: 'CZM',
     args: 1,
-    description: 'Odczyt rejestru maski',
-    lines: `czyt wys wei il;\nwyad wea;\nwyrm as wes;\npisz wyl wea;`,
+    description: 'Wyczyść bit w rejestrze maski (odblokuj przerwanie)',
+    lines: `czyt wys wei il;\nwyad czrm;\nwyl wea;`,
   },
 
   // [wpr2]

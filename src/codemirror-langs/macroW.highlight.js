@@ -10,4 +10,3 @@ export const macroWHighlight = styleTags({
   LineComment: t.lineComment,
   newline: t.content,
 });
-

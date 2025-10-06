@@ -114,7 +114,7 @@
           inputmode="numeric"
           pattern="[0-9]*"
           :value="stepDelay"
-          min="50"
+          min="5"
           max="10000"
           @input="updateNumber('stepDelay', $event.target.value)"
         />
@@ -335,7 +335,7 @@ export default {
         addresBits: { min: 1, max: 32 },
         memoryAddresBits: { min: 1, max: 10 },
         oddDelay: { min: 0, max: 10000 },
-        stepDelay: { min: 50, max: 10000 },
+        stepDelay: { min: 5, max: 10000 },
       }[key];
       if (!rules) {
         if (n >= 0) this.$emit(`update:${key}`, n);

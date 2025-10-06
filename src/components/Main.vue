@@ -207,6 +207,23 @@ export default {
     anyPopupOpen() {
       return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
     },
+
+    rint() {
+      const active = this.RZ & ~this.RM;
+      return active !== 0;
+    },
+
+    highestPriorityIRQ() {
+      const active = this.RZ & ~this.RM;
+      if (!active) return null;
+
+      for (let i = 3; i >= 0; i--) {
+        if (active & (1 << i)) {
+          return i + 1;
+        }
+      }
+      return null;
+    },
   },
 
   created() {
@@ -221,6 +238,7 @@ export default {
       wsPingTimer: null,
       decSigned: false,
       _condState: null,
+      _pendingMemoryClear: null,
       autocompleteEnabled: true,
       isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
@@ -254,6 +272,9 @@ export default {
       DEV_IN: 0,
       DEV_OUT: 0,
 
+      // Internal stack for subroutines and data
+      stack: [],
+
       code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
       program: 'DOD',
       compiledCode: [],
@@ -264,7 +285,6 @@ export default {
       activeLine: 0,
       nextLine: new Set(),
       _stepGuard: 0, // licznik anty-pętli
-      _branchJoin: null, // punkt złączenia po CJUMP (compileCode2)
       // Array to store active timeout IDs for signal management
       activeTimeouts: [],
 
@@ -326,6 +346,16 @@ export default {
           'werb',
           'wyrb',
           'start',
+          'ustrm',
+          'czrm',
+          'werm',
+          'wyrm',
+          'werz',
+          'wyrz',
+          'werp',
+          'wyrp',
+          'weap',
+          'wyap',
         ],
         busConnectors: ['as', 'sa'],
         dl: ['dl'],
@@ -393,15 +423,21 @@ export default {
         dws: false,
         werm: false,
         wyap: false,
+        weap: false,
         wews: false,
         wyrm: false,
+        wyrz: false,
+        werz: false,
+        wyrp: false,
+        werp: false,
         wyls: false,
         wyg: false,
         werb: false,
         wyrb: false,
         rint: false,
-        eni: false,
         start: false,
+        ustrm: false,
+        czrm: false,
       },
       extras: this.getDefaultExtras(),
       logs: [],
@@ -511,6 +547,53 @@ export default {
 
     addrMask() {
       return (1 << this.memoryAddresBits) - 1;
+    },
+
+    updateAP() {
+      const addressEntries = this.stack.filter((item) => item.type === 'Address');
+      if (addressEntries.length > 0) {
+        this.AP = addressEntries[addressEntries.length - 1].value;
+      } else {
+        this.AP = 0;
+      }
+    },
+
+    stackPush(type, value) {
+      // type: 'Data' | 'Address' zastanawiam się czy rozdzielać to programowo w taki sposób czy to jest bardziej problem programisty implementującego assembler...
+      // w razie W będzie łatwe do zmiany
+      const entry = { type, value: value & this.wordMask() };
+      this.stack.push(entry);
+      console.log('Stack PUSH:', entry, 'New stack:', this.stack);
+
+      if (type === 'Address') {
+        this.updateAP();
+        this.addLog(`Stos PUSH [${type}]: ${value} (AP=${this.AP}, WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+      } else {
+        this.addLog(`Stos PUSH [${type}]: ${value} (WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+      }
+    },
+
+    stackPop(expectedType) {
+      // expectedType: 'Data' | 'Address' | null
+      if (this.stack.length === 0) {
+        this.addLog(`Stos POP: stos pusty!`, 'Błąd');
+        return 0;
+      }
+
+      const entry = this.stack.pop();
+
+      if (expectedType && entry.type !== expectedType) {
+        this.addLog(`Stos POP: oczekiwano ${expectedType}, otrzymano ${entry.type}!`, 'Ostrzeżenie');
+      }
+
+      if (entry.type === 'Address') {
+        this.updateAP();
+        this.addLog(`Stos POP [${entry.type}]: ${entry.value} (AP=${this.AP}, WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+      } else {
+        this.addLog(`Stos POP [${entry.type}]: ${entry.value} (WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+      }
+
+      return entry.value;
     },
 
     handleProgramSectionCompile(payload) {
@@ -913,6 +996,9 @@ export default {
         this.BusA = 0;
         this.BusS = 0;
 
+        // Reset stack
+        this.stack = [];
+
         // Reset code to default
         this.code = 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;';
         this.compiledCode = [];
@@ -1103,7 +1189,6 @@ export default {
         this.activePhaseIndex = 0;
         this.activeLine = -1;
         this._condState = null;
-        this._branchJoin = null;
         this._stepGuard = 0;
         this.nextLine.clear();
 
@@ -1121,8 +1206,54 @@ export default {
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
       this._condState = null;
-      this._branchJoin = null;
       this._stepGuard = 0;
+    },
+
+    handleInterrupt() {
+      const irqNum = this.highestPriorityIRQ;
+      if (!irqNum) {
+        this.addLog('handleInterrupt: brak aktywnego przerwania', 'Ostrzeżenie');
+        return;
+      }
+
+      this.addLog(`─────────────────────────────────────`, 'przerwanie');
+      this.addLog(`PRZERWANIE IRQ${irqNum}`, 'przerwanie');
+
+      this.RP = irqNum;
+      this.addLog(`   RP ← ${irqNum} (numer aktywnego przerwania)`, 'przerwanie');
+
+      const returnAddr = this.programCounter;
+      this.stackPush('Address', returnAddr);
+
+      const size = 1 << this.memoryAddresBits;
+      this.WS = (this.WS - 1 + size) % size;
+      const idx = this.WS & this.addrMask();
+      this.mem[idx] = returnAddr;
+      this.addLog(`   Stos: zapisano PC=${returnAddr}, WS=${this.WS}`, 'przerwanie');
+
+      const vectorAddress = irqNum;
+
+      if (vectorAddress < 0 || vectorAddress >= this.compiledProgram.length) {
+        this.addLog(`   Błąd: wektor ${vectorAddress} poza programem!`, 'Błąd');
+        return;
+      }
+
+      this.A = vectorAddress;
+      this.programCounter = vectorAddress;
+
+      this.addLog(`   A ← ${this.A} (wskaźnik na wektor)`, 'przerwanie');
+      this.addLog(`   PC ← ${vectorAddress} (adres wektora IRQ${irqNum})`, 'przerwanie');
+
+      this.activeInstrIndex = vectorAddress;
+      this.activePhaseIndex = 0;
+
+      const vectorInstr = this.compiledProgram[vectorAddress];
+      this.addLog(`   → Wykonanie: ${vectorInstr?.asmLine || 'SOB'}`, 'przerwanie');
+
+      this.RZ &= ~(1 << (irqNum - 1));
+      this.addLog(`   RZ ← ${this.RZ} (wyzerowano IRQ${irqNum})`, 'przerwanie');
+
+      this.addLog(`─────────────────────────────────────`, 'przerwanie');
     },
 
     executeLine() {
@@ -1132,21 +1263,25 @@ export default {
           this.activeLine = obj.srcLine;
           return;
         }
-
         this._refreshHighlight();
       };
 
-      // --- tryb mikro-programu ---
-      console.log(this.compiledProgram);
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
+        // Inicjalizacja przy pierwszym uruchomieniu
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
           this.activePhaseIndex = 0;
           this._stepGuard = 0;
-          this._branchJoin = null;
           this._condState = null;
         }
 
+        if (this.activePhaseIndex === 0 && this.extras?.interrupts?.eniSignal && this.rint) {
+          this.handleInterrupt();
+          return;
+        }
+        //console.log(this.compiledProgram[this.activeInstrIndex].asmLine);
+
+        // Zabezpieczenie przed nieskończoną pętlą
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
           this.addLog('Przerwano: przekroczono limit kroków (prawdopodobna pętla).', 'system');
@@ -1154,6 +1289,7 @@ export default {
           return;
         }
 
+        // Sprawdzenie końca programu
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
@@ -1161,52 +1297,40 @@ export default {
         }
 
         const instr = this.compiledProgram[this.activeInstrIndex];
-        const rawPhase = instr.phases?.[this.activePhaseIndex] || {};
+        const phase = instr.phases?.[this.activePhaseIndex] || {};
 
-        // --- FAZA WARUNKOWA ---
-        if (rawPhase && rawPhase.conditional === true) {
-          // 1) Pierwszy klik: pokaż IF i NIC nie wykonuj
+        if (phase.conditional === true) {
           if (!this._condState) {
-            const cond = this.evaluateFlag(rawPhase.flag);
-            const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
+            const cond = this.evaluateFlag(phase.flag);
+            const list = (cond ? phase.truePhases : phase.falsePhases) || [];
 
             this._condState = {
               list,
               idx: 0,
               pick: cond ? 'T' : 'F',
-              phaseRef: rawPhase,
+              phaseRef: phase,
               stage: 'SHOW_IF',
             };
 
-            rawPhase.srcLine = list[0];
-            hlFrom(rawPhase);
+            hlFrom(phase);
             return;
           }
 
           const st = this._condState;
           const curr = st.list[st.idx];
 
-          // Brak ciała gałęzi -> zamknij fazę warunkową i przejdź dalej
+          // Brak więcej podfaz -> zamknij warunkową i idź dalej
           if (!curr) {
             this._condState = null;
             this.activePhaseIndex += 1;
 
+            // Koniec faz tej instrukcji?
             if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-              if (this._branchJoin != null) {
-                const join = this._branchJoin | 0;
-                this._branchJoin = null;
-                this.addLog(`join -> PC=${join}`, 'system');
-                this.activeInstrIndex = join;
-              } else if (instr.meta?.kind === 'JUMP') {
-                const target = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
-                this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
-                this.activeInstrIndex = target;
-              } else {
-                this.activeInstrIndex += 1;
-              }
+              this.activeInstrIndex += 1;
               this.activePhaseIndex = 0;
             }
 
+            // Podświetl następną fazę/instrukcję
             if (this.activeInstrIndex < this.compiledProgram.length) {
               const ni = this.compiledProgram[this.activeInstrIndex];
               const np = ni?.phases?.[this.activePhaseIndex];
@@ -1218,51 +1342,37 @@ export default {
             return;
           }
 
-          // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
+          hlFrom(curr, st.phaseRef, st.pick);
           const signals = new Set(Object.keys(curr).filter((k) => curr[k] === true));
           this.nextLine = signals;
           this.executeSignalsFromNextLine();
 
-          // Skok bezpośredni z gałęzi?
+          // Jeśli podfaza zawierała sygnał 'wel', to programCounter został zmieniony
           if (curr.wel === true) {
-            const target = Number(this.programCounter) | 0;
-            if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
-              this.addLog(`(branch) wel -> PC=${target}`, 'system');
+            const target = this.programCounter;
+            if (target >= 0 && target < this.compiledProgram.length) {
               this.activeInstrIndex = target;
               this.activePhaseIndex = 0;
+              this._condState = null;
+              const ai = this.compiledProgram[this.activeInstrIndex];
+              const ap = ai?.phases?.[this.activePhaseIndex];
+              hlFrom(ap ?? ai);
             } else {
-              this.addLog(`(branch) wel: niepoprawny cel L=${target}`, 'Błąd');
-              this.activeInstrIndex += 1;
-              this.activePhaseIndex = 0;
+              this.addLog(`Skok poza zakres programu: PC=${target}`, 'Błąd');
+              this.uncompileCode();
             }
-            this._condState = null;
-            const ai = this.compiledProgram[this.activeInstrIndex];
-            const ap = ai?.phases?.[this.activePhaseIndex];
-            hlFrom(ap ?? ai);
             return;
           }
 
-          // Przejdź do następnej pod-fazy tej samej gałęzi albo zamknij gałąź
           st.idx += 1;
 
+          // Jeśli skończyły się podfazy, zamknij warunkową
           if (st.idx >= st.list.length) {
-            // zamknij IF i przejdź dalej
             this._condState = null;
             this.activePhaseIndex += 1;
 
             if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-              if (this._branchJoin != null) {
-                const join = this._branchJoin | 0;
-                this._branchJoin = null;
-                this.addLog(`join -> PC=${join}`, 'system');
-                this.activeInstrIndex = join;
-              } else if (instr.meta?.kind === 'JUMP') {
-                const target = instr.meta.trueTarget ?? this.activeInstrIndex + 1;
-                this.addLog(`Skok bezwarunkowy -> PC=${target}`, 'system');
-                this.activeInstrIndex = target;
-              } else {
-                this.activeInstrIndex += 1;
-              }
+              this.activeInstrIndex += 1;
               this.activePhaseIndex = 0;
             }
 
@@ -1277,74 +1387,60 @@ export default {
             return;
           }
 
-          // Jest kolejna pod-faza w tej samej gałęzi – tylko podświetl ją (wykona się w następnym kroku)
+          // Podświetl następną podfazę (wykona się w kolejnym kroku)
           const nextSub = st.list[st.idx];
           hlFrom(nextSub, st.phaseRef, st.pick);
           return;
         }
 
-        // --- zwykła faza ---
-        if (rawPhase.END_BRANCH === true) {
-          this.activeInstrIndex += 1;
-          this.activePhaseIndex = 0;
-          const ni = this.compiledProgram[this.activeInstrIndex];
-          const np = ni?.phases?.[this.activePhaseIndex];
-          hlFrom(np ?? ni);
-          return;
-        }
-        if (rawPhase.stop === true) {
-          hlFrom(rawPhase);
+        // STOP - zatrzymaj program
+        if (phase.stop === true) {
+          hlFrom(phase);
           this.uncompileCode();
           this.addLog('STOP - program zatrzymany', 'kompilator rozkazów');
           return;
         }
 
-        // Podświetl i wykonaj
-        hlFrom(rawPhase);
-        {
-          const signalsSet = new Set(Object.keys(rawPhase).filter((k) => rawPhase[k] === true));
-          this.nextLine = signalsSet;
-          this.executeSignalsFromNextLine();
-        }
+        // Podświetl i wykonaj sygnały z fazy
+        hlFrom(phase);
+        const signalsSet = new Set(Object.keys(phase).filter((k) => phase[k] === true));
+        this.nextLine = signalsSet;
+        this.executeSignalsFromNextLine();
 
-        // Skok wel
-        if (rawPhase.wel === true && !this._branchJoin) {
-          const target = Number(this.programCounter) | 0;
-          if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
-            this.addLog(`wel -> PC=${target}`, 'system');
+        // Jeśli faza zawierała 'wel', programCounter został zmieniony
+        if (phase.wel === true) {
+          // PC w kontekście compiledProgram[] to indeks instrukcji, nie adres pamięci
+          const target = this.programCounter;
+          if (target >= 0 && target < this.compiledProgram.length) {
             this.activeInstrIndex = target;
             this.activePhaseIndex = 0;
+            const ai = this.compiledProgram[this.activeInstrIndex];
+            const ap = ai?.phases?.[this.activePhaseIndex];
+            hlFrom(ap ?? ai);
           } else {
-            this.addLog(`wel: niepoprawny cel skoku L=${target} (poza programem)`, 'Błąd');
-            this.activeInstrIndex += 1;
-            this.activePhaseIndex = 0;
+            this.addLog(`Skok poza zakres programu: PC=${target}`, 'Błąd');
+            this.uncompileCode();
           }
-          const ai = this.compiledProgram[this.activeInstrIndex];
-          const ap = ai?.phases?.[this.activePhaseIndex];
-          hlFrom(ap ?? ai);
           return;
         }
 
-        // Następna faza / instrukcja
+        // Przejdź do następnej fazy
         this.activePhaseIndex += 1;
+
+        // Koniec faz tej instrukcji? Przejdź do następnej
         if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-          if (this._branchJoin != null) {
-            const join = this._branchJoin | 0;
-            this._branchJoin = null;
-            this.addLog(`join -> PC=${join}`, 'system');
-            this.activeInstrIndex = join;
-          } else {
-            this.activeInstrIndex += 1;
-          }
+          this.activeInstrIndex += 1;
           this.activePhaseIndex = 0;
         }
 
+        // Sprawdź czy nie wyszliśmy poza program
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
 
+        // Podświetl następną fazę
         const ni = this.compiledProgram[this.activeInstrIndex];
         const np = ni?.phases?.[this.activePhaseIndex];
         hlFrom(np ?? ni);
@@ -1439,9 +1535,66 @@ export default {
       this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
     },
 
+    detectAndHandleStackOperations() {
+      const signals = this.nextLine;
+
+      // DNS wyws wea wyak wes
+      if (signals.has('wyws') && signals.has('wea') && signals.has('wyak') && signals.has('wes')) {
+        this.stackPush('Data', this.ACC);
+        return;
+      }
+
+      // PZS - zdejmij dane ze stosu
+      if (
+        signals.has('czyt') &&
+        signals.has('wys') &&
+        signals.has('weja') &&
+        signals.has('przep') &&
+        signals.has('weak') &&
+        signals.has('iws') &&
+        signals.has('wyl') &&
+        signals.has('wea')
+      ) {
+        console.log('PZS: popping stack to ACC');
+        // Zapisz adres przed zwiększeniem WS (iws wykona się później w executeSignalsFromNextLine)
+        const memAddrToClear = this.WS & this.addrMask();
+
+        // Zdejmij wartość z logicznego stosu
+        this.stackPop('Data');
+
+        // Zaplanuj wyczyszczenie pamięci po wykonaniu wszystkich sygnałów
+        this._pendingMemoryClear = memAddrToClear;
+        return;
+      }
+
+      // SDP
+      if (signals.has('dws') && signals.has('wyws') && signals.has('wyls') && signals.has('pisz')) {
+        this.stackPush('Address', this.programCounter);
+        return;
+      }
+
+      // PWR - powrót z podprogramu (zdejmij adres ze stosu)
+      if (signals.has('czyt') && signals.has('wys') && signals.has('sa') && signals.has('wel') && signals.has('iws')) {
+        console.log('PWR: powrót z podprogramu');
+        const memAddrToClear = this.WS & this.addrMask();
+
+        const returnAddr = this.stackPop('Address');
+        console.log('PWR: returnAddr=', returnAddr);
+
+        this._pendingMemoryClear = memAddrToClear;
+        return;
+      }
+    },
+
     executeSignalsFromNextLine() {
       // Clear all active timeouts to prevent signal overlap
       this.clearActiveTimeouts();
+
+      // Debug: log all signals in this phase
+      console.log('executeSignalsFromNextLine: signals=', Array.from(this.nextLine));
+
+      // Detect stack operations based on signal combinations
+      this.detectAndHandleStackOperations();
 
       // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
@@ -1457,6 +1610,10 @@ export default {
       if (this.nextLine.has('wyls')) this.wyls();
       if (this.nextLine.has('wyg')) this.wyg();
       if (this.nextLine.has('wyrb')) this.wyrb();
+      if (this.nextLine.has('wyap')) this.wyap();
+      if (this.nextLine.has('wyrm')) this.wyrm();
+      if (this.nextLine.has('wyrz')) this.wyrz();
+      if (this.nextLine.has('wyrp')) this.wyrp();
 
       if (this.nextLine.has('sa')) this.sa();
       if (this.nextLine.has('as')) this.as();
@@ -1469,6 +1626,10 @@ export default {
       if (this.nextLine.has('wes')) this.wes();
       if (this.nextLine.has('wei')) this.wei();
       if (this.nextLine.has('wel')) this.wel();
+      if (this.nextLine.has('werm')) this.werm();
+      if (this.nextLine.has('weap')) this.weap();
+      if (this.nextLine.has('werz')) this.werz();
+      if (this.nextLine.has('werp')) this.werp();
 
       // all math
       if (this.nextLine.has('dod')) this.dod();
@@ -1494,7 +1655,17 @@ export default {
       if (this.nextLine.has('dws')) this.dws();
       if (this.nextLine.has('werb')) this.werb();
       if (this.nextLine.has('start')) this.start();
+      if (this.nextLine.has('ustrm')) this.ustrm();
+      if (this.nextLine.has('czrm')) this.czrm();
       this.nextLine.clear();
+
+      // Wykonaj odroczone wyczyszczenie pamięci (po PZS/PWR)
+      if (this._pendingMemoryClear !== null) {
+        const idx = this._pendingMemoryClear;
+        this.mem[idx] = 0;
+        this.addLog(`Wyczyszczono komórkę pamięci [${idx}] po zdjęciu ze stosu`, 'stos');
+        this._pendingMemoryClear = null;
+      }
     },
 
     getResolvedPhase(phase) {
@@ -1879,6 +2050,7 @@ export default {
       this.signals.wys = true;
       this.signals.busS = true;
       this.BusS = this.toWord(this.S);
+      console.log('WYS: S=', this.S, 'BusS=', this.BusS);
       const timeoutId = setTimeout(() => {
         this.signals.wys = false;
         // this.signals.busS = false;
@@ -1932,6 +2104,7 @@ export default {
       this.signals.czyt = true;
       const idx = this.A & this.addrMask();
       this.S = this.toWord(this.mem[idx] ?? 0);
+      console.log('CZYT: A=', this.A, 'idx=', idx, 'mem[idx]=', this.mem[idx], 'S=', this.S);
       const timeoutId = setTimeout(() => {
         this.signals.czyt = false;
       }, this.oddDelay);
@@ -2030,8 +2203,135 @@ export default {
         this.DEV_READY = 1;
       }, this.oddDelay * 2);
       this.activeTimeouts.push(id);
-      // jeśli start podaje coś na S (u Ciebie nie), dodaj ewentualnie holdBus('S')
     },
+
+    // Interrupt register signals
+    werm() {
+      // BusS -> RM (Write to Mask Register)
+      console.log('WERM called: BusS=', this.BusS, 'S=', this.S, 'A=', this.A);
+      this.signals.werm = true;
+      this.signals.busS = true;
+      this.RM = this.BusS & 0xf; // 4-bitowa maska
+      const id = setTimeout(() => {
+        this.signals.werm = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      console.log('WERM result: RM=', this.RM);
+      this.addLog(`RM ustawione na ${this.RM} (maska przerwań) [BusS=${this.BusS}]`, 'system');
+    },
+
+    wyrm() {
+      // RM -> BusS (Read from Mask Register)
+      this.signals.wyrm = true;
+      this.signals.busS = true;
+      this.BusS = this.RM & 0xf;
+      const id = setTimeout(() => {
+        this.signals.wyrm = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.holdBus('S');
+    },
+
+    wyap() {
+      // AP -> BusA (Read from Address Pointer)
+      this.signals.wyap = true;
+      this.signals.busA = true;
+      this.BusA = this.AP & this.addrMask();
+      const id = setTimeout(() => {
+        this.signals.wyap = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.holdBus('A');
+    },
+
+    weap() {
+      // BusA -> AP (Write to Address Pointer)
+      this.signals.weap = true;
+      this.signals.busA = true;
+      this.AP = this.BusA & this.addrMask();
+      const id = setTimeout(() => {
+        this.signals.weap = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+    },
+
+    wyrz() {
+      // RZ -> BusS (Read from Request Register)
+      this.signals.wyrz = true;
+      this.signals.busS = true;
+      this.BusS = this.RZ & 0xf;
+      const id = setTimeout(() => {
+        this.signals.wyrz = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.holdBus('S');
+    },
+
+    werz() {
+      // BusS -> RZ (Write to Request Register)
+      this.signals.werz = true;
+      this.signals.busS = true;
+      this.RZ = this.BusS & 0xf;
+      const id = setTimeout(() => {
+        this.signals.werz = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.addLog(`RZ ustawione na ${this.RZ} (zgłoszenia przerwań)`, 'system');
+    },
+
+    wyrp() {
+      // RP -> BusS (Read from Priority Register)
+      this.signals.wyrp = true;
+      this.signals.busS = true;
+      this.BusS = this.RP & 0xf;
+      const id = setTimeout(() => {
+        this.signals.wyrp = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.holdBus('S');
+    },
+
+    werp() {
+      // BusS -> RP (Write to Priority Register)
+      this.signals.werp = true;
+      this.signals.busS = true;
+      this.RP = this.BusS & 0xf;
+      const id = setTimeout(() => {
+        this.signals.werp = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.addLog(`RP ustawione na ${this.RP} (priorytet przerwania)`, 'system');
+    },
+
+    ustrm() {
+      // Ustaw bit w RM (z magistrali A) - zablokuj przerwanie
+      console.log('USTRM called, BusA=', this.BusA);
+      this.signals.ustrm = true;
+      this.signals.busA = true;
+      const bitNum = this.BusA & 0x3; // 0-3
+      this.RM |= 1 << bitNum; // Ustaw bit
+      this.RM &= 0xf; // Maska 4-bitowa
+      const id = setTimeout(() => {
+        this.signals.ustrm = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.addLog(`Ustawiono bit ${bitNum} w RM (RM=${this.RM}) - zablokowano IRQ${bitNum + 1}`, 'przerwanie');
+    },
+
+    czrm() {
+      // Wyczyść bit w RM (z magistrali A) - odblokuj przerwanie
+      this.signals.czrm = true;
+      this.signals.busA = true;
+      const bitNum = this.BusA & 0x3; // 0-3
+      this.RM &= ~(1 << bitNum); // Wyczyść bit
+      this.RM &= 0xf; // Maska 4-bitowa
+      const id = setTimeout(() => {
+        this.signals.czrm = false;
+      }, this.oddDelay);
+      this.activeTimeouts.push(id);
+      this.addLog(`Wyczyszczono bit ${bitNum} w RM (RM=${this.RM}) - odblokowano IRQ${bitNum + 1}`, 'przerwanie');
+    },
+
     resetValues() {
       // Clear any active timeouts first
       this.clearActiveTimeouts();
@@ -2054,6 +2354,9 @@ export default {
       this.JAML = 0;
       this.BusA = 0;
       this.BusS = 0;
+
+      // Reset stack
+      this.stack = [];
 
       // Reset memory to all zeros
       this.mem = new Array(1 << this.memoryAddresBits).fill(0);

@@ -26,7 +26,7 @@
     </div>
 
     <div v-if="manualMode" class="manualModeInstruction">
-      <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
+      <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'Wykonaj takt'</p>
     </div>
 
     <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" :maxHeight=" showIo ? '18.3rem' : '32rem' " />

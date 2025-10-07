@@ -73,7 +73,9 @@
         :dev-ready="DEV_READY"
         :word-bits="codeBits + addresBits"
         :format-number="formatNumber"
-
+        :breakpoints="breakpoints"
+        :breakpoints-enabled="breakpointsEnabled"
+        @toggle-breakpoint="toggleBreakpoint"
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="(code) => (this.code = code)"
 
@@ -107,12 +109,30 @@
       @initMemory="applyInitMemory($event)"
     />
 
-    <Console
-      ref="console"
+    <ConsoleDock
       :logs="logs.slice().reverse()"
-      :class="{ 'console-collapsed': !consoleOpen }"
+      :manual-mode="manualMode"
+      :code-compiled="codeCompiled"
+      :code="code"
+      :is-running="isRunning"
+      :is-fast-running="isFastRunning"
+      :fast-progress="fastProgress"
+      :breakpoints-enabled="breakpointsEnabled"
+      :console-open="consoleOpen"
+      :has-console-errors="hasConsoleErrors"
+      @compile="compileCode"
+      @edit="uncompileCode"
+      @step="executeLine"
+      @run="runCode"
+      @run-fast="runToEndFast"
+      @stop="stopRun"
       @close="closeConsole"
       @clear="clearConsole"
+      @open="toggleConsole"
+      @update:breakpointsEnabled="breakpointsEnabled = $event"
+      @disable-all-breakpoints="breakpointsEnabled = false"
+      @clear-breakpoints="(() => { breakpoints.clear(); breakpoints = new Set(breakpoints); addLog('Usunięto wszystkie breakpointy', 'system'); })()"
+      :class="{ 'console-collapsed': !consoleOpen }"
     />
 
     <!-- Console indicator - visible only when console is collapsed -->
@@ -185,7 +205,7 @@ import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
-import Console from '@/components/Console.vue';
+import ConsoleDock from '@/components/ConsoleDock.vue';
 import SettingsOverlay from '@/components/SettingsOverlay.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
@@ -210,7 +230,7 @@ export default {
     YRegisterSection,
     TopBar,
     AiChat,
-    Console,
+    ConsoleDock,
     SettingsOverlay,
     ExecutionControls,
     ProgramEditor,
@@ -228,6 +248,9 @@ export default {
 
   data() {
     return {
+      _skipNextBreakpoint: false,
+      breakpointsEnabled: true,
+      breakpoints: new Set(),
       _headless: false,
       isFastRunning: false,
       fastProgress: 0,
@@ -441,6 +464,15 @@ export default {
     };
   },
   methods: {
+    toggleBreakpoint(lineIdx) {
+      if (typeof lineIdx !== 'number') return;
+      if (this.breakpoints.has(lineIdx)) this.breakpoints.delete(lineIdx);
+      else this.breakpoints.add(lineIdx);
+      this.addLog(`Breakpoint ${this.breakpoints.has(lineIdx) ? 'dodany' : 'usunięty'} @${lineIdx}`, 'system');
+    },
+    _shouldPauseOnBreakpoint(nextSrcLine) {
+      return this.isRunning && Number.isFinite(nextSrcLine) && this.breakpoints.has(nextSrcLine);
+    },
     reconnectWS() {
       try {
         if (this.ws) {
@@ -1143,6 +1175,7 @@ export default {
     },
 
     executeLine() {
+      // Lokalny helper do highlightu
       const hlFrom = (obj) => {
         if (this._headless) return;
         if (obj && Number.isFinite(obj.srcLine)) {
@@ -1150,6 +1183,23 @@ export default {
           return;
         }
         this._refreshHighlight();
+      };
+
+      // Lokalny helper do pauzy na breakpointach (działa tylko przy RUN/RUN-FAST)
+      const shouldPauseOn = (line) => {
+        // jeśli mamy do pominięcia pierwszy breakpoint – zrób to tylko raz
+        if (this._skipNextBreakpoint) {
+          this._skipNextBreakpoint = false;   // ← wypal „bezpiecznik”
+          return false;
+        }
+        return (
+          this.isRunning &&
+          this.breakpointsEnabled &&
+          Number.isFinite(line) &&
+          this.breakpoints &&
+          typeof this.breakpoints.has === 'function' &&
+          this.breakpoints.has(line)
+        );
       };
 
       // --- tryb mikro-programu ---
@@ -1180,11 +1230,11 @@ export default {
 
         // --- FAZA WARUNKOWA ---
         if (rawPhase && rawPhase.conditional === true) {
-          // 1) Pierwszy klik: pokaż IF i NIC nie wykonuj
+          // 1) Pierwszy krok: pokaż IF (bez wykonywania)
           if (!this._condState) {
             const cond = this.evaluateFlag(rawPhase.flag);
             const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
-            
+
             this._condState = {
               list,
               idx: 0,
@@ -1193,11 +1243,22 @@ export default {
               stage: 'SHOW_IF',
             };
 
-            rawPhase.srcLine = list[0]
+            // Linia IF to srcLine fazy warunkowej
+            const nextSrc = Number.isFinite(rawPhase.srcLine) ? rawPhase.srcLine : undefined;
+
+            // Pauza na breakpoint dokładnie na linii IF
+            if (shouldPauseOn(nextSrc)) {
+              if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
+              this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
+              this._stopRun();
+              return;
+            }
+
             hlFrom(rawPhase);
             return;
           }
 
+          // 2) Wykonywanie ciała wybranej gałęzi – po jednej pod-fazie na krok
           const st = this._condState;
           const curr = st.list[st.idx];
 
@@ -1233,6 +1294,20 @@ export default {
             return;
           }
 
+          // Kandydat na srcLine tej POD-FAZY (gdy nie ma, fallback to linia @zero/@niezero)
+          const fallback = Number.isFinite(st.phaseRef?.srcLine)
+            ? st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2)
+            : undefined;
+          const nextSrc = Number.isFinite(curr?.srcLine) ? curr.srcLine : fallback;
+
+          // Pauza na breakpoint PRZED wykonaniem tej pod-fazy
+          if (shouldPauseOn(nextSrc)) {
+            if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
+            this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
+            this._stopRun();
+            return;
+          }
+
           // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
           const signals = new Set(Object.keys(curr).filter(k => curr[k] === true));
           this.nextLine = signals;
@@ -1257,7 +1332,7 @@ export default {
             return;
           }
 
-          // Przejdź do następnej pod-fazy tej samej gałęzi albo zamknij gałąź
+          // Następna pod-faza tej samej gałęzi
           st.idx += 1;
 
           if (st.idx >= st.list.length) {
@@ -1312,6 +1387,17 @@ export default {
           this.uncompileCode();
           this.addLog('STOP – program zatrzymany', 'kompilator rozkazów');
           return;
+        }
+
+        // Pauza na breakpoint PRZED wykonaniem zwykłej fazy
+        {
+          const nextSrc = Number.isFinite(rawPhase?.srcLine) ? rawPhase.srcLine : undefined;
+          if (shouldPauseOn(nextSrc)) {
+            if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
+            this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
+            this._stopRun();
+            return;
+          }
         }
 
         // Podświetl i wykonaj
@@ -1374,19 +1460,32 @@ export default {
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
+
+        // Pauza na breakpoint PRZED wykonaniem tej linii
+        const nextSrc = this.activeLine; // za chwilę będzie wykonana
+        if (shouldPauseOn(nextSrc)) {
+          this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
+          this._stopRun();
+          this.activeLine = nextSrc; // zostaw highlight na tej linii
+          if (!this._headless) this._refreshHighlight();
+          return;
+        }
+
         this._refreshHighlight();
         const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
         this.nextLine.clear();
         for (const c of commands) this.nextLine.add(c);
         this.executeSignalsFromNextLine();
         this.activeLine++;
+
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
-        } else if (!this._headless){
+        } else if (!this._headless) {
           this._refreshHighlight();
-        } 
+        }
       } else {
+        // Tryb ręczny – ignorujemy breakpointy (użytkownik sam decyduje o kroku)
         this.executeSignalsFromNextLine();
         if (!this._headless) this._refreshHighlight();
       }
@@ -1560,6 +1659,7 @@ export default {
       this.manualMode = false;
       this.clearActiveTimeouts();
 
+      this._skipNextBreakpoint = true; 
       this.isRunning = true;
       let stepsLeft = 100000;
       const CHUNK = 1;                           // było 200
@@ -1601,24 +1701,19 @@ export default {
     },
     _stopRun() {
       if (this.runLoopTimer) { clearTimeout(this.runLoopTimer); this.runLoopTimer = null; }
-
       this.isRunning = false;
       this.isFastRunning = false;
       this.fastProgress = 0;
 
-      // WYŁĄCZ tryb headless i broadcast
+      this._skipNextBreakpoint = false;   // ← reset
+
       this._headless = false;
       this.suppressBroadcast = false;
-
-      // natychmiast zgaś wszystkie timeouty sygnałów
       this.clearActiveTimeouts();
-
-      // zatrzymaj „holdy” magistral A/S
       if (this._busHoldTimers?.A) { clearTimeout(this._busHoldTimers.A); this._busHoldTimers.A = null; }
       if (this._busHoldTimers?.S) { clearTimeout(this._busHoldTimers.S); this._busHoldTimers.S = null; }
       this.signals.busA = false;
       this.signals.busS = false;
-
       this.nextLine.clear();
     },
 

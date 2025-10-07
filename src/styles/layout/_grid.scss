@@ -62,7 +62,7 @@
   grid-template-columns: 2fr 0.73fr auto;
   position: relative;
 }
-#wLayout > #console {
+#wLayout > .console-dock {
   grid-area: c;
   width: 100%;
   margin-bottom: 20px;

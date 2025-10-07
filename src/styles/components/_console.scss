@@ -407,6 +407,11 @@
   background: rgba(185, 28, 28, 0.1);
 }
 
+#console{
+  height: 100%;
+  max-height: 371px;
+}
+
 /* Legacy support for old class names */
 #console > div.error,
 #console > div.błąd {

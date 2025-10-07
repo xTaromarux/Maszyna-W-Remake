@@ -1,25 +1,12 @@
 <template>
   <div class="programEditor">
-    <SegmentedToggle
-      :options="[
-        { label: 'Tryb ręczny', value: true },
-        { label: 'Program', value: false }
-      ]"
-      :model-value="manualMode"
-      @update:model-value="$emit('setManualMode', $event)"
-      class="toggleButtonProgram"
-    />
-    <IOPanel
-      v-if="showIo"
-      :dev-in="devIn"
-      :dev-out="devOut"
-      :dev-ready="devReady"
-      :word-bits="wordBits"
-      :format-number="formatNumber"
-      @update:devIn="$emit('update:devIn', $event)"
-      @update:devReady="$emit('update:devReady', $event)"
-      class="mb-2"
-    />
+    <SegmentedToggle :options="[
+      { label: 'Tryb ręczny', value: true },
+      { label: 'Program', value: false }
+    ]" :model-value="manualMode" @update:model-value="$emit('setManualMode', $event)" class="toggleButtonProgram" />
+    <IOPanel v-if="showIo" :dev-in="devIn" :dev-out="devOut" :dev-ready="devReady" :word-bits="wordBits"
+      :format-number="formatNumber" @update:devIn="$emit('update:devIn', $event)"
+      @update:devReady="$emit('update:devReady', $event)" class="mb-2" />
 
     <div class="chooseProgram">
       <slot name="chooseProgram"></slot>
@@ -29,17 +16,21 @@
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'następna linia'</p>
     </div>
 
-    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme" :maxHeight=" showIo ? '18.3rem' : '32rem' " />
+    <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme"
+      :maxHeight="showIo ? '18.3rem' : '32rem'" />
 
-    <div v-else class="compiledCode" ref="compiledEl">
-      <span
-        v-for="(line, index) in compiledCode"
-        :key="index"
-        class="flexRow"
-        :class="{ active: activeLine === index }"
-        :data-row="index"
-      >
-        <span>{{ index }}</span>
+    <div v-else class="compiledCode" ref="compiledEl" :class="{ 'bp-disabled': !breakpointsEnabled }">
+      <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{
+        active: activeLine === index,
+        'bp-line': breakpoints?.has(index)
+      }" :data-row="index">
+        <!-- Gutter z kropką -->
+        <button class="bp-dot gutter" :class="{ 'bp-dot--active': breakpoints?.has(index) }"
+          :disabled="!breakpointsEnabled" @click.stop="emit('toggle-breakpoint', index)" :title="!breakpointsEnabled
+            ? 'Breakpoints wyłączone'
+            : (breakpoints?.has(index) ? 'Usuń breakpoint' : 'Dodaj breakpoint')" aria-label="Toggle breakpoint" />
+        <!-- Numer linii -->
+        <span class="lineNo">{{ index }}</span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
       </span>
@@ -69,7 +60,8 @@ const props = defineProps({
   compiledCode: { type: Array, required: true },
   activeLine: { type: Number, required: true },
   nextLine: { type: Object, required: true },
-
+  breakpoints: { type: Object, default: () => new Set() },
+  breakpointsEnabled: { type: Boolean, default: true },
   showIo: { type: Boolean, default: false },
   devIn: { type: Number, default: 0 },
   devOut: { type: Number, default: 0 },
@@ -80,7 +72,8 @@ const props = defineProps({
 
 const emit = defineEmits([
   'update:code', 'setManualMode',
-  'update:devIn', 'update:devReady'
+  'update:devIn', 'update:devReady',
+  'toggle-breakpoint'
 ])
 
 const codeLocal = ref(props.code)
@@ -176,7 +169,7 @@ watch(() => props.activeLine, async (row) => {
   flex-direction: row;
 }
 
-.compiledCode .flexRow > span:first-child {
+.compiledCode .flexRow>span:first-child {
   min-width: 3rem;
   text-align: right;
   font-weight: bold;
@@ -184,7 +177,7 @@ watch(() => props.activeLine, async (row) => {
   flex-shrink: 0;
 }
 
-.compiledCode .flexRow > span:nth-child(2) {
+.compiledCode .flexRow>span:nth-child(2) {
   flex-shrink: 0;
   color: #666;
 }
@@ -199,7 +192,7 @@ watch(() => props.activeLine, async (row) => {
   font-weight: bold;
 }
 
-.compiledCode .active > span:first-child {
+.compiledCode .active>span:first-child {
   color: var(--signal-active);
 }
 
@@ -264,5 +257,123 @@ watch(() => props.activeLine, async (row) => {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.8;
+}
+
+/* kolumna z numerem linii */
+.compiledCode .flexRow>.lineNo {
+  text-align: right;
+  font-weight: 600;
+  color: #8a8a8a;
+  /* delikatniejszy */
+}
+
+/* dwukropek */
+.compiledCode .flexRow>span:nth-child(3) {
+  color: #8a8a8a;
+}
+
+/* aktywna linia (bez animacji) */
+.compiledCode .active {
+  color: var(--signal-active);
+  transition: none !important;
+  background-color: rgba(0, 170, 255, 0.10);
+  font-weight: bold;
+}
+
+/* kod */
+.codeLine {
+  padding-left: 0.25rem;
+  line-height: 1.35;
+}
+
+/* --- GUTTER DOT (mała, intellij-owa kropka) --- */
+.gutter {
+  /* zajmuje całą pierwszą kolumnę gridu */
+  justify-self: center;
+}
+
+/* linia z breakpointem – bardzo delikatne tło */
+.bp-line {
+  transition: none !important;
+  background-color: rgba(209, 17, 17, 0.10);
+}
+
+.bp-line.active {
+  background-color: rgba(209, 17, 17, 0.16);
+}
+
+/* kropka – mała, bez animacji */
+.bp-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid #d11;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: none !important;
+}
+
+.bp-dot--active {
+  background: #d11;
+  border-color: #d11;
+}
+
+.bp-dot:hover {
+  border-color: #e22;
+}
+
+/* --- STYL, GDY BREAKPOINTY SĄ WYŁĄCZONE --- */
+.bp-disabled {
+  position: relative;
+}
+
+/* cienki banner u góry listy kodu */
+.bp-disabled::before {
+  content: "BREAKPOINTY WYŁĄCZONE";
+  position: sticky;
+  top: -0.5rem;
+  /* lekko nad listą */
+  display: block;
+  margin: -0.25rem -0.5rem 0;
+  /* wyrównanie do ramki compiledCode */
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: .04em;
+  color: #555;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(120, 120, 120, 0.09) 100%);
+  border-bottom: 1px dashed rgba(120, 120, 120, .5);
+  text-align: center;
+}
+
+/* kropki: szare, puste, nieklikalne */
+.bp-disabled .bp-dot {
+  border-color: #8b8b8b !important;
+  background: transparent !important;
+  color: #8b8b8b;
+  opacity: .6;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.bp-disabled .bp-dot.bp-dot--active {
+  background: transparent !important;
+  /* nie wypełniaj, nawet jeśli był postawiony */
+  border-color: #8b8b8b !important;
+}
+
+/* linie z BP: inne (chłodniejsze) tło, ale bardzo delikatne */
+.bp-disabled .bp-line {
+  background-color: rgba(120, 120, 120, 0.08) !important;
+  opacity: .95;
+}
+
+/* numer i dwukropek lekko bledsze w trybie OFF */
+.bp-disabled .lineNo,
+.bp-disabled .flexRow>span:nth-child(3) {
+  color: #9a9a9a !important;
 }
 </style>

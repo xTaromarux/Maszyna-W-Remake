@@ -1,4 +1,4 @@
-#W {
+﻿#W {
   display: flex;
   flex-direction: column;
 }
@@ -7,17 +7,14 @@
   flex-direction: row;
   gap: 0.8rem;
 }
-
 .layerNoGap {
   gap: 0 !important;
 }
-
 #layer4{
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 .additionalInterruptsSignalsConteiner{
   display: flex;
   flex-direction: column;
@@ -27,28 +24,22 @@
   width: 7rem;
   height: 60px;
 }
-
 @media (max-width: 675px) {
-  .additionalInterruptsSignalsConteiner { 
-    margin-left: 0; 
+  .additionalInterruptsSignalsConteiner {
+    margin-left: 0;
   }
-
   .layer:nth-child(2) {
     gap: 0;
   }
 }
-
 .additionalInterruptsSignal{
   display: block;
   width: 100%;
 }
-
-
 .layerCenter{
   justify-content: center;
   align-items: center;
 }
-
 #wLayout {
   display: grid;
   flex-wrap: wrap;
@@ -73,7 +64,6 @@
 #wLayout > #inputs {
   grid-area: i;
 }
-
 .register {
   display: grid;
   grid-template-columns: auto auto 1fr;

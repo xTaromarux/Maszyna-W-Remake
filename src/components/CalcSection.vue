@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="calcConteiner" :class="extras?.stack?.wsRegister ? 'calcConteinerAdditionalSpace' : ''">
     <WSRegisterSection
       v-if="!isMobile"
@@ -13,14 +13,12 @@
       @clickItem="(name) => $emit('clickItem', name)"
       @update:WS="$emit('update:WS', $event)"
     />
-
     <div id="calc">
       <div v-if="extras.jamlExtras" id="flags">
         FLAGI:
         <div title="Negative number in Acc" v-if="nFlag">N</div>
         <div title="Zero in Acc" v-if="zFlag">Z</div>
       </div>
-
       <div class="accSignals">
         <SignalButton
           v-if="extras.jamlExtras"
@@ -39,14 +37,13 @@
           @click="handleClick('dak')"
         />
       </div>
-
-      <RegisterComponent 
-        id="accumulator" 
-        label="AK" 
+      <RegisterComponent
+        id="accumulator"
+        label="AK"
         :signed-dec="decSigned"
         :word-bits="wordBits"
-        :model="ACC" 
-        @update:model="$emit('update:ACC', $event)" 
+        :model="ACC"
+        @update:model="$emit('update:ACC', $event)"
         :number-format="accFormat"
         @update:number-format="$emit('update:accFormat', $event)"
         />
@@ -112,16 +109,14 @@
           @click="handleClick('i')"
         />
       </div>
-
-      <RegisterComponent 
-        id="jaml" 
-        label="JAML" 
-        :model="JAML" 
-        @update:model="$emit('update:JAML', $event)" 
+      <RegisterComponent
+        id="jaml"
+        label="JAML"
+        :model="JAML"
+        @update:model="$emit('update:JAML', $event)"
         :formatNumber="formatNumber"
         :isEnableEditValue="false"
         :showFormatSelector="false" />
-
       <template v-if="!isMobile">
         <SignalButton
           id="weja"
@@ -131,7 +126,6 @@
           spanClassNames="arrowRightOnBottom"
           @click="handleClick('weja')"
         />
-
         <SignalButton
           id="wyak"
           :signal="signals.wyak"
@@ -144,12 +138,10 @@
     </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
 import WSRegisterSection from './WSRegisterSection.vue';
-
 export default {
   name: 'CalcSection',
   props: {
@@ -173,14 +165,14 @@ export default {
       type: Number,
       required: true,
     },
-    decSigned: { 
-      type: Boolean, 
-      default: false 
+    decSigned: {
+      type: Boolean,
+      default: false
     },
-    wordBits: { 
-      type: Number, 
-      default: 12 
-    }, 
+    wordBits: {
+      type: Number,
+      default: 12
+    },
     accFormat: {
       type: String,
       required: true,
@@ -193,9 +185,9 @@ export default {
       type: Function,
       required: true,
     },
-    wordBits: { 
-      type: Number, 
-      default: 8 
+    wordBits: {
+      type: Number,
+      default: 8
     },
   },
   computed: {

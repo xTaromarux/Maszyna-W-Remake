@@ -1,4 +1,4 @@
-#calc {
+﻿#calc {
   padding-top: 2rem;
   display: grid;
   grid-template-areas:
@@ -10,7 +10,6 @@
     ". weja wyak";
   grid-template-rows: auto auto auto auto 1fr auto;
 }
-
 @media (max-width: 768px) {
   #calc {
     width: 100%;
@@ -24,7 +23,6 @@
     "jamlSignals jamlSignals jaml";
   }
 }
-
 #calc #flags {
   grid-area: flags;
   display: flex;
@@ -36,7 +34,6 @@
   background-color: var(--panelBackgroundColor, white);
   height: 3rem;
 }
-
 #calc #flags div {
   display: flex;
   justify-content: center;
@@ -46,15 +43,12 @@
   border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
 }
-
 #calc .accSignals {
   grid-area: accSignals;
 }
-
 #calc .jamlSignals {
   grid-area: jamlSignals;
 }
-
 #calc .accSignals,
 #calc .jamlSignals {
   display: flex;
@@ -63,7 +57,6 @@
   justify-content: space-evenly;
   align-items: stretch;
 }
-
 #calc .accSignals > *,
 #calc .jamlSignals > * {
   flex-grow: 1;
@@ -72,13 +65,11 @@
   justify-content: stretch;
   align-items: center;
 }
-
 #calc .accSignals > * > *,
 #calc .jamlSignals > * > * {
   flex-grow: 1;
   width: 100%;
 }
-
 #calc #accumulator {
   grid-area: accumulator;
   display: flex;
@@ -87,10 +78,8 @@
   border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
   padding: 0.5rem;
-
   border-radius: 0.5rem 0.5rem 0 0;
 }
-
 #calc #jaml {
   grid-area: jaml;
   display: flex;
@@ -104,10 +93,8 @@
   min-height: 8rem;
   transition: all 0.3s ease;
   cursor: default;
-
   border-radius: 0 0 var(--default-border-radius, 0.25rem) var(--default-border-radius, 0.25rem);
 }
-
 #calc #jaml::before {
   content: "";
   position: absolute;
@@ -120,7 +107,6 @@
   transition: opacity 0.3s ease;
   z-index: 1;
 }
-
 #calc #jaml::after {
   content: "JAML";
   position: absolute;
@@ -134,30 +120,24 @@
   z-index: 2;
   color: var(--signal-active);
 }
-
 #calc #jaml:hover::before {
   opacity: 0.9;
   backdrop-filter: blur(2px);
 }
-
 #calc #jaml:hover::after {
   opacity: 1;
 }
-
 body.lightMode #calc #jaml {
   background-color: #f0f0f0;
 }
-
 body.darkMode #calc #jaml {
   background-color: #2a2c33;
 }
-
 #calc #weja {
   grid-area: weja;
   margin-right: 0.5rem;
   min-height: 3rem;
 }
-
 #calc #wyak {
   grid-area: wyak;
   border-top: var(--pathThickness, 0.125rem) solid var(--signal, black);

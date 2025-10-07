@@ -1,4 +1,4 @@
-.inputWrapper {
+﻿.inputWrapper {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -8,39 +8,30 @@
   width: 100%;
   position: relative;
 }
-
 .inputWrapper > * {
   grid-area: 1 / 1 / 2 / 2;
   width: 100%;
 }
-
 .inputWrapper input {
   opacity: 0;
-
   width: 100%;
 }
-
 .inputWrapper span {
   opacity: 1;
-
   flex-direction: row;
   gap: 0.5rem;
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
-
   pointer-events: none;
 }
-
 .inputWrapper:hover input {
   opacity: 1;
   width: 100%;
 }
-
 .inputWrapper:hover span {
   opacity: 0;
 }
-
 #inputs {
   display: flex;
   flex-direction: column;
@@ -49,7 +40,6 @@
   justify-content: stretch;
   align-items: stretch;
 }
-
 @media (max-width: 1195px) {
   #inputs {
     flex-direction: column-reverse;
@@ -57,17 +47,13 @@
     align-items: flex-start;
   }
 }
-
 .no-horiz-resize {
   resize: vertical;
-
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
-
 .hoverInput {
     text-align: center;
-
     border-radius: 0.5rem;
     border: 1px solid var(--panelOutlineColor);
     background-color: var(--panelBackgroundColor);
@@ -76,34 +62,24 @@
     font-size: inherit;
     font-family: inherit;
     transition: all 0.2s ease;
-    
-    /* Remove default input styling */
     outline: none;
     -webkit-appearance: none;
     -moz-appearance: textfield;
 }
-
 .hoverInput:hover {
     border-color: var(--signal-hover);
-    /* Keep the same background color on hover */
     background-color: var(--panelBackgroundColor);
 }
-
 .hoverInput:focus {
     border-color: var(--signal-active);
-    /* Keep the same background color on focus */
     background-color: var(--panelBackgroundColor);
     box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
 }
-
-/* Remove spinner arrows in Chrome, Safari, Edge */
 .hoverInput::-webkit-outer-spin-button,
 .hoverInput::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-
-/* Remove spinner arrows in Firefox */
 .hoverInput[type=number] {
     -moz-appearance: textfield;
 }

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="iRegister">
     <SignalButton
       id="wyad"
@@ -25,22 +25,20 @@
         @click="handleClick('wei')"
       />
       <div class="stopConteiner" >
-        <SignalButton 
-          id="stop" 
-          :signal="signals.stop" 
-          @click="handleClick('stop')" 
-          label="stop" 
-          spanClassNames="lineLeftOnBottom additionalInterruptsSignal" 
+        <SignalButton
+          id="stop"
+          :signal="signals.stop"
+          @click="handleClick('stop')"
+          label="stop"
+          spanClassNames="lineLeftOnBottom additionalInterruptsSignal"
           />
         </div>
-    </div>  
+    </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
-
 export default {
   name: 'RegisterISection',
   props: {

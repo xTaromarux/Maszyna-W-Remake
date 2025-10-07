@@ -1,9 +1,7 @@
-<template>
+﻿<template>
   <header id="topBar">
     <polsl-logo-long-white class="logo" />
-
     <div class="flexRow">
-      <!-- WS status badge -->
       <button
         v-if="platform === 'esp'"
         class="wsBadge"
@@ -20,7 +18,6 @@
         <span class="dot" :class="{ spin: wsStatus === 'connecting' }" />
         <span class="label">{{ wsLabel }}</span>
       </button>
-
       <button
         class="simpleSvgButton"
         aria-label="Otwórz konsolę"
@@ -28,7 +25,6 @@
       >
         <ConsoleIcon :hasError="hasConsoleErrors" />
       </button>
-
       <button
         v-if="platform !== 'esp'"
         class="simpleSvgButton"
@@ -41,7 +37,6 @@
           strokeWidth="250"
         />
       </button>
-
       <button
         class="simpleSvgButton"
         aria-label="Otwórz ustawienia"
@@ -52,24 +47,18 @@
     </div>
   </header>
 </template>
-
 <script setup>
 import { computed } from 'vue'
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
 import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
 import ConsoleIcon        from '@/assets/svg/ConsoleIcon.vue'
-
 const platform = import.meta.env.VITE_APP_PLATFORM;
-
 const props = defineProps({
   hasConsoleErrors: { type: Boolean, default: false },
-  // 'connecting' | 'connected' | 'error' | 'disconnected'
   wsStatus: { type: String, default: 'disconnected' }
 })
-
 defineEmits(['open-chat', 'open-settings', 'toggle-console', 'ws-reconnect'])
-
 const wsLabel = computed(() => {
   switch (props.wsStatus) {
     case 'connected':   return 'Połączono z maszyną fizyczną';
@@ -78,7 +67,6 @@ const wsLabel = computed(() => {
     default:            return 'Brak połączenia z maszyną fizyczną';
   }
 })
-
 const wsTitle = computed(() => {
   switch (props.wsStatus) {
     case 'connected':   return 'Połączenie aktywne – kliknij, aby odświeżyć.';
@@ -88,12 +76,8 @@ const wsTitle = computed(() => {
   }
 })
 </script>
-
 <style scoped>
-/* layout z Twojego pliku */
 .flexRow { display: flex; gap: .25rem; align-items: center; }
-
-/* WS badge */
 .wsBadge{
   display: inline-flex;
   align-items: center;
@@ -111,7 +95,6 @@ const wsTitle = computed(() => {
   margin-right: .25rem;
 }
 .wsBadge:hover{ transform: translateY(-1px); opacity: 1; }
-
 .wsBadge .dot{
   width: .6rem; height: .6rem; border-radius: 50%;
   background: currentColor;
@@ -128,7 +111,6 @@ const wsTitle = computed(() => {
   opacity: .7;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .ws--ok      { background: rgba( 46,204,113,.14); color: #2ecc71; border-color: rgba(46,204,113,.35); }
 .ws--pending { background: rgba(255,191,0,.14);   color: #ffbf00; border-color: rgba(255,191,0,.35); }
 .ws--err     { background: rgba(255,99,99,.12);   color: #ff5c5c; border-color: rgba(255,99,99,.30); }

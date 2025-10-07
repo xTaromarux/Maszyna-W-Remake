@@ -1,6 +1,5 @@
-<template>
+﻿<template>
   <div class="execution-controls">
-    <!-- Compile / Edit -->
     <button
       v-if="!codeCompiled"
       @click="$emit('compile')"
@@ -11,7 +10,6 @@
       <CompileIcon />
       <span>Kompiluj</span>
     </button>
-
     <button
       v-else
       @click="$emit('edit')"
@@ -22,8 +20,6 @@
       <EditIcon />
       <span>Edytuj</span>
     </button>
-
-    <!-- Single-step execution -->
     <button
       @click="$emit('step')"
       :disabled="isRunning || (!manualMode && !codeCompiled)"
@@ -33,8 +29,6 @@
       <NextLineIcon />
       <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj takt' }}</span>
     </button>
-
-    <!-- Run / Stop -->
     <button
       v-if="!isRunning"
       @click="$emit('run')"
@@ -45,7 +39,6 @@
       <RunIcon />
       <span>Uruchom</span>
     </button>
-
     <button
       v-else
       @click="$emit('stop')"
@@ -55,7 +48,6 @@
       <RunIcon />
       <span>Stop</span>
     </button>
-
     <button
       v-if="!isRunning"
       @click="$emit('run-fast')"
@@ -66,8 +58,6 @@
       <RunIcon />
       <span>Uruchom (bez animacji)</span>
     </button>
-
-    <!-- Kiedy trwa run-fast, pokaż „zajętość” i % -->
     <button
       v-else-if="isFastRunning"
       @click="$emit('stop')"
@@ -77,16 +67,13 @@
       <span class="spinner" aria-hidden="true"></span>
       <span>Pracuję… {{ fastProgress }}%</span>
     </button>
-
   </div>
 </template>
-
 <script>
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
 import NextLineIcon from '@/assets/svg/NextLineIcon.vue';
 import RunIcon from '@/assets/svg/RunIcon.vue';
-
 export default {
   name: 'ExecutionControls',
   components: { CompileIcon, EditIcon, NextLineIcon, RunIcon },
@@ -101,7 +88,6 @@ export default {
   emits: ['compile', 'edit', 'step', 'run', 'run-fast', 'stop'],
 };
 </script>
-
 <style scoped>
 .spinner {
   width: 1em; height: 1em;
@@ -114,5 +100,4 @@ export default {
   vertical-align: -0.15em;
 }
 @keyframes sp { to { transform: rotate(360deg); } }
-
 </style>

@@ -1,4 +1,4 @@
-#counter {
+﻿#counter {
     display: grid;
     grid-template-areas:
         "il c c dl"
@@ -8,46 +8,39 @@
     justify-content: stretch;
     align-items: stretch;
 }
-
 .calcConteiner{
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
 }
-
 .calcConteinerAdditionalSpace{
     justify-content: space-between !important;
 }
-
 #wsRegister {
     display: grid;
     grid-template-areas:
-        ". wyws wews busS"    
+        ". wyws wews busS"
         "il c c dl";
     grid-template-rows: auto 3rem;
     grid-template-columns: auto 1fr 1fr auto;
     justify-content: stretch;
     align-items: stretch;
 }
-
 #wsRegister #busS{
     grid-area: busS;
 }
-
 #wsRegister #iws,
 #counter #il {
     grid-area: il;
     justify-self: right;
     align-self: center;
 }
-
 #wsRegister #dws,
 #counter #dl {
     grid-area: dl;
     justify-self: left;
     align-self: center;
 }
-
 #wsRegister .register,
 #counter .register {
     grid-area: c;
@@ -55,33 +48,27 @@
     background-color: var(--panelBackgroundColor, white);
     border-radius:  0.5rem;
 }
-
 #wylsSignalsConteiner #wel {
     padding-bottom: 20px;
     margin-right: 0.25rem;
 }
-
 #wylsSignalsConteiner #wyls {
     width: 3px;
     padding-bottom: 20px;
     margin-right: 5px !important;
     margin-right: 0.25rem;
 }
-
 #counter #wyl {
     grid-area: wyl;
     padding-bottom: 10px;
     margin-left: 15px !important;
 }
-
 #wsRegister #wews {
     grid-area: wews;
     padding-bottom: 10px;
     margin-left: 15px !important;
 }
-
 #wsRegister #wyws {
     grid-area: wyws;
     padding-bottom: 20px;
 }
-

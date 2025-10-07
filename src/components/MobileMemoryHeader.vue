@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="mobile-memory-header" >
     <div class="memory-signal-in">
         <SignalButton
@@ -28,7 +28,6 @@
       <ListLinesIcon />
       <span>Pamięć</span>
     </button>
-
     <div class="memory-signals-in" style="grid-area: memory-signals-in">
         <SignalButton
         id="czyt"
@@ -37,7 +36,6 @@
         spanClassNames="lineLeftOnBottom"
         @click="emitClick('czyt')"
         />
-
         <SignalButton
         id="pisz"
         :signal="signals.pisz"
@@ -56,7 +54,6 @@
         @click="emitClick('wes')"
         style="grid-area: wes"
         />
-
         <SignalButton
         id="wys"
         :signal="signals.wys"
@@ -66,7 +63,7 @@
         @click="emitClick('wys')"
         style="grid-area: wys"
         />
-    </div> 
+    </div>
     <div class="busLabel busLabelDown">
       <BusLabel
         busName="S"
@@ -78,7 +75,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import ListLinesIcon from '@/assets/svg/ListLinesIcon.vue';
@@ -102,7 +98,6 @@ export default {
   },
 };
 </script>,
-
 <style scoped>
   .busLabel{
     display: flex;
@@ -111,12 +106,10 @@ export default {
     position: relative;
     gap: 5px;
   }
-
   .busLabelUp{
     padding-top: 4px;
     align-items: top;
   }
-
   .busLabelDown{
     padding-bottom: 4px;
     align-items: end;

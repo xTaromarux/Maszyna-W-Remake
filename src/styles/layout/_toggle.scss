@@ -1,5 +1,4 @@
-@use "../abstracts/mixins" as mixins;
-
+﻿@use "../abstracts/mixins" as mixins;
 .toggleButtonDiv {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -23,21 +22,15 @@
   padding: 0.25rem 0.5rem;
   cursor: pointer;
 }
-
-/* Default state - all spans use normal text color */
 .toggleButtonDiv > span {
   color: var(--buttonTextColor, black);
 }
-
-/* Active state - the span under the blue ball gets white text */
 .toggleButtonDiv.active > span:first-child {
   color: #eee;
 }
-
 .toggleButtonDiv:not(.active) > span:last-child {
   color: #eee;
 }
-
 .toggleButtonDiv::after {
   content: "";
   position: absolute;
@@ -50,7 +43,6 @@
   border-radius: 2rem;
   transition: 0.25s ease-in-out;
 }
-
 .toggleButtonDiv.active::after {
   left: 50%;
 }

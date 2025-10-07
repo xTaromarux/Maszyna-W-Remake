@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 408.483 408.483"
@@ -20,10 +20,8 @@
     </g>
   </svg>
 </template>
-
 <script setup>
 import { defineProps } from 'vue'
-
 const props = defineProps({
   width: { type: [Number, String], default: 20 },
   height: { type: [Number, String], default: 20 },

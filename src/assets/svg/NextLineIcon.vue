@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -11,4 +11,4 @@
     <path d="m9 18 6-6-6-6"/>
     <path d="M21 6v12"/>
   </svg>
-</template> 
+</template>

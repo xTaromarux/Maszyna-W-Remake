@@ -1,8 +1,7 @@
-.signal:not(.bus) {
+﻿.signal:not(.bus) {
     cursor: pointer;
     user-select: none;
 }
-
 @media (hover: hover) and (pointer: fine)  {
   .signal:hover:not(.bus) {
     --signal: var(--signal-hover) !important;

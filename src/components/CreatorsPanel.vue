@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div
     v-if="!isMobile"
     id="creators"
@@ -10,10 +10,8 @@
     <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
   </div>
 </template>
-
 <script>
 import PeopleSection from './PeopleSection.vue'
-
 export default {
   name: 'CreatorsPanel',
   components: { PeopleSection },

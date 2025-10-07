@@ -1,4 +1,4 @@
-#xRegister,
+﻿#xRegister,
 #yRegister,
 #gRegister,
 #rpRegister,
@@ -10,7 +10,6 @@
   gap: 0 0.5rem;
   padding-bottom: 20px;
 }
-
 #rzRegister {
   display: grid;
   grid-template-areas:
@@ -18,7 +17,6 @@
     "r";
   padding-bottom: 20px;
 }
-
 #rmRegister {
   display: grid;
   grid-template-areas:
@@ -26,13 +24,11 @@
     "in out";
   gap: 0 0.5rem;
 }
-
 @media (max-width: 675px) {
   #rmRegister {
     gap: 0 0;
   }
-  
-  #rbRegister, 
+  #rbRegister,
   #gRegister {
     grid-template-areas:
       "r r"
@@ -40,7 +36,6 @@
     padding-bottom: 0;
   }
 }
-
 #apRegister {
   display: grid;
   grid-template-areas:
@@ -49,7 +44,6 @@
   grid-template-columns: 1fr 1fr;
   gap: 0 0.5rem;
 }
-
 #xRegister .register,
 #yRegister .register,
 #gRegister .register,
@@ -66,30 +60,24 @@
   padding: 0.125rem 0.5rem;
   border-radius: 0.5rem;
 }
-
 #wyy, #wex, #werb, #start, #wyrm, #wyg{
   padding-bottom: 10px;
 }
-
 #wyx, #wyrb, #start {
   padding-bottom: 20px;
 }
-
  #werm, #wey {
   margin-left: 15px !important;
   padding-bottom: 20px;
 }
-
 #wyap{
   padding-bottom: 10px;
 }
-
 #iRegister {
   display: flex;
   flex-direction: column;
   align-content: stretch;
 }
-
 #iRegister .register {
   border: 1px solid var(--panelOutlineColor, black);
   background-color: var(--panelBackgroundColor, white);
@@ -99,76 +87,63 @@
   width: 100%;
   border-radius: 0.5rem;
 }
-
 #iRegister .signal {
   flex-grow: 1;
   height: 0.125rem;
 }
-
 #iRegister .signals,
 #iRegister #wei,
 #iRegister #stop {
-  height: auto; /* nadpisuje poprzednie 0.125rem */
+  height: auto;
 }
-
 #iRegister .signals {
   display: flex;
   flex-direction: row;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
   flex-grow: 1;
 }
-
 #iRegister #wyad {
   margin-right: 2rem;
 }
-
 #iRegister #wei {
   flex-grow: 1;
   margin-left: 2rem;
 }
-
 .stopConteiner {
   display: flex;
   width: 80px;
   margin-right: 20px;
   align-items: center;
 }
-
 @media (max-width: 675px) {
   .stopConteiner {
    margin-right: 0;
    width: 50px;
    padding-bottom: 60px;
   }
-
   #iRegister #wei {
     margin-left: 1rem;
   }
 }
-
 #stop {
   margin-left: 0rem;
 }
-
 .wylsConteiner {
   display: flex;
   width: 80px;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
 }
-
 .wylsBusConteiner {
   display: flex;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
 }
-
 .wylsBusDiv {
-  width: 55px; 
+  width: 55px;
   height: 2px;
-} 
-
+}
 .wylsBusExt,
 .wylsSignalsExt {
   width: 42.11px;
@@ -176,79 +151,62 @@
   border-right: 3px solid var(--signal, black);
   transition: none;
 }
-
 @media (max-width: 675px) {
   #counter #wyl {
      margin-left: 5px !important;
   }
-
   .wylsSignalsExt {
     margin-right: 2px;
     width: 3px;
     background-color: var(--signal, black);
     border-right: 0px solid var(--signal, black);
   }
-
   .wylsBusExt{
     width: 3px;
     background-color: var(--signal, black);
     border-right: 0px solid var(--signal, black);
   }
-
   .wylsBusDiv{
     width: 9px;
   }
-
   #wyls {
     margin-left: 0 !important;
   }
-
 }
-
 @media (hover: hover) and (pointer: fine) {
   #W:has(#wyls.signal:hover) {
     --wylsExtColor: var(--signal-hover);
   }
 }
-
-/* Aktywny (klik/tap) – działa wszędzie */
 #W:has(#wyls.signal.active) {
   --wylsExtColor: var(--signal-active);
 }
-
 .wylsSignalsConteiner{
   grid-area: cont;
   display: flex;
   flex-direction: row;
 }
-
 .wylsSignalsConteinerContent{
   justify-content: space-between;
 }
-
 .wylsSignalsConteinerContentEnd{
   justify-content: flex-end;
 }
-
 .wylsBusConteiner .bus {
   width: 100%;
 }
-
 #sa {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   position: relative;
 }
-
 #as {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   position: relative;
 }
-
-/* -------- REJESTRY -------- */
 .register {
   display: grid;
   grid-template-columns: auto auto 1fr;
@@ -256,14 +214,11 @@
   align-items: stretch;
   padding: 0.125rem 0.5rem;
 }
-
 .register > span {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
-/* -------- MEMORY SECTION (cały grid) -------- */
 #memory {
   display: grid;
   height: 100%;
@@ -278,23 +233,18 @@
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto 1fr auto auto;
 }
-
-/* rejestry wewnątrz #memory */
 #memory #aRegister {
   display: flex;
   flex-direction: row;
   grid-area: aRegister;
   border-radius: 0.5rem 0.5rem 0 0;
 }
-
 #memory #sRegister {
   display: flex;
   flex-direction: row;
   grid-area: sRegister;
   border-radius: 0 0 0.5rem 0.5rem;
 }
-
-/* styl bazowy dla .register jako elementu w #memory */
 #memory > .register {
   border: 1px solid var(--panelOutlineColor, black);
   background: var(--panelBackgroundColor, black);
@@ -307,8 +257,6 @@
   width: 100%;
   border-radius: 0.5rem;
 }
-
-/* -------- MEMORY TABLE -------- */
 #memoryTable {
   grid-area: memoryTable;
   border: 1px solid var(--panelOutlineColor, black);
@@ -323,7 +271,6 @@
   max-height: 22rem;
   width: 100%;
 }
-
 .scrollWrapper {
   box-sizing: border-box;
   display: grid;
@@ -334,7 +281,6 @@
   height: 94%;
   margin: 10px 10px;
 }
-
 .memoryContainer {
   display: grid;
   border-radius: 0.5rem;
@@ -343,7 +289,6 @@
   height: 100%;
   width: 100%;
 }
-
 .memoryContainer > div {
   min-width: 5rem;
   text-align: center;
@@ -351,7 +296,6 @@
   justify-content: center;
   align-items: center;
 }
-
 .memoryContainer > span,
 .memoryContainer > input {
   border: 1px solid var(--panelOutlineColor, black);
@@ -360,7 +304,6 @@
   justify-content: center;
   align-items: center;
 }
-
 .memoryContainer > .label {
   font-weight: bold;
   position: sticky;
@@ -372,18 +315,14 @@
   z-index: 10;
   justify-content: center;
 }
-
 .memoryContainer > .label:first-of-type {
   border-top-left-radius: 0.4rem;
 }
-
 .memoryContainer > .selected {
   border-top: 4px solid var(--signal-active) !important;
   border-bottom: 4px solid var(--signal-active) !important;
   background-color: color-mix(in srgb, transparent, var(--signal-active) 25%);
 }
-
-/* -------- OPERACJE -------- */
 #memory .signals {
   grid-area: signals;
   display: flex;
@@ -392,7 +331,6 @@
   justify-content: center;
   align-items: center;
 }
-
 #memory .signal {
   height: 0.125rem;
   display: flex;
@@ -402,21 +340,17 @@
   position: relative;
   height: 3rem;
 }
-
 #memory #wea {
   margin-right: 30px;
   grid-area: wea;
   position: relative;
 }
-
 #memory #wes {
   margin-right: 5px;
 }
-
 #memory #wys {
   margin-left: 15px;
 }
-
 #memory #operations {
   grid-area: operations;
   display: flex;
@@ -424,7 +358,6 @@
   justify-content: center;
   align-items: flex-start;
 }
-
 .mobile-button-wrapper .signals {
   grid-area: signals;
   display: flex;
@@ -433,7 +366,6 @@
   justify-content: center;
   align-items: center;
 }
-
 .mobile-button-wrapper .signal {
   height: 0.125rem;
   display: flex;
@@ -443,21 +375,17 @@
   position: relative;
   height: 3rem;
 }
-
 .mobile-button-wrapper #wea {
   margin-right: 40px;
   grid-area: wea;
   position: relative;
 }
-
 .mobile-button-wrapper #wes {
   margin-right: 0.25rem;
 }
-
 .mobile-button-wrapper #wys {
   margin-left: 0.25rem;
 }
-
 .mobile-button-wrapper #operations {
   grid-area: operations;
   display: flex;
@@ -465,12 +393,9 @@
   justify-content: center;
   align-items: flex-start;
 }
-
 .memory-wrapper {
   position: relative;
 }
-
-/* ====== STYL DLA PRZYCISKU MOBILNEGO "PaO" ====== */
 .mobile-button-wrapper {
   display: grid;
   width: 100%;
@@ -484,7 +409,6 @@
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto 1fr auto auto;
 }
-
 .mobile-toggle {
   grid-area: mobile-toggle;
   width: 12vw;
@@ -500,8 +424,6 @@
   cursor: pointer;
   user-select: none;
 }
-
-/* ====== MODALNE NAKŁADKI ====== */
 .mobile-overlay {
   position: fixed;
   top: 0;
@@ -515,7 +437,6 @@
   align-items: center;
   z-index: 999;
 }
-
 .mobileModalContent {
   position: relative;
   width: 90%;
@@ -527,40 +448,33 @@
   border-radius: 0.5rem;
   padding: 4rem 2rem;
 }
-
 .closeButtonModal {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
 }
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
-
 .scale-enter-active,
 .scale-leave-active {
   transition:
     transform 0.2s ease,
     opacity 0.2s ease;
 }
-
 .scale-enter-from,
 .scale-leave-to {
   transform: scale(0.98);
   opacity: 0;
 }
-
 .memorySection {
   height: 100%;
 }
-
 .mobile-memory-header {
   height: 100%;
   display: grid;
@@ -573,7 +487,6 @@
   align-items: stretch;
   justify-items: stretch;
 }
-
 .memory-signal-in{
   height: 100%;
     display: flex;
@@ -582,7 +495,6 @@
   justify-content: center;
   padding-right: 30px;
 }
-
 .mobile-memory-button {
   display: inline-flex;
   align-items: center;
@@ -596,7 +508,6 @@
   background: var(--panelBackgroundColor, black);
   cursor: pointer;
 }
-
 .memory-signals-in{
   display: flex;
   flex-direction: column;
@@ -606,7 +517,6 @@
   padding-right: 20px;
   gap: 10px
 }
-
 .memory-signals-out{
   display: flex;
   height: 100%;

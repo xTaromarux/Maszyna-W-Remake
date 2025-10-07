@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="bus signal" :class="{ active: signalStatus }">
     <div class="line" />
     <BusLabel
@@ -10,10 +10,8 @@
     />
   </div>
 </template>
-
 <script>
 import BusLabel from './BusLabel.vue'
-
 export default {
   name: 'BusSignal',
   components: { BusLabel },

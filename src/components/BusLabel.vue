@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <span v-if="showInvisibleRegisters && !mobileView" style="margin-right: 5px;">
     {{ busName }} : {{ formatNumber(busValue) }}
   </span>
@@ -6,7 +6,6 @@
     {{ busName.toLowerCase() }}
   </span>
 </template>
-
 <script>
 export default {
   name: 'BusLabel',

@@ -1,15 +1,11 @@
-// Rich diagnostic error utilities for WLAN toolchain (lexer/parser/analyzer)
-
+﻿
 import { BaseAppError, ErrorLevel } from '../errors';
-
 export type Severity = 'error' | 'warning' | 'info';
-
 export interface DiagnosticLocation {
   line: number; // 1-based
   col: number; // 1-based, visual column
   length?: number; // length of the offending span (defaults to 1)
 }
-
 export interface DiagnosticData {
   code?: string;
   hint?: string;
@@ -17,7 +13,6 @@ export interface DiagnosticData {
   loc?: DiagnosticLocation;
   frame?: string;
 }
-
 export function makeCodeFrame(
   source: string,
   lineOneBased: number,
@@ -30,10 +25,8 @@ export function makeCodeFrame(
   const lineIdx = Math.max(0, Math.min(lines.length - 1, lineOneBased - 1));
   const startCtx = Math.max(0, lineIdx - contextLines);
   const endCtx = Math.min(lines.length - 1, lineIdx + contextLines);
-
   const lineNoWidth = String(endCtx + 1).length;
   const frameLines: string[] = [];
-
   for (let i = startCtx; i <= endCtx; i++) {
     const gutter = String(i + 1).padStart(lineNoWidth, ' ');
     frameLines.push(`${gutter} | ${lines[i]}`);
@@ -43,17 +36,14 @@ export function makeCodeFrame(
       frameLines.push(`${' '.repeat(lineNoWidth)} | ${underline}`);
     }
   }
-
   return frameLines.join('\n');
 }
-
 export class WlanError extends BaseAppError<string, DiagnosticData> {
   code?: string;
   hint?: string;
   severity: Severity;
   loc?: DiagnosticLocation;
   frame?: string;
-
   constructor(message: string, options?: DiagnosticData & { source?: string }) {
     const composed = WlanError.composeMessage(message, options);
     super(composed, {
@@ -69,13 +59,11 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
     this.loc = options?.loc;
     this.frame = options?.frame;
   }
-
   static composeMessage(message: string, options?: DiagnosticData & { source?: string }): string {
     const parts: string[] = [];
     const code = options?.code ? `[${options.code}] ` : '';
     const where = options?.loc ? ` (linia ${options.loc.line}, kolumna ${options.loc.col})` : '';
     parts.push(`${code}${message}${where}`);
-
     const frame =
       options?.frame ||
       (options?.source && options.loc ? makeCodeFrame(options.source, options.loc.line, options.loc.col, options.loc.length || 1) : '');
@@ -84,7 +72,6 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
     return parts.join('');
   }
 }
-
 export function errorFromToken(
   source: string,
   token: { line: number; col: number; text?: string },
@@ -100,7 +87,6 @@ export function errorFromToken(
     source,
   });
 }
-
 export function errorAt(
   source: string,
   line: number,
@@ -112,7 +98,6 @@ export function errorAt(
 ): WlanError {
   return new WlanError(message, { code, hint, loc: { line, col, length }, source });
 }
-
 function severityToLevel(sev?: Severity): ErrorLevel {
   switch (sev) {
     case 'info':

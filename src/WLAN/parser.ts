@@ -1,13 +1,10 @@
-import { lex } from './lexer';
+﻿import { lex } from './lexer';
 import { Token, TokenType, ProgramAst, AstNode, Operand, DirectiveNode, InstructionNode, ConditionalNode } from './model';
 import { WlanError, errorFromToken, errorAt } from './error';
-
 const REGISTER_REGEX = /^(A|S|L|I|AK|PC|IR)$/i;
-
 function parseNumberLiteral(text: string): number {
   const neg = text.startsWith('-');
   const raw = neg ? text.slice(1) : text;
-
   let val: number;
   if (/^0[xX]/.test(raw)) {
     val = parseInt(raw.slice(2), 16);
@@ -18,29 +15,19 @@ function parseNumberLiteral(text: string): number {
   }
   return neg ? -val : val;
 }
-
-/**
- * Parser budujący AST:
- * - Program → LabelDefinition | Instruction | Directive | Conditional
- */
 export class Parser {
   tokens: Token[];
   pos: number;
-
   constructor(private readonly source: string) {
     this.tokens = lex(source);
-    // console.log('TOKENS:', this.tokens);
     this.pos = 0;
   }
-
   peek(offset = 0): Token | null {
     return this.tokens[this.pos + offset] || null;
   }
-
   consume(): Token {
     return this.tokens[this.pos++];
   }
-
   expect(type: TokenType, text?: string): Token {
     const tok = this.peek();
     if (!tok || tok.type !== type || (text && tok.text !== text)) {
@@ -54,15 +41,12 @@ export class Parser {
     }
     return this.consume();
   }
-
   parseProgram(): ProgramAst {
     const body: AstNode[] = [];
     while (this.peek()) {
       while (this.peek()?.type === 'NEWLINE') this.consume();
-
       const tok = this.peek();
       if (!tok) break;
-
       if (tok.type === 'IDENT' && this.peek(1)?.type === 'COLON') {
         const result = this.parseLabelDefinition();
         Array.isArray(result) ? body.push(...result) : body.push(result);
@@ -77,38 +61,30 @@ export class Parser {
           'Być może brakuje nowej linii lub instrukcja/etykieta jest błędnie zapisana.'
         );
       }
-
       while (this.peek()?.type === 'NEWLINE') this.consume();
     }
     return { type: 'Program', body };
   }
-  
   parseLabelDefinition(): AstNode | AstNode[] {
     const nameTok = this.consume(); // IDENT
     this.expect(TokenType.COLON, ':');
-
     const label: AstNode = {
       type: 'LabelDefinition',
       name: nameTok.text,
       line: nameTok.line,
     };
-
     const next = this.peek();
     if (!next || ['NEWLINE', 'SEMICOLON'].includes(next.type)) {
       return label;
     }
-
     if (next.type === 'IDENT') {
       return [label, this.parseInstruction()];
     }
-
     return label;
   }
-
   parseInstruction(): InstructionNode | DirectiveNode {
     const tok = this.consume(); // IDENT
     const name = tok.text.toUpperCase();
-
     if (name === 'RST') {
       const operand = this.parseOperand();
       return {
@@ -118,9 +94,7 @@ export class Parser {
         line: tok.line,
       } as DirectiveNode;
     }
-
     if (name === 'RPA') {
-      // RPA nie przyjmuje operandów
       return {
         type: 'Directive',
         name: name,
@@ -128,35 +102,26 @@ export class Parser {
         line: tok.line,
       } as DirectiveNode;
     }
-
     const operands: Operand[] = [];
-
     while (this.peek()) {
       const tok = this.peek();
-
       if (['NEWLINE', 'SEMICOLON'].includes(tok.type)) break;
       if (tok.type === 'COLON' && this.peek(1)?.type === 'IDENT') break;
-
       if (['IDENT', 'NUMBER', 'AT'].includes(tok.type)) {
         operands.push(this.parseOperand());
-
         if (this.peek()?.type === 'COMMA') {
           this.consume(); // Zjedz przecinek, ale kontynuuj
         } else {
-          // Jeśli po operandoe przyjdzie coś dziwnego, wyjdź zamiast erroru
           if (!['NEWLINE', 'SEMICOLON', 'COLON'].includes(this.peek()?.type)) break;
         }
       } else {
         break; // zamiast rzucać wyjątek - przerwij
       }
     }
-
     return { type: 'Instruction', name, operands, line: tok.line } as InstructionNode;
   }
-
   parseOperand(): Operand {
     const tok = this.peek();
-
     if (tok.type === TokenType.COMMA) {
       throw errorFromToken(
         this.source,
@@ -166,9 +131,7 @@ export class Parser {
         'Usuń zbędny przecinek lub dodaj brakujący operand przed przecinkiem.'
       );
     }
-
     if (!tok) throw new WlanError(`Brak tokena przy parsowaniu operandu`, { code: 'PARSE_NO_TOKEN', source: this.source });
-
     if (tok.type === TokenType.COLON) {
       throw errorFromToken(
         this.source,
@@ -178,13 +141,11 @@ export class Parser {
         'Dwukropek kończy etykietę. Upewnij się, że dwukropek stoi po nazwie etykiety.'
       );
     }
-
     if (tok.type === TokenType.AT) {
       this.consume();
       const ident = this.expect(TokenType.IDENT);
       return { type: 'LabelRef', name: ident.text, line: ident.line } as Operand;
     }
-
     if (tok.type === TokenType.NUMBER) {
       const t = this.consume();
       const value = parseNumberLiteral(t.text);
@@ -199,7 +160,6 @@ export class Parser {
       }
       return { type: 'Immediate', value, line: t.line } as Operand;
     }
-
     if (tok.type === TokenType.IDENT) {
       const t = this.consume();
       if (REGISTER_REGEX.test(t.text)) {
@@ -208,7 +168,6 @@ export class Parser {
         return { type: 'LabelRef', name: t.text, line: t.line } as Operand;
       }
     }
-
     throw errorFromToken(
       this.source,
       tok,
@@ -218,12 +177,6 @@ export class Parser {
     );
   }
 }
-
-/**
- * Parser helper
- * @param {string} source
- * @returns {object} AST
- */
 export function parse(source: string): ProgramAst {
   return new Parser(source).parseProgram();
 }

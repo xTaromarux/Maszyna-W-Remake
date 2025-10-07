@@ -1,4 +1,4 @@
-.simpleSvgButton {
+﻿.simpleSvgButton {
   all: unset;
   cursor: pointer;
   display: flex;
@@ -18,7 +18,6 @@
   transform: scale(0.9);
   transition: 0.1s;
 }
-
 button {
   padding: 0.5rem;
   border: 0.0625rem solid #8888;
@@ -49,26 +48,12 @@ button:has(span) {
   padding-right: 1rem !important;
 }
 
-// button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
-//   background-color: var(--buttonHoverColor, #fff);
-//   transform: translateY(-0.05rem) scale(1.05);
-//   transition: 0.1s ease-out;
-// }
-
-// button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
-//   background-color: var(--buttonActiveColor, #aaa);
-//   transform: translateY(0.01rem) scale(0.98);
-//   transition: 0.01s ease-out;
-// }
-
 button svg {
   width: 2rem;
   height: 2rem;
-
   stroke: 888;
   color: #888;
 }
-
 .SvgAndTextButton {
   all: unset;
   cursor: pointer;
@@ -92,7 +77,6 @@ button svg {
 .SvgAndTextButton:active {
   background-color: #004c99;
 }
-
 .SvgAndTextButton svg {
   width: 1.5rem;
   height: 1.5rem;
@@ -102,17 +86,14 @@ button svg {
   animation: spin 2.5s forwards;
   color: white;
 }
-
 .SvgAndTextButton:hover svg {
   transform: rotate(-380deg);
   transition: transform 0.6s ease;
 }
-
 .SvgAndTextButton:hover:active svg {
   transform: rotate(-20deg);
   transition: transform 0s ease;
 }
-
 .SvgAndTextButton:active svg {
   transform: rotate(0deg);
   transition: transform 0s ease;

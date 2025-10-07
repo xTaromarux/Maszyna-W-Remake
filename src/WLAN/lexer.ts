@@ -1,6 +1,5 @@
-import type { Token, TokenType } from './model';
+﻿import type { Token, TokenType } from './model';
 import { WlanError, errorAt } from './error';
-
 const tokenSpecs: [string, RegExp][] = [
   ['WHITESPACE', /^[ \t\r]+/],
   ['NEWLINE', /^\r?\n/],
@@ -13,27 +12,22 @@ const tokenSpecs: [string, RegExp][] = [
   ['AT', /^@/],
   ['IDENT', /^[\p{L}_][\p{L}0-9_]*/u],
 ];
-
 export function lex(input: string): Token[] {
   const tokens: Token[] = [];
   let pos = 0;
   let line = 1;
   let col = 1;
-
   while (pos < input.length) {
     const slice = input.slice(pos);
     let matched = false;
-
     for (const [type, regex] of tokenSpecs) {
       const m = regex.exec(slice);
       if (!m) continue;
-
       matched = true;
       const text = m[0];
       const tokenStartLine = line;
       const tokenStartCol = col;
       const newlines = text.match(/\r?\n/g);
-
       if (newlines) {
         line += newlines.length;
         const lastLf = Math.max(text.lastIndexOf('\n'), text.lastIndexOf('\r'));
@@ -42,23 +36,17 @@ export function lex(input: string): Token[] {
       } else {
         col += text.length;
       }
-
       pos += text.length;
-
-      // Pomiń whitespace i komentarze
       if (['WHITESPACE', 'COMMENT_SLASH', 'COMMENT_SEMI'].includes(type)) break;
-
       tokens.push({ type, text, line: tokenStartLine, col: tokenStartCol });
       break;
     }
-
     if (!matched) {
       if (slice[0] === '\r') {
         pos++;
         continue; // pomiń bez błędu
       }
       const unknownChar = input[pos];
-      // Zgłoś błąd leksykalny z ramką kodu
       throw errorAt(
         input,
         line,
@@ -71,6 +59,4 @@ export function lex(input: string): Token[] {
   }
   return tokens;
 }
-
-// Eksport alternatywny
 export { lex as tokenize };

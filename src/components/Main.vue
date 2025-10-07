@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <TopBar
     @open-chat="aiChatOpen = true"
     @open-settings="settingsOpen = true"
@@ -7,7 +7,6 @@
     :hasConsoleErrors="hasConsoleErrors"
     :ws-status="wsStatus"
   />
-
   <div id="wLayout">
     <MaszynaW
       :manual-mode="manualMode"
@@ -57,7 +56,6 @@
       @update:WS="WS = $event"
       @update:number-format="({ field, value }) => (registerFormats[field] = value)"
     />
-
     <div id="inputs">
       <ProgramEditor
         :manual-mode="manualMode"
@@ -66,7 +64,6 @@
         :compiled-code="compiledCode"
         :active-line="activeLine"
         :next-line="nextLine"
-
         :show-io="extras?.io?.rbRegister"
         :dev-in="DEV_IN"
         :dev-out="DEV_OUT"
@@ -78,11 +75,9 @@
         @toggle-breakpoint="toggleBreakpoint"
         @setManualMode="(flag) => (flag ? manualModeCheck() : manualModeUncheck())"
         @update:code="(code) => (this.code = code)"
-
         @update:devIn="(v) => { DEV_IN = v; DEV_READY = v ? 0 : 1 }"
         @update:devReady="(v) => { DEV_READY = v }"
       />
-      <!--HACK WITH COMPILE CODE 2, it is an old version of the compile code function-->
       <ExecutionControls
         :manual-mode="manualMode"
         :code-compiled="codeCompiled"
@@ -98,7 +93,6 @@
         @stop="stopRun"
       />
     </div>
-
     <ProgramSection
       :manualMode="manualMode"
       :commandList="commandList"
@@ -108,7 +102,6 @@
       @log="addLog($event.message, $event.class, $event.error)"
       @initMemory="applyInitMemory($event)"
     />
-
     <ConsoleDock
       :logs="logs.slice().reverse()"
       :manual-mode="manualMode"
@@ -134,8 +127,6 @@
       @clear-breakpoints="(() => { breakpoints.clear(); breakpoints = new Set(breakpoints); addLog('Usunięto wszystkie breakpointy', 'system'); })()"
       :class="{ 'console-collapsed': !consoleOpen }"
     />
-
-    <!-- Console indicator - visible only when console is collapsed -->
     <div
       v-if="!consoleOpen"
       class="console-indicator"
@@ -143,9 +134,7 @@
       @click="toggleConsole"
       title="Click to open console"
     />
-
     <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
-
     <SettingsOverlay
       :settings-open="settingsOpen"
       :is-mobile="isMobile"
@@ -172,7 +161,6 @@
       @update:memoryAddresBits="memoryAddresBits = $event"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
     />
-
     <CommandList
       :visible="commandListOpen"
       :commandList="commandList"
@@ -180,7 +168,6 @@
       @update:commandList="commandList = $event"
       @close="closePopups('commandListOpen')"
     />
-
     <AiChat
       :visible="aiChatOpen"
       @close="closePopups('aiChatOpen')"
@@ -190,7 +177,6 @@
     />
   </div>
 </template>
-
 <script>
 import MaszynaW from '@/components/MaszynaW.vue';
 import CommandList from './CommandList.vue';
@@ -212,10 +198,8 @@ import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
 import { compileCodeExternal } from '@/WLAN/compiler';
-
 export default {
   name: 'MainComponent',
-
   components: {
     MaszynaW,
     CommandList,
@@ -235,17 +219,14 @@ export default {
     ExecutionControls,
     ProgramEditor,
   },
-
   computed: {
     anyPopupOpen() {
       return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
     },
   },
-
   created() {
     this.ws = null;
   },
-
   data() {
     return {
       _skipNextBreakpoint: false,
@@ -259,7 +240,7 @@ export default {
       _lastLogTs: 0,
       platform: import.meta.env.VITE_APP_PLATFORM,
       ws: null,
-      wsStatus: 'disconnected', // 'connecting' | 'connected' | 'error'
+      wsStatus: 'disconnected',
       wsPingTimer: null,
       decSigned: false,
       _condState: null,
@@ -276,7 +257,6 @@ export default {
       programCounter: 0,
       JAML: 0,
       RZInputs: [0,0,0,0],
-
       X: 0,
       Y: 0,
       RB: 0,
@@ -296,31 +276,23 @@ export default {
       DEV_IN: 0,
       DEV_OUT: 0,
       DEV_BUSY: false,
-
       runLoopTimer: null,
       isRunning: false,
-
       code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
       program: 'DOD',
       compiledCode: [],
-      // Structured micro-program (preferred execution format)
       compiledProgram: [],
       activeInstrIndex: -1,
       activePhaseIndex: 0,
       activeLine: 0,
       nextLine: new Set(),
-      _stepGuard: 0, // licznik anty-pętli
-      _branchJoin: null, // punkt złączenia po CJUMP (compileCode2)
-      // Array to store active timeout IDs for signal management
+      _stepGuard: 0,
+      _branchJoin: null,
       activeTimeouts: [],
-
-      // DEFAULT IS 100ms
       oddDelay: 400,
       busHoldMs: 200,
       _busHoldTimers: { A: null, S: null },
-
       commandList,
-
       numberFormat: 'dec',
       registerFormats: {
         L: 'dec',
@@ -341,7 +313,6 @@ export default {
         BusA: 'dec',
         BusS: 'dec',
       },
-
       avaiableSignals: {
         always: [
           'il',
@@ -376,7 +347,6 @@ export default {
         xRegister: ['wyx', 'wex'],
         yRegister: ['wyy', 'wey'],
       },
-
       signals: {
         as: false,
         sa: false,
@@ -403,7 +373,6 @@ export default {
         weja: false,
         wyak: false,
         przep: false,
-
         dod: false,
         ode: false,
         mno: false,
@@ -428,9 +397,7 @@ export default {
         // Y
         wyy: false,
         wey: false,
-
         stop: false,
-
         wyws: false,
         iws: false,
         dws: false,
@@ -448,17 +415,13 @@ export default {
       },
       extras: this.getDefaultExtras(),
       logs: [],
-
       manualMode: true,
       codeCompiled: false,
-
       disappearBlour: false,
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
-
       lightMode: true,
-
       consoleOpen: false,
       hasConsoleErrors: false,
     };
@@ -480,15 +443,13 @@ export default {
           this.ws = null;
         }
         this.wsStatus = 'connecting';
-        // malutkie opóźnienie żeby zamknąć stary socket „do końca”
         setTimeout(() => this.initWebsocket(), 150);
       } catch (e) {
         this.wsStatus = 'error';
         this.addLog('[WS] Reconnect failed', 'Error', { message: String(e) });
       }
     },
-
-    holdBus(which){ // 'A' lub 'S'
+    holdBus(which){
       const key = which === 'A' ? 'busA' : 'busS';
       this.signals[key] = true;
       const slot = which === 'A' ? 'A' : 'S';
@@ -498,7 +459,6 @@ export default {
         this._busHoldTimers[slot] = null;
       }, this.busHoldMs);
     },
-
     toSigned(value, bits) {
       const mod = 1 << bits;
       const mask = mod - 1;
@@ -511,17 +471,17 @@ export default {
         xRegister: false,
         yRegister: false,
         io: { rbRegister: false, gRegister: false },
-        stack: { 
+        stack: {
           wsRegister: false,
-          wylsSignal: false  
+          wylsSignal: false
         },
-        interrupts: { 
-          rzRegister: false, 
-          rpRegister: false, 
-          rmRegister: false, 
-          apRegister: false, 
+        interrupts: {
+          rzRegister: false,
+          rpRegister: false,
+          rmRegister: false,
+          apRegister: false,
           rintSignal: false,
-          eniSignal: false, 
+          eniSignal: false,
         },
         dl: false,
         jamlExtras: false,
@@ -529,7 +489,6 @@ export default {
         showInvisibleRegisters: false,
       };
     },
-
     mergeExtras(current, patch) {
       const base = this.getDefaultExtras();
       const src = current || {};
@@ -543,27 +502,19 @@ export default {
         interrupts: { ...base.interrupts, ...(src.interrupts || {}), ...(p.interrupts || {}) },
       };
     },
-
     to8(v) {
       return v & 0xff;
     },
-
-    // Dynamic word size masking based on machine word size (codeBits + addresBits)
     toWord(v) {
       return v & this.wordMask();
     },
-
-    // Dynamic word mask based on actual machine word size (codeBits + addresBits)
     wordMask() {
       return (1 << (this.codeBits + this.addresBits)) - 1;
     },
-
     addrMask() {
       return (1 << this.memoryAddresBits) - 1;
     },
-
     handleProgramSectionCompile(payload) {
-      // Accept both legacy string and structured payload from ProgramSection
       if (typeof payload === 'string') {
         this.code = payload;
         this.compiledCode = payload
@@ -578,7 +529,6 @@ export default {
         this.nextLine.clear();
         return;
       }
-
       const { text, program } = payload || {};
       if (typeof text === 'string') {
         this.code = text;
@@ -595,14 +545,11 @@ export default {
       this.nextLine.clear();
       this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
     },
-
     applyInitMemory(assignments) {
-      // assignments: Array<{ addr:number, val:number }>
       const size = 1 << this.memoryAddresBits;
       const nextMem = new Array(size).fill(0);
-      // start from current mem to preserve any manual setup
       for (let i = 0; i < Math.min(this.mem.length, size); i++) nextMem[i] = this.mem[i];
-      const mask = this.wordMask(); // Dynamic mask based on codeBits + addresBits
+      const mask = this.wordMask();
       for (const { addr, val } of assignments) {
         if (addr >= 0 && addr < size) {
           nextMem[addr] = val & mask;
@@ -618,13 +565,10 @@ export default {
         this.wsStatus = 'connecting';
         this.ws = new WebSocket('ws://localhost:8080'); // lub IP ESP32
         this.ws.binaryType = 'arraybuffer';
-
         this.ws.addEventListener('open', () => {
           this.wsStatus = 'connected';
           this.addLog('[WS] Connected to server', 'system');
           this.sendFullDataToESP();
-
-          // prosty ping, by utrzymać i weryfikować połączenie
           this.wsPingTimer && clearInterval(this.wsPingTimer);
           this.wsPingTimer = setInterval(() => {
             if (this.ws?.readyState === WebSocket.OPEN) {
@@ -632,31 +576,24 @@ export default {
             }
           }, 10000);
         });
-
         this.ws.addEventListener('close', () => {
           this.wsStatus = 'disconnected';
           this.addLog('[WS] Disconnected', 'system');
           this.wsPingTimer && clearInterval(this.wsPingTimer);
           this.wsPingTimer = null;
         });
-
         this.ws.addEventListener('error', (err) => {
           this.wsStatus = 'error';
           this.addLog('[WS] Connection error', 'Error', { message: String(err) });
         });
-
         this.ws.addEventListener('message', async ({ data }) => {
           let text;
           if (data instanceof Blob) text = await data.text();
           else if (data instanceof ArrayBuffer) text = new TextDecoder().decode(data);
           else text = data;
-
           let msg;
           try { msg = JSON.parse(text); } catch (_) { return; }
-
           if (msg.type === 'pong') return;
-
-          // ESP32 sygnały z przycisków
           if (msg.type === 'button_press') {
             this.handleRemoteToggleESPWebSocket(msg.buttonName);
           }
@@ -666,7 +603,6 @@ export default {
         this.addLog('[WS] Init failed', 'Error', { message: String(e) });
       }
     },
-
     handleRemoteToggleLocalWebSocket(id, value) {
       this.suppressBroadcast = true;
       if (value) {
@@ -677,9 +613,7 @@ export default {
       this.signals[id] = value;
       this.suppressBroadcast = false;
     },
-
     checkConflict(signalName) {
-      // Groups of mutually conflicting signals:
       const groups = [
         ['wyad', 'wyl'],
         ['wys', 'wyak'],
@@ -687,16 +621,9 @@ export default {
         ['czyt', 'pisz'],
         ['iak', 'dak'],
       ];
-
-      // Sygnały używające magistrali A
       const busASignals = ['wyl', 'wel', 'wyad', 'wea', 'as', 'sa', 'wyws', 'wyap', 'wyrm', 'werm'];
-
-      // Sygnały używające magistrali S
       const busSSignals = ['wei', 'weja', 'wyak', 'wyx', 'wex', 'wyy', 'wey', 'wes', 'wys', 'as', 'sa', 'wyls', 'wyg', 'wyrb', 'werb', 'start'];
-
-      // One JAML Operation at a Time Group:
       const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
-
       for (const group of groups) {
         if (group.includes(signalName)) {
           for (const other of group) {
@@ -707,8 +634,6 @@ export default {
           }
         }
       }
-
-      // Sprawdzenie konfliktów magistrali A
       if (busASignals.includes(signalName)) {
         for (const other of busASignals) {
           if (other === signalName) continue;
@@ -717,8 +642,6 @@ export default {
           }
         }
       }
-
-      // Sprawdzenie konfliktów magistrali S
       if (busSSignals.includes(signalName)) {
         for (const other of busSSignals) {
           if (other === signalName) continue;
@@ -727,7 +650,6 @@ export default {
           }
         }
       }
-
       if (jalOperations.includes(signalName)) {
         for (const other of jalOperations) {
           if (other === signalName) continue;
@@ -736,13 +658,10 @@ export default {
           }
         }
       }
-
       return null;
     },
-
     handleRemoteToggleESPWebSocket(value) {
       this.suppressBroadcast = true;
-
       if (!this.signals[value]) {
         this.nextLine.add(value);
       } else {
@@ -751,9 +670,7 @@ export default {
       this.signals[value] = !this.signals[value];
       this.suppressBroadcast = false;
     },
-
     checkConflict(signalName) {
-      // Groups of mutually conflicting signals:
       const groups = [
         ['wyad', 'wyl'],
         ['wys', 'wyak'],
@@ -761,9 +678,7 @@ export default {
         ['czyt', 'pisz'],
         ['iak', 'dak'],
       ];
-      // One JAML Operation at a Time Group:
       const jalOperations = ['dod', 'ode', 'przep', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
-
       for (const group of groups) {
         if (group.includes(signalName)) {
           for (const other of group) {
@@ -774,7 +689,6 @@ export default {
           }
         }
       }
-
       if (jalOperations.includes(signalName)) {
         for (const other of jalOperations) {
           if (other === signalName) continue;
@@ -783,15 +697,11 @@ export default {
           }
         }
       }
-
       return null;
     },
-
     handleSignalToggle(signalName) {
       if (!this.manualMode) return;
-
       const willBeOn = !this.signals[signalName];
-
       if (willBeOn) {
         const conflictMsg = this.checkConflict(signalName);
         if (conflictMsg) {
@@ -806,13 +716,11 @@ export default {
           return;
         }
       }
-
       this.errorMessage = '';
       if (this.errorTimeoutId) {
         clearTimeout(this.errorTimeoutId);
         this.errorTimeoutId = null;
       }
-
       if (this.nextLine.has(signalName)) {
         this.nextLine.delete(signalName);
         this.signals[signalName] = false;
@@ -821,7 +729,6 @@ export default {
         this.signals[signalName] = true;
       }
     },
-
     sendPartialData(fieldName, newValue) {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(
@@ -833,12 +740,10 @@ export default {
         );
       }
     },
-
     sendMemUpdate() {
       const addrs = this.mem.slice(0, 4).map((_, idx) => idx);
       const args = this.mem.slice(0, 4).map((val) => this.decToArgument(val));
       const vals = this.mem.slice(0, 4);
-
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(
           JSON.stringify({
@@ -852,13 +757,11 @@ export default {
         );
       }
     },
-
     sendFullDataToESP() {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         const addrs = this.mem.slice(0, 4).map((val, idx) => idx);
         const args = this.mem.slice(0, 4).map((val) => this.decToArgument(val));
         const vals = this.mem.slice(0, 4);
-
         const data = {
           acc: this.ACC,
           a: this.A,
@@ -870,7 +773,6 @@ export default {
           vals,
           vals,
         };
-
         this.ws.send(
           JSON.stringify({
             type: 'mem-update',
@@ -879,19 +781,15 @@ export default {
         );
       }
     },
-
     handleRemoteMemUpdate(idx, value) {
       this.suppressBroadcast = true;
       this.$set(this.mem, idx, value);
       this.suppressBroadcast = false;
     },
-
     loadFromLS() {
       const data = localStorage.getItem('W');
       if (data) {
         const parsed = JSON.parse(data);
-
-        // Only restore settings, not register values or code
         const settingsToRestore = [
           'addresBits',
           'codeBits',
@@ -904,7 +802,6 @@ export default {
           'autocompleteEnabled',
           'decSigned',
         ];
-
         settingsToRestore.forEach((setting) => {
           if (parsed[setting] !== undefined) {
             if (setting === 'extras') {
@@ -914,14 +811,10 @@ export default {
             }
           }
         });
-
-        // Validate memoryAddresBits to ensure it doesn't exceed the limit of 10 (2^10 = 1024 cells)
         if (this.memoryAddresBits > 10) {
           this.memoryAddresBits = 10;
           this.addLog('Rozmiar pamięci został ograniczony do maksymalnie 1024 komórek (10 bitów)', 'system');
         }
-
-        // Always reset to default values for registers and program state
         this.A = 0;
         this.ACC = 0;
         this.JAML = 0;
@@ -939,43 +832,31 @@ export default {
         this.S = 0;
         this.BusA = 0;
         this.BusS = 0;
-
-        // Reset code to default
         this.code = 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;';
         this.compiledCode = [];
         this.activeLine = 0;
-
         this.nextLine = new Set();
         this.codeCompiled = false;
         this.manualMode = true;
-
-        // Reset all signals to false
         for (const key in this.signals) {
           this.signals[key] = false;
         }
-
-        // Don't reset logs - they should persist during the session
       }
     },
     saveToLS() {
-      // Create a copy of data without logs
       const dataToSave = { ...this.$data };
       delete dataToSave.logs;
       delete dataToSave.hasConsoleErrors;
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
     addLog(message, classification = 'info', errorObj = null) {
-
       const timestamp = new Date();
       const key = `${classification}|${message}`;
       const now = timestamp.getTime();
-
-      // reset liczników po przerwie > 1000 ms
       if (now - (this._lastLogTs || 0) > 1000) {
         this._lastLogKey = null;
         this._lastLogCount = 0;
       }
-
       if (this._lastLogKey === key) {
         this._lastLogCount += 1;
         const last = this.logs[this.logs.length - 1];
@@ -984,21 +865,17 @@ export default {
           last.timestamp = timestamp;
         }
         this._lastLogTs = now;
-        return; // nie dopisujemy nowej pozycji
+        return;
       } else {
         this._lastLogKey = key;
         this._lastLogCount = 0;
         this._lastLogTs = now;
       }
-
-      // Enhanced log entry structure that supports both legacy and new error formats
       const logEntry = {
         timestamp,
         message,
         class: classification,
       };
-
-      // If an error object is provided (e.g., WlanError or BaseAppError)
       if (errorObj) {
         logEntry.error = {
           message: errorObj.message || message,
@@ -1011,15 +888,11 @@ export default {
           context: errorObj.context,
         };
       }
-
       this.logs.push(logEntry);
-
-      // Check if this is an error and set the error flag
       const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu', 'błąd sygnału'];
       const isError =
         errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase())) ||
         (errorObj && ['ERROR', 'CRITICAL'].includes(errorObj.level));
-
       if (isError) {
         this.hasConsoleErrors = true;
       }
@@ -1028,18 +901,16 @@ export default {
       if (typeof number !== 'number' || isNaN(number)) {
         return 'Błąd: Nieprawidłowa liczba.';
       }
-
       const formatters = {
         dec: () => {
           if (this.decSigned) {
             return this.toSigned(number, this.codeBits + this.addresBits);
           }
            return number | 0;
-        },        
+        },
         hex: () => '0x' + Math.floor(number).toString(16).toUpperCase(),
         bin: () => '0b' + Math.floor(number).toString(2),
       };
-
       return formatters[this.numberFormat]?.() ?? `EE${number}`;
     },
     decToCommand(dec) {
@@ -1048,21 +919,15 @@ export default {
     decToArgument(dec) {
       return dec & ((1 << this.memoryAddresBits) - 1);
     },
-
     resizeMemory() {
       const newSize = 1 << this.memoryAddresBits;
       const newMem = new Array(newSize).fill(0);
-
-      // Set default values for the first 8 memory locations if memory is large enough
       const defaultValues = [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000];
-
       for (let i = 0; i < Math.min(defaultValues.length, newSize); i++) {
         newMem[i] = defaultValues[i];
       }
-
       this.mem = newMem;
     },
-
     manualModeCheck() {
       this.manualMode = true;
       this.manualModeChanged();
@@ -1072,11 +937,8 @@ export default {
       this.manualModeChanged();
     },
     manualModeChanged() {
-      // Clear any active timeouts when switching modes
       this.clearActiveTimeouts();
-
       this.nextLine.clear();
-
       if (this.manualMode) {
         this.uncompileCode();
         this.addLog('Przejście w tryb ręczny – program wstrzymany i wyczyszczony.', 'system');
@@ -1086,68 +948,46 @@ export default {
       if (typeof popupName === 'string' && popupName in this.$data) {
         this[popupName] = false;
       }
-
       if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
         setTimeout(() => {
           this.disappearBlour = false;
         }, 1000);
       }
     },
-
     compileCode() {
       try {
         const { program, rawLines } = compileCodeExternal(this.code, {
           availableSignals: this.avaiableSignals,
           extras: this.extras,
         });
-
-        // 1) Ustawiamy program + surowe linie do podglądu
         this.compiledProgram = Array.isArray(program) ? program : [];
         this.compiledCode    = Array.isArray(rawLines) ? rawLines : [];
-
-        // 2) PRZYPISANIE srcLine
-        //    Dla zwykłej fazy: +1 linia
-        //    Dla fazy warunkowej: +3 linie (IF, @zero, @niezero)
-        //    Po każdej instrukcji doliczamy jej postAsm (jeśli były dopisane linie w assemblerze)
         let linePtr = 0;
         for (const entry of this.compiledProgram) {
           if (!entry || !Array.isArray(entry.phases)) continue;
-
           for (const phase of entry.phases) {
             if (phase && phase.conditional === true) {
-              // IF
               phase.srcLine = linePtr;
-
-              // pierwsze pod-fazy — nadajemy im "wirtualne" źródła do poprawnego highlightu
               const t0 = phase.truePhases && phase.truePhases[0];
               const f0 = phase.falsePhases && phase.falsePhases[0];
-              if (t0) t0.srcLine = linePtr + 1;   // linia z @zero ...
-              if (f0) f0.srcLine = linePtr + 2;   // linia z @niezero ...
-
+              if (t0) t0.srcLine = linePtr + 1;
+              if (f0) f0.srcLine = linePtr + 2;
               linePtr += 3;
             } else {
-              // zwykła faza
               if (phase) phase.srcLine = linePtr;
               linePtr += 1;
             }
           }
-
-          // jeśli generator dopisał tekstowe linie po instrukcji (postAsm),
-          // to w podglądzie one istnieją, więc licznik też trzeba przesunąć
           const extra = entry.meta?.postAsm;
           if (Array.isArray(extra) && extra.length) {
             linePtr += extra.length;
           }
-
-          // bazowy srcLine wpisu — „pierwsza” linia wpisu (pomocniczo)
           if (entry.phases?.length && Number.isFinite(entry.phases[0]?.srcLine)) {
             entry.srcLine = entry.phases[0].srcLine;
           } else {
             entry.srcLine = entry.srcLine ?? 0;
           }
         }
-
-        // 3) Reset stanu i start jak wcześniej
         this.codeCompiled = true;
         this.activeInstrIndex = -1;
         this.activePhaseIndex = 0;
@@ -1156,26 +996,22 @@ export default {
         this._branchJoin = null;
         this._stepGuard = 0;
         this.nextLine.clear();
-
         this.executeLine();
         this.addLog('Kod skompilowany pomyślnie (mikro-ASM)', 'kompilator rozkazów');
       } catch (e) {
         this.addLog(`Błąd kompilacji ASM: ${e?.message || String(e)}`, 'Error');
       }
     },
-
     uncompileCode() {
       this.codeCompiled = false;
       this.nextLine.clear();
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
-      this._condState = null; 
+      this._condState = null;
       this._branchJoin = null;
       this._stepGuard = 0;
     },
-
     executeLine() {
-      // Lokalny helper do highlightu
       const hlFrom = (obj) => {
         if (this._headless) return;
         if (obj && Number.isFinite(obj.srcLine)) {
@@ -1184,12 +1020,9 @@ export default {
         }
         this._refreshHighlight();
       };
-
-      // Lokalny helper do pauzy na breakpointach (działa tylko przy RUN/RUN-FAST)
       const shouldPauseOn = (line) => {
-        // jeśli mamy do pominięcia pierwszy breakpoint – zrób to tylko raz
         if (this._skipNextBreakpoint) {
-          this._skipNextBreakpoint = false;   // ← wypal „bezpiecznik”
+          this._skipNextBreakpoint = false;
           return false;
         }
         return (
@@ -1201,8 +1034,6 @@ export default {
           this.breakpoints.has(line)
         );
       };
-
-      // --- tryb mikro-programu ---
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
@@ -1211,30 +1042,23 @@ export default {
           this._branchJoin = null;
           this._condState = null;
         }
-
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
           this.addLog('Przerwano: przekroczono limit kroków (prawdopodobna pętla).', 'system');
           this.uncompileCode();
           return;
         }
-
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
-
         const instr = this.compiledProgram[this.activeInstrIndex];
         const rawPhase = instr.phases?.[this.activePhaseIndex] || {};
-
-        // --- FAZA WARUNKOWA ---
         if (rawPhase && rawPhase.conditional === true) {
-          // 1) Pierwszy krok: pokaż IF (bez wykonywania)
           if (!this._condState) {
             const cond = this.evaluateFlag(rawPhase.flag);
             const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
-
             this._condState = {
               list,
               idx: 0,
@@ -1242,31 +1066,21 @@ export default {
               phaseRef: rawPhase,
               stage: 'SHOW_IF',
             };
-
-            // Linia IF to srcLine fazy warunkowej
             const nextSrc = Number.isFinite(rawPhase.srcLine) ? rawPhase.srcLine : undefined;
-
-            // Pauza na breakpoint dokładnie na linii IF
             if (shouldPauseOn(nextSrc)) {
               if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
               this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
               this._stopRun();
               return;
             }
-
             hlFrom(rawPhase);
             return;
           }
-
-          // 2) Wykonywanie ciała wybranej gałęzi – po jednej pod-fazie na krok
           const st = this._condState;
           const curr = st.list[st.idx];
-
-          // Brak ciała gałęzi → zamknij fazę warunkową i przejdź dalej
           if (!curr) {
             this._condState = null;
             this.activePhaseIndex += 1;
-
             if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
               if (this._branchJoin != null) {
                 const join = this._branchJoin | 0;
@@ -1282,7 +1096,6 @@ export default {
               }
               this.activePhaseIndex = 0;
             }
-
             if (this.activeInstrIndex < this.compiledProgram.length) {
               const ni = this.compiledProgram[this.activeInstrIndex];
               const np = ni?.phases?.[this.activePhaseIndex];
@@ -1293,27 +1106,19 @@ export default {
             }
             return;
           }
-
-          // Kandydat na srcLine tej POD-FAZY (gdy nie ma, fallback to linia @zero/@niezero)
           const fallback = Number.isFinite(st.phaseRef?.srcLine)
             ? st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2)
             : undefined;
           const nextSrc = Number.isFinite(curr?.srcLine) ? curr.srcLine : fallback;
-
-          // Pauza na breakpoint PRZED wykonaniem tej pod-fazy
           if (shouldPauseOn(nextSrc)) {
             if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
             this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
             this._stopRun();
             return;
           }
-
-          // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
           const signals = new Set(Object.keys(curr).filter(k => curr[k] === true));
           this.nextLine = signals;
           this.executeSignalsFromNextLine();
-
-          // Skok bezpośredni z gałęzi?
           if (curr.wel === true) {
             const target = Number(this.programCounter) | 0;
             if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
@@ -1331,15 +1136,10 @@ export default {
             hlFrom(ap ?? ai);
             return;
           }
-
-          // Następna pod-faza tej samej gałęzi
           st.idx += 1;
-
           if (st.idx >= st.list.length) {
-            // zamknij IF i przejdź dalej
             this._condState = null;
             this.activePhaseIndex += 1;
-
             if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
               if (this._branchJoin != null) {
                 const join = this._branchJoin | 0;
@@ -1355,7 +1155,6 @@ export default {
               }
               this.activePhaseIndex = 0;
             }
-
             if (this.activeInstrIndex < this.compiledProgram.length) {
               const ni = this.compiledProgram[this.activeInstrIndex];
               const np = ni?.phases?.[this.activePhaseIndex];
@@ -1366,14 +1165,10 @@ export default {
             }
             return;
           }
-
-          // Jest kolejna pod-faza w tej samej gałęzi – tylko podświetl ją (wykona się w następnym kroku)
           const nextSub = st.list[st.idx];
           hlFrom(nextSub, st.phaseRef, st.pick);
           return;
         }
-
-        // --- zwykła faza ---
         if (rawPhase.END_BRANCH === true) {
           this.activeInstrIndex += 1;
           this.activePhaseIndex = 0;
@@ -1388,8 +1183,6 @@ export default {
           this.addLog('STOP – program zatrzymany', 'kompilator rozkazów');
           return;
         }
-
-        // Pauza na breakpoint PRZED wykonaniem zwykłej fazy
         {
           const nextSrc = Number.isFinite(rawPhase?.srcLine) ? rawPhase.srcLine : undefined;
           if (shouldPauseOn(nextSrc)) {
@@ -1399,16 +1192,12 @@ export default {
             return;
           }
         }
-
-        // Podświetl i wykonaj
         hlFrom(rawPhase);
         {
           const signalsSet = new Set(Object.keys(rawPhase).filter(k => rawPhase[k] === true));
           this.nextLine = signalsSet;
           this.executeSignalsFromNextLine();
         }
-
-        // Skok wel
         if (rawPhase.wel === true && !this._branchJoin) {
           const target = Number(this.programCounter) | 0;
           if (Number.isFinite(target) && target >= 0 && target < this.compiledProgram.length) {
@@ -1425,8 +1214,6 @@ export default {
           hlFrom(ap ?? ai);
           return;
         }
-
-        // Następna faza / instrukcja
         this.activePhaseIndex += 1;
         if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
           if (this._branchJoin != null) {
@@ -1439,20 +1226,16 @@ export default {
           }
           this.activePhaseIndex = 0;
         }
-
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
-
         const ni = this.compiledProgram[this.activeInstrIndex];
         const np = ni?.phases?.[this.activePhaseIndex];
         hlFrom(np ?? ni);
         return;
       }
-
-      // --- legacy (tekstowe fazy po średnikach) ---
       if (!this.manualMode) {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
@@ -1460,24 +1243,20 @@ export default {
           this.addLog('Kod zakończony', 'kompilator rozkazów');
           return;
         }
-
-        // Pauza na breakpoint PRZED wykonaniem tej linii
-        const nextSrc = this.activeLine; // za chwilę będzie wykonana
+        const nextSrc = this.activeLine;
         if (shouldPauseOn(nextSrc)) {
           this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
           this._stopRun();
-          this.activeLine = nextSrc; // zostaw highlight na tej linii
+          this.activeLine = nextSrc;
           if (!this._headless) this._refreshHighlight();
           return;
         }
-
         this._refreshHighlight();
         const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
         this.nextLine.clear();
         for (const c of commands) this.nextLine.add(c);
         this.executeSignalsFromNextLine();
         this.activeLine++;
-
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
           this.addLog('Kod zakończony', 'kompilator rozkazów');
@@ -1485,43 +1264,34 @@ export default {
           this._refreshHighlight();
         }
       } else {
-        // Tryb ręczny – ignorujemy breakpointy (użytkownik sam decyduje o kroku)
         this.executeSignalsFromNextLine();
         if (!this._headless) this._refreshHighlight();
       }
     },
-
     _refreshHighlight() {
       if (!this.codeCompiled) return;
-
     if (this._condState) {
       const st = this._condState;
-      // 1) pierwszy klik – SHOW_IF
       if (st.stage === 'SHOW_IF') {
         if (Number.isFinite(st.phaseRef?.srcLine)) {
           this.activeLine = st.phaseRef.srcLine;
           return;
         }
       }
-      // 2) drugi i kolejne – RUN_BRANCH
       const idx = Math.min(st.idx ?? 0, (st.list?.length ?? 1) - 1);
       const curr = st.list?.[idx];
       if (curr && Number.isFinite(curr.srcLine)) {
         this.activeLine = curr.srcLine;
         return;
       }
-      // awaryjnie – offset względem IF
       if (Number.isFinite(st.phaseRef?.srcLine)) {
         this.activeLine = st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2);
         return;
       }
     }
-
-      // Jeżeli mamy przypięte srcLine — to ich używamy.
       if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
         const instr = this.compiledProgram[this.activeInstrIndex];
         const phase = instr?.phases?.[this.activePhaseIndex];
-
         if (phase && Number.isFinite(phase.srcLine)) {
           this.activeLine = phase.srcLine;
           return;
@@ -1531,8 +1301,6 @@ export default {
           return;
         }
       }
-
-      // awaryjnie: licznik faz „na piechotę”
       let line = 0;
       const instrIdx = Math.max(0, this.activeInstrIndex);
       for (let i = 0; i < instrIdx; i++) {
@@ -1547,18 +1315,11 @@ export default {
         line += (p && p.conditional === true) ? 3 : 1;
       }
       this.activeLine = line;
-
-      // legacy zakres
       const max = (this.compiledCode?.length || 1) - 1;
       this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
     },
-
     executeSignalsFromNextLine() {
-      
-      // Clear all active timeouts to prevent signal overlap
       if (!this.isFastRunning) this.clearActiveTimeouts();
-
-      // all wy's first
       if (this.nextLine.has('wyl')) this.wyl();
       if (this.nextLine.has('czyt')) this.czyt();
       if (this.nextLine.has('pisz')) this.pisz();
@@ -1572,11 +1333,8 @@ export default {
       if (this.nextLine.has('wyls')) this.wyls();
       if (this.nextLine.has('wyg')) this.wyg();
       if (this.nextLine.has('wyrb')) this.wyrb();
-
       if (this.nextLine.has('sa')) this.sa();
       if (this.nextLine.has('as')) this.as();
-
-      // then all we's
       if (this.nextLine.has('wea')) this.wea();
       if (this.nextLine.has('weja')) this.weja();
       if (this.nextLine.has('wex')) this.wex();
@@ -1584,8 +1342,6 @@ export default {
       if (this.nextLine.has('wes')) this.wes();
       if (this.nextLine.has('wei')) this.wei();
       if (this.nextLine.has('wel')) this.wel();
-
-      // all math
       if (this.nextLine.has('dod')) this.dod();
       if (this.nextLine.has('ode')) this.ode();
       if (this.nextLine.has('przep')) this.przep();
@@ -1596,22 +1352,17 @@ export default {
       if (this.nextLine.has('neg')) this.neg();
       if (this.nextLine.has('lub')) this.lub();
       if (this.nextLine.has('i')) this.i();
-
       if (this.nextLine.has('iak')) this.iak();
       if (this.nextLine.has('dak')) this.dak();
-
       if (this.nextLine.has('weak')) this.weak();
-
       if (this.nextLine.has('il')) this.il();
       if (this.nextLine.has('dl')) this.dl();
-
       if (this.nextLine.has('iws')) this.iws();
       if (this.nextLine.has('dws')) this.dws();
       if (this.nextLine.has('werb')) this.werb();
       if (this.nextLine.has('start')) this.start();
       this.nextLine.clear();
     },
-
     getResolvedPhase(phase) {
       if (!phase) return {};
       if (phase.conditional === true) {
@@ -1622,13 +1373,11 @@ export default {
       }
       return phase;
     },
-
     evaluateFlag(flag) {
       if (!flag) return false;
       const f = String(flag).toUpperCase();
       const acc8 = this.ACC & this.wordMask();
       const SIGN = 1 << (this.codeBits + this.addresBits - 1);
-
       switch (f) {
         case 'ZAK':
         case 'ZERO':
@@ -1648,39 +1397,31 @@ export default {
           return false;
       }
     },
-
     stopRun() {
       this._stopRun();
       this.addLog('Wykonanie przerwane przyciskiem STOP.', 'system');
     },
-
     runCode() {
-      if (this.isRunning || !this.codeCompiled) return; 
+      if (this.isRunning || !this.codeCompiled) return;
       this.manualMode = false;
       this.clearActiveTimeouts();
-
-      this._skipNextBreakpoint = true; 
+      this._skipNextBreakpoint = true;
       this.isRunning = true;
       let stepsLeft = 100000;
-      const CHUNK = 1;                           // było 200
-      const TICK_MS = Math.max(1, this.oddDelay); // było 0
-
+      const CHUNK = 1;
+      const TICK_MS = Math.max(1, this.oddDelay);
       if (this.compiledProgram && this.compiledProgram.length > 0 && this.activeInstrIndex < 0) {
         this.activeInstrIndex = 0;
         this.activePhaseIndex = 0;
       }
-
       const tick = () => {
         if (!this.codeCompiled || !this.isRunning) return this._stopRun();
-
         let i = 0;
         while (i++ < CHUNK && stepsLeft-- > 0 && this.codeCompiled &&
               this.activeInstrIndex >= 0 && this.activeInstrIndex < this.compiledProgram.length) {
-          // jeżeli w trakcie ktoś kliknie STOP – przerwij natychmiast
           if (!this.isRunning) return this._stopRun();
           this.executeLine();
         }
-
         if (!this.codeCompiled || this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length) {
           return this._stopRun();
         }
@@ -1688,15 +1429,12 @@ export default {
           this.addLog('Przerwano: limit kroków RUN osiągnięty.', 'system');
           return this._stopRun();
         }
-
-        // <<< TU ZMIANA: planuj następny tik tylko gdy nadal isRunning >>>
         if (this.isRunning) {
           this.runLoopTimer = setTimeout(tick, TICK_MS);
         } else {
           this._stopRun();
         }
       };
-
       this.runLoopTimer = setTimeout(tick, TICK_MS);
     },
     _stopRun() {
@@ -1704,9 +1442,7 @@ export default {
       this.isRunning = false;
       this.isFastRunning = false;
       this.fastProgress = 0;
-
-      this._skipNextBreakpoint = false;   // ← reset
-
+      this._skipNextBreakpoint = false;
       this._headless = false;
       this.suppressBroadcast = false;
       this.clearActiveTimeouts();
@@ -1716,42 +1452,29 @@ export default {
       this.signals.busS = false;
       this.nextLine.clear();
     },
-
-
     async runToEndFast() {
       if (!this.codeCompiled) return;
-
-      // jeżeli coś „biegnie”, najpierw to ukróć
       this._stopRun();
-
       this.manualMode = false;
       this.clearActiveTimeouts();
-
-      // tryb bez-animacji: brak highlightów, brak timeoutów, brak broadcastów WS
       this._headless = true;
       this.suppressBroadcast = true;
-
       this.isRunning = true;
       this.isFastRunning = true;
       this.fastProgress = 0;
-
       const prevTitle = document.title;
       document.title = '▶️ Running…';
-
       try {
         const hasStructured = Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0;
         const totalInstr = hasStructured ? this.compiledProgram.length : (this.compiledCode?.length || 0);
-
         if (hasStructured && this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
           this.activePhaseIndex = 0;
         } else if (!hasStructured) {
           this.activeLine = Math.max(this.activeLine, 0);
         }
-
         let safety = 200_000;
         const CHUNK = 1200;
-
         while (this.codeCompiled && safety > 0) {
           for (let i = 0; i < CHUNK && safety > 0 && this.codeCompiled; i++, safety--) {
             if (hasStructured) {
@@ -1759,7 +1482,7 @@ export default {
                 this.uncompileCode();
                 break;
               }
-              this.executeLine(/* headless → patrz niżej */);
+              this.executeLine();
             } else {
               if (this.activeLine >= this.compiledCode.length) {
                 this.uncompileCode();
@@ -1768,8 +1491,6 @@ export default {
               this.executeLine();
             }
           }
-
-          // progres bez malowania UI (tylko liczba)
           if (hasStructured) {
             const cur = Math.max(0, Math.min(this.activeInstrIndex, totalInstr));
             this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
@@ -1777,33 +1498,25 @@ export default {
             const cur = Math.max(0, Math.min(this.activeLine, totalInstr));
             this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
           }
-
-          // daj event loopowi odetchnąć
           await new Promise(r => setTimeout(r, 0));s
-
           if (!this.codeCompiled) break;
           if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) break;
           if (!hasStructured && this.activeLine >= this.compiledCode.length) break;
         }
-
         if (safety <= 0) this.addLog('Przerwano: limit kroków RUN-FAST osiągnięty.', 'system');
       } finally {
-        this._headless = false;           // ← WRÓĆ do normalnego trybu
-        this.suppressBroadcast = false;   // ← ponownie pozwól na WS
+        this._headless = false;
+        this.suppressBroadcast = false;
         this.isFastRunning = false;
         this.isRunning = false;
         this.fastProgress = 0;
         document.title = prevTitle;
       }
     },
-
-    // natychmiastowy tryb – używany przez runToEndFast (bez sygnałów i bez timeoutów)
     _instant(fn) {
       if (this.isFastRunning) { fn(); return true; }
       return false;
     },
-
-    /* COMMANDS */
     il() {
       if (this._instant(() => { this.programCounter++; })) return;
       this.signals.il = true;
@@ -1858,7 +1571,6 @@ export default {
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
-
     iak() {
       if (this._instant(() => { this.ACC = this.toWord(this.ACC + 1); })) return;
       this.signals.iak = true;
@@ -1873,7 +1585,6 @@ export default {
       const timeoutId = setTimeout(() => { this.signals.dak = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-
     weak() {
       if (this._instant(() => { this.ACC = this.toWord(this.JAML); })) return;
       this.signals.weak = true;
@@ -1899,7 +1610,6 @@ export default {
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
-
     dod() {
       if (this._instant(() => { this.JAML = this.toWord(this.JAML + this.ACC); })) return;
       this.signals.dod = true;
@@ -1982,7 +1692,6 @@ export default {
       const timeoutId = setTimeout(() => { this.signals.i = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-
     wyx() {
       if (this._instant(() => { this.BusS = this.toWord(this.X); })) return;
       this.signals.wyx = true;
@@ -2019,7 +1728,6 @@ export default {
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
-
     wea() {
       if (this._instant(() => { this.A = this.BusA & this.addrMask(); })) return;
       this.signals.wea = true;
@@ -2047,24 +1755,19 @@ export default {
       this.activeTimeouts.push(timeoutId);
       this.holdBus('S');
     },
-
     stop() {
       if (this._instant(() => {
-        // zatrzymaj natychmiast w szybkim trybie
         this._stopRun();
         this.codeCompiled = false;
         this.nextLine.clear();
       })) return;
-
       this.signals.stop = true;
       const id = setTimeout(() => { this.signals.stop = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
-
       this._stopRun();
       this.codeCompiled = false;
       this.nextLine.clear();
     },
-
     as() {
       if (this._instant(() => { this.BusS = this.BusA; })) return;
       this.signals.as = true;
@@ -2085,7 +1788,6 @@ export default {
       this.activeTimeouts.push(timeoutId);
       this.holdBus('A'); this.holdBus('S');
     },
-
     czyt() {
       if (this._instant(() => {
         const idx = this.A & this.addrMask();
@@ -2108,7 +1810,6 @@ export default {
       const timeoutId = setTimeout(() => { this.signals.pisz = false; }, this.oddDelay);
       this.activeTimeouts.push(timeoutId);
     },
-
     wyws() {
       if (this._instant(() => { this.BusA = this.WS & this.addrMask(); })) return;
       this.signals.wyws = true;
@@ -2140,7 +1841,6 @@ export default {
       const id = setTimeout(() => { this.signals.dws = false; }, this.oddDelay);
       this.activeTimeouts.push(id);
     },
-
     wyls() {
       if (this._instant(() => { this.BusS = this.toWord(this.programCounter); })) return;
       this.signals.wyls = true;
@@ -2196,14 +1896,12 @@ export default {
     start() {
       if (this._instant(() => {
         if (this.DEV_BUSY) return;
-        // w szybkim trybie „symulujemy” natychmiastowe przygotowanie
         this.DEV_BUSY = true;
         this.DEV_READY = this.DEV_IN ? 0 : 1;
         this.DEV_BUSY = false;
         this.DEV_READY = this.DEV_IN ? 0 : 1;
         this.G = this.DEV_READY ? 1 : 0;
       })) return;
-
       if (this.DEV_BUSY) return;
       this.DEV_BUSY = true;
       this.signals.start = true;
@@ -2216,12 +1914,8 @@ export default {
       }, this.oddDelay * 2);
       this.activeTimeouts.push(id);
     },
-
     resetValues() {
-      // Clear any active timeouts first
       this.clearActiveTimeouts();
-
-      // Reset all register values to 0
       this.programCounter = 0;
       this.I = 0;
       this.ACC = 0;
@@ -2239,26 +1933,16 @@ export default {
       this.JAML = 0;
       this.BusA = 0;
       this.BusS = 0;
-
-      // Reset memory to all zeros
       this.mem = new Array(1 << this.memoryAddresBits).fill(0);
-
-      // Reset all signals to false
       for (const key in this.signals) {
         this.signals[key] = false;
       }
-
       this.nextLine.clear();
-
-      // Clear console logs
       this.logs = [];
       this.hasConsoleErrors = false;
-
       this.addLog('Wszystkie wartości rejestrów zostały zresetowane', 'system');
     },
-
     restoreDefaults() {
-      // Reset to default settings
       this.memoryAddresBits = 6;
       this.codeBits = 6;
       this.addresBits = 4;
@@ -2284,28 +1968,20 @@ export default {
         BusS: 'dec',
       };
       this.extras = this.getDefaultExtras();
-
-      // Resize memory according to new settings
       this.resizeMemory();
-
-      // Clear console logs
       this.logs = [];
       this.hasConsoleErrors = false;
       this.autocompleteEnabled = true;
       this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
     },
-
     openCommandList() {
       this.closePopups('settingsOpen');
       this.commandListOpen = true;
     },
-
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
-
       if (this.consoleOpen) {
         this.hasConsoleErrors = false;
-
         this.$nextTick(() => {
           if (window.innerWidth <= 1080 && this.$refs.console?.$el) {
             this.$refs.console.$el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2313,43 +1989,30 @@ export default {
         });
       }
     },
-
     closeConsole() {
       this.consoleOpen = false;
     },
-
     clearConsole() {
       this.logs = [];
       this.hasConsoleErrors = false;
       this.addLog('Konsola została wyczyszczona', 'system');
     },
-
     handleKeyPress(event) {
-      // Close console with Escape key
       if (event.key === 'Escape' && this.consoleOpen) {
         this.consoleOpen = false;
       }
     },
-
     clearActiveTimeouts() {
-      // Clear all active timeouts and reset all signals to false
       this.activeTimeouts.forEach((timeoutId) => {
         clearTimeout(timeoutId);
       });
       this.activeTimeouts = [];
-
-      // Immediately turn off all signals
       for (const key in this.signals) {
         this.signals[key] = false;
       }
     },
-
-    // Test method to demonstrate enhanced console with different error types
     testEnhancedConsole() {
-      // Test different error levels and formats
       this.addLog('System inicjalizowany', 'system');
-
-      // Test BaseAppError structure
       const mockWlanError = {
         message: 'Nieznany znak w linii kodu',
         level: 'ERROR',
@@ -2359,10 +2022,7 @@ export default {
         loc: { line: 5, col: 12, length: 1 },
         frame: '    3 | ŁAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
       };
-
       this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);
-
-      // Test warning
       const mockWarning = {
         message: 'Niewykorzystana etykieta',
         level: 'WARNING',
@@ -2370,10 +2030,7 @@ export default {
         code: 'SEM_UNUSED_LABEL',
         hint: 'Sprawdź czy etykieta jest faktycznie potrzebna lub czy nie ma literówki w nazwie.',
       };
-
       this.addLog('Ostrzeżenie kompilatora', 'Warning', mockWarning);
-
-      // Test critical error
       const mockCritical = {
         message: 'Krytyczny błąd systemu',
         level: 'CRITICAL',
@@ -2381,7 +2038,6 @@ export default {
         code: 'SYS_CRITICAL',
         hint: 'Skontaktuj się z administratorem systemu.',
       };
-
       this.addLog('Błąd krytyczny', 'Critical', mockCritical);
     },
   },
@@ -2396,7 +2052,6 @@ export default {
       this.resizeMemory();
     },
     lightMode() {
-      // add lightMode or darkMode class to body
       if (this.lightMode) {
         document.body.classList.add('lightMode');
         document.body.classList.remove('darkMode');
@@ -2405,7 +2060,6 @@ export default {
         document.body.classList.remove('lightMode');
       }
     },
-
     signals: {
       deep: true,
       handler() {
@@ -2419,12 +2073,10 @@ export default {
         this.prevSignals = curr;
       },
     },
-
     mem: {
       deep: true,
       handler() {
         if (this.suppressBroadcast) return;
-
         let first4Changed = false;
         for (let i = 0; i < 4; i++) {
           if (this.mem[i] !== this.prevMem[i]) {
@@ -2432,40 +2084,32 @@ export default {
             break;
           }
         }
-
         if (first4Changed) {
           this.sendMemUpdate();
         }
-
         this.prevMem = [...this.mem];
       },
     },
-
     ACC(newVal, oldVal) {
       if (this.suppressBroadcast) return;
       this.sendPartialData('acc', newVal);
     },
-
     A(newVal, oldVal) {
       if (this.suppressBroadcast) return;
       this.sendPartialData('a', newVal);
     },
-
     S(newVal, oldVal) {
       if (this.suppressBroadcast) return;
       this.sendPartialData('s', newVal);
     },
-
     programCounter(newVal, oldVal) {
       if (this.suppressBroadcast) return;
       this.sendPartialData('c', newVal);
     },
-
     I(newVal, oldVal) {
       if (this.suppressBroadcast) return;
       this.sendPartialData('i', newVal);
     },
-
     anyPopupOpen: {
       handler(val) {
         if (val) {
@@ -2475,29 +2119,23 @@ export default {
       immediate: true,
     },
   },
-
   mounted() {
     if(this.platform === 'esp'){
       this.initWebsocket();
     }
     this.loadFromLS();
     this.resizeMemory();
-
     this.addLog('System zainicjalizowany.', 'System');
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
-
-    // Add event listener for key presses
     window.addEventListener('keydown', this.handleKeyPress);
   },
-
   beforeDestroy() {
     window.removeEventListener('keydown', this.handleKeyPress);
     if (this.wsPingTimer) clearInterval(this.wsPingTimer);
   },
 };
 </script>
-
 <style scoped>
 ol {
   display: flex;
@@ -2505,7 +2143,6 @@ ol {
   gap: 1rem;
   text-align: left;
 }
-
 .toolbar {
   display: flex;
   gap: 0.5rem;

@@ -1,24 +1,20 @@
-<template>
+﻿<template>
     <div class="io-card">
         <h3>Urządzenie zewnętrzne</h3>
-
         <div class="row">
             <label for="devin">Wejście (DEV_IN):</label>
             <input id="devin" ref="inputEl" type="text" maxlength="1" placeholder="Wpisz znak…" @input="onInput" />
         </div>
-
         <div class="row hint">
             <label for="devin" class="hint-label">Aktualny DEV_IN:</label>
             <span class="hint-value">{{ formatNumber(devIn) }}</span>
         </div>
-
         <div class="row">
             <label>Wyjście (DEV_OUT):</label>
             <div class="value-box">
                 {{ formatNumber(devOut) }} ({{ String.fromCharCode(devOut || 32) }})
             </div>
         </div>
-
         <div class="row">
             <label>Status (READY/G):</label>
             <div class="status" :class="devReady ? 'ready' : 'busy'">
@@ -27,10 +23,8 @@
         </div>
     </div>
 </template>
-
 <script setup>
 import { ref } from 'vue'
-
 const props = defineProps({
     devIn: { type: Number, required: true },
     devOut: { type: Number, required: true },
@@ -38,12 +32,9 @@ const props = defineProps({
     wordBits: { type: Number, required: true },
     formatNumber: { type: Function, required: true }
 })
-
 const emit = defineEmits(['update:devIn', 'update:devReady'])
-
 const mask = bits => (1 << bits) - 1
 const inputEl = ref(null)
-
 const onInput = (e) => {
     const v = (e.target.value?.charCodeAt(0) || 0) & mask(props.wordBits)
     emit('update:devIn', v)
@@ -51,7 +42,6 @@ const onInput = (e) => {
     if (inputEl.value) inputEl.value.value = ''
 }
 </script>
-
 <style scoped>
 .io-card {
     width: 100%;
@@ -61,14 +51,12 @@ const onInput = (e) => {
     background: var(--panelBackgroundColor, white);
     margin-bottom: 10px;
 }
-
 .io-card h3 {
     margin: 0 0 10px 0;
     font-size: 1.35rem;
     font-weight: 800;
     text-align: start;
 }
-
 .row {
     display: grid;
     grid-template-columns: 150px 1fr;
@@ -76,25 +64,20 @@ const onInput = (e) => {
     gap: 10px;
     margin: 6px 0;
 }
-
 .row.hint {
     grid-template-columns: 150px 1fr;
 }
-
 .hint-label {
     color: var(--fontColor);
 }
-
 .hint-value {
     font-weight: 700;
 }
-
 label {
     text-align: start;
     font-size: .90rem;
     font-weight: 600;
 }
-
 input {
     height: 28px;
     padding: 2px 8px;
@@ -104,11 +87,9 @@ input {
     border-radius: 4px;
     outline: none;
 }
-
 input:focus {
     border-color: #0b74ff;
 }
-
 .value-box {
     border: 1px solid var(--panelOutlineColor);
     border-radius: 4px;
@@ -119,7 +100,6 @@ input:focus {
     justify-content: center;
     font-family: monospace;
 }
-
 .status {
     display: inline-block;
     text-align: center;
@@ -129,11 +109,9 @@ input:focus {
     color: #fff;
     font-weight: 800;
 }
-
 .status.ready {
     background: var(--primaryColor, #003c7d);
 }
-
 .status.busy {
     background: #c33636;
 }

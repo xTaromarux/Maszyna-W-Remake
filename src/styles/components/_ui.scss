@@ -1,33 +1,26 @@
-
+﻿
 #ui {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-
   position: fixed;
   left: 1rem;
   bottom: 1rem;
 }
-
 #ui button {
   padding: 0.5rem;
   border: 0.0625rem solid #8888;
   outline: 0.0625rem solid #8888;
   cursor: pointer;
-
   border-radius: 100%;
-
-
   background-color: #eee;
   transition: 1s ease-out;
 }
-
 #ui button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):hover {
   background-color: #fff;
   transform: translateY(-0.05rem) scale(1.05);
   transition: 0.1s ease-out;
 }
-
 #ui button:not(:disabled):not(.simpleSvgButton):not(.SvgAndTextButton):active {
   background-color: #aaa;
   transform: translateY(0.01rem) scale(0.98);

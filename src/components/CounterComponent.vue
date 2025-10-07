@@ -1,8 +1,6 @@
-<template>
+﻿<template>
   <div id="counter">
-    <!-- Signal Button Component -->
     <SignalButton id="il" :signal="signals.il" @click="handleClick('il')" label="il" spanClassNames="arrowRightOnBottom" />
-
     <RegisterComponent
       label="L"
       :model="programCounter"
@@ -10,9 +8,7 @@
       :number-format="numberFormat"
       @update:number-format="$emit('update:numberFormat', $event)"
     />
-
     <SignalButton id="dl" v-if="extras.dl" :signal="signals.dl" @click="handleClick('dl')" label="dl" spanClassNames="arrowLeftOnBottom" />
-
     <SignalButton
       id="wyl"
       :signal="signals.wyl"
@@ -21,7 +17,7 @@
       class="long pathDownOnLeft"
       spanClassNames="arrowLeftOnBottom"
     />
-    <div 
+    <div
       class="wylsSignalsConteiner"
       :class="extras?.stack?.wylsSignal ? 'wylsSignalsConteinerContent' : 'wylsSignalsConteinerContentEnd'">
       <div v-if="extras?.stack?.wylsSignal" class="wylsSignalsExt">
@@ -37,11 +33,9 @@
     </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
-
 export default {
   name: 'CounterComponent',
   components: {
@@ -78,5 +72,4 @@ export default {
   },
 };
 </script>
-
 <style scoped></style>

@@ -1,4 +1,4 @@
-
+﻿
 @keyframes slideIn {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
@@ -7,7 +7,6 @@
   from { transform: translateX(0); }
   to   { transform: translateX(100%); }
 }
-
 #aiChat.chatPanel {
   position: fixed;
   top: 0;
@@ -25,7 +24,6 @@
   font-family: "Segoe UI", Tahoma, sans-serif;
   z-index: 100;
 }
-
 @media screen and (max-width: 500px) {
   #aiChat.chatPanel {
     width: 90%;
@@ -33,14 +31,12 @@
     max-width: 90%;
   }
 }
-
 .chatPanel.show {
   animation: slideIn 0.5s ease-out forwards;
 }
 .chatPanel.hide {
   animation: slideOut 0.5s ease-in forwards;
 }
-
 .resizer {
   position: absolute;
   left: 0;
@@ -48,21 +44,17 @@
   bottom: 0;
   width: 6px;
   cursor: ew-resize;
-  /* dla lepszej widoczności na hover: */
   &:hover {
     background: rgba(0, 60, 125, 0.1);
   }
 }
-
 .resetBtn .trashIcon {
   fill: #ffffff;
   transition: fill 0.2s ease;
 }
-
 .resetBtn:hover .trashIcon {
   fill: rgba(136, 136, 136, 0.5333333333);
 }
-
 .chatHeader {
   display: flex;
   align-items: center;
@@ -75,13 +67,11 @@
   font-size: 1.25rem;
   margin: 0;
 }
-
 .headerBtns {
   display: flex;
   flex-direction: row;
   gap: 10px;
 }
-
 .resetBtn,
 .closeBtn {
   background: none;
@@ -99,7 +89,6 @@
   color: rgba(136, 136, 136, 0.5333333333) !important;
   opacity: 0.75;
 }
-
 #conversation {
   flex: 1;
   padding: 1rem;
@@ -109,14 +98,12 @@
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .conversationBox {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .messageBubble {
   display: flex;
   align-items: flex-start;
@@ -132,11 +119,9 @@
 .messageAi {
   align-self: flex-start;
 }
-
 .messageAi .messageContent {
   color: #000;
 }
-
 .iconWrapper {
   flex-shrink: 0;
   margin: 0 0.5rem;
@@ -153,7 +138,6 @@
   background: var(--primaryColor, #003c7d);
   color: #fff;
 }
-
 .messageUser .messageHeader {
   color: #fff;
 }
@@ -185,11 +169,9 @@
   font-family: "Helvetica Neue", monospace;
   font-size: 0.9rem;
 }
-
 .messageTextAssistant {
   color: var(--fontColor) !important;
 }
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -211,7 +193,6 @@
 .messageEnter-enter-active {
   transition: all 0.3s ease;
 }
-
 .inputArea {
   padding: 1rem;
   border-top: 1px solid #eee;
@@ -237,7 +218,6 @@
   font-size: 0.95rem;
   transition: border-color 0.2s;
 }
-
 #conversation::-webkit-scrollbar {
   width: 6px;
 }
@@ -245,11 +225,9 @@
   background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
-
 .messageBubble.messageAi {
   position: relative;
 }
-
 .cancelBtn {
   width: 25px;
   height: 20px;
@@ -269,11 +247,9 @@
   line-height: 1;
   transition: color .2s;
 }
-
 .cancelBtn:hover {
   color: #f5f5f5;
 }
-
 .typing {
   display: inline-block;
   vertical-align: middle;
@@ -293,7 +269,6 @@
 .typing span:nth-child(3) {
   animation-delay: 0.4s;
 }
-
 @keyframes bounce {
   0%, 80%, 100% {
     transform: translateY(0);

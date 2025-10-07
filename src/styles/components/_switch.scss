@@ -1,14 +1,12 @@
-.switchDiv {
+﻿.switchDiv {
     --width: 2rem;
     --height: 1.125rem;
     --padding: 0.125rem;
-  
     display: flex;
     align-items: center;
     justify-items: center;
     gap: 0.25rem
   }
-  
   .switchDiv input[type="checkbox"] {
     all: unset;
     cursor: pointer;
@@ -19,9 +17,7 @@
     border-radius: calc(var(--height) / 2);
     position: relative;
     transition: 0.15s ease-in-out;
-    /* Animacja zmiany koloru */
   }
-  
   .switchDiv input[type="checkbox"]::after {
     content: '';
     position: absolute;
@@ -32,11 +28,7 @@
     background-color: white;
     border-radius: 50%;
     transition: 0.15s ease-in-out;
-    /* Animacja przesuwania kulki */
   }
-  
   .switchDiv input[type="checkbox"]:checked {
     background-color: #00aaff;
-    /* Kolor włączonego przełącznika */
   }
-  

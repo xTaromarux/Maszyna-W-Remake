@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="program" v-if="!manualMode">
     <CodeMirrorEditor
       :disable="programCompiled"
@@ -12,7 +12,6 @@
       :onCompile="compileProgram"
       :onEdit="uncompileProgram"
     />
-
     <div class="flexRow">
       <button
         v-if="!programCompiled"
@@ -23,7 +22,6 @@
         <CompileIcon />
         <span>Kompiluj</span>
       </button>
-
       <button v-else @click="uncompileProgram" :disabled="manualMode" class="execution-btn execution-btn--edit">
         <EditIcon />
         <span>Edytuj</span>
@@ -31,36 +29,27 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue';
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
-
-// WLAN
 import { parse } from '@/WLAN/parser';
 import { analyzeSemantics } from '@/WLAN/semanticAnalyzer';
 import { generateMicroProgram, injectCJumpMeta } from '@/WLAN/microGenerator';
-
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
   commandList: { type: Array, required: true },
   program: { type: String, required: true },
   autocompleteEnabled: { type: Boolean, default: true },
 });
-
 const emit = defineEmits(['update:code', 'log', 'initMemory']);
-
 const programLocal = ref(props.program);
 const programCompiled = ref(false);
-
 function compileProgram() {
   try {
     const ast = parse(programLocal.value);
     const analyzedNodes = analyzeSemantics(ast);
-
-    // --- Dyrektywy inicjalizacji pamięci -> do rodzica
     const initAssignments = [];
     for (const node of analyzedNodes) {
       if (node.type === 'Directive' && node._initMemory) {
@@ -68,7 +57,6 @@ function compileProgram() {
         initAssignments.push({ addr, val });
       }
     }
-    // Argumenty rozkazów -> pamięć programu PC=0,1,2…
     let pcAddr = 0;
     for (const node of analyzedNodes) {
       if (node.type === 'Instruction') {
@@ -80,17 +68,10 @@ function compileProgram() {
       }
     }
     if (initAssignments.length) emit('initMemory', initAssignments);
-
-    // --- Mikro-program
     let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
-
-    // (opcjonalne) wstrzyknięcie metadanych CJUMP (zachowujemy srcLine później)
     microProgram = injectCJumpMeta(microProgram);
-
-    // --- Konwersja na tekst + PRECYZYJNE mapowanie srcLine
     const asmFragments = [];
     let lineNo = 0;
-
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
         if ((phase).conditional === true) {
@@ -100,32 +81,23 @@ function compileProgram() {
           const tLabel = labels.t || 'zero';
           const fLabel = labels.f || 'niezero';
           const prefixArr = cond.__prefix;
-
           const t = cond.truePhases?.[0] ?? {};
           const f = cond.falsePhases?.[0] ?? {};
           const trueSignals = Object.keys(t).filter(k => t[k]).join(' ');
           const falseSignals = Object.keys(f).filter(k => f[k]).join(' ');
-
           const prefix = (prefixArr && prefixArr.length) ? (prefixArr.join(' ') + ' ') : '';
-
-          // linia z IF – z etykietą gałęzi false i prefiksem w tej samej linii
           cond.srcLine = lineNo;
           asmFragments.push(`@${fLabel} ${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
           lineNo++;
-
-          // gałąź true – bez dopisywania "KONIEC" na siłę
           (t).srcLine = lineNo;
           asmFragments.push(trueSignals ? `@${tLabel} ${trueSignals};` : `@${tLabel};`);
           lineNo++;
-
-          // gałąź false – drukuj tylko jeśli coś w niej jest
           if (falseSignals) {
             (f).srcLine = lineNo;
             asmFragments.push(`@${fLabel} ${falseSignals};`);
             lineNo++;
           }
         } else {
-          // zwykła faza
           const signals = Object.keys(phase).filter((key) => (phase)[key] === true).join(' ');
           if (signals.trim()) {
             (phase).srcLine = lineNo;             // <-- mapowanie 1:1 faza → linia
@@ -134,7 +106,6 @@ function compileProgram() {
           }
         }
       }
-
       const extra = (entry).meta?.postAsm;
       if (extra?.length) {
         for (const line of extra) {
@@ -143,10 +114,8 @@ function compileProgram() {
         }
       }
     }
-
     const finalMicroSignals = asmFragments.join('\n');
     emit('update:code', { text: finalMicroSignals, program: microProgram });
-
     programCompiled.value = true;
     emit('log', { message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN', class: 'kompilator rozkazów' });
   } catch (error) {
@@ -164,13 +133,11 @@ function compileProgram() {
     }
   }
 }
-
 function uncompileProgram() {
   programCompiled.value = false;
   emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
 }
 </script>
-
 <style scoped>
 #program {
   grid-area: p;
@@ -182,7 +149,6 @@ function uncompileProgram() {
   min-height: 40rem;
   max-height: 40rem;
 }
-
 @media (min-width: 1380px) {
   #program { width: 20rem; }
 }
@@ -203,14 +169,12 @@ function uncompileProgram() {
 @media (max-width: 675px) {
   #program { margin: 20px 0; }
 }
-
 .flexRow {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
 }
-
 .monaco-container {
   flex-grow: 1;
   min-height: 300px;

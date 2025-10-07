@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div
     id="settings-overlay"
     v-if="open"
@@ -10,7 +10,6 @@
       :creators="creators"
       :caregivers="caregivers"
     />
-
     <SettingsPanel
       :is-animated="isAnimated"
       :is-mobile="isMobile"
@@ -24,8 +23,8 @@
       :extras="extras"
       :platform="platform"
       :dec-signed="decSigned"
-      :memory-addres-bits="memoryAddresBits" 
-      :autocomplete-enabled="autocompleteEnabled"  
+      :memory-addres-bits="memoryAddresBits"
+      :autocomplete-enabled="autocompleteEnabled"
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
@@ -42,11 +41,9 @@
     />
   </div>
 </template>
-
 <script>
 import SettingsPanel from './SettingsPanel.vue'
 import CreatorsPanel from './CreatorsPanel.vue'
-
 export default {
   name: 'SettingsOverlay',
   components: { SettingsPanel, CreatorsPanel },
@@ -143,7 +140,6 @@ export default {
   },
 }
 </script>
-
 <style scoped>
 #settings-overlay {
   position: fixed;
@@ -152,12 +148,10 @@ export default {
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
 }
-
 @keyframes fadeIn {
   from { opacity: 0 }
   to { opacity: 1 }
 }
-
 @media (max-width: 768px) {
   :deep(#settings) { width: 100vw; max-width: 100vw }
   :deep(#creators) { width: 85vw; max-width: 85vw }

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="memory">
     <SignalButton
       id="wea"
@@ -9,7 +9,6 @@
       spanClassNames="arrowRightOnBottom"
       @click="handleClick('wea')"
     />
-
     <RegisterComponent
       classNames="register"
       id="aRegister"
@@ -19,7 +18,6 @@
       :number-format="aFormat"
       @update:number-format="$emit('update:aFormat', $event)"
     />
-
     <div id="memoryTable">
       <div class="scrollWrapper">
         <div class="memoryContainer">
@@ -27,7 +25,6 @@
           <span class="label">Wartość</span>
           <span class="label">Kod</span>
           <span class="label">Adres</span>
-
           <template v-for="(value, index) in mem" :key="index">
             <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
             <div :class="{ selected: A === index }" class="inputWrapper">
@@ -53,7 +50,6 @@
         </div>
       </div>
     </div>
-
     <RegisterComponent
       classNames="register"
       id="sRegister"
@@ -63,12 +59,10 @@
       :number-format="sFormat"
       @update:number-format="$emit('update:sFormat', $event)"
     />
-
     <div id="operations" v-if="!isMobile">
       <SignalButton id="czyt" :signal="signals.czyt" label="czyt" spanClassNames="lineLeftOnBottom" @click="handleClick('czyt')" />
       <SignalButton id="pisz" :signal="signals.pisz" label="pisz" spanClassNames="lineLeftOnBottom" @click="handleClick('pisz')" />
     </div>
-
     <div class="signals" v-if="!isMobile">
       <SignalButton
         id="wes"
@@ -91,7 +85,6 @@
     </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
@@ -145,14 +138,14 @@ export default {
       type: String,
       required: true,
     },
-    signedDec: { 
-      type: Boolean, 
-      default: false 
+    signedDec: {
+      type: Boolean,
+      default: false
     },
-    wordBits:  { 
-      type: Number,  
-      default: 8 
-    }, 
+    wordBits:  {
+      type: Number,
+      default: 8
+    },
   },
   emits: ['update:A', 'update:S', 'update:mem', 'clickItem', 'update:aFormat', 'update:sFormat'],
   components: {
@@ -193,14 +186,12 @@ export default {
     },
     updateMemoryValue(event, index) {
       const txt = String(event.target.value).trim();
-      if (txt === '' || txt === '-' ) return; 
-
+      if (txt === '' || txt === '-' ) return;
       const val = parseInt(txt, 10);
       if (Number.isNaN(val)) {
         event.target.value = this.displayValue(this.mem[index]);
         return;
       }
-
       if (this.validateRegisterValue) {
         const ok = this.validateRegisterValue(
           val,
@@ -224,14 +215,12 @@ export default {
           return;
         }
       }
-
       let stored;
       if (this.signedDec && val < 0) {
         stored = (val + (1 << this.wordBits)) & this.wordMask();
       } else {
         stored = val & this.wordMask();
       }
-
       const newMem = [...this.mem];
       newMem[index] = stored;
       this.$emit('update:mem', newMem);
@@ -244,7 +233,6 @@ export default {
         this.$emit('update:mem', newMem);
         event.target.value = this.displayValue(0);
       } else {
-        // wyrównaj prezentację do trybu signed/unsigned
         event.target.value = this.displayValue(this.mem[index]);
       }
     },

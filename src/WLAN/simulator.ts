@@ -1,7 +1,5 @@
-export const DEFAULT_VECTOR_BASE = 0x10;
-
+﻿export const DEFAULT_VECTOR_BASE = 0x10;
 import type { Store, ConditionalPhase, Phase } from './model';
-
 export function initStore(
   memorySize = 256,
   vectorBase = DEFAULT_VECTOR_BASE,
@@ -15,7 +13,6 @@ export function initStore(
       console.warn(`Adres poza zakresem pamięci: ${addr}`);
     }
   }
-
   return {
     I: 0,
     L: 0,
@@ -25,17 +22,13 @@ export function initStore(
     magA: 0,
     magS: 0,
     flags: {
-      // Z: zero flag (true when Ak == 0)
       Z: false,
-      // N: negative flag (true when Ak has MSB set)
       N: false,
       IE: false,
       IR: false,
     },
     mem,
-    // Stos danych (DNS/PZS)
     dataStack: [],
-    // Stos powrotów (SDP/PWR oraz ISR)
     callStack: [],
     program: [],
     phaseIdx: 0,
@@ -46,7 +39,6 @@ export function initStore(
     vectorBase,
   };
 }
-
 function runISR(store) {
   store.callStack.push({ L: store.L, phaseIdx: store.phaseIdx });
   store.flags.IE = false;
@@ -54,18 +46,14 @@ function runISR(store) {
   store.L = store.vectorBase;
   store.phaseIdx = 0;
 }
-
 export function applySignals(phase: any, store: Store) {
   if (phase.wyad) store.magA = store.I & 0xff;
   if (phase.wyl) store.magA = store.L & 0xff;
   if (phase.wys) store.magS = store.S;
   if (phase.wyak) store.magS = store.Ak;
-
   if (phase.czyt) store.S = store.mem[store.magA];
   if (phase.pisz) store.mem[store.magA] = store.S;
-
   if (phase.weja) store._aluIn = store.magS;
-
   if (phase.dod) store._aluOut = (store.Ak + store._aluIn) & 0xff;
   if (phase.ode) store._aluOut = (store.Ak - store._aluIn) & 0xff;
   if (phase.mno) store._aluOut = (store.Ak * store._aluIn) & 0xff;
@@ -77,15 +65,12 @@ export function applySignals(phase: any, store: Store) {
   if (phase.i) store._aluOut = store.Ak & store._aluIn;
   if (phase.as) store._aluOut = (store.Ak + 1) & 0xff;
   if (phase.sa) store._aluOut = (store.Ak - 1) & 0xff;
-
   if (phase.przep) store._aluOut = store._aluIn;
-
   if (phase.weak) {
     store.Ak = store._aluOut;
     store.flags.Z = (store.Ak & 0xff) === 0;
     store.flags.N = !!(store.Ak & 0x80);
   }
-
   if (phase.wea) store.A = store.magA;
   if (phase.wes) store.S = store.magS;
   if (phase.wei) store.I = store.magS;
@@ -95,26 +80,21 @@ export function applySignals(phase: any, store: Store) {
     store.magS   = readyBit & 0xff;
     store.portIn = readyBit & 0xff;
   }
-
   if (phase.wyrb) {
     const hasData = store.ioIn.length > 0;
     const v = hasData ? (store.ioIn.shift()! & 0xff) : 0;
     store.magS   = v;
     store.portIn = v;
   }
-
   if (phase.werb) {
     const v = store.Ak & 0xff;
     store.portOut = v;
     store.ioOut.push(v);
   }
-
   if (phase.il) {
     store.L = (store.L + 1) & 0xff;
   }
-
   if (phase.writeIO) {
-    // domyślnie wyprowadź zawartość ACC (jeśli nie ustawiono inaczej)
     const outVal = phase.useMagS ? store.magS : store.Ak;
     store.portOut = outVal & 0xff;
     store.ioOut.push(store.portOut);
@@ -123,22 +103,17 @@ export function applySignals(phase: any, store: Store) {
     store.portIn = store.ioIn.length ? store.ioIn.shift() : 0;
     store.magS = store.portIn & 0xff;
   }
-
-  // Operacje stosu i wywołań
   if (phase.pushAcc) {
     store.dataStack.push(store.Ak & 0xff);
   }
   if (phase.popAcc) {
     const val = store.dataStack.length ? store.dataStack.pop() : 0;
     store.Ak = val & 0xff;
-    // odśwież flagi po pobraniu
     store.flags.Z = (store.Ak & 0xff) === 0;
     store.flags.N = !!(store.Ak & 0x80);
   }
   if (phase.call) {
-    // zapamiętaj adres powrotu (następna instrukcja, phaseIdx=0)
     store.callStack.push({ L: (store.L + 1) & 0xff, phaseIdx: 0 });
-    // skok pod adres z magA
     store.L = store.magA & 0xff;
     store.phaseIdx = 0;
   }
@@ -150,25 +125,19 @@ export function applySignals(phase: any, store: Store) {
     }
   }
 }
-
-// Prosty type-guard do zawężania typu fazy
 function isCondPhase(p: Phase): p is ConditionalPhase {
   return !!p && p.conditional === true && 'flag' in p && Array.isArray((p as any).truePhases);
 }
-
 export function stepMicro(store: Store) {
   if (store.flags.IE && store.flags.IR) {
     runISR(store);
     return;
   }
-
   const entry = store.program[store.L];
   if (!entry) {
     throw new Error(`Brak mikroprogramu pod adresem ${store.L}`);
   }
-
   const phase: any = entry.phases[store.phaseIdx];
-
   if (isCondPhase(phase)) {
     const conditionMet = store.flags[phase.flag] === true;
     const phases = conditionMet ? phase.truePhases : phase.falsePhases;
@@ -176,12 +145,9 @@ export function stepMicro(store: Store) {
   } else {
     applySignals(phase, store);
   }
-
-
   store.phaseIdx++;
   if (store.phaseIdx >= entry.phases.length) {
     store.phaseIdx = 0;
-
     if (store.L >= store.vectorBase && store.callStack.length) {
       const ctx = store.callStack.pop();
       store.L = ctx.L;
@@ -191,7 +157,6 @@ export function stepMicro(store: Store) {
     }
   }
 }
-
 export function exportStore(store: Store) {
   return JSON.stringify({
     registers: { I: store.I, L: store.L, A: store.A, S: store.S, Ak: store.Ak },
@@ -205,7 +170,6 @@ export function exportStore(store: Store) {
     vectorBase: store.vectorBase,
   });
 }
-
 export function importStore(json: string): Store {
   const data = JSON.parse(json);
   const store = initStore(data.memory.length, data.vectorBase, []);
@@ -223,13 +187,11 @@ export function importStore(json: string): Store {
   store.callStack = Array.from(data.callStack || []);
   return store;
 }
-
 export function saveState(name: string, store: Store) {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem(`WMachine_${name}`, exportStore(store));
   }
 }
-
 export function loadState(name: string): Store {
   if (typeof localStorage !== 'undefined') {
     const json = localStorage.getItem(`WMachine_${name}`);
@@ -238,7 +200,6 @@ export function loadState(name: string): Store {
   }
   throw new Error('LocalStorage nie jest dostępne');
 }
-
 export function evalFlag(vm: any, flag: 'Z'|'N'|'C'|'V'): boolean {
   switch (flag) {
     case 'Z': return (vm.Ak & 0xff) === 0;

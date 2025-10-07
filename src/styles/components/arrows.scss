@@ -1,11 +1,10 @@
-.arrowRightOnBottom {
+﻿.arrowRightOnBottom {
     color: var(--signalText, black);
     border-bottom: var(--arrowLineThickness, 0.125rem) solid var(--signal, black);
     padding-right: 0.5rem;
     position: relative;
     margin-right: var(--arrowHeadSize, 0.25rem);
 }
-
 .arrowRightOnBottom:after {
     content: "";
     position: absolute;
@@ -14,11 +13,9 @@
     right: calc(-2 * var(--arrowHeadSize, 0.25rem));
     bottom: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
 }
-
 .fullSizeArrow{
     height: 97% !important;
 }
-
 .arrowLeftOnBottom {
     color: var(--signalText, black);
     border-bottom: var(--arrowLineThickness, 0.125rem) solid var(--signal, black);
@@ -26,7 +23,6 @@
     position: relative;
     margin-left: var(--arrowHeadSize, 0.25rem);
 }
-
 .arrowLeftOnBottom:after {
     content: "";
     position: absolute;
@@ -35,21 +31,18 @@
     left: calc(-2 * var(--arrowHeadSize, 0.25rem));
     bottom: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
 }
-
 .pathDownOnLeft {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: left;
     position: relative;
-
     border-left: var(--pathThickness, 0.125rem) solid var(--signal, black);
     margin-bottom: var(--arrowHeadSize, 0.25rem);
     padding-top: var(--arrowHeadSize, 0.25rem);
     margin-left: var(--arrowHeadSize, 0.25rem);
     min-height: 2rem;
 }
-
 .pathDownOnLeft:after {
     content: "";
     position: absolute;
@@ -58,19 +51,16 @@
     bottom: calc(-2 * var(--arrowHeadSize, 0.25rem));
     left: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
 }
-
 .pathDownOnRight {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: right;
     position: relative;
-
     border-right: var(--pathThickness, 0.125rem) solid var(--signal, black);
     margin-bottom: var(--arrowHeadSize, 0.25rem);
     padding-top: var(--arrowHeadSize, 0.25rem);
 }
-
 .pathDownOnRight:after {
     content: "";
     position: absolute;
@@ -79,18 +69,15 @@
     bottom: calc(-2 * var(--arrowHeadSize, 0.25rem));
     right: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
 }
-
 .pathUpOnLeft {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     position: relative;
-
     border-left: var(--pathThickness, 0.125rem) solid var(--signal, black);
     margin-top: var(--arrowHeadSize, 0.25rem);
     padding-bottom: var(--arrowHeadSize, 0.25rem);
 }
-
 .pathUpOnLeft:after {
     content: "";
     position: absolute;
@@ -99,18 +86,15 @@
     top: calc(-2 * var(--arrowHeadSize, 0.25rem));
     left: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
 }
-
 .pathUpOnRight {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     position: relative;
-
     border-right: var(--pathThickness, 0.125rem) solid var(--signal, black);
     margin-top: var(--arrowHeadSize, 0.25rem);
     padding-bottom: var(--arrowHeadSize, 0.25rem);
 }
-
 .pathUpOnRight:after {
     content: "";
     position: absolute;
@@ -119,41 +103,33 @@
     top: calc(-2 * var(--arrowHeadSize, 0.25rem));
     right: calc(-1 * var(--arrowHeadSize, 0.25rem) - 0.5 * var(--pathThickness, 0.125rem));
 }
-
 .lineRightOnBottom {
     color: var(--signalText, black);
     border-bottom: var(--arrowLineThickness, 0.125rem) dashed var(--signal, black);
     padding-right: 0.5rem;
     position: relative;
 }
-
 .lineRightOnBottom:after {
     content: "";
     position: absolute;
-
     width: var(--lineHeadThickness, 0.125rem);
     height: var(--lineHeadLength, 0.125rem);
     background-color: var(--signal, black);
-
     right: var(--lineHeadMargin, 0.125rem);
     bottom: calc(-0.5 * var(--lineHeadLength, 0.5rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
 }
-
 .lineLeftOnBottom {
     color: var(--signalText, black);
     border-bottom: var(--arrowLineThickness, 0.125rem) dashed var(--signal, black);
     padding-left: 0.5rem;
     position: relative;
 }
-
 .lineLeftOnBottom:after {
     content: "";
     position: absolute;
-
     width: var(--lineHeadThickness, 0.125rem);
     height: var(--lineHeadLength, 0.125rem);
     background-color: var(--signal, black);
-
     left: var(--lineHeadMargin, 0.125rem);
     bottom: calc(-0.5 * var(--lineHeadLength, 0.5rem) - 0.5 * var(--arrowLineThickness, 0.125rem));
 }

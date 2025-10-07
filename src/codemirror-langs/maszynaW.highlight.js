@@ -1,5 +1,4 @@
-import { styleTags, tags as t } from '@lezer/highlight';
-
+﻿import { styleTags, tags as t } from '@lezer/highlight';
 export const maszynaWHighlight = styleTags({
   Keyword: t.keyword,
   labelDef: t.labelName,

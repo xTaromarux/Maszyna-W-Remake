@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div v-if="visible" id="rzRegister" class="rz-register">
     <div class="rz-inputs">
       <button
@@ -13,7 +13,6 @@
         {{ idx + 1 }}
       </button>
     </div>
-
     <RegisterComponent
       label="RZ"
       :model="RZ"
@@ -23,17 +22,15 @@
     />
   </div>
 </template>
-
 <script>
 import RegisterComponent from './RegisterComponent.vue'
-
 export default {
   name: 'RZRegisterSection',
   components: { RegisterComponent },
   props: {
     visible: { type: Boolean, default: true },
     RZ: { type: Number, default: 0 },
-    rzInputs: { type: Array, default: () => [0,0,0,0] }, 
+    rzInputs: { type: Array, default: () => [0,0,0,0] },
     numberFormat: { type: String, required: true },
   },
   emits: ['update:RZ', 'update:rzInputs', 'update:numberFormat'],
@@ -63,7 +60,6 @@ export default {
         }
       }
     },
-
     RZ(newVal) {
       const bits = [
         (newVal >> 0) & 1,
@@ -81,28 +77,24 @@ export default {
       const copy = this.localInputs.slice()
       copy[i] = copy[i] ? 0 : 1
       this.localInputs = copy
-
       this.$emit('update:rzInputs', copy)
       this.$emit('update:RZ', this.rzValue)
     },
   },
 }
 </script>
-
 <style scoped>
 .rz-register {
   display: flex;
   flex-direction: column;
   gap: .5rem;
 }
-
 .rz-inputs {
   grid-area: b;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: .25rem;
 }
-
 .rz-input {
   appearance: none;
   border: 1px solid var(--panelOutlineColor);
@@ -117,9 +109,8 @@ export default {
 }
 .rz-input:active { transform: translateY(1px); }
 .rz-input.active {
-  background: #9fd18b; 
+  background: #9fd18b;
 }
-
 .rz-display {
   border: 2px solid #000;
   background: #fff;
@@ -127,4 +118,3 @@ export default {
   border-radius: 2px;
 }
 </style>
-

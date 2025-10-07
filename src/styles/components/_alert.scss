@@ -1,12 +1,12 @@
-.error-alert {
+﻿.error-alert {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    background-color: #f44336; /* czerwone tło */
+    background-color: #f44336;
     color: white;
     padding: 10px 20px;
     font-weight: bold;
-    z-index: 1000; /* nad innymi elementami */
+    z-index: 1000;
     text-align: center;
   }

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 475 439"
@@ -29,7 +29,6 @@
     </g>
   </svg>
 </template>
-
 <script setup>
 const props = defineProps({
   fillColor: {
@@ -45,10 +44,8 @@ const props = defineProps({
     default: 0
   }
 })
-
 const viewBoxHeight = 439
 </script>
-
 <style scoped>
 .customIcon {
   display: inline-block;

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="programEditor">
     <SegmentedToggle :options="[
       { label: 'Tryb ręczny', value: true },
@@ -7,35 +7,28 @@
     <IOPanel v-if="showIo" :dev-in="devIn" :dev-out="devOut" :dev-ready="devReady" :word-bits="wordBits"
       :format-number="formatNumber" @update:devIn="$emit('update:devIn', $event)"
       @update:devReady="$emit('update:devReady', $event)" class="mb-2" />
-
     <div class="chooseProgram">
       <slot name="chooseProgram"></slot>
     </div>
-
     <div v-if="manualMode" class="manualModeInstruction">
       <p>Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'Wykonaj takt'</p>
     </div>
-
     <CodeMirrorEditor v-else-if="!codeCompiled" v-model="codeLocal" language="maszynaW" theme="mwTheme"
       :maxHeight="showIo ? '18.3rem' : '32rem'" />
-
     <div v-else class="compiledCode" ref="compiledEl" :class="{ 'bp-disabled': !breakpointsEnabled }">
       <span v-for="(line, index) in compiledCode" :key="index" class="flexRow" :class="{
         active: activeLine === index,
         'bp-line': breakpoints?.has(index)
       }" :data-row="index">
-        <!-- Gutter z kropką -->
         <button class="bp-dot gutter" :class="{ 'bp-dot--active': breakpoints?.has(index) }"
           :disabled="!breakpointsEnabled" @click.stop="emit('toggle-breakpoint', index)" :title="!breakpointsEnabled
             ? 'Breakpoints wyłączone'
             : (breakpoints?.has(index) ? 'Usuń breakpoint' : 'Dodaj breakpoint')" aria-label="Toggle breakpoint" />
-        <!-- Numer linii -->
         <span class="lineNo">{{ index }}</span>
         <span>:</span>
         <span class="codeLine">{{ line }}</span>
       </span>
     </div>
-
     <div class="nextLine" v-if="manualMode">
       <p class="nextLineTitle">Sygnały następnej linii:</p>
       <div class="flexRow">
@@ -46,13 +39,11 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import SegmentedToggle from './SegmentedToggle.vue'
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue'
 import IOPanel from '@/components/IOPanel.vue'
-
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
   codeCompiled: { type: Boolean, required: true },
@@ -69,31 +60,25 @@ const props = defineProps({
   wordBits: { type: Number, required: true },
   formatNumber: { type: Function, required: true }
 })
-
 const emit = defineEmits([
   'update:code', 'setManualMode',
   'update:devIn', 'update:devReady',
   'toggle-breakpoint'
 ])
-
 const codeLocal = ref(props.code)
 const compiledEl = ref(null)
-
 watch(codeLocal, (v) => emit('update:code', v))
 watch(() => props.code, (v) => { if (v !== codeLocal.value) codeLocal.value = v })
-
 watch(() => props.activeLine, async (row) => {
   await nextTick()
   const rowEl = compiledEl.value?.querySelector(`[data-row="${row}"]`)
   if (rowEl?.scrollIntoView) rowEl.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 })
 </script>
-
 <style scoped>
 .toggleButtonProgram {
   width: 100%;
 }
-
 .programEditor {
   display: flex;
   flex-direction: column;
@@ -102,19 +87,16 @@ watch(() => props.activeLine, async (row) => {
   max-height: 35.8rem;
   min-height: 35.8rem;
 }
-
 @media (min-width: 675px) and (max-width: 1195px) {
   .programEditor {
     width: 40rem;
   }
 }
-
 @media (max-width: 675px) {
   .programEditor {
     width: 100%;
   }
 }
-
 .flexRow {
   max-width: 230px;
   display: flex;
@@ -123,14 +105,12 @@ watch(() => props.activeLine, async (row) => {
   gap: 1rem;
   align-items: center;
 }
-
 .flexRow span {
   opacity: 1;
   color: var(--fontColor, black);
   font-style: italic;
   font-weight: bold;
 }
-
 .compiledCode {
   display: flex;
   width: 100%;
@@ -146,7 +126,6 @@ watch(() => props.activeLine, async (row) => {
   font-family: monospace;
   font-size: 0.9rem;
 }
-
 .executed-info {
   text-align: center;
   padding-bottom: 0.5rem;
@@ -156,7 +135,6 @@ watch(() => props.activeLine, async (row) => {
   font-size: 0.8rem;
   border-bottom: 1px solid var(--panelOutlineColor, black);
 }
-
 .compiledCode .flexRow {
   max-width: none;
   flex-wrap: nowrap;
@@ -168,7 +146,6 @@ watch(() => props.activeLine, async (row) => {
   display: flex;
   flex-direction: row;
 }
-
 .compiledCode .flexRow>span:first-child {
   min-width: 3rem;
   text-align: right;
@@ -176,26 +153,21 @@ watch(() => props.activeLine, async (row) => {
   color: #666;
   flex-shrink: 0;
 }
-
 .compiledCode .flexRow>span:nth-child(2) {
   flex-shrink: 0;
   color: #666;
 }
-
 .compiledCode .flexRow:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
-
 .compiledCode .active {
   color: var(--signal-active);
   background-color: rgba(0, 170, 255, 0.1);
   font-weight: bold;
 }
-
 .compiledCode .active>span:first-child {
   color: var(--signal-active);
 }
-
 .codeLine {
   flex-grow: 1;
   text-align: left;
@@ -204,7 +176,6 @@ watch(() => props.activeLine, async (row) => {
   padding-left: 0.5rem;
   line-height: 1.4;
 }
-
 .monaco-container {
   flex: 1;
   min-height: 300px;
@@ -212,7 +183,6 @@ watch(() => props.activeLine, async (row) => {
   border: 1px solid var(--panelOutlineColor, black);
   border-radius: var(--default-border-radius, 0.25rem);
 }
-
 .nextLine {
   flex-grow: 1;
   width: 100%;
@@ -227,7 +197,6 @@ watch(() => props.activeLine, async (row) => {
   border-radius: var(--default-border-radius, 0.25rem);
   background-color: var(--panelBackgroundColor, white);
 }
-
 .nextLine .nextLineTitle {
   display: flex;
   opacity: 0.8;
@@ -237,7 +206,6 @@ watch(() => props.activeLine, async (row) => {
   flex-direction: row;
   gap: 0.5rem;
 }
-
 .manualModeInstruction {
   display: flex;
   align-items: center;
@@ -252,57 +220,39 @@ watch(() => props.activeLine, async (row) => {
   font-weight: bold;
   text-align: center;
 }
-
 .manualModeInstruction p {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.8;
 }
-
-/* kolumna z numerem linii */
 .compiledCode .flexRow>.lineNo {
   text-align: right;
   font-weight: 600;
   color: #8a8a8a;
-  /* delikatniejszy */
 }
-
-/* dwukropek */
 .compiledCode .flexRow>span:nth-child(3) {
   color: #8a8a8a;
 }
-
-/* aktywna linia (bez animacji) */
 .compiledCode .active {
   color: var(--signal-active);
   transition: none !important;
   background-color: rgba(0, 170, 255, 0.10);
   font-weight: bold;
 }
-
-/* kod */
 .codeLine {
   padding-left: 0.25rem;
   line-height: 1.35;
 }
-
-/* --- GUTTER DOT (mała, intellij-owa kropka) --- */
 .gutter {
-  /* zajmuje całą pierwszą kolumnę gridu */
   justify-self: center;
 }
-
-/* linia z breakpointem – bardzo delikatne tło */
 .bp-line {
   transition: none !important;
   background-color: rgba(209, 17, 17, 0.10);
 }
-
 .bp-line.active {
   background-color: rgba(209, 17, 17, 0.16);
 }
-
-/* kropka – mała, bez animacji */
 .bp-dot {
   width: 8px;
   height: 8px;
@@ -316,30 +266,22 @@ watch(() => props.activeLine, async (row) => {
   outline: none;
   transition: none !important;
 }
-
 .bp-dot--active {
   background: #d11;
   border-color: #d11;
 }
-
 .bp-dot:hover {
   border-color: #e22;
 }
-
-/* --- STYL, GDY BREAKPOINTY SĄ WYŁĄCZONE --- */
 .bp-disabled {
   position: relative;
 }
-
-/* cienki banner u góry listy kodu */
 .bp-disabled::before {
   content: "BREAKPOINTY WYŁĄCZONE";
   position: sticky;
   top: -0.5rem;
-  /* lekko nad listą */
   display: block;
   margin: -0.25rem -0.5rem 0;
-  /* wyrównanie do ramki compiledCode */
   padding: 0.15rem 0.5rem;
   font-size: 0.72rem;
   letter-spacing: .04em;
@@ -348,8 +290,6 @@ watch(() => props.activeLine, async (row) => {
   border-bottom: 1px dashed rgba(120, 120, 120, .5);
   text-align: center;
 }
-
-/* kropki: szare, puste, nieklikalne */
 .bp-disabled .bp-dot {
   border-color: #8b8b8b !important;
   background: transparent !important;
@@ -358,20 +298,14 @@ watch(() => props.activeLine, async (row) => {
   filter: grayscale(1);
   cursor: not-allowed;
 }
-
 .bp-disabled .bp-dot.bp-dot--active {
   background: transparent !important;
-  /* nie wypełniaj, nawet jeśli był postawiony */
   border-color: #8b8b8b !important;
 }
-
-/* linie z BP: inne (chłodniejsze) tło, ale bardzo delikatne */
 .bp-disabled .bp-line {
   background-color: rgba(120, 120, 120, 0.08) !important;
   opacity: .95;
 }
-
-/* numer i dwukropek lekko bledsze w trybie OFF */
 .bp-disabled .lineNo,
 .bp-disabled .flexRow>span:nth-child(3) {
   color: #9a9a9a !important;

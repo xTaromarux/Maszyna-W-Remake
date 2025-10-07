@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div v-if="visible" id="yRegister">
     <SignalButton
       id="wyy"
@@ -25,11 +25,9 @@
     />
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
-
 export default {
   name: 'YRegisterSection',
   props: {

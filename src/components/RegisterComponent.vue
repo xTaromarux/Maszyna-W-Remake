@@ -1,9 +1,8 @@
-<template>
+﻿<template>
   <div :id="id" :class="[classNames, edgeClass, 'register-container']">
     <div v-if="isEnableEditValue" class="register-container">
       <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span>
       <span>:</span>
-      
       <div class="inputWrapper">
         <span>{{ formattedValue }}</span>
         <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" @blur="onBlur" />
@@ -21,10 +20,8 @@
     </div>
   </div>
 </template>
-
 <script>
 import KogWheelIcon from '@/assets/svg/KogWheelIcon.vue';
-
 export default {
   name: 'RegisterComponent',
   components: { KogWheelIcon },
@@ -52,7 +49,7 @@ export default {
       default: 'dec',
     },
     signedDec: { type: Boolean, default: false },
-    wordBits: { type: Number, default: 12 }, 
+    wordBits: { type: Number, default: 12 },
     showFormatSelector: {
       type: Boolean,
       default: true,
@@ -86,7 +83,7 @@ export default {
         RM: 'Rejestr maski przerwań',
         G:  'Rejestr gotowości urządzenia',
         RB: 'Rejestr bufora urządzenia',
-        WS: 'Wskaźnik stosu', 
+        WS: 'Wskaźnik stosu',
       };
       return names[this.label] || this.label;
     },
@@ -94,7 +91,6 @@ export default {
       if (typeof this.model !== 'number' || isNaN(this.model)) {
         return 'Błąd';
       }
-      
       const toSigned = (value, bits) => {
         const mod = 1 << bits;
         const mask = mod - 1;
@@ -102,7 +98,6 @@ export default {
          const v = value & mask;
          return (v & sign) ? v - mod : v;
        };
-       
       const formatters = {
         dec: (num) => (this.signedDec ? toSigned(num, this.wordBits) : num).toString(),
         hex: (num) => '0x' + num.toString(16).toUpperCase(),
@@ -111,7 +106,6 @@ export default {
       return (formatters[this.numberFormat] || formatters.dec)(this.model);
     },
      registerType() {
-      // Map label to register type for validation
       const typeMap = {
         AK: 'ACC',
         X: 'X',
@@ -120,13 +114,13 @@ export default {
         L: 'programCounter',
         S: 'S',
         A: 'A',
-        WS: 'WS', 
-        RZ: 'RZ', 
-        RP: 'RP', 
-        AP: 'AP', 
-        RM: 'RM', 
-        G: 'G', 
-        RB: 'RB', 
+        WS: 'WS',
+        RZ: 'RZ',
+        RP: 'RP',
+        AP: 'AP',
+        RM: 'RM',
+        G: 'G',
+        RB: 'RB',
         JAML: 'JAML',
       };
       return typeMap[this.label] || this.label;
@@ -136,17 +130,14 @@ export default {
     updateValue(event) {
       const value = parseInt(event.target.value, 10);
       if (!isNaN(value)) {
-        // Use injected validation function if available
         if (this.validateRegisterValue) {
           const registerName = this.fullName || this.label;
           if (this.validateRegisterValue(value, this.registerType, registerName)) {
             this.$emit('update:model', value);
           } else {
-            // if validation fails then reset input to current model value
             event.target.value = this.model;
           }
         } else {
-          // fallback to basic validation using  getMaxValueForRegister
           if (this.getMaxValueForRegister) {
             const maxValue = this.getMaxValueForRegister(this.registerType);
             if (value > maxValue) {
@@ -166,7 +157,6 @@ export default {
       }
     },
     onBlur(e) {
-      // ustaw 0 tylko jeśli pole jest puste
       if (e.target.value === '' || e.target.value === null) {
         e.target.value = 0;
         this.$emit('update:model', 0);
@@ -202,23 +192,19 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .register-container {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 .inputWrapper {
   position: relative;
 }
-
 .format-selector {
   position: relative;
   margin-left: 4px;
 }
-
 .format-button {
   background: none;
   border: none;
@@ -230,17 +216,14 @@ export default {
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }
-
 .format-button:hover {
   background-color: rgba(128, 128, 128, 0.2);
 }
-
 .format-button svg {
   width: 16px;
   height: 16px;
   fill: var(--fontColor);
 }
-
 .format-menu {
   position: absolute;
   top: 100%;
@@ -253,7 +236,6 @@ export default {
   min-width: 60px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
-
 .format-menu div {
   padding: 6px 10px;
   cursor: pointer;
@@ -261,11 +243,9 @@ export default {
   font-size: 0.85rem;
   text-align: center;
 }
-
 .format-menu div:hover {
   background-color: var(--buttonHoverColor);
 }
-
 .format-menu div.active {
   background-color: var(--signal-active);
   color: white;

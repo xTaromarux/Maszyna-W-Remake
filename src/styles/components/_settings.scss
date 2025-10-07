@@ -1,32 +1,25 @@
-.simpleSvgButton {
+﻿.simpleSvgButton {
   all: unset;
   cursor: pointer;
   user-select: none;
-
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-
   transition: 0.5s ease-in-out;
   color: #ddd;
 }
-
 .simpleSvgButton svg {
   color: #ddd;
 }
-
 .simpleSvgButton:hover {
   transform: scale(1.1);
   transition: 0.25s ease-in-out;
 }
-
 .simpleSvgButton:active {
   transform: scale(0.9);
   transition: 0.1s ease-in-out;
 }
-
-// Settings slide-out panel overlay
 #settings-overlay {
   position: fixed;
   top: 0;
@@ -37,22 +30,17 @@
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
 }
-
 .settings-overlay.hide {
   animation: fadeOut 0.3s ease-in-out forwards;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
 }
-
-// Settings slide-out panel
 #settings {
   position: fixed;
   top: 0;
@@ -61,27 +49,20 @@
   width: 400px;
   max-width: 90vw;
   z-index: 101;
-  
   background-color: var(--panelBackgroundColor);
   border-left: 1px solid var(--panelOutlineColor);
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-  
   display: flex;
   flex-direction: column;
-  
-  // Initial state - panel is off-screen
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  
   &.slide-in {
     transform: translateX(0);
   }
-
   &.slide-out {
     transform: translateX(100);
   }
 }
-
 .settings-header {
   display: flex;
   justify-content: space-between;
@@ -92,7 +73,6 @@
   min-height: 60px;
   flex-shrink: 0;
 }
-
 .settingsContent {
   flex: 1;
   overflow-y: auto;
@@ -101,57 +81,47 @@
   flex-direction: column;
   gap: 1.5rem;
 }
-
 #settings .titleSpan {
   font-weight: bold;
   font-size: 1.2rem;
   color: var(--fontColor);
   margin: 0;
 }
-
 #settings .flexColumn {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 #settings .flexRow {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
   align-items: center;
 }
-
 #settings .extras {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 #settings .extras > label {
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: var(--fontColor);
 }
-
 #settings .switchDiv {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 #settings .switchDiv input[type="checkbox"] {
   width: 18px;
   height: 18px;
   accent-color: var(--signal-active);
 }
-
 #settings .switchDiv label {
   color: var(--fontColor);
   font-weight: normal;
 }
-
-
 #settings input[type="number"] {
   padding: 0.5rem;
   border-radius: var(--default-border-radius);
@@ -161,12 +131,10 @@
   font-size: 0.9rem;
   transition: border-color 0.2s ease;
 }
-
 #settings input[type="number"]:focus {
   border-color: var(--signal-active);
   outline: none;
 }
-
 #settings select {
   padding: 0.5rem;
   border-radius: var(--default-border-radius);
@@ -177,18 +145,15 @@
   cursor: pointer;
   transition: border-color 0.2s ease;
 }
-
 #settings select:focus {
   border-color: var(--signal-active);
   outline: none;
 }
-
 #settings label {
   font-weight: 500;
   color: var(--fontColor);
   margin-bottom: 0.25rem;
 }
-
 #settings p {
   font-size: 0.85rem;
   color: var(--fontColor);
@@ -196,14 +161,11 @@
   margin: 0.25rem 0 0 0;
   line-height: 1.4;
 }
-
-// Toggle button styling
 .toggleButtonDiv {
   display: flex;
   border-radius: var(--default-border-radius);
   overflow: hidden;
   border: 1px solid var(--panelOutlineColor);
-  
   span {
     flex: 1;
     padding: 0.75rem;
@@ -216,24 +178,19 @@
     color: var(--buttonTextColor);
     transition: all 0.2s ease;
     font-size: 0.9rem;
-    
     &:hover {
       background-color: var(--buttonHoverColor);
     }
   }
-  
   &.active span:first-child {
     background-color: var(--signal-active);
     color: white;
   }
-  
   &:not(.active) span:last-child {
     background-color: var(--signal-active);
     color: white;
   }
 }
-
-// Reset button styling
 .SvgAndTextButton {
   display: flex;
   align-items: center;
@@ -248,24 +205,19 @@
   font-size: 0.9rem;
   flex: 1;
   justify-content: center;
-  
   &:hover {
     background-color: var(--buttonHoverColor);
     transform: translateY(-1px);
   }
-  
   &:active {
     background-color: var(--buttonActiveColor);
     transform: translateY(0);
   }
-  
   svg {
     width: 16px;
     height: 16px;
   }
 }
-
-// Responsive design for smaller screens
 @media (max-width: 768px) {
   #settings {
     width: 100vw;

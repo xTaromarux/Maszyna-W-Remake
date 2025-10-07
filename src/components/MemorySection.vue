@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="memorySection">
     <MobileMemoryHeader
       v-if="isMobile"
@@ -11,7 +11,6 @@
       :showInvisibleRegisters="showInvisibleRegisters"
       :formatNumber="formatNumber"
     />
-
     <teleport to="body">
       <transition name="fade">
         <div v-if="showMobileModal" class="mobile-overlay" @click.self="closeMobileModal">
@@ -40,7 +39,6 @@
         </div>
       </transition>
     </teleport>
-
     <MemoryContent
       v-if="!isMobile"
       :A="A"
@@ -63,11 +61,9 @@
     />
   </div>
 </template>
-
 <script>
 import MemoryContent from './MemoryContent.vue';
 import MobileMemoryHeader from './MobileMemoryHeader.vue';
-
 export default {
   name: 'MemorySection',
   components: { MemoryContent, MobileMemoryHeader },
@@ -86,7 +82,7 @@ export default {
     busSValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
     signedDec: { type: Boolean, default: false },
-    wordBits:  { type: Number,  default: 8 }, 
+    wordBits:  { type: Number,  default: 8 },
   },
   emits: ['clickItem', 'update:A', 'update:S', 'update:mem', 'update:aFormat', 'update:sFormat'],
   data() {

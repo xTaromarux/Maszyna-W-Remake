@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="W" :class="{ manualMode: manualMode }">
     <div class="layer" v-if="hasAnyInterrupts">
       <RZRegisterSection
@@ -98,8 +98,6 @@
           @click="handleClick('wyls')"
         />
       </div>
-
-
       <div class="layer">
         <RegisterISection
           :I="I"
@@ -110,7 +108,6 @@
           @update:I="$emit('update:I', $event)"
           @clickItem="(name) => $emit('clickItem', name)"
         />
-
         <template v-if="!isMobile">
           <CalcSection
             :signals="signals"
@@ -133,7 +130,6 @@
             @clickItem="(name) => $emit('clickItem', name)"
           />
         </template>
-
         <SignalButton
           v-if="extras.busConnectors"
           id="sa"
@@ -143,7 +139,6 @@
           spanClassNames="lineRightOnBottom"
           @click="$emit('clickItem', 'sa')"
         />
-
         <SignalButton
           v-if="extras.busConnectors"
           id="as"
@@ -153,7 +148,6 @@
           spanClassNames="lineLeftOnBottom"
           @click="$emit('clickItem', 'as')"
         />
-
         <MemorySection
           :A="A"
           :S="S"
@@ -189,7 +183,6 @@
       :number-format="registerFormats.BusS"
       @update:number-format="(val) => $emit('update:number-format', { field: 'BusS', value: val })"
     />
-
     <div id="layer3" class="layer layerCenter">
       <XRegisterSection
         :visible="extras.xRegister"
@@ -201,7 +194,6 @@
         @update:X="$emit('update:X', $event)"
         @clickItem="(name) => $emit('clickItem', name)"
       />
-
       <template v-if="isMobile">
         <SignalButton
           id="weja"
@@ -212,7 +204,6 @@
           spanClassNames="arrowRightOnBottom"
           @click="handleClick('weja')"
         />
-
         <SignalButton
           id="wyak"
           :signal="signals.wyak"
@@ -256,7 +247,6 @@
         @clickItem="(name) => $emit('clickItem', name)"
       />
     </div>
-
     <template v-if="isMobile">
       <div id="layer4" class="layer">
         <CalcSection
@@ -329,10 +319,8 @@
         />
     </div>
     </template>
-
   </div>
 </template>
-
 <script>
 import CounterComponent from '@/components/CounterComponent.vue';
 import BusSignal from '@/components/BusSignal.vue';
@@ -349,7 +337,6 @@ import APRegisterSection from '@/components/APRegisterSection.vue';
 import RZRegisterSection from '@/components/RZRegisterSection.vue';
 import RPRegisterSection from '@/components/RPRegisterSection.vue';
 import WSRegisterSection from '@/components/WSRegisterSection.vue';
-
 export default {
   name: 'MaszynaW',
   components: {
@@ -446,6 +433,5 @@ export default {
   ],
 };
 </script>
-
 <style scoped>
 </style>

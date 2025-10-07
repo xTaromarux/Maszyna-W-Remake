@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="segmented" :style="rootStyle">
     <div class="track" role="tablist" :aria-label="ariaLabel">
       <div class="thumb" v-if="activeIndex >= 0" aria-hidden="true"></div>
@@ -22,10 +22,8 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { computed } from 'vue'
-
 const props = defineProps({
   options: { type: Array, required: true },
   modelValue: { default: null },
@@ -34,35 +32,29 @@ const props = defineProps({
   labelKey: { type: String, default: 'label' }
 })
 const emit = defineEmits(['update:modelValue','change'])
-
 const values = computed(() =>
   props.options.map(o => (typeof o === 'object' ? o[props.valueKey] : o))
 )
-
 const activeIndex = computed(() => {
   if (props.modelValue == null) return -1
   const idx = values.value.findIndex(x => x === props.modelValue)
   return idx
 })
-
 const rootStyle = computed(() => ({
   '--count': String(props.options.length),
   '--idx': String(activeIndex.value)
 }))
-
 function select(opt) {
   const val = typeof opt === 'object' ? opt[props.valueKey] : opt
   emit('update:modelValue', val)
   emit('change', val)
 }
-
 function getLabel(opt) {
   return typeof opt === 'object' ? opt[props.labelKey] : String(opt)
 }
 function optKey(opt, i) {
   return typeof opt === 'object' ? opt[props.valueKey] ?? i : opt
 }
-
 function focusPrev(i) {
   const next = (i - 1 + props.options.length) % props.options.length
   const btns = [...document.querySelectorAll('.segmented .seg-btn')]
@@ -74,7 +66,6 @@ function focusNext(i) {
   btns[next]?.focus()
 }
 </script>
-
 <style scoped>
 .segmented {
   --count: 2;
@@ -101,7 +92,7 @@ function focusNext(i) {
   width: calc((100% - 12px) / var(--count));
   transform: translateX(calc(var(--idx) * 100%));
   border-radius: 0.1rem;
-  background: var(--buttonBackgroundColor); 
+  background: var(--buttonBackgroundColor);
   box-shadow: 0 4px 14px rgba(0,0,0,.15);
   transition: transform var(--dur) var(--ease);
   will-change: transform;

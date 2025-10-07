@@ -1,7 +1,6 @@
-<template>
+﻿<template>
   <div v-if="visible" id="wsRegister">
     <SignalButton id="iws" :signal="signals.iws" @click="handleClick('iws')" label="iws" spanClassNames="arrowRightOnBottom" />
-
     <RegisterComponent
       label="WS"
       :model="WS"
@@ -9,9 +8,7 @@
       :number-format="numberFormat"
       @update:number-format="$emit('update:numberFormat', $event)"
     />
-
     <SignalButton id="dws" :signal="signals.dws" @click="handleClick('dws')" label="dws" spanClassNames="arrowLeftOnBottom" />
-
     <SignalButton
       id="wyws"
       :signal="signals.wyws"
@@ -20,7 +17,6 @@
       class="long pathUpOnRight"
       spanClassNames="lineRightOnBottom"
     />
-
     <SignalButton
       id="wews"
       :signal="signals.wews"
@@ -39,12 +35,10 @@
     </div>
   </div>
 </template>
-
 <script>
 import SignalButton from './SignalButton.vue';
 import RegisterComponent from './RegisterComponent.vue';
 import BusLabel from '@/components/BusLabel.vue';
-
 export default {
   name: 'WSRegisterSection',
   components: {
@@ -95,5 +89,4 @@ export default {
   },
 };
 </script>
-
 <style scoped></style>

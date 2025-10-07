@@ -1,11 +1,10 @@
-<template>
+﻿<template>
   <div class="modal-overlay" v-if="visible" @click.self="$emit('close')">
     <div id="commandList">
       <div class="header">
         <h1>Lista rozkazów</h1>
         <button class="closeBtn closeButton" @click="$emit('close')" aria-label="Zamknij listę rozkazów">&times;</button>
       </div>
-
       <div id="commandListTable">
         <span>{{ commandList.length }} / {{ Math.pow(2, codeBits) }}</span>
         <button
@@ -18,7 +17,6 @@
           <span>{{ cmd.name }}</span>
         </button>
       </div>
-
       <div class="right-panel">
         <div id="commandDetails" v-if="selectedCommand !== null || isCreatingNew">
           <div class="roskazCode">
@@ -27,11 +25,9 @@
             <textarea v-else v-model="newCommandLines" placeholder="Wpisz kod dla nowego rozkazu..." />
           </div>
         </div>
-
         <div class="actionButtons">
           <div class="top-actions" v-if="selectedCommand !== null">
             <button @click="deleteCommand" title="Usuń rozkaz" class="execution-btn execution-btn--run">
-              <!-- ikona kosza -->
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -40,7 +36,6 @@
               </svg>
               <span>Usuń</span>
             </button>
-
             <button
               class="execution-btn execution-btn--run"
               @click="onEdit"
@@ -49,7 +44,6 @@
             >
               <span>Edytuj</span>
             </button>
-
             <button
               class="execution-btn execution-btn--run"
               @click="onSave"
@@ -105,7 +99,6 @@
               <span>Dodaj</span>
             </button>
           </div>
-
           <div class="fileActions">
             <button @click="loadCommandList" title="Wgraj listę rozkazów" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
@@ -135,10 +128,8 @@
     </div>
   </div>
 </template>
-
 <script>
 import SegmentedToggle from './SegmentedToggle.vue'
-
 export default {
   name: 'CommandList',
   components: {  SegmentedToggle },
@@ -163,13 +154,9 @@ export default {
       newCommandLines: '',
     };
   },
-
-  // there can be a situation where fullCommandList is deprecated after adding a new command
-  // needs to be addressed, leaving due to the lack of time
   created() {
     this.fullCommandList = JSON.parse(JSON.stringify(this.commandList));
   },
-
   computed: {
     canEdit() { return this.selectedCommand !== null },
     commandInputPlaceholder() {
@@ -181,11 +168,8 @@ export default {
       }
       return 'Nazwa nowego rozkazu';
     },
-
     matchingCommand() {
       if (!this.commandInputValue.trim()) return null;
-
-      // Normal matching
       const found = this.localList.find((cmd) => cmd.name.trim().toLowerCase() === this.commandInputValue.trim().toLowerCase());
       return found || null;
     },
@@ -197,7 +181,6 @@ export default {
           this.isAddingCommand = false;
           return;
         }
-
         this.localList = JSON.parse(JSON.stringify(newList));
         if (this.selectedCommand !== null && this.selectedCommand >= newList.length) {
           this.selectedCommand = newList.length > 0 ? newList.length - 1 : null;
@@ -207,41 +190,30 @@ export default {
       },
       deep: true,
     },
-
     codeBits: {
       handler(newBits, oldBits) {
         const newMaxCommands = Math.pow(2, newBits);
         const oldMaxCommands = oldBits ? Math.pow(2, oldBits) : this.fullCommandList.length;
-
         if (newMaxCommands < oldMaxCommands) {
-          // Bits decreased - trim visible list to new limit
           if (this.localList.length > newMaxCommands) {
             this.localList = this.localList.slice(0, newMaxCommands);
-
-            // Adjust selected command if needed
             if (this.selectedCommand !== null && this.selectedCommand >= newMaxCommands) {
               this.selectedCommand = newMaxCommands > 0 ? newMaxCommands - 1 : null;
             }
-
             this.emitUpdate();
           }
         } else if (newMaxCommands > oldMaxCommands) {
-          // Bits increased - restore instructions from full list up to new limit
           const commandsToRestore = Math.min(this.fullCommandList.length, newMaxCommands);
           this.localList = JSON.parse(JSON.stringify(this.fullCommandList.slice(0, commandsToRestore)));
           console.log(this.fullCommandList.length, this.localList.length, this.commandList.length);
-
-          // Restore selected command if it was trimmed before
           if (this.selectedCommand === null && this.localList.length > 0) {
             this.selectedCommand = 0;
           }
-
           this.emitUpdate();
         }
       },
       immediate: false,
     },
-
     selectedCommand(newVal) {
       if (newVal === null) {
         return;
@@ -249,23 +221,17 @@ export default {
       this.commandInputValue = this.localList[newVal].name;
       this.isCreatingNew = false;
     },
-
     matchingCommand(newCommand) {
-      // Don't interfere when editing name
       if (this.isEditingName) return;
-
       if (newCommand) {
-        // Found matching command - show its content
         const index = this.localList.findIndex((cmd) => cmd === newCommand);
         this.selectedCommand = index;
         this.isCreatingNew = false;
       } else if (this.commandInputValue.trim()) {
-        // No matching command but input not empty - creating new
         this.selectedCommand = null;
         this.isCreatingNew = true;
         this.newCommandLines = '';
       } else {
-        // Empty input
         this.selectedCommand = null;
         this.isCreatingNew = false;
       }
@@ -275,14 +241,11 @@ export default {
         this.EditCommandField = this.localList[this.selectedCommand]?.lines || '';
       } else if (this.selectedCommand !== null) {
         this.localList[this.selectedCommand].lines = this.EditCommandField;
-
-        // Update the same command in fullCommandList
         const commandToUpdate = this.localList[this.selectedCommand];
         const fullListIndex = this.fullCommandList.findIndex((cmd) => cmd.name === commandToUpdate.name);
         if (fullListIndex !== -1) {
           this.fullCommandList[fullListIndex].lines = this.EditCommandField;
         }
-
         this.emitUpdate();
       }
     },
@@ -307,21 +270,17 @@ export default {
     validateDuplicateNames() {
       const names = this.localList.map((cmd) => cmd.name.trim()).filter((name) => name !== '');
       const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
-
       if (duplicates.length > 0) {
         const uniqueDuplicates = [...new Set(duplicates)];
         console.warn(`Duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
       }
     },
     handleKeyup() {
-      // This will trigger the matchingCommand watcher automatically
-      // which handles the logic for showing/hiding content
     },
     handleKeydown(event) {
       if (!this.isEditingName) {
         return;
       }
-
       if (event.key === 'Enter') {
         event.preventDefault();
         this.confirmNameEdit();
@@ -341,65 +300,47 @@ export default {
         alert('Błąd: nie znaleziono rozkazu do edycji');
         return;
       }
-
       this.isEditingName = true;
       this.editingCommandOriginalName = this.matchingCommand.name;
     },
     confirmNameEdit() {
       const newName = this.commandInputValue.trim();
       console.log('confirmNameEdit called with:', newName);
-
       if (newName === '') {
         alert('Nazwa rozkazu nie może być pusta!');
         this.commandInputValue = this.editingCommandOriginalName;
         return;
       }
-
-      // Find the command we're editing
       const commandToEdit = this.localList.find((cmd) => cmd.name.trim().toLowerCase() === this.editingCommandOriginalName.toLowerCase());
-
       if (!commandToEdit) {
         alert('Błąd: nie znaleziono rozkazu do edycji');
         this.cancelNameEdit();
         return;
       }
-
       if (newName !== this.editingCommandOriginalName) {
-        // Check for duplicates (excluding current command) in both lists
         const otherCommands = this.localList.filter((cmd) => cmd !== commandToEdit);
         const otherFullCommands = this.fullCommandList.filter(
           (cmd) => cmd.name.trim().toLowerCase() !== this.editingCommandOriginalName.toLowerCase()
         );
-
         const duplicate =
           otherCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase()) ||
           otherFullCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase());
-
         if (duplicate) {
           alert(`Rozkaz o nazwie "${newName}" już istnieje!`);
           this.commandInputValue = this.editingCommandOriginalName;
           return;
         }
-
-        // Update the command name in local list
         commandToEdit.name = newName;
-
-        // Update the same command in fullCommandList
         const fullListCommand = this.fullCommandList.find(
           (cmd) => cmd.name.trim().toLowerCase() === this.editingCommandOriginalName.toLowerCase()
         );
         if (fullListCommand) {
           fullListCommand.name = newName;
         }
-
         this.emitUpdate();
       }
-
-      // Exit editing mode
       this.isEditingName = false;
       this.editingCommandOriginalName = '';
-
-      // Update the selected command to the newly renamed one
       const newIndex = this.localList.findIndex((cmd) => cmd === commandToEdit);
       if (newIndex !== -1) {
         this.selectedCommand = newIndex;
@@ -410,38 +351,29 @@ export default {
         alert('Limit rozkazów osiągnięty');
         return;
       }
-
       const newCommandName = this.commandInputValue.trim();
-
       if (newCommandName === '') {
         alert('Nazwa rozkazu nie może być pusta!');
         return;
       }
-
-      // Check if command already exists
       if (this.matchingCommand) {
         alert(`Rozkaz o nazwie "${newCommandName}" już istnieje!`);
         return;
       }
-
       const newCommand = {
         name: newCommandName,
         args: 0,
         description: `Rozkaz ${newCommandName}`,
         lines: this.newCommandLines || '',
       };
-
       this.localList.push(newCommand);
       this.fullCommandList.push(JSON.parse(JSON.stringify(newCommand)));
-
       const newIndex = this.localList.length - 1;
       this.selectedCommand = newIndex;
       this.isCreatingNew = false;
       this.newCommandLines = '';
-
       this.isAddingCommand = true;
       this.emitUpdate();
-
       this.$nextTick(() => {
         const commandButtons = document.querySelectorAll('#commandListTable > button');
         if (commandButtons[newIndex]) {
@@ -449,7 +381,6 @@ export default {
         }
       });
     },
-
     loadCommandList() {
       const input = document.createElement('input');
       input.type = 'file';
@@ -460,19 +391,15 @@ export default {
         reader.onload = (ev) => {
           try {
             const parsed = JSON.parse(ev.target.result);
-
-            // Apply current codeBits limit when loading
             const maxCommands = Math.pow(2, this.codeBits);
             this.fullCommandList = parsed; // Store complete loaded list
             this.localList = parsed.slice(0, maxCommands); // Show only up to current limit
-
             if (this.localList.length > 0) {
               this.selectedCommand = 0;
               this.editCommandEnabled = false;
             } else {
               this.selectedCommand = null;
             }
-
             this.emitUpdate();
           } catch {
             alert('Błąd wczytywania listy');
@@ -498,39 +425,30 @@ export default {
     },
     deleteCommand() {
       if (this.selectedCommand === null) return;
-
       const commandToDelete = this.localList[this.selectedCommand];
-
-      // Remove from local list
       this.localList.splice(this.selectedCommand, 1);
-
-      // Remove from full list as well
       const fullListIndex = this.fullCommandList.findIndex(
         (cmd) => cmd.name === commandToDelete.name && cmd.lines === commandToDelete.lines
       );
       if (fullListIndex !== -1) {
         this.fullCommandList.splice(fullListIndex, 1);
       }
-
       this.emitUpdate();
       this.selectedCommand = this.localList.length ? Math.min(this.selectedCommand, this.localList.length - 1) : null;
     },
     emitUpdate() {
       const names = this.localList.map((cmd) => cmd.name.trim()).filter((name) => name !== '');
       const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
-
       if (duplicates.length > 0) {
         const uniqueDuplicates = [...new Set(duplicates)];
         alert(`Nie można zapisać - znaleziono duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
         return;
       }
-
       this.$emit('update:commandList', JSON.parse(JSON.stringify(this.localList)));
     },
   },
 };
 </script>
-
 <style scoped>
 .modal-overlay {
   position: fixed;
@@ -565,7 +483,6 @@ export default {
   max-width: 90vw;
   height: 90vh;
 }
-
 @media (max-width: 675px) {
   #commandList {
     grid-template-areas:
@@ -576,11 +493,9 @@ export default {
     grid-template-columns: autos;
   }
 }
-
 body.darkMode #commandList {
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
 }
-
 .header {
   grid-area: header;
   display: flex;
@@ -590,20 +505,17 @@ body.darkMode #commandList {
   padding: 0 0 1rem 0;
   border-bottom: 1px solid var(--panelOutlineColor, black);
 }
-
 .header h1 {
   margin: 0;
   font-size: 1.5rem;
   text-align: center;
   color: var(--fontColor, black);
 }
-
 .closeButton {
   position: absolute;
   right: 0;
   top: 0%;
 }
-
 #commandListTable {
   grid-area: list;
   display: flex;
@@ -612,7 +524,6 @@ body.darkMode #commandList {
   overflow-y: auto;
   padding-right: 0.5rem;
 }
-
 #commandListTable > span {
   color: var(--fontColor, black);
   font-size: 0.9rem;
@@ -620,15 +531,12 @@ body.darkMode #commandList {
   margin-bottom: 0.5rem;
   padding: 0 0.5rem;
 }
-
 body.darkMode #commandListTable > button:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
-
 body.darkMode #commandListTable > button.selected {
   box-shadow: 0 2px 8px rgba(74, 158, 255, 0.4);
 }
-
 .right-panel {
   grid-area: right-panel;
   display: flex;
@@ -637,18 +545,15 @@ body.darkMode #commandListTable > button.selected {
   padding-right: 0.5rem;
   min-width: 0;
 }
-
 #commandDetails {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   min-height: 0;
 }
-
 #commandDetails > .buttons {
   display: none;
 }
-
 #commandDetails .roskazCode {
   display: flex;
   flex-direction: column;
@@ -656,7 +561,6 @@ body.darkMode #commandListTable > button.selected {
   align-items: stretch;
   flex-grow: 1;
 }
-
 #commandDetails .roskazCode textarea {
   margin: 5px;
   width: 100%;
@@ -672,76 +576,62 @@ body.darkMode #commandListTable > button.selected {
   line-height: 1.4;
   transition: all 0.2s ease;
 }
-
 #commandDetails .roskazCode textarea:focus {
   outline: none;
   border-color: #003c7d;
   box-shadow: 0 0 0 2px #003c7d;
 }
-
 body.darkMode #commandDetails .roskazCode textarea:focus {
   box-shadow: 0 0 0 2px #003c7d;
 }
-
 #commandDetails .roskazCode textarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background-color: var(--buttonBackgroundColor, #f5f5f5);
 }
-
 body.darkMode #commandDetails .roskazCode textarea:disabled {
   opacity: 0.5;
 }
-
 .actionButtons {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
-
 .top-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
 }
-
 @media (max-width: 675px) {
   .top-actions {
     justify-content: center;
     gap: 0.5rem;
   }
 }
-
 .top-actions > button{
   height: 20px ;
 }
-
 .top-actions > button:first-child:hover {
   background: #ff4444;
   color: white;
   border-color: #ff4444;
 }
-
 .commandInputSection {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .unifiedCommandInput {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex-grow: 1;
 }
-
 .editingButtons {
   display: flex;
   gap: 0.5rem;
 }
-
 .commandInput {
   flex: 1;
   margin-left: 5px;
@@ -753,7 +643,6 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   font-size: 14px;
   transition: all 0.2s ease;
 }
-
 @media (max-width: 675px) {
   .commandInputSection {
     gap: 1rem;
@@ -761,28 +650,23 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
     flex-wrap: wrap;
   }
 }
-
 .commandInput:focus {
   outline: none;
   border-color: #003c7d;
   box-shadow: 0 0 0 2px #003c7d;
 }
-
 body.darkMode .commandInput:focus {
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
 }
-
 .fileActions {
   display: flex;
   justify-content: center;
   gap: 1rem;
 }
-
 .actionButtons button svg {
   width: 20px;
   height: 20px;
 }
-
 .actionButtons button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -792,7 +676,6 @@ body.darkMode .commandInput:focus {
   transform: none;
   box-shadow: none;
 }
-
 body.darkMode .commandInputSection button:hover,
 body.darkMode .fileActions button:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);

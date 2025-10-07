@@ -1,8 +1,6 @@
-import { EditorView } from '@codemirror/view';
+﻿import { EditorView } from '@codemirror/view';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
-
-// mwTheme - equivalent to Monaco's mwTheme
 export const mwTheme = [
   EditorView.theme({
     '&': {
@@ -50,8 +48,6 @@ export const mwTheme = [
     ])
   ),
 ];
-
-// macroTheme - equivalent to Monaco's macroTheme
 export const macroTheme = [
   EditorView.theme({
     '&': {

@@ -1,11 +1,10 @@
-<template>
+﻿<template>
     <div
       :id="id"
       :class="['signal', 'impulse', divClassNames, { active: signal }]">
       <span :class="[spanClassNames]">{{ label }}</span>
     </div>
   </template>
-  
   <script>
   export default {
     name: "SignalButton",

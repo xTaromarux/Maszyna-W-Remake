@@ -1,36 +1,29 @@
-/* Futuristic Console Styles */
+﻿
 .futuristic-console {
   scroll-behavior: smooth;
   grid-area: c;
-
   height: auto;
   min-height: 8rem;
   max-height: 50vh;
   width: 100%;
   justify-self: stretch;
   align-self: stretch;
-
   background: linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 100%);
   border: 1px solid #2a3441;
   border-radius: 8px;
   overflow: hidden;
-
   display: flex;
   flex-direction: column;
-
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
   transition:
     height 0.3s ease,
     min-height 0.3s ease,
     max-height 0.3s ease,
     opacity 0.3s ease;
-
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
-
 .futuristic-console.console-collapsed {
   height: 0;
   min-height: 0;
@@ -40,11 +33,9 @@
   padding: 0;
   border: none;
 }
-
 .futuristic-console.console-collapsed:hover {
   opacity: 1;
 }
-
 .console-header {
   display: flex;
   justify-content: space-between;
@@ -56,7 +47,6 @@
   width: 100%;
   flex-shrink: 0;
 }
-
 .console-header::after {
   content: '';
   position: absolute;
@@ -67,13 +57,11 @@
   background: linear-gradient(90deg, transparent, #64ffda, transparent);
   opacity: 0.3;
 }
-
 .header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
 .status-indicator {
   width: 8px;
   height: 8px;
@@ -82,7 +70,6 @@
   box-shadow: 0 0 10px #64ffda;
   animation: pulse-status 2s infinite;
 }
-
 @keyframes pulse-status {
   0%,
   100% {
@@ -92,7 +79,6 @@
     opacity: 0.5;
   }
 }
-
 .console-title {
   font-size: 0.875rem;
   font-weight: 600;
@@ -100,13 +86,11 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
 .header-center {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .header-right {
   display: flex;
   align-items: center;
@@ -114,15 +98,12 @@
   font-size: 0.75rem;
   color: #8892b0;
 }
-
 .entry-count {
   background: rgba(100, 255, 218, 0.1);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   border: 1px solid rgba(100, 255, 218, 0.2);
 }
-
-/* Console header buttons */
 .close-btn,
 .clear-btn,
 .scroll-top-btn,
@@ -140,26 +121,22 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-
 .close-btn:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
   color: #ef4444;
 }
-
 .clear-btn:hover {
   background: rgba(249, 115, 22, 0.2);
   border-color: #f97316;
   color: #f97316;
 }
-
 .scroll-top-btn:hover,
 .scroll-bottom-btn:hover {
   background: rgba(100, 255, 218, 0.2);
   border-color: #64ffda;
   color: #64ffda;
 }
-
 .console-content {
   overflow-y: auto;
   overflow-x: hidden;
@@ -171,26 +148,21 @@
   scroll-behavior: smooth;
   position: relative;
 }
-
 .console-content::-webkit-scrollbar {
   width: 8px;
 }
-
 .console-content::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 }
-
 .console-content::-webkit-scrollbar-thumb {
   background: rgba(100, 255, 218, 0.3);
   border-radius: 4px;
   transition: background 0.2s ease;
 }
-
 .console-content::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 255, 218, 0.5);
 }
-
 .console-entry {
   border-radius: 6px;
   border-left: 3px solid transparent;
@@ -198,20 +170,16 @@
   transition: all 0.2s ease;
   position: relative;
 }
-
 .console-entry:hover {
   background: rgba(255, 255, 255, 0.05);
   transform: translateX(2px);
 }
-
 .console-entry.has-details {
   cursor: pointer;
 }
-
 .console-entry.has-details:hover {
   background: rgba(255, 255, 255, 0.08);
 }
-
 .entry-header {
   padding: 0.75rem;
   display: flex;
@@ -219,14 +187,12 @@
   align-items: flex-start;
   gap: 1rem;
 }
-
 .entry-meta {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
 }
-
 .severity-indicator {
   width: 6px;
   height: 6px;
@@ -234,7 +200,6 @@
   flex-shrink: 0;
   box-shadow: 0 0 8px currentColor;
 }
-
 .timestamp {
   font-size: 0.75rem;
   color: #8892b0;
@@ -245,7 +210,6 @@
   font-family: inherit;
   white-space: nowrap;
 }
-
 .level-badge {
   font-size: 0.75rem;
   font-weight: 600;
@@ -257,7 +221,6 @@
   border: 1px solid currentColor;
   white-space: nowrap;
 }
-
 .entry-content {
   flex: 1;
   display: flex;
@@ -265,7 +228,6 @@
   gap: 0.75rem;
   min-width: 0;
 }
-
 .message-line {
   flex: 1;
   display: flex;
@@ -273,20 +235,17 @@
   gap: 0.5rem;
   min-width: 0;
 }
-
 .terminal-symbol {
   color: #64ffda;
   font-weight: bold;
   flex-shrink: 0;
 }
-
 .message {
   color: #ccd6f6;
   flex: 1;
   word-break: break-word;
   line-height: 1.4;
 }
-
 .details-toggle {
   background: none;
   border: 1px solid rgba(100, 255, 218, 0.3);
@@ -301,25 +260,21 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-
 .details-toggle:hover {
   background: rgba(100, 255, 218, 0.1);
   border-color: #64ffda;
   box-shadow: 0 0 8px rgba(100, 255, 218, 0.3);
 }
-
 .details-toggle.expanded {
   background: rgba(100, 255, 218, 0.2);
   border-color: #64ffda;
   transform: rotate(180deg);
 }
-
 .entry-details {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
   animation: expandDetails 0.3s ease-out;
 }
-
 @keyframes expandDetails {
   from {
     opacity: 0;
@@ -330,27 +285,23 @@
     max-height: 300px;
   }
 }
-
 .details-content {
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .detail-section {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
-
 .detail-section.code-frame {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   padding: 0.75rem;
   border-left: 3px solid #64ffda;
 }
-
 .detail-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -358,12 +309,10 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
 .detail-value {
   color: #ccd6f6;
   line-height: 1.4;
 }
-
 .detail-value code,
 .detail-value.code-block {
   background: rgba(0, 0, 0, 0.4);
@@ -373,7 +322,6 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f7fafc;
 }
-
 .hint-text {
   font-style: italic;
   color: #8892b0;
@@ -382,75 +330,57 @@
   border-radius: 4px;
   border-left: 3px solid #64ffda;
 }
-
-/* Level-specific styling */
 .console-entry.level-info {
   border-left-color: #3b82f6;
 }
-
 .console-entry.level-warning {
   border-left-color: #f59e0b;
 }
-
 .console-entry.level-error {
   border-left-color: #ef4444;
   background: rgba(239, 68, 68, 0.05);
 }
-
 .console-entry.level-critical {
   border-left-color: #b91c1c;
   background: rgba(185, 28, 28, 0.1);
   box-shadow: 0 0 20px rgba(185, 28, 28, 0.2);
 }
-
 .console-entry.level-critical .entry-header {
   background: rgba(185, 28, 28, 0.1);
 }
-
 #console{
   height: 100%;
   max-height: 371px;
 }
-
-/* Legacy support for old class names */
 #console > div.error,
 #console > div.błąd {
   background-color: #cc0000aa;
 }
-
 #console > div.io {
   background-color: #0099ff88;
 }
-
 #console > div.command.compiler,
 #console > div.kompilator.rozkazów {
   background-color: #00ccff88;
 }
-
 #console > div.program.compiler {
   background-color: #00aaff88;
 }
-
 #console > div.system,
 #console > div.System {
   background-color: #0099ff88;
 }
-
 #console > div.info {
   background-color: #0099ff88;
 }
-
-/* Style for compound class names */
 #console > div[class*='błąd parsera kodu'],
 #console > div[class*='code parser error'] {
   background-color: #cc0000aa;
 }
-
 #console > div[class*='kompilator rozkazów'],
 #console > div[class*='command compiler'] {
   background-color: #00ccff88;
 }
-
 .console-indicator {
   grid-area: c;
   height: 4px;
@@ -465,21 +395,17 @@
   justify-self: stretch;
   align-self: end;
 }
-
 .console-indicator:hover {
   height: 6px;
   background: linear-gradient(90deg, transparent, var(--accentColor, #0066cc), transparent);
 }
-
 .console-indicator.has-errors {
   background: linear-gradient(90deg, transparent, #ff4444, transparent);
   animation: pulse-indicator 1s infinite;
 }
-
 .console-indicator.has-errors:hover {
   background: linear-gradient(90deg, transparent, #ff6666, transparent);
 }
-
 @keyframes pulse-indicator {
   0%,
   100% {
@@ -489,8 +415,6 @@
     opacity: 0.6;
   }
 }
-
-/* Mobile responsiveness */
 @media (max-width: 1080px) {
   .futuristic-console {
     max-height: 40vh;

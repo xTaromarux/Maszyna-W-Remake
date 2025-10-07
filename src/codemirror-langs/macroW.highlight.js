@@ -1,5 +1,4 @@
-import { styleTags, tags as t } from '@lezer/highlight';
-
+﻿import { styleTags, tags as t } from '@lezer/highlight';
 export const macroWHighlight = styleTags({
   instrWord: t.keyword,
   number: t.number,
@@ -10,4 +9,3 @@ export const macroWHighlight = styleTags({
   LineComment: t.lineComment,
   newline: t.content,
 });
-

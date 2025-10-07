@@ -1,10 +1,8 @@
-<template>
+﻿<template>
   <Main/>
 </template>
-
 <script>
 import Main from './components/Main.vue'
-
 export default {
   name: 'App',
   components: {
@@ -12,11 +10,8 @@ export default {
   }
 }
 </script>
-
 <style>
-
 @import url("@/assets/style/vars.css");
-
 * {
   box-sizing: border-box;
 }

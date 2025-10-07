@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="editor-wrapper" :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }" ref="editorWrapper" :style="wrapperStyle">
     <button v-if="language === 'macroW'" @click="toggleFullScreen" class="fullscreen-button">
       <svg
@@ -32,25 +32,20 @@
         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
       </svg>
     </button>
-
-    <!-- Compilation controls for fullscreen macro editor -->
     <div v-if="language === 'macroW' && isFullScreen" class="fullscreen-controls">
       <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="execution-btn execution-btn--compile">
         <CompileIcon />
         <span>Kompiluj</span>
       </button>
-
       <button v-else @click="onEdit" class="compile-btn compile-btn--edit">
         <EditIcon />
         <span>Edytuj</span>
       </button>
     </div>
-
     <div v-if="programCompiled" class="overlay-lock" aria-hidden="true" />
     <div ref="editorContainer" class="codemirror-container"  :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }"/>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits, computed } from 'vue';
 import { EditorView } from 'codemirror';
@@ -69,31 +64,19 @@ import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirro
 import { highlightSelectionMatches, search } from '@codemirror/search';
 import { bracketMatching, indentOnInput, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { javascript } from '@codemirror/lang-javascript';
-
-// Import custom languages and themes
 import { maszynaW } from '../codemirror-langs/maszynaW.support.js';
 import { mwTheme, macroTheme } from '../codemirror-langs/themes.js';
 import { macroW } from '../codemirror-langs/macroW.support.js';
 import { macroWRuntimeHighlight, macroWRuntimeCompletions } from '../codemirror-langs/macroW.runtime';
-// import { stickyCompletion } from '../codemirror-langs/stickyCompletion.js';
-
-// Import icons for compilation buttons
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
-
 const isFullScreen = ref(false);
 const editorWrapper = ref<HTMLDivElement | null>(null);
-
 function toggleFullScreen() {
   if (!editorWrapper.value) return;
-
   const wrapper = editorWrapper.value;
-
   if (isFullScreen.value) {
-    // --- EXIT ---
     isFullScreen.value = false;
-
-    // Cleanup after transition
     const handleTransitionEnd = () => {
       wrapper.style.position = '';
       wrapper.style.top = '';
@@ -105,29 +88,22 @@ function toggleFullScreen() {
     };
     wrapper.addEventListener('transitionend', handleTransitionEnd, { once: true });
   } else {
-    // --- ENTER ---
     const rect = wrapper.getBoundingClientRect();
     wrapper.style.position = 'fixed';
     wrapper.style.top = `${rect.top}px`;
     wrapper.style.left = `${rect.left}px`;
     wrapper.style.width = `${rect.width}px`;
     wrapper.style.height = `${rect.height}px`;
-
-    // Force reflow
     void wrapper.offsetWidth;
-
     wrapper.style.transition = 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
     isFullScreen.value = true;
   }
 }
-
-// 1. Props with same interface as Monaco component
 const props = defineProps<{
   modelValue: string;
   language?: string;
   theme?: string;
   readOnly?: boolean;
-  // Props for macro compilation
   programCompiled?: boolean;
   disable?: boolean;
   onCompile?: () => void;
@@ -137,18 +113,14 @@ const props = defineProps<{
   maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();
-
 const wrapperStyle = computed(() => ({
   '--editorMaxHeight': props.maxHeight ?? '32rem',
 }));
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
-
 const editorContainer = ref<HTMLDivElement | null>(null);
 let editorView: EditorView | null = null;
-
 function getAutocompleteExtensions() {
   if (props.autocompleteEnabled === false) return [];
   if (props.language === 'macroW') {
@@ -156,7 +128,6 @@ function getAutocompleteExtensions() {
   }
   return [];
 }
-
 function getLanguageExtension(language?: string) {
   switch (language) {
     case 'maszynaW':
@@ -169,7 +140,6 @@ function getLanguageExtension(language?: string) {
       return javascript();
   }
 }
-
 function getThemeExtension(theme?: string) {
   switch (theme) {
     case 'mwTheme':
@@ -180,11 +150,8 @@ function getThemeExtension(theme?: string) {
       return mwTheme;
   }
 }
-
-// 6. Create editor extensions
 function createExtensions() {
   return [
-    // Essential editor features
     lineNumbers(),
     highlightActiveLine(),
     history(),
@@ -192,17 +159,12 @@ function createExtensions() {
     dropCursor(),
     rectangularSelection(),
     crosshairCursor(),
-
-    // Language features
     bracketMatching(),
     indentOnInput(),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-
     closeBrackets(),
     highlightSelectionMatches(),
     search({ top: true }),
-
-    // Enhanced keymap with explicit undo/redo and useful shortcuts
     keymap.of([
       ...closeBracketsKeymap,
       ...(props.autocompleteEnabled !== false ? completionKeymap : []),
@@ -212,7 +174,6 @@ function createExtensions() {
       { key: 'Ctrl-Shift-z', run: redo },
       { key: 'Tab', run: indentWithTab.run },
       { key: 'Shift-Tab', run: indentWithTab.run },
-      // Additional useful shortcuts
       {
         key: 'Ctrl-a',
         run: (view) => {
@@ -223,21 +184,16 @@ function createExtensions() {
       {
         key: 'Ctrl-/',
         run: (view) => {
-          // Simple comment toggle - adds // at the beginning of lines
           const { state } = view;
           const changes = [];
-
           for (let i = 0; i < state.selection.ranges.length; i++) {
             const range = state.selection.ranges[i];
             const from = state.doc.lineAt(range.from).from;
             const to = state.doc.lineAt(range.to).to;
-
             for (let lineStart = from; lineStart <= to; ) {
               const line = state.doc.lineAt(lineStart);
               const lineText = line.text;
-
               if (lineText.trim().startsWith('//')) {
-                // Remove comment
                 const commentIndex = lineText.indexOf('//');
                 changes.push({
                   from: line.from + commentIndex,
@@ -245,7 +201,6 @@ function createExtensions() {
                   insert: '',
                 });
               } else if (lineText.trim().length > 0) {
-                // Add comment
                 const firstNonSpace = lineText.search(/\S/);
                 const insertPos = firstNonSpace >= 0 ? line.from + firstNonSpace : line.from;
                 changes.push({
@@ -254,11 +209,9 @@ function createExtensions() {
                   insert: '// ',
                 });
               }
-
               lineStart = line.to + 1;
             }
           }
-
           if (changes.length > 0) {
             view.dispatch({ changes });
           }
@@ -268,12 +221,10 @@ function createExtensions() {
     ]),
     EditorView.editable.of(!(props.readOnly || props.disable || props.programCompiled)),
     EditorView.lineWrapping,
-    // Add language and theme LAST to ensure they override
     getLanguageExtension(props.language),
     ...getThemeExtension(props.theme),
     ...getAutocompleteExtensions(),
     ...(props.language === 'macroW' ? macroWRuntimeHighlight(props.commandList || []) : []),
-    // ...(props.language === 'macroW' && props.devStickyCompletion ? [stickyCompletion()] : []),
     EditorView.theme({
       '&': {
         fontSize: '14px',
@@ -301,7 +252,6 @@ function createExtensions() {
         textAlign: 'left',
         lineHeight: '1.4',
       },
-      // Selection styling
       '.cm-selectionBackground': {
         backgroundColor: '#316AC5 !important',
         marginTop: '-5px',
@@ -315,7 +265,6 @@ function createExtensions() {
       '&.cm-focused .cm-selectionBackground': {
         backgroundColor: '#316AC5 !important',
       },
-      // Cursor styling
       '.cm-cursor': {
         marginTop: '-4px',
         marginLeft: '-4px',
@@ -324,11 +273,9 @@ function createExtensions() {
         borderLeftColor: '#316AC5 !important',
         borderLeftWidth: '2px !important',
       },
-      // Active line highlighting
       '.cm-activeLine': {
         backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
       },
-      // Search match highlighting
       '.cm-searchMatch': {
         backgroundColor: '#ffd700 !important',
         color: '#000 !important',
@@ -336,7 +283,6 @@ function createExtensions() {
       '.cm-searchMatch.cm-searchMatch-selected': {
         backgroundColor: '#ff8c00 !important',
       },
-      // Keywords for macroW conditional statements
       '.tok-IF, .tok-THEN, .tok-ELSE': {
         color: '#003c7d !important',
         fontWeight: 'bold !important',
@@ -345,7 +291,6 @@ function createExtensions() {
         color: '#003c7d !important',
         fontWeight: 'bold !important',
       },
-      // Label styling
       '.tok-labelName, .cmt-labelName': {
         color: '#795E26 !important',
         fontStyle: 'italic !important',
@@ -359,7 +304,6 @@ function createExtensions() {
         fontStyle: 'italic !important',
       },
     }),
-    // Update listener
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         const newValue = update.state.doc.toString();
@@ -370,8 +314,6 @@ function createExtensions() {
     }),
   ];
 }
-
-// 7. Initialize editor
 onMounted(() => {
   if (editorContainer.value) {
     editorView = new EditorView({
@@ -383,15 +325,12 @@ onMounted(() => {
     });
   }
 });
-
-// 8. Cleanup
 onUnmounted(() => {
   if (editorView) {
     editorView.destroy();
     editorView = null;
   }
 });
-
 watch(
   () => props.programCompiled,
   () => {
@@ -402,8 +341,6 @@ watch(
     }
   }
 );
-
-// 9. Watch for external changes to modelValue
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -418,7 +355,6 @@ watch(
     }
   }
 );
-
 watch(
   () => props.autocompleteEnabled,
   () => {
@@ -427,7 +363,6 @@ watch(
     }
   }
 );
-
 watch(
   () => props.commandList,
   () => {
@@ -439,7 +374,6 @@ watch(
   },
   { deep: true }
 );
-
 watch(
   () => props.disable,
   () => {
@@ -450,8 +384,6 @@ watch(
     }
   }
 );
-
-// 10. Watch for language changes
 watch(
   () => props.language,
   () => {
@@ -462,8 +394,6 @@ watch(
     }
   }
 );
-
-// 11. Watch for theme changes
 watch(
   () => props.theme,
   () => {
@@ -474,8 +404,6 @@ watch(
     }
   }
 );
-
-// 12. Watch for readOnly changes
 watch(
   () => props.readOnly,
   () => {
@@ -487,7 +415,6 @@ watch(
   }
 );
 </script>
-
 <style scoped>
 .editor-wrapper {
   position: relative;
@@ -500,24 +427,20 @@ watch(
     top 0.3s ease,
     left 0.3s ease;
 }
-
 @media (min-width: 675px) and (max-width: 1195px) {
   .editor-wrapper {
     width: 40rem;
   }
 }
-
 @media (max-width: 675px) {
   .programEditor {
     width: 100%;
   }
 }
-
 :deep(.cm-content .cm-macrow-keyword) {
   color: #0a84ff !important;
   font-weight: 700;
 }
-
 .fullscreen-button {
   position: absolute;
   top: 10px;
@@ -533,11 +456,9 @@ watch(
   color: var(--fontColor);
   transition: all 0.2s ease;
 }
-
 .fullscreen-button:hover {
   color: var(--primaryColor);
 }
-
 .editor-wrapper.full-screen {
   top: 0 !important;
   left: 65vw !important;
@@ -551,7 +472,6 @@ watch(
   border-radius: 0 0 0 8px;
   max-height: none;
 }
-
 .codemirror-container {
   width: 100%;
   height: 100%;
@@ -560,27 +480,21 @@ watch(
   overflow: hidden;
   max-height: 40rem;
 }
-
 .codemirror-container.full-screen {
   max-height: 93% !important;
 }
-
 .codemirror-container :deep(.cm-editor) {
   height: 100%;
-  background: var(--panelBackgroundColor) !important; /* light domyślnie */
+  background: var(--panelBackgroundColor) !important;
   color: var(--fontColor) !important;
 }
-
 .codemirror-container :deep(.cm-gutters) {
-  background: var(--panelBackgroundColor) !important; /* light domyślnie */
+  background: var(--panelBackgroundColor) !important;
   color: var(--fontColor) !important;
 }
-
 .codemirror-container :deep(.cm-focused) {
   outline: none;
 }
-
-/* Fullscreen controls styling */
 .fullscreen-controls {
   position: absolute;
   bottom: 8px;
@@ -590,32 +504,19 @@ watch(
   gap: 0.5rem;
   align-items: center;
 }
-
-/* ============ AUTOCOMPLETE (CodeMirror 6) ============ */
-
-/* Główne pudło podpowiedzi */
 :deep(.cm-tooltip-autocomplete) {
   width: 250px !important;
   min-width: 250px !important;
   max-width: 250px !important;
-
-  /* żeby szerokość liczyła się razem z padding/border */
   box-sizing: border-box !important;
-
-  /* opcjonalnie: zablokuj rozciąganie */
   display: block !important;
   overflow: hidden !important;
-
   border: 4px solid #003c7d !important;
   border-radius: 8px !important;
-
-  background: var(--panelBackgroundColor) !important; /* light domyślnie */
+  background: var(--panelBackgroundColor) !important;
   color: var(--fontColor) !important;
-
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
 }
-
-/* Wysokość i przewijanie listy */
 :deep(.cm-tooltip-autocomplete ul) {
   width: 100% !important;
   max-height: 260px !important;
@@ -625,8 +526,6 @@ watch(
   padding: 6px 0 !important;
   margin: 0 !important;
 }
-
-/* Elementy listy */
 :deep(.cm-tooltip-autocomplete li) {
   display: grid !important;
   grid-template-columns: 1fr auto;
@@ -636,15 +535,11 @@ watch(
   line-height: 1.2 !important;
   white-space: wrap !important;
 }
-
-/* Zaznaczony element */
 :deep(.cm-tooltip-autocomplete li[aria-selected='true']),
 :deep(.cm-tooltip-autocomplete .cm-completionSelected) {
   background: #e6f0ff !important;
   color: #003c7d !important;
 }
-
-/* Label (nazwa rozkazu) */
 :deep(.cm-tooltip-autocomplete .cm-completionLabel) {
   grid-column: 1 !important;
   grid-row: 1 !important;
@@ -654,24 +549,17 @@ watch(
   text-overflow: ellipsis !important;
   font-weight: 700 !important;
 }
-
 :deep(.cm-tooltip-autocomplete .cm-completionIcon) {
   grid-column: 2 !important;
 }
-
-/* Szczegóły (description) */
 :deep(.cm-tooltip-autocomplete .cm-completionDetail) {
   opacity: 0.75 !important;
   font-size: 12px !important;
 }
-
-/* Podświetlona część dopasowania */
 :deep(.cm-tooltip-autocomplete .cm-completionMatchedText) {
   text-decoration: none !important;
   font-weight: 700 !important;
 }
-
-/* Pasek przewijania (opcjonalnie) */
 :deep(.cm-tooltip-autocomplete ul::-webkit-scrollbar) {
   width: 8px;
 }
@@ -679,7 +567,6 @@ watch(
   background: #c7d7ff;
   border-radius: 6px;
 }
-
 .editor-wrapper.dimmed .codemirror-container :deep(.cm-editor) {
   filter: grayscale(0.6) brightness(0.95);
   opacity: 0.85;
@@ -687,15 +574,13 @@ watch(
     opacity 0.2s ease,
     filter 0.2s ease;
 }
-
-/* półtransparentna nakładka z napisem */
 .overlay-lock {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.08);
   display: grid;
   place-items: center;
-  pointer-events: none; /* nie blokuj scrolla/selection */
+  pointer-events: none;
   z-index: 15;
 }
 </style>

@@ -1,0 +1,54 @@
+// Program demonstrujący instrukcje skoku warunkowego
+// Sprawdzanie czy liczba jest zerem
+
+PROGRAM SprawdzZero;
+VAR
+    liczba: 0;      // Liczba do sprawdzenia (zmień na różne wartości)
+    msg_zero: 1;    // Wiadomość: "to jest zero"
+    msg_nie_zero: 2;// Wiadomość: "to nie jest zero"
+BEGIN
+    // Załaduj liczbę do sprawdzenia
+    POB liczba;
+    
+    // Jeśli akumulator = 0, skocz do etykiety "jest_zero"
+    SOZ jest_zero;
+    
+    // Jeśli doszliśmy tutaj, liczba NIE jest zerem
+    POB msg_nie_zero;
+    ŁAD 20;        // Zapisz wynik w komórce 20
+    SOB koniec;    // Skocz do końca
+    
+jest_zero:
+    // Liczba JEST zerem
+    POB msg_zero;
+    ŁAD 20;        // Zapisz wynik w komórce 20
+    
+koniec:
+    STP;           // Zakończ program
+END.
+
+/*
+OPIS PROGRAMU:
+Program demonstruje instrukcje skoku warunkowego SOZ (Skok gdy Zero)
+i bezwarunkowego SOB (Skok Bezwarunkowy).
+
+ANALIZA INSTRUKCJI:
+- SOZ etykieta: skacze gdy akumulator = 0
+- SOB etykieta: skacze zawsze
+- Etykiety oznaczają miejsca w kodzie
+
+SCENARIUSZE TESTOWE:
+1. liczba = 0  → wynik w komórce 20 = 1 (to jest zero)
+2. liczba = 5  → wynik w komórce 20 = 2 (to nie jest zero)
+3. liczba = -1 → wynik w komórce 20 = 2 (to nie jest zero)
+
+OBSERWACJE:
+- Sprawdź licznik rozkazów (PC) podczas skoków
+- Zwróć uwagę które instrukcje są pomijane
+- Obserwuj flagę Z po instrukcji POB
+
+CELE EDUKACYJNE:
+- Zrozumienie instrukcji warunkowych
+- Poznanie koncepcji etykiet i skoków
+- Podstawy logiki programowania
+*/

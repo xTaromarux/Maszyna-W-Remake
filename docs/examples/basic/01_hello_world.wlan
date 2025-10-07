@@ -1,0 +1,35 @@
+// Pierwszy program - Hello World w Maszynie W
+// Demonstruje podstawowe operacje: pobieranie, zapisywanie i zatrzymanie
+
+PROGRAM HelloWorld;
+BEGIN
+    // Pobierz wartość z komórki pamięci 10 do akumulatora
+    POB 10;
+    
+    // Zapisz zawartość akumulatora do komórki pamięci 15
+    ŁAD 15;
+    
+    // Zatrzymaj wykonywanie programu
+    STP;
+END.
+
+/*
+OPIS PROGRAMU:
+Najprostszy możliwy program w języku WLAN. Demonstruje:
+1. Pobieranie wartości z pamięci (POB)
+2. Zapisywanie wartości do pamięci (ŁAD) 
+3. Zatrzymanie programu (STP)
+
+INSTRUKCJE URUCHOMIENIA:
+1. Przed uruchomieniem ustaw wartość w komórce 10 (np. 42)
+2. Skompiluj program
+3. Wykonaj krok po kroku obserwując:
+   - Akumulator po instrukcji POB
+   - Komórkę 15 po instrukcji ŁAD
+   - Stan programu po STP
+
+CELE EDUKACYJNE:
+- Zrozumienie podstawowych instrukcji procesora
+- Obserwacja przepływu danych między pamięcią a akumulatorem
+- Poznanie struktury programu WLAN
+*/

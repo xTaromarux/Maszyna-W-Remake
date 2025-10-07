@@ -1,0 +1,115 @@
+[Opcje]
+Po³¹czenie=1
+Inkrementacja=0
+Logiczne=0
+Arytmetyczne=0
+Stos=1
+RejestrX=0
+RejestrY=0
+Przerwania=0
+Wejœcie=0
+Znaczniki=0
+Adres=5
+Kod=4
+[Rozkazy]
+Liczba=12
+Nazwa1=stp
+Nazwa2=dod
+Nazwa3=ode
+Nazwa4=pob
+Nazwa5=³ad
+Nazwa6=sob
+Nazwa7=som
+Nazwa8=soz
+Nazwa9=dns
+Nazwa10=pwr
+Nazwa11=pzs
+Nazwa12=sdp
+[stp]
+Linie=5
+Linia1=// zakoñczenie programu
+Linia2=ROZKAZ STP;
+Linia3=Argumenty 0;
+Linia4=czyt wys wei il;
+Linia5=stop;
+[dod]
+Linie=5
+Linia1=// (Ak)+((Ad))->Ak
+Linia2=ROZKAZ DOD;
+Linia3=czyt wys wei il;
+Linia4=wyad wea;
+Linia5=czyt wys weja dod weak wyl wea;
+[ode]
+Linie=5
+Linia1=// (Ak)-((Ad))->Ak
+Linia2=ROZKAZ ODE;
+Linia3=czyt wys wei il;
+Linia4=wyad wea;
+Linia5=czyt wys weja ode weak wyl wea;
+[pob]
+Linie=5
+Linia1=// ((Ad))->Ak
+Linia2=ROZKAZ POB;
+Linia3=czyt wys wei il;
+Linia4=wyad wea;
+Linia5=czyt wys weja przep weak wyl wea;
+[³ad]
+Linie=5
+Linia1=// (Ak)->(Ad)
+Linia2=ROZKAZ £AD;
+Linia3=czyt wys wei il;
+Linia4=wyad wea wyak wes;
+Linia5=pisz wyl wea;
+[sob]
+Linie=5
+Linia1=// skok bezwarunkowy
+Linia2=ROZKAZ SOB;
+Linia3=Argumenty 1;
+Linia4=czyt wys wei il;
+Linia5=wyad wea wel;
+[som]
+Linie=6
+Linia1=// skok gdy (AK) < 0
+Linia2=ROZKAZ SOM;
+Linia3=czyt wys wei il;
+Linia4=JE¯ELI Z TO @ujemne GDY NIE @dodatnie;
+Linia5=@ujemne wyad wea wel KONIEC;
+Linia6=@dodatnie wyl wea;
+[soz]
+Linie=6
+Linia1=// skok gdy (AK) = 0
+Linia2=ROZKAZ SOZ;
+Linia3=czyt wys wei il;
+Linia4=JE¯ELI zak TO @zero GDY NIE @niezero;
+Linia5=@zero wyad wea wel KONIEC;
+Linia6=@niezero wyl wea;
+[dns]
+Linie=6
+Linia1=rozkaz dns;
+Linia2=argumenty 0;
+Linia3=czyt wys wei il;
+Linia4=dws;
+Linia5=wyws wea wyak wes;
+Linia6=pisz wyl wea;
+[pwr]
+Linie=5
+Linia1=rozkaz pwr;
+Linia2=argumenty 0;
+Linia3=czyt wys wei il;
+Linia4=wyws wea iws;
+Linia5=czyt wys as wea wel;
+[pzs]
+Linie=5
+Linia1=rozkaz pzs;
+Linia2=argumenty 0;
+Linia3=czyt wys wei il;
+Linia4=wyws wea iws;
+Linia5=czyt wys weja przep weak wyl wea;
+[sdp]
+Linie=6
+Linia1=rozkaz sdp;
+Linia2=argumenty 1;
+Linia3=czyt wys wei il;
+Linia4=dws;
+Linia5=wyws wea wyls wes;
+Linia6=pisz wyad wel wea;

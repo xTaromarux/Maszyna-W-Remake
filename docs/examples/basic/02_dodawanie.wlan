@@ -1,0 +1,43 @@
+// Program demonstrujący podstawowe operacje arytmetyczne
+// Dodawanie dwóch liczb i zapisanie wyniku
+
+PROGRAM Dodawanie;
+VAR
+    liczba1: 25;    // Pierwsza liczba do dodania
+    liczba2: 17;    // Druga liczba do dodania
+    wynik: 0;       // Miejsce na wynik
+BEGIN
+    // Załaduj pierwszą liczbę do akumulatora
+    POB liczba1;
+    
+    // Dodaj drugą liczbę do akumulatora
+    DOD liczba2;
+    
+    // Zapisz wynik w pamięci
+    ŁAD wynik;
+    
+    // Zakończ program
+    STP;
+END.
+
+/*
+OPIS PROGRAMU:
+Demonstruje podstawowe operacje arytmetyczne w Maszynie W.
+Program dodaje dwie liczby i zapisuje wynik w pamięci.
+
+ANALIZA WYKONANIA:
+1. POB liczba1  → AK = 25
+2. DOD liczba2  → AK = 25 + 17 = 42  
+3. ŁAD wynik    → pamięć[wynik] = 42
+4. STP          → koniec programu
+
+OBSERWACJE:
+- Sprawdź wartość akumulatora po każdej instrukcji
+- Zwróć uwagę na zmiany w pamięci
+- Obserwuj flagę Z (zero) - czy jest ustawiona?
+
+EKSPERYMENTY:
+- Zmień wartości liczba1 i liczba2
+- Co się stanie gdy suma przekroczy 65535?
+- Spróbuj dodać więcej liczb
+*/

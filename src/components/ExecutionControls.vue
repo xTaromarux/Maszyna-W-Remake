@@ -4,7 +4,7 @@
     <button
       v-if="!codeCompiled"
       @click="$emit('compile')"
-      :disabled="isRunning || !code || !code.trim()"
+      :disabled="manualMode || isRunning || !code || !code.trim()"
       class="execution-btn execution-btn--compile"
       title="Skompiluj program"
     >
@@ -31,7 +31,7 @@
       title="Krok wykonania"
     >
       <NextLineIcon />
-      <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj rozkaz' }}</span>
+      <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj takt' }}</span>
     </button>
 
     <!-- Run / Stop -->

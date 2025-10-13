@@ -84,7 +84,6 @@ export function applySignals(phase: any, store: Store) {
 
   if (phase.weak) {
     store.Ak = store._aluOut;
-    // aktualizacja flag po zapisie do Ak
     store.flags.Z = (store.Ak & 0xff) === 0;
     store.flags.N = !!(store.Ak & 0x80);
   }
@@ -93,6 +92,24 @@ export function applySignals(phase: any, store: Store) {
   if (phase.wes) store.S = store.magS;
   if (phase.wei) store.I = store.magS;
   if (phase.wel) store.L = store.magA;
+  if (phase.wyg) {
+    const readyBit = (store.ioIn.length > 0) ? 0 : 1;
+    store.magS   = readyBit & 0xff;
+    store.portIn = readyBit & 0xff;
+  }
+
+  if (phase.wyrb) {
+    const hasData = store.ioIn.length > 0;
+    const v = hasData ? (store.ioIn.shift()! & 0xff) : 0;
+    store.magS   = v;
+    store.portIn = v;
+  }
+
+  if (phase.werb) {
+    const v = store.Ak & 0xff;
+    store.portOut = v;
+    store.ioOut.push(v);
+  }
 
   if (phase.il) {
     store.L = (store.L + 1) & 0xff;

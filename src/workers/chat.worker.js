@@ -1,5 +1,3 @@
-// workers/chat.worker.js
-
 let currentAbort = null;
 
 function pickTextFromResponse(data) {
@@ -24,6 +22,30 @@ const API_URL = (() => {
   return isDevHost ? `${protocol}//${hostname}:8787/api/chat` : '/api/chat';
 })();
 
+// /health siedzi obok /api/chat
+const HEALTH_URL = API_URL.replace(/\/api\/chat\/?$/, '/health');
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchJSONWithTimeout(url, opts = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { ...opts, signal: controller.signal });
+    const ct = r.headers.get('content-type') || '';
+    let body = null;
+    if (ct.includes('application/json')) {
+      body = await r.json().catch(() => ({}));
+    } else {
+      const txt = await r.text().catch(() => '');
+      try { body = JSON.parse(txt); } catch { body = { text: txt }; }
+    }
+    return { ok: r.ok, status: r.status, body, headers: r.headers };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 self.onmessage = async (e) => {
   const msg = e.data;
 
@@ -44,7 +66,7 @@ self.onmessage = async (e) => {
   if (currentAbort) currentAbort.abort();
   currentAbort = new AbortController();
 
-  try {
+  const doChatCall = async () => {
     const resp = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -61,28 +83,51 @@ self.onmessage = async (e) => {
       throw new Error(`HTTP ${resp.status} ${resp.statusText}${txt ? ` - ${txt}` : ''}`);
     }
 
-    // FastAPI zwraca JSON { response, timestamp }
     let data = null;
     try { data = await resp.json(); }
     catch { data = { response: await resp.text() }; }
 
-    const full = pickTextFromResponse(data) || '[AI did not return a response]';
+    return pickTextFromResponse(data) || '[AI did not return a response]';
+  };
 
+  try {
+    let full = null;
+
+    // Próba 1
+    try {
+      full = await doChatCall();
+    } catch (firstErr) {
+      if (currentAbort?.signal?.aborted) throw firstErr;
+
+      // „Po cichu” sprawdź /health i wybudź Space
+      await fetchJSONWithTimeout(`${HEALTH_URL}?check=1`, { method: 'GET' }, 8000).catch(() => null);
+      await fetchJSONWithTimeout(`${HEALTH_URL}?wake=1`,  { method: 'GET' }, 25000).catch(() => null);
+      if (currentAbort?.signal?.aborted) throw firstErr;
+      await sleep(1500);
+
+      // Próba 2
+      full = await doChatCall();
+    }
+
+    // stream samej odpowiedzi (bez „Łączenie…” itp.)
     for (let i = 0; i < full.length; i++) {
       if (!currentAbort || currentAbort.signal.aborted) break;
       self.postMessage({ aiIndex, char: full[i] });
+      // delikatny typing delay
+      // eslint-disable-next-line no-await-in-loop
       await new Promise((r) => setTimeout(r, 20));
     }
-
     self.postMessage({ aiIndex, done: true });
+
   } catch (err) {
     if (currentAbort && currentAbort.signal.aborted) {
       self.postMessage({ aiIndex, done: true });
       return;
     }
-    const errMsg = `⚠️ Failed to get response from AI. ${err?.message || ''}`.trim();
+    const errMsg = `⚠️ Nie udało się pobrać odpowiedzi od AI. ${err?.message || ''}`.trim();
     for (let i = 0; i < errMsg.length; i++) {
       self.postMessage({ aiIndex, char: errMsg[i] });
+      // eslint-disable-next-line no-await-in-loop
       await new Promise((r) => setTimeout(r, 40));
     }
     self.postMessage({ aiIndex, done: true });

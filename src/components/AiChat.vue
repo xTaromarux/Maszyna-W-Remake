@@ -25,6 +25,13 @@
       </header>
 
       <div id="conversation" ref="conversationEl">
+        <!-- BANER zdrowia/wzbudzania -->
+        <div v-if="apiState==='checking' || apiState==='waking'" class="healthBanner">
+          <span v-if="apiState==='checking'">Sprawdzam połączenie z modelem…</span>
+          <span v-else>Wybudzam model na Hugging Face…</span>
+          <span class="dots"><span></span><span></span><span></span></span>
+        </div>
+
         <transition-group name="messageEnter" tag="div" class="conversationBox">
           <div
             v-for="(msg, i) in messages"
@@ -78,9 +85,9 @@
             v-model="text"
             :placeholder="placeholder"
             type="text"
-            :disabled="aiTyping"
+            :disabled="aiTyping || apiState==='checking' || apiState==='waking'"
           />
-          <button class="execution-btn execution-btn--run" type="submit" :disabled="aiTyping">Wyślij</button>
+          <button class="execution-btn execution-btn--run" type="submit" :disabled="aiTyping || apiState==='checking' || apiState==='waking'">Wyślij</button>
         </form>
       </div>
     </div>
@@ -120,6 +127,32 @@ const requestTimestamps = ref([])
 const typingTimer = ref(null)
 const currentAiIndex = ref(null)
 const panelWidth = ref(Number(localStorage.getItem(WIDTH_KEY)) || 650)
+
+/* ====== HEALTH / WAKE ====== */
+const apiState = ref('idle') // 'idle' | 'checking' | 'waking'
+
+const API_URL = import.meta.env.VITE_API_URL || ''
+const HEALTH_URL = API_URL ? API_URL.replace(/\/api\/chat\/?$/, '/health') : ''
+
+async function healthCheckAndWake() {
+  try {
+    apiState.value = 'checking'
+    const r = await fetch(`${HEALTH_URL}?check=1`)
+    const j = await r.json().catch(() => ({}))
+    if (j && j.upstream_ok === false) {
+      apiState.value = 'waking'
+      // „szturchnięcie” Space po stronie backendu
+      await fetch(`${HEALTH_URL}?wake=1`)
+      // odczekaj chwilę na cold start
+      await new Promise(res => setTimeout(res, 1200))
+    }
+  } catch (_) {
+    // cicho – worker i tak ma własny retry
+  } finally {
+    // nie chowaj banera natychmiast (krótka „miękka” pauza)
+    setTimeout(() => { apiState.value = 'idle' }, 600)
+  }
+}
 
 /* =========================
    AUTOSCROLL (z throttlingiem)
@@ -285,13 +318,16 @@ async function sendUserMessage() {
     alert('Limit 20 zapytań na minutę. Spróbuj ponownie później.')
     return
   }
-  if (!text.value.trim() || aiTyping.value) return
+  if (!text.value.trim() || aiTyping.value || apiState.value==='checking' || apiState.value==='waking') return
   requestTimestamps.value.push(now)
 
   const userQuery = text.value.trim()
   messages.value.push({ sender: 'user', text: userQuery, timestamp: now })
   text.value = ''
   scheduleScroll('smooth')
+
+  // pre-check /health + ewentualny „wake”
+  await healthCheckAndWake()
 
   aiTyping.value = true
   messages.value.push({ sender: 'assistant', text: '', timestamp: Date.now() })
@@ -428,4 +464,22 @@ onBeforeUnmount(() => {
   margin-top: .2rem;
   margin-bottom: .2rem;
 }
+
+/* BANER stanu /health */
+.healthBanner{
+  margin: .4rem 0 .6rem;
+  padding: .5rem .75rem;
+  border: 1px dashed var(--signal-active,#0ea5e9);
+  background: color-mix(in srgb, var(--panelBackgroundColor,#fff) 85%, #0ea5e9);
+  border-radius: 8px;
+  font-size: .9rem;
+  display:flex; align-items:center; gap:.5rem;
+}
+.healthBanner .dots{ display:inline-flex; gap:.2rem }
+.healthBanner .dots span{
+  width:6px;height:6px;border-radius:50%;background:#0e7490;opacity:.3;animation:blink 1.4s infinite;
+}
+.healthBanner .dots span:nth-child(2){ animation-delay:.2s }
+.healthBanner .dots span:nth-child(3){ animation-delay:.4s }
+@keyframes blink{ 0%,80%,100%{opacity:.2} 40%{opacity:1} }
 </style>

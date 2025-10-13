@@ -13,7 +13,14 @@
     "build:parsers": "npm run build:maszynaW && npm run build:macroW",
     "build:maszynaW": "lezer-generator src/codemirror-langs/maszynaW.grammar -o src/codemirror-langs/maszynaW.js",
     "build:macroW": "lezer-generator src/codemirror-langs/macroW.grammar -o src/codemirror-langs/macroW.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
@@ -37,12 +44,18 @@
   "devDependencies": {
     "@lezer/generator": "^1.7.0",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/test-utils": "^2.4.6",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
     "concurrently": "^9.1.2",
+    "cypress": "^13.17.0",
+    "jsdom": "^25.0.1",
     "prettier": "^3.5.3",
     "sass": "^1.87.0",
     "typescript": "^5.8.3",
     "vite": "^6.0.5",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
-    "vite-plugin-vue-devtools": "^7.6.8"
+    "vite-plugin-vue-devtools": "^7.6.8",
+    "vitest": "^2.1.8"
   }
 }

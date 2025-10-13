@@ -4,6 +4,7 @@
     @open-settings="settingsOpen = true"
     @toggle-console="toggleConsole"
     @ws-reconnect="reconnectWS"
+    @open-test-dashboard="testDashboardOpen = true"
     :hasConsoleErrors="hasConsoleErrors"
     :ws-status="wsStatus"
   />
@@ -158,6 +159,7 @@
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
+      @open-test-dashboard="openTestDashboard()"
       @update:memoryAddresBits="memoryAddresBits = $event"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
     />
@@ -175,6 +177,14 @@
       placeholder="Wpisz wiadomość…"
       instruction="Opisz operację uzyskania kodu maszynowego:"
     />
+    <Teleport to="body">
+      <div v-if="testDashboardOpen" class="test-dashboard-overlay">
+        <TestDashboard />
+        <button @click="closePopups('testDashboardOpen')" class="close-dashboard-btn">
+          ✕ Zamknij Dashboard
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 <script>
@@ -195,6 +205,7 @@ import ConsoleDock from '@/components/ConsoleDock.vue';
 import SettingsOverlay from '@/components/SettingsOverlay.vue';
 import ExecutionControls from './ExecutionControls.vue';
 import ProgramEditor from './ProgramEditor.vue';
+import TestDashboard from '@/components/TestDashboard.vue';
 import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
 import { compileCodeExternal } from '@/WLAN/compiler';
@@ -218,10 +229,11 @@ export default {
     SettingsOverlay,
     ExecutionControls,
     ProgramEditor,
+    TestDashboard,
   },
   computed: {
     anyPopupOpen() {
-      return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
+      return this.commandListOpen || this.aiChatOpen || this.settingsOpen || this.testDashboardOpen;
     },
   },
   created() {
@@ -421,6 +433,7 @@ export default {
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
+      testDashboardOpen: false,
       lightMode: true,
       consoleOpen: false,
       hasConsoleErrors: false,
@@ -1978,6 +1991,12 @@ export default {
       this.closePopups('settingsOpen');
       this.commandListOpen = true;
     },
+    openTestDashboard() {
+      this.closePopups('settingsOpen');
+      this.closePopups('commandListOpen');
+      this.closePopups('aiChatOpen');
+      this.testDashboardOpen = true;
+    },
     toggleConsole() {
       this.consoleOpen = !this.consoleOpen;
       if (this.consoleOpen) {
@@ -2154,5 +2173,53 @@ ol {
 }
 .toolbar select {
   padding: 0.2rem;
+}
+
+/* Test Dashboard Overlay Styles */
+.test-dashboard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+.close-dashboard-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  z-index: 10000;
+}
+
+.close-dashboard-btn:hover {
+  background: var(--signal-active);
+  color: white;
+  border-color: var(--signal-active);
+}
+
+@media (max-width: 768px) {
+  .test-dashboard-overlay {
+    padding: 1rem;
+  }
+  
+  .close-dashboard-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 </style>

@@ -39,6 +39,14 @@
       </button>
       <button
         class="simpleSvgButton"
+        aria-label="Otwórz dashboard testów"
+        @click="$emit('open-test-dashboard')"
+        title="Test Dashboard - Zarządzanie testami"
+      >
+        <TestIcon />
+      </button>
+      <button
+        class="simpleSvgButton"
         aria-label="Otwórz ustawienia"
         @click="$emit('open-settings')"
       >
@@ -53,12 +61,13 @@ import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue'
 import AiChatIcon         from '@/components/AiChatIcon.vue'
 import KogWheelIcon       from '@/assets/svg/KogWheelIcon.vue'
 import ConsoleIcon        from '@/assets/svg/ConsoleIcon.vue'
+import TestIcon           from '@/assets/svg/TestIcon.vue'
 const platform = import.meta.env.VITE_APP_PLATFORM;
 const props = defineProps({
   hasConsoleErrors: { type: Boolean, default: false },
   wsStatus: { type: String, default: 'disconnected' }
 })
-defineEmits(['open-chat', 'open-settings', 'toggle-console', 'ws-reconnect'])
+defineEmits(['open-chat', 'open-settings', 'toggle-console', 'ws-reconnect', 'open-test-dashboard'])
 const wsLabel = computed(() => {
   switch (props.wsStatus) {
     case 'connected':   return 'Połączono z maszyną fizyczną';

@@ -3,18 +3,53 @@
 import { commandList } from '../utils/data/commands';
 
 export type Signal =
-  | 'czyt' | 'wys' | 'wei' | 'il'
-  | 'wyad' | 'wea' | 'wyl' | 'wel'
-  | 'weja' | 'weak' | 'przep' | 'dod' | 'ode'
-  | 'mno' | 'dziel'
-  | 'shr' | 'shl' | 'neg' | 'lub' | 'i'
-  | 'as' | 'sa'
+  | 'czyt'
+  | 'wys'
+  | 'wei'
+  | 'il'
+  | 'wyad'
+  | 'wea'
+  | 'wyl'
+  | 'wel'
+  | 'weja'
+  | 'weak'
+  | 'przep'
+  | 'dod'
+  | 'ode'
+  | 'mno'
+  | 'dziel'
+  | 'shr'
+  | 'shl'
+  | 'neg'
+  | 'lub'
+  | 'i'
+  | 'as'
+  | 'sa'
   | 'pisz'
-  | 'readIO' | 'writeIO'
-  | 'call' | 'ret'
-  | 'pushAcc' | 'popAcc'
-  | 'wyws' | 'iws' | 'dws' | 'wyls'
-  | 'wyg' | 'werb' | 'wyrb' | 'start';
+  | 'readIO'
+  | 'writeIO'
+  | 'call'
+  | 'ret'
+  | 'pushAcc'
+  | 'popAcc'
+  | 'wyws'
+  | 'iws'
+  | 'dws'
+  | 'wyls'
+  | 'wyg'
+  | 'werb'
+  | 'wyrb'
+  | 'start'
+  | 'ustrm'
+  | 'czrm'
+  | 'werm'
+  | 'wyrm'
+  | 'werz'
+  | 'wyrz'
+  | 'werp'
+  | 'wyrp'
+  | 'weap'
+  | 'wyap';
 
 export type SignalSet = Partial<Record<Signal, true>>;
 
@@ -29,18 +64,53 @@ export type Phase = Signal[] | ConditionalPhase;
 export type InstructionTemplates = Record<string, Phase[]>;
 
 const SIGNALS: Set<string> = new Set<Signal>([
-  'czyt','wys','wei','il',
-  'wyad','wea','wyl','wel',
-  'weja','weak','przep','dod','ode',
-  'mno','dziel',
-  'shr','shl','neg','lub','i',
-  'as','sa',
+  'czyt',
+  'wys',
+  'wei',
+  'il',
+  'wyad',
+  'wea',
+  'wyl',
+  'wel',
+  'weja',
+  'weak',
+  'przep',
+  'dod',
+  'ode',
+  'mno',
+  'dziel',
+  'shr',
+  'shl',
+  'neg',
+  'lub',
+  'i',
+  'as',
+  'sa',
   'pisz',
-  'readIO','writeIO',
-  'call','ret',
-  'pushAcc','popAcc',
-  'wyws','iws','dws','wyls',
-  'wyg','werb','wyrb','start',
+  'readIO',
+  'writeIO',
+  'call',
+  'ret',
+  'pushAcc',
+  'popAcc',
+  'wyws',
+  'iws',
+  'dws',
+  'wyls',
+  'wyg',
+  'werb',
+  'wyrb',
+  'start',
+  'ustrm',
+  'czrm',
+  'werm',
+  'wyrm',
+  'werz',
+  'wyrz',
+  'werp',
+  'wyrp',
+  'weap',
+  'wyap',
 ]);
 
 type Cmd = {
@@ -53,11 +123,11 @@ type Cmd = {
 function tokenizeStatements(lines: string): string[] {
   return lines
     .split('\n')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
     .join(' ')
     .split(';')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
 }
 
@@ -74,7 +144,10 @@ function stripLabel(stmt: string): { label?: string; rest: string } {
 }
 
 function stmtToSignalArray(stmt: string): Signal[] {
-  const toks = stmt.split(/\s+/).map(t => t.trim()).filter(Boolean);
+  const toks = stmt
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
   const sigs: Signal[] = [];
   for (const t of toks) {
     if (SIGNALS.has(t)) sigs.push(t as Signal);
@@ -84,7 +157,7 @@ function stmtToSignalArray(stmt: string): Signal[] {
 
 function toSignalSetArray(stmt: string): SignalSet[] {
   const arr = stmtToSignalArray(stmt);
-  return arr.length ? [Object.fromEntries(arr.map(s => [s, true])) as SignalSet] : [];
+  return arr.length ? [Object.fromEntries(arr.map((s) => [s, true])) as SignalSet] : [];
 }
 
 function parseIF(stmt: string) {

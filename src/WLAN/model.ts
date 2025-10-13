@@ -46,7 +46,7 @@ export interface InstructionNode {
 
 export interface ConditionalNode {
   type: 'Conditional';
-  condition: 'Z' | 'N' | string; 
+  condition: 'Z' | 'N' | string;
   thenBranch: Operand;
   elseBranch: Operand | null;
   line: number;

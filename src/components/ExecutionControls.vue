@@ -33,7 +33,6 @@
       <NextLineIcon />
       <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj takt' }}</span>
     </button>
-
     <!-- Run / Stop -->
     <button
       v-if="!isRunning"

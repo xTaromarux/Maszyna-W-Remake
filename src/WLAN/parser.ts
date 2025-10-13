@@ -82,7 +82,7 @@ export class Parser {
     }
     return { type: 'Program', body };
   }
-  
+
   parseLabelDefinition(): AstNode | AstNode[] {
     const nameTok = this.consume(); // IDENT
     this.expect(TokenType.COLON, ':');

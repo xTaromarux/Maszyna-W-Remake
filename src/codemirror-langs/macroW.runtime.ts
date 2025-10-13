@@ -17,32 +17,31 @@ function matchCase(s: string, pattern: string) {
 }
 
 export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension[] {
-  const words = Array.from(new Set(commands.map(c => c?.name).filter(Boolean))) as string[];
+  const words = Array.from(new Set(commands.map((c) => c?.name).filter(Boolean))) as string[];
 
   // brak komend → pusta dekoracja
   if (words.length === 0) {
     const empty = StateField.define<DecorationSet>({
       create: () => Decoration.none,
-      update: v => v,
-      provide: f => EditorView.decorations.from(f),
+      update: (v) => v,
+      provide: (f) => EditorView.decorations.from(f),
     });
     return [empty] as const;
   }
 
-  const boundary = "[\\p{L}\\p{N}_]";
-  const rx = new RegExp(
-    `(?<!${boundary})(?:${words.map(escapeRx).join("|")})(?!${boundary})`,
-    "giu"
-  );
+  const boundary = '[\\p{L}\\p{N}_]';
+  const rx = new RegExp(`(?<!${boundary})(?:${words.map(escapeRx).join('|')})(?!${boundary})`, 'giu');
   const deco = Decoration.mark({ class: 'cm-macrow-keyword' });
 
   const field = StateField.define<DecorationSet>({
-    create(state: EditorState) { return build(state); },
+    create(state: EditorState) {
+      return build(state);
+    },
     update(value, tr) {
       if (tr.docChanged || tr.selection) return build(tr.state);
       return value;
     },
-    provide: f => EditorView.decorations.from(f),
+    provide: (f) => EditorView.decorations.from(f),
   });
 
   function build(state: EditorState): DecorationSet {
@@ -66,9 +65,7 @@ export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension
 }
 
 export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
-  const base = (commands || [])
-    .filter(c => c?.name)
-    .map(c => ({ name: c.name, description: c.description || 'rozkaz' }));
+  const base = (commands || []).filter((c) => c?.name).map((c) => ({ name: c.name, description: c.description || 'rozkaz' }));
 
   function source(ctx: CompletionContext): CompletionResult | null {
     // Unicode: litery/cyfry/podkreślenie
@@ -85,10 +82,12 @@ export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
     return { from: word.from, options: opts };
   }
 
-  return [autocompletion({
-    override: [source],
-    activateOnTyping: true,
-    closeOnBlur: true,       // 🔴 nie zamykaj na blur
-    selectOnOpen: true,       // opcjonalnie: od razu zaznacz pierwszy
-  })] as const;
+  return [
+    autocompletion({
+      override: [source],
+      activateOnTyping: true,
+      closeOnBlur: true, // 🔴 nie zamykaj na blur
+      selectOnOpen: true, // opcjonalnie: od razu zaznacz pierwszy
+    }),
+  ] as const;
 }

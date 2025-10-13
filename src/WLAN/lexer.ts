@@ -55,10 +55,9 @@ export function lex(input: string): Token[] {
     if (!matched) {
       if (slice[0] === '\r') {
         pos++;
-        continue; // pomiń bez błędu
+        continue;
       }
       const unknownChar = input[pos];
-      // Zgłoś błąd leksykalny z ramką kodu
       throw errorAt(
         input,
         line,

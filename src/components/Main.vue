@@ -1746,7 +1746,7 @@ export default {
       if (!this.isFastRunning) this.clearActiveTimeouts();
 
       // Debug: log all signals in this phase
-      console.log('executeSignalsFromNextLine: signals=', Array.from(this.nextLine));
+      // console.log('executeSignalsFromNextLine: signals=', Array.from(this.nextLine));
 
       // Detect stack operations based on signal combinations
       this.detectAndHandleStackOperations();

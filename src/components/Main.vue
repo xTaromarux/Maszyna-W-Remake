@@ -1396,7 +1396,7 @@ export default {
         }
 
         const instr = this.compiledProgram[this.activeInstrIndex];
-        const phase = instr.phases?.[this.activePhaseIndex] || {};
+        const rawPhase = instr.phases?.[this.activePhaseIndex] || {};
 
         // --- FAZA WARUNKOWA ---
         if (rawPhase && rawPhase.conditional === true) {

@@ -1990,7 +1990,7 @@ export default {
           }
 
           // daj event loopowi odetchnąć
-          await new Promise(r => setTimeout(r, 0));s
+          await new Promise(r => setTimeout(r, 0));
 
           if (!this.codeCompiled) break;
           if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) break;

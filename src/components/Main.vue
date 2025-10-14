@@ -1280,7 +1280,6 @@ export default {
     },
 
     uncompileCode() {
-      this.stopAutoStep(); // Stop auto stepping when uncompiling
       this.codeCompiled = false;
       this.nextLine.clear();
       this.activeInstrIndex = -1;
@@ -1870,7 +1869,6 @@ export default {
       if (this.isRunning || !this.codeCompiled) return; 
       this.manualMode = false;
       this.clearActiveTimeouts();
-      this.stopAutoStep();
 
       this._skipNextBreakpoint = true; 
       this.isRunning = true;

@@ -1523,7 +1523,7 @@ export default {
         }
 
         // STOP - zatrzymaj program
-        if (phase.stop === true) {
+        if (rawPhase.stop === true) {
           hlFrom(phase);
           this.uncompileCode();
           this.addLog('STOP - program zatrzymany', 'kompilator rozkazów');
@@ -1550,7 +1550,7 @@ export default {
         }
 
         // Jeśli faza zawierała 'wel', programCounter został zmieniony
-        if (phase.wel === true) {
+        if (rawPhase.wel === true) {
           // PC w kontekście compiledProgram[] to indeks instrukcji, nie adres pamięci
           const target = this.programCounter;
           if (target >= 0 && target < this.compiledProgram.length) {

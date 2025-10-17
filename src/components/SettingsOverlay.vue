@@ -32,6 +32,7 @@
       @open-command-list="$emit('open-command-list')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
       @update:memoryAddresBits="$emit('update:memoryAddresBits', $event)"
+      @color-change="$emit('color-change', $event)"
     />
   </div>
 </template>
@@ -107,6 +108,7 @@ export default {
     'update:memoryAddresBits',
     'update:decSigned',
     'update:autocompleteEnabled',
+    'color-change',
   ],
   data() {
     return {

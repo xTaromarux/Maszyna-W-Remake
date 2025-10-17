@@ -172,6 +172,7 @@
       @open-command-list="openCommandList()"
       @update:memoryAddresBits="memoryAddresBits = $event"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
+      @color-change="sendColorToESP"
     />
 
     <CommandList
@@ -988,6 +989,25 @@ export default {
             data: data,
           })
         );
+      }
+    },
+
+    sendColorToESP(colorData) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(
+          JSON.stringify({
+            type: 'color-update',
+            data: {
+              hex: colorData.hex,
+              r: colorData.rgbScaled.r,
+              g: colorData.rgbScaled.g,
+              b: colorData.rgbScaled.b,
+              brightness: Math.round(colorData.brightness * 255), // 0-255
+              timestamp: Date.now()
+            }
+          })
+        );
+        this.addLog(`[LED] Wysłano kolor: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`, 'system');
       }
     },
 

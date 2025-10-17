@@ -270,6 +270,7 @@ export default {
     'update:memoryAddresBits',
     'update:autocompleteEnabled',
     'update:decSigned',
+    'color-change',
   ],
   computed: {
     extrasLabels() {
@@ -322,10 +323,13 @@ export default {
     },
   },
   methods: {
-    onColorChange({ hex, rgb, hsv, brightness }) {
+    onColorChange({ hex, rgb, hsv, brightness, rgbScaled }) {
       // przykład: podbij akcent w CSS i wyślij wartości do kontrolera LED
       document.documentElement.style.setProperty('--accentColor', hex);
       // brightness = ledPower (0..1), hsv.v = jasność koloru
+      
+      // Emituj event do Main.vue przez SettingsOverlay
+      this.$emit('color-change', { hex, rgb, hsv, brightness, rgbScaled });
     },
     updateNumber(key, value) {
       const n = parseInt(value, 10);

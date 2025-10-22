@@ -47,7 +47,7 @@
     </div>
 
     <div v-if="programCompiled" class="overlay-lock" aria-hidden="true" />
-    <div ref="editorContainer" class="codemirror-container"  :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }"/>
+    <div ref="editorContainer" class="codemirror-container" :class="{ 'full-screen': isFullScreen, dimmed: programCompiled }" />
   </div>
 </template>
 
@@ -90,10 +90,8 @@ function toggleFullScreen() {
   const wrapper = editorWrapper.value;
 
   if (isFullScreen.value) {
-    // --- EXIT ---
     isFullScreen.value = false;
 
-    // Cleanup after transition
     const handleTransitionEnd = () => {
       wrapper.style.position = '';
       wrapper.style.top = '';
@@ -105,7 +103,6 @@ function toggleFullScreen() {
     };
     wrapper.addEventListener('transitionend', handleTransitionEnd, { once: true });
   } else {
-    // --- ENTER ---
     const rect = wrapper.getBoundingClientRect();
     wrapper.style.position = 'fixed';
     wrapper.style.top = `${rect.top}px`;
@@ -113,7 +110,6 @@ function toggleFullScreen() {
     wrapper.style.width = `${rect.width}px`;
     wrapper.style.height = `${rect.height}px`;
 
-    // Force reflow
     void wrapper.offsetWidth;
 
     wrapper.style.transition = 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
@@ -317,6 +313,7 @@ function createExtensions() {
       },
       // Cursor styling
       '.cm-cursor': {
+        borderLeftColor: 'var(--fontColor, #000) !important',
         marginTop: '-4px',
         marginLeft: '-4px',
       },
@@ -337,14 +334,14 @@ function createExtensions() {
         backgroundColor: '#ff8c00 !important',
       },
       // Keywords for macroW conditional statements
-      '.tok-IF, .tok-THEN, .tok-ELSE': {
-        color: '#003c7d !important',
-        fontWeight: 'bold !important',
-      },
-      '.cmt-IF, .cmt-THEN, .cmt-ELSE': {
-        color: '#003c7d !important',
-        fontWeight: 'bold !important',
-      },
+      // '.tok-IF, .tok-THEN, .tok-ELSE': {
+      //   color: '#003c7d !important',
+      //   fontWeight: 'bold !important',
+      // },
+      // '.cmt-IF, .cmt-THEN, .cmt-ELSE': {
+      //   color: '#003c7d !important',
+      //   fontWeight: 'bold !important',
+      // },
       // Label styling
       '.tok-labelName, .cmt-labelName': {
         color: '#795E26 !important',

@@ -32,7 +32,16 @@
           <div class="top-actions" v-if="selectedCommand !== null">
             <button @click="deleteCommand" title="Usuń rozkaz" class="execution-btn execution-btn--run">
               <!-- ikona kosza -->
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                 <path d="M10 11v6m4-6v6" />
@@ -50,12 +59,7 @@
               <span>Edytuj</span>
             </button>
 
-            <button
-              class="execution-btn execution-btn--run"
-              @click="onSave"
-              :disabled="!editCommandEnabled"
-              title="Zapisz zmiany"
-            >
+            <button class="execution-btn execution-btn--run" @click="onSave" :disabled="!editCommandEnabled" title="Zapisz zmiany">
               <span>Zapisz</span>
             </button>
           </div>
@@ -84,7 +88,12 @@
                 <span>Anuluj</span>
               </button>
             </div>
-            <button v-else-if="matchingCommand && !isEditingName" @click="startNameEdit" title="Edytuj nazwę rozkazu" class="execution-btn execution-btn--run">
+            <button
+              v-else-if="matchingCommand && !isEditingName"
+              @click="startNameEdit"
+              title="Edytuj nazwę rozkazu"
+              class="execution-btn execution-btn--run"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -95,7 +104,13 @@
               </svg>
               <span>Edytuj</span>
             </button>
-            <button v-else @click="handleAddCommand" :disabled="!commandInputValue.trim()" title="Dodaj nowy rozkaz" class="execution-btn execution-btn--run">
+            <button
+              v-else
+              @click="handleAddCommand"
+              :disabled="!commandInputValue.trim()"
+              title="Dodaj nowy rozkaz"
+              class="execution-btn execution-btn--run"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <g stroke-width="2" stroke-linecap="round">
                   <path d="M12 16V8m4 4H8" />
@@ -137,11 +152,11 @@
 </template>
 
 <script>
-import SegmentedToggle from './SegmentedToggle.vue'
+import SegmentedToggle from './SegmentedToggle.vue';
 
 export default {
   name: 'CommandList',
-  components: {  SegmentedToggle },
+  components: { SegmentedToggle },
   props: {
     visible: { type: Boolean, default: false },
     commandList: { type: Array, required: true },
@@ -155,6 +170,7 @@ export default {
       selectedCommand: this.commandList.length > 0 ? 0 : null,
       editCommandEnabled: false,
       EditCommandField: '',
+      suppressEditCommit: false,
       commandInputValue: '',
       isAddingCommand: false,
       isCreatingNew: false,
@@ -171,7 +187,9 @@ export default {
   },
 
   computed: {
-    canEdit() { return this.selectedCommand !== null },
+    canEdit() {
+      return this.selectedCommand !== null;
+    },
     commandInputPlaceholder() {
       if (this.isEditingName) {
         return `Edytuj nazwę z "${this.editingCommandOriginalName}"`;
@@ -229,7 +247,6 @@ export default {
           // Bits increased - restore instructions from full list up to new limit
           const commandsToRestore = Math.min(this.fullCommandList.length, newMaxCommands);
           this.localList = JSON.parse(JSON.stringify(this.fullCommandList.slice(0, commandsToRestore)));
-          console.log(this.fullCommandList.length, this.localList.length, this.commandList.length);
 
           // Restore selected command if it was trimmed before
           if (this.selectedCommand === null && this.localList.length > 0) {
@@ -273,7 +290,16 @@ export default {
     editCommandEnabled(val) {
       if (val) {
         this.EditCommandField = this.localList[this.selectedCommand]?.lines || '';
-      } else if (this.selectedCommand !== null) {
+        return;
+      }
+
+      if (this.suppressEditCommit) {
+        this.suppressEditCommit = false;
+        this.EditCommandField = '';
+        return;
+      }
+
+      if (this.selectedCommand !== null) {
         this.localList[this.selectedCommand].lines = this.EditCommandField;
 
         // Update the same command in fullCommandList
@@ -301,9 +327,15 @@ export default {
     }
   },
   methods: {
-    onEdit() { this.editCommandEnabled = true },
-    onSave() { this.editCommandEnabled = false },
-    changeEditCommandEnabled(){ this.editCommandEnabled = !this.editCommandEnabled },
+    onEdit() {
+      this.editCommandEnabled = true;
+    },
+    onSave() {
+      this.editCommandEnabled = false;
+    },
+    changeEditCommandEnabled() {
+      this.editCommandEnabled = !this.editCommandEnabled;
+    },
     validateDuplicateNames() {
       const names = this.localList.map((cmd) => cmd.name.trim()).filter((name) => name !== '');
       const duplicates = names.filter((name, index) => names.indexOf(name) !== index);
@@ -312,10 +344,6 @@ export default {
         const uniqueDuplicates = [...new Set(duplicates)];
         console.warn(`Duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
       }
-    },
-    handleKeyup() {
-      // This will trigger the matchingCommand watcher automatically
-      // which handles the logic for showing/hiding content
     },
     handleKeydown(event) {
       if (!this.isEditingName) {
@@ -355,7 +383,6 @@ export default {
         return;
       }
 
-      // Find the command we're editing
       const commandToEdit = this.localList.find((cmd) => cmd.name.trim().toLowerCase() === this.editingCommandOriginalName.toLowerCase());
 
       if (!commandToEdit) {
@@ -381,7 +408,6 @@ export default {
           return;
         }
 
-        // Update the command name in local list
         commandToEdit.name = newName;
 
         // Update the same command in fullCommandList
@@ -395,11 +421,9 @@ export default {
         this.emitUpdate();
       }
 
-      // Exit editing mode
       this.isEditingName = false;
       this.editingCommandOriginalName = '';
 
-      // Update the selected command to the newly renamed one
       const newIndex = this.localList.findIndex((cmd) => cmd === commandToEdit);
       if (newIndex !== -1) {
         this.selectedCommand = newIndex;
@@ -418,7 +442,6 @@ export default {
         return;
       }
 
-      // Check if command already exists
       if (this.matchingCommand) {
         alert(`Rozkaz o nazwie "${newCommandName}" już istnieje!`);
         return;
@@ -461,10 +484,9 @@ export default {
           try {
             const parsed = JSON.parse(ev.target.result);
 
-            // Apply current codeBits limit when loading
             const maxCommands = Math.pow(2, this.codeBits);
-            this.fullCommandList = parsed; // Store complete loaded list
-            this.localList = parsed.slice(0, maxCommands); // Show only up to current limit
+            this.fullCommandList = parsed;
+            this.localList = parsed.slice(0, maxCommands);
 
             if (this.localList.length > 0) {
               this.selectedCommand = 0;
@@ -499,12 +521,16 @@ export default {
     deleteCommand() {
       if (this.selectedCommand === null) return;
 
+      if (this.editCommandEnabled) {
+        this.suppressEditCommit = true;
+        this.editCommandEnabled = false;
+      }
+
+      const deletedIndex = this.selectedCommand;
       const commandToDelete = this.localList[this.selectedCommand];
 
-      // Remove from local list
       this.localList.splice(this.selectedCommand, 1);
 
-      // Remove from full list as well
       const fullListIndex = this.fullCommandList.findIndex(
         (cmd) => cmd.name === commandToDelete.name && cmd.lines === commandToDelete.lines
       );
@@ -512,8 +538,17 @@ export default {
         this.fullCommandList.splice(fullListIndex, 1);
       }
 
+      if (this.localList.length === 0) {
+        this.selectedCommand = null;
+        this.commandInputValue = '';
+        this.isCreatingNew = false;
+      } else if (deletedIndex >= this.localList.length) {
+        this.selectedCommand = this.localList.length - 1;
+      } else {
+        this.selectedCommand = deletedIndex;
+      }
+
       this.emitUpdate();
-      this.selectedCommand = this.localList.length ? Math.min(this.selectedCommand, this.localList.length - 1) : null;
     },
     emitUpdate() {
       const names = this.localList.map((cmd) => cmd.name.trim()).filter((name) => name !== '');
@@ -569,9 +604,9 @@ export default {
 @media (max-width: 675px) {
   #commandList {
     grid-template-areas:
-    'header header'
-    'right-panel right-panel'
-    'list list';
+      'header header'
+      'right-panel right-panel'
+      'list list';
     grid-template-rows: auto auto auto;
     grid-template-columns: autos;
   }
@@ -699,7 +734,6 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   gap: 1rem;
 }
 
-
 .top-actions {
   display: flex;
   justify-content: flex-end;
@@ -714,8 +748,8 @@ body.darkMode #commandDetails .roskazCode textarea:disabled {
   }
 }
 
-.top-actions > button{
-  height: 20px ;
+.top-actions > button {
+  height: 20px;
 }
 
 .top-actions > button:first-child:hover {

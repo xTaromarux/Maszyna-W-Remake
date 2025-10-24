@@ -998,16 +998,17 @@ export default {
           JSON.stringify({
             type: 'color-update',
             data: {
+              colorType: colorData.type,
               hex: colorData.hex,
               r: colorData.rgbScaled.r,
               g: colorData.rgbScaled.g,
               b: colorData.rgbScaled.b,
-              brightness: Math.round(colorData.brightness * 255), // 0-255
+              brightness: Math.round(colorData.brightness * 255),
               timestamp: Date.now()
             }
           })
         );
-        this.addLog(`[LED] Wysłano kolor: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`, 'system');
+        this.addLog(`[LED] Wysłano kolor ${colorData.type}: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`, 'system');
       }
     },
 

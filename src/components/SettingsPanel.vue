@@ -212,7 +212,55 @@
         </div>
       </div>
 
-      <ColorPicker v-if="platform == 'esp'" v-model="color" v-model:brightness="ledPower" :size="260" @change="onColorChange" />
+      <!-- Sekcja kolorów dla ESP32 -->
+      <div v-if="platform == 'esp'" class="color-section">
+        <h3 class="color-section-title">Kolory LED</h3>
+        
+        <div class="color-buttons-list">
+          <button 
+            class="color-selection-btn"
+            @click="openColorPicker('signal_line')"
+          >
+            <span class="color-label">Linie sygnałowe</span>
+            <div class="color-dot" :style="{ backgroundColor: signalLineColor }"></div>
+          </button>
+
+          <button 
+            class="color-selection-btn"
+            @click="openColorPicker('display')"
+          >
+            <span class="color-label">Wyświetlacz</span>
+            <div class="color-dot" :style="{ backgroundColor: displayColor }"></div>
+          </button>
+
+          <button 
+            class="color-selection-btn"
+            @click="openColorPicker('bus')"
+          >
+            <span class="color-label">Magistrala</span>
+            <div class="color-dot" :style="{ backgroundColor: busColor }"></div>
+          </button>
+        </div>
+
+        <button 
+          class="send-colors-btn"
+          @click="sendAllColors"
+          :disabled="!hasColorChanges"
+        >
+          <span>📡 Wyślij wszystkie kolory do ESP32</span>
+        </button>
+      </div>
+
+      <!-- Popup wyboru koloru -->
+      <ColorPickerPopup
+        :visible="colorPickerOpen"
+        :title="currentColorTitle"
+        :color="currentColor"
+        :brightness="currentBrightness"
+        @close="closeColorPicker"
+        @apply="applyColor"
+      />
+
       <PeopleSection :isMobile="isMobile" title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
       <PeopleSection :isMobile="isMobile" title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
     </div>
@@ -226,11 +274,11 @@ import RefreshIcon from '@/assets/svg/RefreshIcon.vue';
 import CommandListIcon from '@/assets/svg/CommandListIcon.vue';
 import SegmentedToggle from './SegmentedToggle.vue';
 import PeopleSection from './PeopleSection.vue';
-import ColorPicker from './ColorPicker.vue';
+import ColorPickerPopup from './ColorPickerPopup.vue';
 
 export default {
   name: 'SettingsPanel',
-  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle, PeopleSection, ColorPicker },
+  components: { SunIcon, MoonIcon, RefreshIcon, CommandListIcon, SegmentedToggle, PeopleSection, ColorPickerPopup },
   props: {
     isAnimated: { type: Boolean, default: false },
     lightMode: { type: Boolean, required: true },
@@ -250,8 +298,25 @@ export default {
   },
   data() {
     return {
-      color: '#ff00ff',
-      ledPower: 1,
+      // Kolory dla trzech różnych elementów
+      signalLineColor: '#ff0000',      // Czerwony dla linii sygnałowych
+      signalLineBrightness: 1,
+      displayColor: '#00ff00',         // Zielony dla wyświetlacza
+      displayBrightness: 1,
+      busColor: '#0000ff',             // Niebieski dla magistrali
+      busBrightness: 1,
+      
+      // Popup state
+      colorPickerOpen: false,
+      currentColorType: null,
+      currentColorTitle: '',
+      currentColor: '#ff0000',
+      currentBrightness: 1,
+      
+      // Tracking changes
+      pendingColors: {},
+      hasColorChanges: false,
+      
       openMap: {}, // { [groupKey]: boolean }
     };
   },
@@ -323,13 +388,80 @@ export default {
     },
   },
   methods: {
-    onColorChange({ hex, rgb, hsv, brightness, rgbScaled }) {
-      // przykład: podbij akcent w CSS i wyślij wartości do kontrolera LED
-      document.documentElement.style.setProperty('--accentColor', hex);
-      // brightness = ledPower (0..1), hsv.v = jasność koloru
+    openColorPicker(type) {
+      this.currentColorType = type;
       
-      // Emituj event do Main.vue przez SettingsOverlay
-      this.$emit('color-change', { hex, rgb, hsv, brightness, rgbScaled });
+      const colorMap = {
+        signal_line: {
+          title: 'Kolor linii sygnałowych',
+          color: this.signalLineColor,
+          brightness: this.signalLineBrightness
+        },
+        display: {
+          title: 'Kolor wyświetlacza',
+          color: this.displayColor,
+          brightness: this.displayBrightness
+        },
+        bus: {
+          title: 'Kolor magistrali',
+          color: this.busColor,
+          brightness: this.busBrightness
+        }
+      };
+      
+      const config = colorMap[type];
+      this.currentColorTitle = config.title;
+      this.currentColor = config.color;
+      this.currentBrightness = config.brightness;
+      this.colorPickerOpen = true;
+    },
+    
+    closeColorPicker() {
+      this.colorPickerOpen = false;
+      this.currentColorType = null;
+    },
+    
+    applyColor({ color, brightness, colorData }) {
+      // Zapisz nowy kolor lokalnie
+      if (this.currentColorType === 'signal_line') {
+        this.signalLineColor = color;
+        this.signalLineBrightness = brightness;
+      } else if (this.currentColorType === 'display') {
+        this.displayColor = color;
+        this.displayBrightness = brightness;
+      } else if (this.currentColorType === 'bus') {
+        this.busColor = color;
+        this.busBrightness = brightness;
+      }
+      
+      // Zapisz do pending changes
+      this.pendingColors[this.currentColorType] = {
+        type: this.currentColorType + '_hex',
+        color,
+        brightness,
+        colorData
+      };
+      
+      this.hasColorChanges = Object.keys(this.pendingColors).length > 0;
+      this.closeColorPicker();
+    },
+    
+    sendAllColors() {
+      // Wyślij wszystkie pending kolory
+      Object.values(this.pendingColors).forEach(colorInfo => {
+        this.$emit('color-change', {
+          type: colorInfo.type,
+          hex: colorInfo.colorData.hex,
+          rgb: colorInfo.colorData.rgb,
+          hsv: colorInfo.colorData.hsv,
+          brightness: colorInfo.brightness,
+          rgbScaled: colorInfo.colorData.rgbScaled
+        });
+      });
+      
+      // Wyczyść pending changes
+      this.pendingColors = {};
+      this.hasColorChanges = false;
     },
     updateNumber(key, value) {
       const n = parseInt(value, 10);
@@ -714,5 +846,110 @@ input:checked + .slider:before {
   opacity: 0.7;
   margin: 0.25rem 0 0 0;
   line-height: 1.4;
+}
+
+/* Sekcja kolorów */
+.color-section {
+  margin: 20px 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--panelOutlineColor);
+}
+
+.color-section-title {
+  color: var(--fontColor);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.color-buttons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.color-selection-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-selection-btn:hover {
+  background: var(--buttonHoverColor);
+  border-color: #003c7d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 60, 125, 0.15);
+}
+
+.color-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--panelOutlineColor);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.send-colors-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: #003c7d;
+  color: white;
+  border: 1px solid #003c7d;
+  border-radius: var(--default-border-radius);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.send-colors-btn:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+}
+
+.send-colors-btn:disabled {
+  background: var(--buttonBackgroundColor);
+  color: var(--fontColor);
+  border-color: var(--panelOutlineColor);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.color-picker-group {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+}
+
+.color-picker-label {
+  color: var(--fontColor);
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0 0 15px 0;
+  text-align: center;
+  opacity: 0.9;
 }
 </style>

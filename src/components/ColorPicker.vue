@@ -23,7 +23,7 @@
 
         <!-- Suwak mocy LED (global brightness) -->
         <div class="cp-section">
-            <div class="cp-label">Moc LED</div>
+            <div class="cp-label">Jasność LED (skaluje hex)</div>
             <div class="cp-bar cp-bar-grey"></div>
             <input class="cp-range" type="range" min="0" max="1" step="0.001" :value="brightnessLocal"
                 @input="onPowerInput($event)" />
@@ -41,7 +41,7 @@
             <div class="cp-current" :style="{ background: hex }"></div>
             <div class="cp-text">
                 <div class="cp-line">{{ hex }}</div>
-                <div class="cp-line">rgb({{ rgb.r }}, {{ rgb.g }}, {{ rgb.b }})</div>
+                <div class="cp-line">rgb({{ Math.round(rgb.r * brightnessLocal) }}, {{ Math.round(rgb.g * brightnessLocal) }}, {{ Math.round(rgb.b * brightnessLocal) }})</div>
                 <div class="cp-line">
                     hsv({{ hsv.h.toFixed(0) }}, {{ Math.round(hsv.s * 100) }}%, {{ Math.round(hsv.v * 100) }}%)
                 </div>
@@ -69,7 +69,16 @@ const scale = window.devicePixelRatio || 1
 const hsv = reactive({ h: 300, s: 0.5, v: 1 })
 const rgb = reactive({ r: 255, g: 0, b: 255 })
 
-const hex = computed(() => rgbToHex(rgb))
+// Hex z zastosowaną jasnością (do wyświetlania)
+const hex = computed(() => {
+    const s = brightnessLocal.value
+    const finalRgb = { 
+        r: Math.round(rgb.r * s), 
+        g: Math.round(rgb.g * s), 
+        b: Math.round(rgb.b * s) 
+    }
+    return rgbToHex(finalRgb)
+})
 const hexPure = computed(() => rgbToHex(hsvToRgb(hsv.h, hsv.s, 1)))
 
 // wskaźnik
@@ -168,12 +177,26 @@ function updateFromHSV() {
     const { r, g, b } = hsvToRgb(hsv.h, hsv.s, hsv.v)
     rgb.r = r; rgb.g = g; rgb.b = b
     updateIndicator()
-    const out = rgbToHex(rgb)
-    emit('update:modelValue', out)
-
+    
+    // Zastosuj jasność bezpośrednio do RGB dla hex
     const s = brightnessLocal.value
-    const rgbScaled = { r: Math.round(rgb.r * s), g: Math.round(rgb.g * s), b: Math.round(rgb.b * s) }
-    emit('change', { hex: out, rgb: { ...rgb }, hsv: { ...hsv }, brightness: s, rgbScaled, pwm: rgbScaled })
+    const finalRgb = { 
+        r: Math.round(rgb.r * s), 
+        g: Math.round(rgb.g * s), 
+        b: Math.round(rgb.b * s) 
+    }
+    const finalHex = rgbToHex(finalRgb)
+    
+    emit('update:modelValue', finalHex)
+    emit('change', { 
+        hex: finalHex, 
+        rgb: finalRgb, 
+        hsv: { ...hsv }, 
+        brightness: s, 
+        rgbScaled: finalRgb, 
+        pwm: finalRgb,
+        baseRgb: { ...rgb } // Oryginalne RGB bez jasności
+    })
 }
 
 function updateIndicator() {
@@ -188,12 +211,34 @@ function onPowerInput(e) {
     const v = clamp01(parseFloat(e.target.value))
     brightnessLocal.value = v
     emit('update:brightness', v)
-    const rgbScaled = { r: Math.round(rgb.r * v), g: Math.round(rgb.g * v), b: Math.round(rgb.b * v) }
-    emit('change', { hex: hex.value, rgb: { ...rgb }, hsv: { ...hsv }, brightness: v, rgbScaled, pwm: rgbScaled })
+    
+    // Zastosuj jasność bezpośrednio do RGB dla hex
+    const finalRgb = { 
+        r: Math.round(rgb.r * v), 
+        g: Math.round(rgb.g * v), 
+        b: Math.round(rgb.b * v) 
+    }
+    const finalHex = rgbToHex(finalRgb)
+    
+    emit('update:modelValue', finalHex)
+    emit('change', { 
+        hex: finalHex, 
+        rgb: finalRgb, 
+        hsv: { ...hsv }, 
+        brightness: v, 
+        rgbScaled: finalRgb, 
+        pwm: finalRgb,
+        baseRgb: { ...rgb } // Oryginalne RGB bez jasności
+    })
 }
 
 function applyHex(h) {
     const parsed = hexToRgb(h); if (!parsed) return
+    
+    // Ustaw jasność na maksimum i użyj podanego hex jako bazowego koloru
+    brightnessLocal.value = 1
+    emit('update:brightness', 1)
+    
     const hv = rgbToHsv(parsed.r, parsed.g, parsed.b)
     hsv.h = hv.h; hsv.s = hv.s; hsv.v = hv.v
     updateFromHSV()

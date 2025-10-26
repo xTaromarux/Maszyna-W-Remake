@@ -298,26 +298,23 @@ export default {
   },
   data() {
     return {
-      // Kolory dla trzech różnych elementów
-      signalLineColor: '#ff0000',      // Czerwony dla linii sygnałowych
+      signalLineColor: '#ff0000',
       signalLineBrightness: 1,
-      displayColor: '#00ff00',         // Zielony dla wyświetlacza
+      displayColor: '#00ff00',
       displayBrightness: 1,
-      busColor: '#0000ff',             // Niebieski dla magistrali
+      busColor: '#0000ff',
       busBrightness: 1,
       
-      // Popup state
       colorPickerOpen: false,
       currentColorType: null,
       currentColorTitle: '',
       currentColor: '#ff0000',
       currentBrightness: 1,
       
-      // Tracking changes
       pendingColors: {},
       hasColorChanges: false,
       
-      openMap: {}, // { [groupKey]: boolean }
+      openMap: {},
     };
   },
   emits: [
@@ -422,7 +419,6 @@ export default {
     },
     
     applyColor({ color, brightness, colorData }) {
-      // Zapisz nowy kolor lokalnie
       if (this.currentColorType === 'signal_line') {
         this.signalLineColor = color;
         this.signalLineBrightness = brightness;
@@ -434,7 +430,6 @@ export default {
         this.busBrightness = brightness;
       }
       
-      // Zapisz do pending changes
       this.pendingColors[this.currentColorType] = {
         type: this.currentColorType + '_hex',
         color,
@@ -447,7 +442,6 @@ export default {
     },
     
     sendAllColors() {
-      // Wyślij wszystkie pending kolory
       Object.values(this.pendingColors).forEach(colorInfo => {
         this.$emit('color-change', {
           type: colorInfo.type,
@@ -459,7 +453,6 @@ export default {
         });
       });
       
-      // Wyczyść pending changes
       this.pendingColors = {};
       this.hasColorChanges = false;
     },

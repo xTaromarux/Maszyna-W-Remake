@@ -16,7 +16,6 @@
       :extras="extras"
       :platform="platform"
       :dec-signed="decSigned"
-      :memory-addres-bits="memoryAddresBits"
       :autocomplete-enabled="autocompleteEnabled"
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
@@ -31,7 +30,6 @@
       @defaultSettings="$emit('defaultSettings')"
       @open-command-list="$emit('open-command-list')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
-      @update:memoryAddresBits="$emit('update:memoryAddresBits', $event)"
       @color-change="$emit('color-change', $event)"
     />
   </div>
@@ -51,7 +49,6 @@ export default {
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },
     autocompleteEnabled: { type: Boolean, default: true },
-    memoryAddresBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
     stepDelay: { type: Number, required: true },
@@ -105,7 +102,6 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
-    'update:memoryAddresBits',
     'update:decSigned',
     'update:autocompleteEnabled',
     'color-change',

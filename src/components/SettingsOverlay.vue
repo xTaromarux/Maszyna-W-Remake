@@ -17,6 +17,7 @@
       :platform="platform"
       :dec-signed="decSigned"
       :autocomplete-enabled="autocompleteEnabled"
+      :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
@@ -30,6 +31,7 @@
       @defaultSettings="$emit('defaultSettings')"
       @open-command-list="$emit('open-command-list')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
+      @update:autoResetOnAsmCompile="$emit('update:autoResetOnAsmCompile', $event)"
       @color-change="$emit('color-change', $event)"
     />
   </div>
@@ -49,6 +51,7 @@ export default {
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },
     autocompleteEnabled: { type: Boolean, default: true },
+    autoResetOnAsmCompile: { type: Boolean, default: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
     stepDelay: { type: Number, required: true },
@@ -104,6 +107,7 @@ export default {
     'open-command-list',
     'update:decSigned',
     'update:autocompleteEnabled',
+    'update:autoResetOnAsmCompile',
     'color-change',
   ],
   data() {

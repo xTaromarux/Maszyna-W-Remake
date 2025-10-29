@@ -77,21 +77,6 @@
       </div>
 
       <div class="flexColumn">
-        <label for="memoryAddresBits">Bity pamięci (RAM):</label>
-        <input
-          id="memoryAddresBits"
-          type="number"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          :value="memoryAddresBits"
-          min="1"
-          max="10"
-          @input="updateNumber('memoryAddresBits', $event.target.value)"
-        />
-        <p>Rozmiar pamięci = 2^bity komórek.</p>
-      </div>
-
-      <div class="flexColumn">
         <label for="oddDelay">Opóźnienie mikro-kroku (ms):</label>
         <input
           id="oddDelay"
@@ -293,7 +278,6 @@ export default {
     extras: { type: Object, required: true },
     platform: { type: String, default: '' },
     autocompleteEnabled: { type: Boolean, default: true },
-    memoryAddresBits: { type: Number, required: true },
     decSigned: { type: Boolean, default: false },
   },
   data() {
@@ -329,7 +313,6 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
-    'update:memoryAddresBits',
     'update:autocompleteEnabled',
     'update:decSigned',
     'color-change',
@@ -462,7 +445,6 @@ export default {
       const rules = {
         codeBits: { min: 1, max: 16 },
         addresBits: { min: 1, max: 32 },
-        memoryAddresBits: { min: 1, max: 10 },
         oddDelay: { min: 0, max: 10000 },
         stepDelay: { min: 5, max: 10000 },
       }[key];

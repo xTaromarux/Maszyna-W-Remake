@@ -10,7 +10,7 @@
       :autocomplete-enabled="props.autocompleteEnabled"
       :programCompiled="programCompiled"
       :onCompile="compileProgram"
-      :onEdit="uncompileProgram"
+      :onEdit="enableProgramEditing"
     />
 
     <div class="flexRow">
@@ -24,7 +24,7 @@
         <span>Kompiluj</span>
       </button>
 
-      <button v-else @click="uncompileProgram" :disabled="manualMode" class="execution-btn execution-btn--edit">
+      <button v-else @click="enableProgramEditing" :disabled="manualMode" class="execution-btn execution-btn--edit">
         <EditIcon />
         <span>Edytuj</span>
       </button>
@@ -48,19 +48,23 @@ const props = defineProps({
   commandList: { type: Array, required: true },
   program: { type: String, required: true },
   autocompleteEnabled: { type: Boolean, default: true },
+  autoResetOnAsmCompile: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:code', 'log', 'initMemory']);
+const emit = defineEmits(['update:code', 'log', 'initMemory', 'reset-registers']);
 
 const programLocal = ref(props.program);
 const programCompiled = ref(false);
 
 function compileProgram() {
   try {
+    if (props.autoResetOnAsmCompile) {
+      emit('reset-registers');
+    }
+
     const ast = parse(programLocal.value);
     const analyzedNodes = analyzeSemantics(ast);
 
-    // --- Dyrektywy inicjalizacji pamięci -> do rodzica
     const initAssignments = [];
     for (const node of analyzedNodes) {
       if (node.type === 'Directive' && node._initMemory) {
@@ -68,7 +72,7 @@ function compileProgram() {
         initAssignments.push({ addr, val });
       }
     }
-    // Argumenty rozkazów -> pamięć programu PC=0,1,2…
+
     let pcAddr = 0;
     for (const node of analyzedNodes) {
       if (node.type === 'Instruction') {
@@ -81,19 +85,16 @@ function compileProgram() {
     }
     if (initAssignments.length) emit('initMemory', initAssignments);
 
-    // --- Mikro-program
     let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
 
-    // (opcjonalne) wstrzyknięcie metadanych CJUMP (zachowujemy srcLine później)
     microProgram = injectCJumpMeta(microProgram);
 
-    // --- Konwersja na tekst + PRECYZYJNE mapowanie srcLine
     const asmFragments = [];
     let lineNo = 0;
 
     for (const entry of microProgram) {
       for (const phase of entry.phases) {
-        if ((phase).conditional === true) {
+        if (phase.conditional === true) {
           const cond = phase;
           const flag = cond.flag;
           const labels = cond.__labels || {};
@@ -103,43 +104,46 @@ function compileProgram() {
 
           const t = cond.truePhases?.[0] ?? {};
           const f = cond.falsePhases?.[0] ?? {};
-          const trueSignals = Object.keys(t).filter(k => t[k]).join(' ');
-          const falseSignals = Object.keys(f).filter(k => f[k]).join(' ');
+          const trueSignals = Object.keys(t)
+            .filter((k) => t[k])
+            .join(' ');
+          const falseSignals = Object.keys(f)
+            .filter((k) => f[k])
+            .join(' ');
 
-          const prefix = (prefixArr && prefixArr.length) ? (prefixArr.join(' ') + ' ') : '';
+          const prefix = prefixArr && prefixArr.length ? prefixArr.join(' ') + ' ' : '';
 
-          // linia z IF – z etykietą gałęzi false i prefiksem w tej samej linii
           cond.srcLine = lineNo;
           asmFragments.push(`@${fLabel} ${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
           lineNo++;
 
-          // gałąź true – bez dopisywania "KONIEC" na siłę
-          (t).srcLine = lineNo;
+          t.srcLine = lineNo;
           asmFragments.push(trueSignals ? `@${tLabel} ${trueSignals};` : `@${tLabel};`);
           lineNo++;
 
-          // gałąź false – drukuj tylko jeśli coś w niej jest
           if (falseSignals) {
-            (f).srcLine = lineNo;
+            f.srcLine = lineNo;
             asmFragments.push(`@${fLabel} ${falseSignals};`);
             lineNo++;
           }
         } else {
-          // zwykła faza
-          const signals = Object.keys(phase).filter((key) => (phase)[key] === true).join(' ');
+          const signals = Object.keys(phase)
+            .filter((key) => phase[key] === true)
+            .join(' ');
+
           if (signals.trim()) {
-            (phase).srcLine = lineNo;             // <-- mapowanie 1:1 faza → linia
+            phase.srcLine = lineNo;
             asmFragments.push(`${signals};`);
             lineNo++;
           }
         }
       }
 
-      const extra = (entry).meta?.postAsm;
+      const extra = entry.meta?.postAsm;
       if (extra?.length) {
         for (const line of extra) {
           asmFragments.push(`${line};`);
-          lineNo++; // te linie nie mają odpowiadających faz – ale zajmują miejsce w liście tekstowej
+          lineNo++;
         }
       }
     }
@@ -165,7 +169,7 @@ function compileProgram() {
   }
 }
 
-function uncompileProgram() {
+function enableProgramEditing() {
   programCompiled.value = false;
   emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
 }
@@ -184,13 +188,19 @@ function uncompileProgram() {
 }
 
 @media (min-width: 1380px) {
-  #program { width: 20rem; }
+  #program {
+    width: 20rem;
+  }
 }
 @media (min-width: 1255px) and (max-width: 1380px) {
-  #program { width: 12rem; }
+  #program {
+    width: 12rem;
+  }
 }
 @media (min-width: 1165px) and (max-width: 1255px) {
-  #program { width: 8rem; }
+  #program {
+    width: 8rem;
+  }
 }
 @media (min-width: 675px) and (max-width: 1195px) {
   #program {
@@ -201,7 +211,9 @@ function uncompileProgram() {
   }
 }
 @media (max-width: 675px) {
-  #program { margin: 20px 0; }
+  #program {
+    margin: 20px 0;
+  }
 }
 
 .flexRow {

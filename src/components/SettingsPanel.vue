@@ -171,6 +171,21 @@
           </label>
         </div>
       </div>
+      <div class="flexColumn">
+        <label>Kompilacja ASM:</label>
+        <div class="module-toggle-wrapper">
+          <span class="module-label">Resetuj rejestry przy kompilacji</span>
+          <label class="switch">
+            <input
+              type="checkbox"
+              :checked="autoResetOnAsmCompile"
+              @change="$emit('update:autoResetOnAsmCompile', $event.target.checked)"
+            />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <p>Po włączeniu rejestry i pamięć są czyszczone automatycznie przed kompilacją assemblera.</p>
+      </div>
 
       <div class="flexColumn">
         <div class="flexColumn button-column">
@@ -200,38 +215,25 @@
       <!-- Sekcja kolorów dla ESP32 -->
       <div v-if="platform == 'esp'" class="color-section">
         <h3 class="color-section-title">Kolory LED</h3>
-        
+
         <div class="color-buttons-list">
-          <button 
-            class="color-selection-btn"
-            @click="openColorPicker('signal_line')"
-          >
+          <button class="color-selection-btn" @click="openColorPicker('signal_line')">
             <span class="color-label">Linie sygnałowe</span>
             <div class="color-dot" :style="{ backgroundColor: signalLineColor }"></div>
           </button>
 
-          <button 
-            class="color-selection-btn"
-            @click="openColorPicker('display')"
-          >
+          <button class="color-selection-btn" @click="openColorPicker('display')">
             <span class="color-label">Wyświetlacz</span>
             <div class="color-dot" :style="{ backgroundColor: displayColor }"></div>
           </button>
 
-          <button 
-            class="color-selection-btn"
-            @click="openColorPicker('bus')"
-          >
+          <button class="color-selection-btn" @click="openColorPicker('bus')">
             <span class="color-label">Magistrala</span>
             <div class="color-dot" :style="{ backgroundColor: busColor }"></div>
           </button>
         </div>
 
-        <button 
-          class="send-colors-btn"
-          @click="sendAllColors"
-          :disabled="!hasColorChanges"
-        >
+        <button class="send-colors-btn" @click="sendAllColors" :disabled="!hasColorChanges">
           <span>📡 Wyślij wszystkie kolory do ESP32</span>
         </button>
       </div>
@@ -279,6 +281,7 @@ export default {
     platform: { type: String, default: '' },
     autocompleteEnabled: { type: Boolean, default: true },
     decSigned: { type: Boolean, default: false },
+    autoResetOnAsmCompile: { type: Boolean, default: true },
   },
   data() {
     return {
@@ -288,16 +291,16 @@ export default {
       displayBrightness: 1,
       busColor: '#0000ff',
       busBrightness: 1,
-      
+
       colorPickerOpen: false,
       currentColorType: null,
       currentColorTitle: '',
       currentColor: '#ff0000',
       currentBrightness: 1,
-      
+
       pendingColors: {},
       hasColorChanges: false,
-      
+
       openMap: {},
     };
   },
@@ -315,6 +318,7 @@ export default {
     'open-command-list',
     'update:autocompleteEnabled',
     'update:decSigned',
+    'update:autoResetOnAsmCompile',
     'color-change',
   ],
   computed: {
@@ -370,37 +374,37 @@ export default {
   methods: {
     openColorPicker(type) {
       this.currentColorType = type;
-      
+
       const colorMap = {
         signal_line: {
           title: 'Kolor linii sygnałowych',
           color: this.signalLineColor,
-          brightness: this.signalLineBrightness
+          brightness: this.signalLineBrightness,
         },
         display: {
           title: 'Kolor wyświetlacza',
           color: this.displayColor,
-          brightness: this.displayBrightness
+          brightness: this.displayBrightness,
         },
         bus: {
           title: 'Kolor magistrali',
           color: this.busColor,
-          brightness: this.busBrightness
-        }
+          brightness: this.busBrightness,
+        },
       };
-      
+
       const config = colorMap[type];
       this.currentColorTitle = config.title;
       this.currentColor = config.color;
       this.currentBrightness = config.brightness;
       this.colorPickerOpen = true;
     },
-    
+
     closeColorPicker() {
       this.colorPickerOpen = false;
       this.currentColorType = null;
     },
-    
+
     applyColor({ color, brightness, colorData }) {
       if (this.currentColorType === 'signal_line') {
         this.signalLineColor = color;
@@ -412,30 +416,30 @@ export default {
         this.busColor = color;
         this.busBrightness = brightness;
       }
-      
+
       this.pendingColors[this.currentColorType] = {
         type: this.currentColorType + '_hex',
         color,
         brightness,
-        colorData
+        colorData,
       };
-      
+
       this.hasColorChanges = Object.keys(this.pendingColors).length > 0;
       this.closeColorPicker();
     },
-    
+
     sendAllColors() {
-      Object.values(this.pendingColors).forEach(colorInfo => {
+      Object.values(this.pendingColors).forEach((colorInfo) => {
         this.$emit('color-change', {
           type: colorInfo.type,
           hex: colorInfo.colorData.hex,
           rgb: colorInfo.colorData.rgb,
           hsv: colorInfo.colorData.hsv,
           brightness: colorInfo.brightness,
-          rgbScaled: colorInfo.colorData.rgbScaled
+          rgbScaled: colorInfo.colorData.rgbScaled,
         });
       });
-      
+
       this.pendingColors = {};
       this.hasColorChanges = false;
     },

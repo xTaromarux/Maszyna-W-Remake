@@ -110,9 +110,11 @@
       :commandList="commandList"
       :program="program"
       :autocompleteEnabled="autocompleteEnabled"
+      :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @update:code="handleProgramSectionCompile($event)"
       @log="addLog($event.message, $event.class, $event.error)"
       @initMemory="applyInitMemory($event)"
+      @reset-registers="handleAsmAutoReset"
     />
 
     <ConsoleDock
@@ -170,6 +172,7 @@
       :step-delay="stepDelay"
       :extras="extras"
       :autocomplete-enabled="autocompleteEnabled"
+      :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
       @update:numberFormat="numberFormat = $event"
@@ -183,6 +186,7 @@
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
+      @update:autoResetOnAsmCompile="autoResetOnAsmCompile = $event"
       @color-change="sendColorToESP"
     />
 
@@ -295,6 +299,7 @@ export default {
       _condState: null,
       _pendingMemoryClear: null,
       autocompleteEnabled: true,
+      autoResetOnAsmCompile: true,
       isMobile: window.innerWidth <= 768,
       suppressBroadcast: false,
       prevSignals: {},
@@ -697,6 +702,14 @@ export default {
       this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
     },
 
+    handleAsmAutoReset() {
+      if (!this.autoResetOnAsmCompile) return;
+      this.resetValues({
+        resetLogs: false,
+        logMessage: 'Rejestry automatycznie zresetowane przed kompilacją assemblera.',
+      });
+    },
+
     applyInitMemory(assignments) {
       // assignments: Array<{ addr:number, val:number }>
       const size = 1 << this.addresBits;
@@ -1047,6 +1060,7 @@ export default {
           'lightMode',
           'registerFormats',
           'autocompleteEnabled',
+          'autoResetOnAsmCompile',
           'decSigned',
         ];
 
@@ -2870,7 +2884,8 @@ export default {
       this.addLog(`Wyczyszczono bit ${bitNum} w RM (RM=${this.RM}) - odblokowano IRQ${bitNum + 1}`, 'przerwanie');
     },
 
-    resetValues() {
+    resetValues(options = {}) {
+      const { resetMemory = true, resetLogs = true, logMessage = 'Wszystkie wartości rejestrów zostały zresetowane' } = options;
       // Clear any active timeouts first
       this.clearActiveTimeouts();
 
@@ -2897,7 +2912,9 @@ export default {
       this.stack = [];
 
       // Reset memory to all zeros
-      this.mem = new Array(1 << this.addresBits).fill(0);
+      if (resetMemory) {
+        this.mem = new Array(1 << this.addresBits).fill(0);
+      }
 
       // Reset all signals to false
       for (const key in this.signals) {
@@ -2907,10 +2924,14 @@ export default {
       this.nextLine.clear();
 
       // Clear console logs
-      this.logs = [];
-      this.hasConsoleErrors = false;
+      if (resetLogs) {
+        this.logs = [];
+        this.hasConsoleErrors = false;
+      }
 
-      this.addLog('Wszystkie wartości rejestrów zostały zresetowane', 'system');
+      if (logMessage) {
+        this.addLog(logMessage, 'system');
+      }
     },
 
     restoreDefaults() {
@@ -2919,6 +2940,7 @@ export default {
       this.addresBits = 4;
       this.oddDelay = 100;
       this.numberFormat = 'dec';
+      this.autoResetOnAsmCompile = true;
       this.registerFormats = {
         L: 'dec',
         I: 'dec',

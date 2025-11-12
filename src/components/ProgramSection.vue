@@ -49,6 +49,8 @@ const props = defineProps({
   program: { type: String, required: true },
   autocompleteEnabled: { type: Boolean, default: true },
   autoResetOnAsmCompile: { type: Boolean, default: false },
+  codeBits: { type: Number, required: true },
+  addresBits: { type: Number, required: true },
 });
 
 const emit = defineEmits(['update:code', 'log', 'initMemory', 'reset-registers']);
@@ -65,28 +67,65 @@ function compileProgram() {
     const ast = parse(programLocal.value);
     const analyzedNodes = analyzeSemantics(ast);
 
+    const opcodeLookup = new Map();
+    props.commandList.forEach((cmd, idx) => {
+      if (!cmd || cmd.name == null) return;
+      const key = String(cmd.name).toUpperCase();
+      if (!opcodeLookup.has(key)) {
+        opcodeLookup.set(key, idx);
+      }
+    });
+
+    const addrBits = props.addresBits;
+    const codeBits = props.codeBits;
+    const addressSpace = 2 ** addrBits;
+    const addressMask = addressSpace - 1;
+    const maxOpcode = 2 ** codeBits - 1;
+
     const initAssignments = [];
     for (const node of analyzedNodes) {
       if (node.type === 'Directive' && node._initMemory) {
         const { addr, val } = node._initMemory;
         initAssignments.push({ addr, val });
+      } else if (node.type === 'Directive' && Array.isArray(node._initMemoryList)) {
+        for (const entry of node._initMemoryList) {
+          initAssignments.push({ addr: entry.addr, val: entry.val });
+        }
       }
     }
 
     let pcAddr = 0;
     for (const node of analyzedNodes) {
       if (node.type === 'Instruction') {
+        const opcodeKey = String(node.name || '').toUpperCase();
+        const opcode = opcodeLookup.get(opcodeKey);
+        if (opcode == null) {
+          throw new Error(`Nie znaleziono definicji rozkazu "${node.name}" w aktualnej liscie rozkazow.`);
+        }
+        if (opcode > maxOpcode) {
+          throw new Error(`Rozkaz "${node.name}" o indeksie ${opcode} przekracza limit ${maxOpcode} wynikajacy z ${codeBits} bitow kodu.`);
+        }
+
         const argVal = node.operands?.[0]?.value ?? 0;
-        initAssignments.push({ addr: pcAddr, val: argVal });
+        if (argVal < 0 || argVal > addressMask) {
+          throw new Error(
+            `Argument ${argVal} instrukcji "${node.name}" wykracza poza zakres 0..${addressMask} dla ${addrBits} bitow adresu.`
+          );
+        }
+
+        const encodedValue = opcode * addressSpace + argVal;
+        initAssignments.push({ addr: pcAddr, val: encodedValue });
         pcAddr++;
       } else if (node.type === 'Directive' && node.name?.toUpperCase() === 'ORG') {
         pcAddr = node.operands?.[0]?.value ?? pcAddr;
       }
     }
-    if (initAssignments.length) emit('initMemory', initAssignments);
+
+    if (initAssignments.length) {
+      emit('initMemory', initAssignments);
+    }
 
     let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
-
     microProgram = injectCJumpMeta(microProgram);
 
     const asmFragments = [];

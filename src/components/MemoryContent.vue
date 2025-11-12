@@ -38,7 +38,7 @@
                 class="hoverInput"
                 :value="displayValue(mem[index])"
                 :min="signedDec ? -(1 << (wordBits - 1)) : 0"
-                :max="signedDec ?  ((1 << (wordBits - 1)) - 1) : wordMask()"
+                :max="signedDec ? (1 << (wordBits - 1)) - 1 : wordMask()"
                 @input="updateMemoryValue($event, index)"
                 @blur="onMemoryBlur($event, index)"
               />
@@ -145,14 +145,14 @@ export default {
       type: String,
       required: true,
     },
-    signedDec: { 
-      type: Boolean, 
-      default: false 
+    signedDec: {
+      type: Boolean,
+      default: false,
     },
-    wordBits:  { 
-      type: Number,  
-      default: 8 
-    }, 
+    wordBits: {
+      type: Number,
+      default: 8,
+    },
   },
   emits: ['update:A', 'update:S', 'update:mem', 'clickItem', 'update:aFormat', 'update:sFormat'],
   components: {
@@ -180,10 +180,10 @@ export default {
       const mod = 1 << this.wordBits;
       const sign = 1 << (this.wordBits - 1);
       const m = v & (mod - 1);
-      return (m & sign) ? (m - mod) : m;
+      return m & sign ? m - mod : m;
     },
     displayValue(raw) {
-      return this.signedDec ? this.toSigned(raw) : (raw & this.wordMask());
+      return this.signedDec ? this.toSigned(raw) : raw & this.wordMask();
     },
     handleClick(id) {
       this.$emit('clickItem', id);
@@ -193,7 +193,7 @@ export default {
     },
     updateMemoryValue(event, index) {
       const txt = String(event.target.value).trim();
-      if (txt === '' || txt === '-' ) return; 
+      if (txt === '' || txt === '-') return;
 
       const val = parseInt(txt, 10);
       if (Number.isNaN(val)) {
@@ -202,22 +202,18 @@ export default {
       }
 
       if (this.validateRegisterValue) {
-        const ok = this.validateRegisterValue(
-          val,
-          'memory',
-          `Pamięć[${index}]`,
-        );
+        const ok = this.validateRegisterValue(val, 'memory', `Pamięć[${index}]`);
         if (!ok) {
           event.target.value = this.displayValue(this.mem[index]);
           return;
         }
       } else {
         const min = this.signedDec ? -(1 << (this.wordBits - 1)) : 0;
-        const max = this.signedDec ?  ((1 << (this.wordBits - 1)) - 1) : this.wordMask();
+        const max = this.signedDec ? (1 << (this.wordBits - 1)) - 1 : this.wordMask();
         if (val < min || val > max) {
           if (this.showToast) {
             this.showToast(
-              `Wartość ${val} poza zakresem ${min}..${max} (słowo ${this.wordBits}-bit${this.wordBits===1?'owe':'owe'}).`
+              `Wartość ${val} poza zakresem ${min}..${max} (słowo ${this.wordBits}-bit${this.wordBits === 1 ? 'owe' : 'owe'}).`
             );
           }
           event.target.value = this.displayValue(this.mem[index]);

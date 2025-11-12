@@ -45,6 +45,7 @@
       @update:JAML="JAML = $event"
       @update:A="A = $event"
       @update:S="S = $event"
+      @update:mem="mem = $event"
       @update:X="X = $event"
       @update:Y="Y = $event"
       @update:RB="RB = $event"
@@ -109,6 +110,8 @@
       :manualMode="manualMode"
       :commandList="commandList"
       :program="program"
+      :code-bits="codeBits"
+      :addres-bits="addresBits"
       :autocompleteEnabled="autocompleteEnabled"
       :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @update:code="handleProgramSectionCompile($event)"
@@ -714,9 +717,9 @@ export default {
       // assignments: Array<{ addr:number, val:number }>
       const size = 1 << this.addresBits;
       const nextMem = new Array(size).fill(0);
-      // start from current mem to preserve any manual setup
+
       for (let i = 0; i < Math.min(this.mem.length, size); i++) nextMem[i] = this.mem[i];
-      const mask = this.wordMask(); // Dynamic mask based on codeBits + addresBits
+      const mask = this.wordMask();
       for (const { addr, val } of assignments) {
         if (addr >= 0 && addr < size) {
           nextMem[addr] = val & mask;

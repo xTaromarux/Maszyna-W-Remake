@@ -161,7 +161,7 @@ function toSignalSetArray(stmt: string): SignalSet[] {
 }
 
 function parseIF(stmt: string) {
-  // IF Z THEN @zero ELSE @niezero
+  // IF Z THEN @zero ELSE @notzero
   const m = /^IF\s+([A-Za-z]+)\s+THEN\s+@([A-Za-z0-9_]+)\s+ELSE\s+@([A-Za-z0-9_]+)$/i.exec(stmt);
   if (!m) return null;
   const flag = m[1].toUpperCase();
@@ -197,7 +197,7 @@ function phasesFromCommand(cmd: Cmd): Phase[] {
 
     if (!stmt) continue;
 
-    const ifSpec = !ifHandled ? parseIF(stmt.replace(/\s+KONIEC$/i, '')) : null;
+    const ifSpec = !ifHandled ? parseIF(stmt.replace(/\s+END$/i, '')) : null;
     if (ifSpec) {
       const tStmt = labels.get(ifSpec.tLabel) ?? '';
       const fStmt = labels.get(ifSpec.fLabel) ?? '';

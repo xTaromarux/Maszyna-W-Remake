@@ -198,7 +198,7 @@ export function compileCodeExternal(
     // 2) Linia NIE-będąca IF — twarda walidacja pisowni
     for (const tok of rest) {
       const up = tok.toUpperCase();
-      if (up === "KONIEC") continue;
+      if (up === "END") continue;
       if (!KNOWN.has(tok.toLowerCase())) {
         throw new Error(`Nieznany symbol „${tok}” w linii ${i + 1}: ${line}`);
       }

@@ -79,7 +79,7 @@ export default {
         L: 'Licznik',
         S: 'Rejestr S',
         A: 'Rejestr A',
-        JAML: 'Rejestr JAML',
+        JAML: 'Rejestr JAL',
         RZ: 'Rejestr zgłoszeń przerwań',
         RP: 'Rejestr priorytetów przerwań',
         AP: 'Rejestr adresu przerwania',
@@ -127,7 +127,7 @@ export default {
         RM: 'RM', 
         G: 'G', 
         RB: 'RB', 
-        JAML: 'JAML',
+        JAML: 'JAL',
       };
       return typeMap[this.label] || this.label;
     },

@@ -54,9 +54,9 @@ const KNOWN: ReadonlySet<string> = new Set([
 const IF_RE = /\bIF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\b/i;
 const IF_LINE_RE = /^\s*IF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\s*$/i;
 
-function cutKONIEC(text: string): string {
-  // wycina pojedyncze słowo KONIEC (bez ;), zostawiając resztę
-  return text.replace(/\bKONIEC\b/gi, '').trim();
+function cutEND(text: string): string {
+  // wycina pojedyncze słowo END (bez ;), zostawiając resztę
+  return text.replace(/\bEND\b/gi, '').trim();
 }
 
 function toSignalSet(line: string): SignalSet {
@@ -84,7 +84,7 @@ function pickBranchBodyFromChunk(chunk: string, label: string): SignalSet[] {
   const re = new RegExp(`^@${label}\\s+(.+)$`, 'i');
   const mm = re.exec(chunk.trim());
   if (!mm) return [];
-  const body = cutKONIEC(mm[1]);
+  const body = cutEND(mm[1]);
   const sset = toSignalSet(body);
   // jeśli ciało nie zawiera żadnych znanych sygnałów – zwracamy pustą listę
   const any = Object.keys(sset).length > 0;
@@ -113,7 +113,7 @@ export function buildFromCommandList(list: Cmd[]): Built {
       const split = splitChunkAtIF(ln);
       let prefixArr: Signal[] | undefined;
       if (split.before) {
-        const arr = toSignalArray(cutKONIEC(split.before));
+        const arr = toSignalArray(cutEND(split.before));
         if (arr.length) prefixArr = arr;
       }
       if (split.ifPart) ln = split.ifPart;
@@ -151,7 +151,7 @@ export function buildFromCommandList(list: Cmd[]): Built {
 
       // 3) Linia zaczyna się od etykiety @label - faza bezwarunkowa (spoza IF)
       if (ln.startsWith('@')) {
-        const body = cutKONIEC(ln.replace(/^@\S+\s+/, ''));
+        const body = cutEND(ln.replace(/^@\S+\s+/, ''));
         const arr = toSignalArray(body);
         if (arr.length) phases.push(arr);
         continue;
@@ -164,7 +164,7 @@ export function buildFromCommandList(list: Cmd[]): Built {
       }
 
       // 5) Zwykła faza sygnałowa
-      const arr = toSignalArray(cutKONIEC(ln));
+      const arr = toSignalArray(cutEND(ln));
       if (arr.length) phases.push(arr);
     }
 

@@ -11,6 +11,10 @@
     --lineHeadLength: 0.75rem;
     --lineHeadMargin: 0.20rem;
     --arrowHeadSize: 0.5rem;
+
+    /* Default colors for scrollbar */
+    --primaryColor: #003c7d;
+    --accentColor: #00aaff;
   }
   
   body, body.lightMode {
@@ -65,8 +69,34 @@
     transition: 0.25s;
   }
   
-  ::-webkit-scrollbar-track { background-color: var(--scrollBackground); }
-  ::-webkit-scrollbar { width: 0.25rem; height: 0.25rem; background-color: var(--scrollBackground); }
-  ::-webkit-scrollbar-thumb { border-radius: 10px; background-color: var(--scrollThumb); }
-  ::-webkit-scrollbar-corner { background: var(--scrollBackground); }
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--panelBackgroundColor);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--primaryColor);
+    border-radius: 6px;
+    transition: background-color 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accentColor);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--panelBackgroundColor);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primaryColor) var(--panelBackgroundColor);
+  }
   

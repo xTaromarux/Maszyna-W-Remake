@@ -120,6 +120,7 @@ export default {
   watch: {
     settingsOpen(newVal) {
       if (newVal) {
+        this.disableBodyScroll();
         this.open = true;
         this.$nextTick(() => {
           setTimeout(() => {
@@ -127,6 +128,7 @@ export default {
           }, 10);
         });
       } else {
+        this.enableBodyScroll();
         this.$nextTick(() => {
           setTimeout(() => {
             this.open = false;
@@ -140,6 +142,7 @@ export default {
   },
   mounted() {
     if (this.settingsOpen) {
+      this.disableBodyScroll();
       this.open = true;
       this.$nextTick(() =>
         setTimeout(() => {
@@ -148,8 +151,18 @@ export default {
       );
     }
   },
+  beforeUnmount() {
+    this.enableBodyScroll();
+  },
   methods: {
+    disableBodyScroll() {
+      document.body.style.overflow = 'hidden';
+    },
+    enableBodyScroll() {
+      document.body.style.overflow = '';
+    },
     startClose() {
+      this.enableBodyScroll();
       this.$emit('close');
       setTimeout(() => {
         this.open = false;

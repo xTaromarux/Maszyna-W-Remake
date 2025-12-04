@@ -28,11 +28,11 @@ type CJumpMeta = {
   srcLine?: number;
 };
 
-/* IF Z THEN @zero ELSE @niezero; */
+/* IF Z THEN @zero ELSE @notzero; */
 const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
 
 function cutAtKoniec(phases: Phase[]): Phase[] {
-  const i = phases.findIndex((p) => p.op === 'KONIEC' || p.op === 'END_BRANCH');
+  const i = phases.findIndex((p) => p.op === 'END' || p.op === 'END_BRANCH');
   return i >= 0 ? phases.slice(0, i) : phases;
 }
 
@@ -91,8 +91,8 @@ export function buildConditionalForInstr(lines: string[]): {
   let truePhases = linesToPhases(trueLines);
   let falsePhases = linesToPhases(falseLines);
 
-  truePhases = cutAtKoniec(truePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
-  falsePhases = cutAtKoniec(falsePhases).map((p) => (p.op === 'KONIEC' ? { op: 'END_BRANCH' } : p));
+  truePhases = cutAtKoniec(truePhases).map((p) => (p.op === 'END' ? { op: 'END_BRANCH' } : p));
+  falsePhases = cutAtKoniec(falsePhases).map((p) => (p.op === 'END' ? { op: 'END_BRANCH' } : p));
 
   const meta: CJumpMeta = {
     kind: 'CJUMP',

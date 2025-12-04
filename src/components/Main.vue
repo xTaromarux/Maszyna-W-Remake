@@ -1266,7 +1266,7 @@ export default {
 
         // 2) PRZYPISANIE srcLine
         //    Dla zwykłej fazy: +1 linia
-        //    Dla fazy warunkowej: +3 linie (IF, @zero, @niezero)
+        //    Dla fazy warunkowej: +3 linie (IF, @zero, @notzero)
         //    Po każdej instrukcji doliczamy jej postAsm (jeśli były dopisane linie w assemblerze)
         let linePtr = 0;
         for (const entry of this.compiledProgram) {
@@ -1281,7 +1281,7 @@ export default {
               const t0 = phase.truePhases && phase.truePhases[0];
               const f0 = phase.falsePhases && phase.falsePhases[0];
               if (t0) t0.srcLine = linePtr + 1; // linia z @zero ...
-              if (f0) f0.srcLine = linePtr + 2; // linia z @niezero ...
+              if (f0) f0.srcLine = linePtr + 2; // linia z @notzero ...
 
               linePtr += 3;
             } else {
@@ -1498,7 +1498,7 @@ export default {
             return;
           }
 
-          // Kandydat na srcLine tej POD-FAZY (gdy nie ma, fallback to linia @zero/@niezero)
+          // Kandydat na srcLine tej POD-FAZY (gdy nie ma, fallback to linia @zero/@notzero)
           const fallback = Number.isFinite(st.phaseRef?.srcLine) ? st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2) : undefined;
           const nextSrc = Number.isFinite(curr?.srcLine) ? curr.srcLine : fallback;
 

@@ -138,7 +138,7 @@ function compileProgram() {
           const flag = cond.flag;
           const labels = cond.__labels || {};
           const tLabel = labels.t || 'zero';
-          const fLabel = labels.f || 'niezero';
+          const fLabel = labels.f || 'notzero';
           const prefixArr = cond.__prefix;
 
           const t = cond.truePhases?.[0] ?? {};

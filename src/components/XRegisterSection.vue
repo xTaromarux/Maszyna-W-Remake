@@ -5,7 +5,7 @@
       :signal="signals.wyx"
       label="wyx"
       divClassNames="pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
+      spanClassNames="lineRightOnBottom"
       @click="handleClick('wyx')"
     />
     <RegisterComponent
@@ -20,7 +20,7 @@
       :signal="signals.wex"
       label="wex"
       divClassNames="pathDownOnLeft"
-      spanClassNames="lineLeftOnBottom"
+      spanClassNames="arrowLeftOnBottom"
       @click="handleClick('wex')"
     />
   </div>

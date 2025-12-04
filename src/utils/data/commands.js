@@ -83,14 +83,14 @@ export const commandList = [
     Linia1=skok gdy (AK) < 0
     Linia2=ROZKAZ SOM;
     Linia3=czyt wys wei il;
-    Linia4=IF N THEN @ujemne ELSE @dodatnie;
-    Linia5=@ujemne wyad wea wel KONIEC;
-    Linia6=@dodatnie wyl wea; */
+    Linia4=IF N THEN @negative ELSE @positive;
+    Linia5=@negative wyad wea wel END;
+    Linia6=@positive wyl wea; */
   {
     name: 'SOM',
     args: 1,
     description: 'skok gdy (AK) < 0',
-    lines: `czyt wys wei il;\nIF N THEN @ujemne ELSE @dodatnie;\n@ujemne wyad wea wel KONIEC;\n@dodatnie wyl wea;`,
+    lines: `czyt wys wei il;\nIF N THEN @negative ELSE @positive;\n@negative wyad wea wel END;\n@positive wyl wea;`,
   },
 
   // [soz]
@@ -98,14 +98,14 @@ export const commandList = [
   // Linia1=// skok gdy (AK) = 0
   // Linia2=ROZKAZ SOZ;
   // Linia3=czyt wys wei il;
-  // Linia4=IF Z THEN @zero ELSE @niezero;
-  // Linia5=@zero wyad wea wel KONIEC;
-  // Linia6=@niezero wyl wea;
+  // Linia4=IF Z THEN @zero ELSE @notzero;
+  // Linia5=@zero wyad wea wel END;
+  // Linia6=@notzero wyl wea;
   {
     name: 'SOZ',
     args: 1,
     description: 'skok gdy (AK) = 0',
-    lines: `czyt wys wei il;\nIF Z THEN @zero ELSE @niezero;\n@zero wyad wea wel KONIEC;\n@niezero wyl wea;`,
+    lines: `czyt wys wei il;\nIF Z THEN @zero ELSE @notzero;\n@zero wyad wea wel END;\n@notzero wyl wea;`,
   },
 
   // [dns]
@@ -199,13 +199,13 @@ export const commandList = [
   // Linia3=Argumenty 1;
   // Linia4=czyt wys wei il;
   // Linia5=wyak weja ode weak start;
-  // Linia6=@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;
-  // Linia7=@gotowe wyrb weja przep weak wyl wea;
+  // Linia6=@wait wyg weja ode weak IF Z THEN @done ELSE @wait;
+  // Linia7=@done wyrb weja przep weak wyl wea;
   {
     name: 'WPR',
     args: 1,
     description: 'wczytaj znak z urządzenia zewnętrznego',
-    lines: `czyt wys wei il;\nwyak weja ode weak start;\n@czekaj wyg weja ode weak IF Z THEN @gotowe ELSE @czekaj;\n@gotowe wyrb weja przep weak wyl wea;`,
+    lines: `czyt wys wei il;\nwyak weja ode weak start;\n@wait wyg weja ode weak IF Z THEN @done ELSE @wait;\n@done wyrb weja przep weak wyl wea;`,
   },
 
   // [wyp]
@@ -216,13 +216,13 @@ export const commandList = [
   // Linia4=czyt wys wei il;
   // Linia5=wyak weja werb start;
   // Linia6=wyak wes weja ode weak;
-  // Linia7=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
-  // Linia8=@gotowe wys weja przep weak wyl wea;
+  // Linia7=@wait wyg weja ode weak IF Z THEN @done ELSE @wait;
+  // Linia8=@done wys weja przep weak wyl wea;
   {
     name: 'WYP',
     args: 1,
     description: 'wyprowadź znak na urządzenie zewnętrzne',
-    lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
+    lines: `czyt wys wei il;\nwyak weja werb start;\nwyak wes weja ode weak;\n@wait wyg weja ode weak IF Z THEN @done ELSE @wait;\n@done wys weja przep weak wyl wea;`,
   },
 
   // [mas]
@@ -273,13 +273,13 @@ export const commandList = [
   // Linia2=ROZKAZ WPR2;
   // Linia3=czyt wys wei il;
   // Linia4=start wyak weja ode weak;
-  // Linia5=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
-  // Linia6=@gotowe wyrb weja przep weak wyl wea;
+  // Linia5=@wait wyg weja ode weak IF Z THEN @done ELSE @wait;
+  // Linia6=@done wyrb weja przep weak wyl wea;
   {
     name: 'WPR2',
     args: 1,
     description: 'Wczytanie znaku z urządzenia zewnętrznego o numerze podanym jako argument',
-    lines: `czyt wys wei il;\nstart wyak weja ode weak;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wyrb weja przep weak wyl wea;`,
+    lines: `czyt wys wei il;\nstart wyak weja ode weak;\n@wait wyg weja ode weak IF Z THEN @done ELSE @wait;\n@done wyrb weja przep weak wyl wea;`,
   },
 
   // [wyp2]
@@ -288,12 +288,12 @@ export const commandList = [
   // Linia2=ROZKAZ WYP2;
   // Linia3=czyt wys wei il;
   // Linia4=wyak weja ode weak wes werb start;
-  // Linia5=@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;
-  // Linia6=@gotowe wys weja przep weak wyl wea;
+  // Linia5=@wait wyg weja ode weak IF Z THEN @done ELSE @wait;
+  // Linia6=@done wys weja przep weak wyl wea;
   {
     name: 'WYP2',
     args: 1,
     description: 'Wypisanie znaku znajdującego się w akumulatorze na urządzenie zewnętrzne o numerze podanym jako argument',
-    lines: `czyt wys wei il;\nwyak weja ode weak wes werb start;\n@czeka wyg weja ode weak IF Z THEN @gotowe ELSE @czeka;\n@gotowe wys weja przep weak wyl wea;`,
+    lines: `czyt wys wei il;\nwyak weja ode weak wes werb start;\n@wait wyg weja ode weak IF Z THEN @done ELSE @wait;\n@done wys weja przep weak wyl wea;`,
   },
 ];

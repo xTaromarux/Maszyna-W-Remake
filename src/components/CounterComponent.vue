@@ -19,7 +19,7 @@
       @click="handleClick('wyl')"
       label="wyl"
       class="long pathDownOnLeft"
-      spanClassNames="arrowLeftOnBottom"
+      spanClassNames="lineLeftOnBottom"
     />
     <div 
       class="wylsSignalsConteiner"

@@ -5,7 +5,7 @@
       :signal="signals.wyad"
       label="wyad"
       divClassNames="long pathUpOnRight"
-      spanClassNames="arrowRightOnBottom"
+      spanClassNames="lineRightOnBottom"
       @click="handleClick('wyad')"
     />
     <RegisterComponent

@@ -4,7 +4,7 @@
       id="wyg"
       :signal="signals.wyg"
       label="wyg"
-      :divClassNames="isMobile ? 'pathUpOnRight' : 'pathDownOnRight'"
+      :divClassNames="isMobile ? 'pathDownOnRight' : 'pathUpOnRight'"
       spanClassNames="lineRightOnBottom"
       @click="handleClick('wyg')"
     />
@@ -19,7 +19,7 @@
       id="start"
       :signal="signals.start"
       label="start"
-      :divClassNames="isMobile ? 'pathDownOnLeft' : 'pathUpOnLeft'"
+      :divClassNames="isMobile ? 'pathUpOnLeft' : 'pathDownOnLeft'"
       spanClassNames="arrowLeftOnBottom"
       @click="handleClick('start')"
     />

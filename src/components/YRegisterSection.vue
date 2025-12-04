@@ -4,8 +4,8 @@
       id="wyy"
       :signal="signals.wyy"
       label="wyy"
-      divClassNames="pathDownOnRight"
-      spanClassNames="arrowRightOnBottom"
+      divClassNames="pathUpOnRight"
+      spanClassNames="lineRightOnBottom"
       @click="handleClick('wyy')"
     />
     <RegisterComponent
@@ -19,8 +19,8 @@
       id="wey"
       :signal="signals.wey"
       label="wey"
-      divClassNames="pathUpOnLeft"
-      spanClassNames="lineLeftOnBottom"
+      divClassNames="pathDownOnLeft"
+      spanClassNames="arrowLeftOnBottom"
       @click="handleClick('wey')"
     />
   </div>

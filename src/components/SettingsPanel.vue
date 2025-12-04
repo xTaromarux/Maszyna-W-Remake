@@ -931,4 +931,72 @@ input:checked + .slider:before {
   text-align: center;
   opacity: 0.9;
 }
+
+/* Custom scrollbar styles for settings content */
+.settingsContent::-webkit-scrollbar {
+  width: 12px;
+}
+
+.settingsContent::-webkit-scrollbar-track {
+  background: var(--panelBackgroundColor);
+  border-radius: 6px;
+}
+
+.settingsContent::-webkit-scrollbar-thumb {
+  background: #003c7d;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.settingsContent::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+}
+
+.settingsContent::-webkit-scrollbar-thumb:active {
+  background: #002a5c;
+}
+
+/* Scrollbar corner */
+.settingsContent::-webkit-scrollbar-corner {
+  background: var(--panelBackgroundColor);
+}
+
+/* Scrollbar buttons (arrows) */
+.settingsContent::-webkit-scrollbar-button {
+  display: block;
+  height: 12px;
+  width: 12px;
+  background: #003c7d;
+  border-radius: 0;
+}
+
+.settingsContent::-webkit-scrollbar-button:hover {
+  background: #0056b3;
+}
+
+.settingsContent::-webkit-scrollbar-button:active {
+  background: #002a5c;
+}
+
+/* Up arrow */
+.settingsContent::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 14l5-5 5 5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Down arrow */
+.settingsContent::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Firefox scrollbar */
+.settingsContent {
+  scrollbar-width: auto;
+  scrollbar-color: #003c7d var(--panelBackgroundColor);
+}
 </style>

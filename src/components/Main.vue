@@ -781,6 +781,10 @@ export default {
           if (msg.type === 'button_press') {
             this.handleRemoteToggleESPWebSocket(msg.buttonName);
           }
+          
+          if (msg.type === 'signal-toggle') {
+            this.handleRemoteToggleLocalWebSocket(msg.signal, msg.state);
+          }
         });
       } catch (e) {
         this.wsStatus = 'error';
@@ -796,6 +800,7 @@ export default {
         this.nextLine.delete(id);
       }
       this.signals[id] = value;
+      this.addLog(`[WS] Odebrano sygnał ${id}: ${value ? 'ON' : 'OFF'}`, 'system');
       this.suppressBroadcast = false;
     },
 
@@ -887,6 +892,11 @@ export default {
         this.nextLine.delete(value);
       }
       this.signals[value] = !this.signals[value];
+      
+      this.addLog(`[ESP32] Przycisk ${value}: ${this.signals[value] ? 'ON' : 'OFF'}`, 'system');
+      
+      this.sendSignalToESP(value, this.signals[value]);
+      
       this.suppressBroadcast = false;
     },
 
@@ -957,6 +967,21 @@ export default {
       } else {
         this.nextLine.add(signalName);
         this.signals[signalName] = true;
+      }
+      
+      this.sendSignalToESP(signalName, this.signals[signalName]);
+    },
+
+    sendSignalToESP(signalName, state) {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(
+          JSON.stringify({
+            type: 'signal-toggle',
+            signal: signalName,
+            state: state,
+          })
+        );
+        this.addLog(`[WS] Wysłano sygnał ${signalName}: ${state ? 'ON' : 'OFF'}`, 'system');
       }
     },
 
@@ -1038,6 +1063,9 @@ export default {
           `[LED] Wysłano kolor ${colorData.type}: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`,
           'system'
         );
+        
+        // Wyślij pełne dane po zmianie koloru, aby ESP32 od razu zaktualizował LED z nowymi wartościami
+        this.sendFullDataToESP();
       }
     },
 

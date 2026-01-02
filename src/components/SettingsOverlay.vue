@@ -8,6 +8,7 @@
       :creators="creators"
       :caregivers="caregivers"
       :light-mode="lightMode"
+      :language="language"
       :number-format="numberFormat"
       :code-bits="codeBits"
       :addres-bits="addresBits"
@@ -20,6 +21,7 @@
       :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
+      @update:language="$emit('update:language', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
       @update:decSigned="$emit('update:decSigned', $event)"
       @update:codeBits="$emit('update:codeBits', $event)"
@@ -48,6 +50,7 @@ export default {
     settingsOpen: { type: Boolean, default: false },
     isMobile: { type: Boolean, required: true },
     lightMode: { type: Boolean, required: true },
+    language: { type: String, default: 'pl' },
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },
     autocompleteEnabled: { type: Boolean, default: true },
@@ -97,6 +100,7 @@ export default {
   emits: [
     'close',
     'update:lightMode',
+    'update:language',
     'update:numberFormat',
     'update:codeBits',
     'update:addresBits',

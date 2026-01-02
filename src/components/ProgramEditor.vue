@@ -205,14 +205,6 @@ watch(() => props.activeLine, async (row) => {
   line-height: 1.4;
 }
 
-.monaco-container {
-  flex: 1;
-  min-height: 300px;
-  margin-bottom: 0.7rem;
-  border: 1px solid var(--panelOutlineColor, black);
-  border-radius: var(--default-border-radius, 0.25rem);
-}
-
 .nextLine {
   flex-grow: 1;
   width: 100%;

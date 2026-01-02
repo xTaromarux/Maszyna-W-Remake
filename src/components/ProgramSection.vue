@@ -261,12 +261,4 @@ function enableProgramEditing() {
   align-items: center;
   gap: 0.5rem;
 }
-
-.monaco-container {
-  flex-grow: 1;
-  min-height: 300px;
-  border: 1px solid var(--panelOutlineColor, black);
-  border-radius: var(--default-border-radius, 0.25rem);
-  background-color: var(--panelBackgroundColor, white);
-}
 </style>

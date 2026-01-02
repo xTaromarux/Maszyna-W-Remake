@@ -20,6 +20,18 @@
       </div>
 
       <div class="flexColumn">
+        <label>Język interfejsu:</label>
+        <SegmentedToggle
+          :options="[
+            { label: 'Polski', value: 'pl' },
+            { label: 'English', value: 'en' },
+          ]"
+          :model-value="language"
+          @update:model-value="$emit('update:language', $event)"
+        />
+      </div>
+
+      <div class="flexColumn">
         <label>Domyślny format liczb:</label>
         <SegmentedToggle
           :options="[
@@ -273,6 +285,7 @@ export default {
     numberFormat: { type: String, required: true },
     creators: { type: Array, default: () => [] },
     caregivers: { type: Array, default: () => [] },
+    language: { type: String, default: 'pl' },
     codeBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
@@ -320,6 +333,7 @@ export default {
     'update:decSigned',
     'update:autoResetOnAsmCompile',
     'color-change',
+    'update:language',
   ],
   computed: {
     extrasLabels() {

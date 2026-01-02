@@ -86,7 +86,7 @@ export default {
     busSValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
     signedDec: { type: Boolean, default: false },
-    wordBits:  { type: Number,  default: 8 }, 
+    wordBits: { type: Number, default: 8 },
   },
   emits: ['clickItem', 'update:A', 'update:S', 'update:mem', 'update:aFormat', 'update:sFormat'],
   data() {

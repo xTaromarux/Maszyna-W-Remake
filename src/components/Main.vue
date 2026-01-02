@@ -167,6 +167,7 @@
       :settings-open="settingsOpen"
       :is-mobile="isMobile"
       :light-mode="lightMode"
+      :language="language"
       :number-format="numberFormat"
       :code-bits="codeBits"
       :addres-bits="addresBits"
@@ -178,6 +179,7 @@
       :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @close="closePopups('settingsOpen')"
       @update:lightMode="lightMode = $event"
+      @update:language="language = $event"
       @update:numberFormat="numberFormat = $event"
       @update:decSigned="decSigned = $event"
       @update:codeBits="codeBits = $event"
@@ -517,6 +519,7 @@ export default {
       aiChatOpen: false,
 
       lightMode: true,
+      language: 'pl',
 
       consoleOpen: false,
       hasConsoleErrors: false,
@@ -1089,6 +1092,7 @@ export default {
           'numberFormat',
           'extras',
           'lightMode',
+          'language',
           'registerFormats',
           'autocompleteEnabled',
           'autoResetOnAsmCompile',
@@ -1143,6 +1147,10 @@ export default {
 
         // Don't reset logs - they should persist during the session
       }
+      this.syncDocumentLanguage();
+    },
+    syncDocumentLanguage(lang = this.language) {
+      document.documentElement.lang = lang || 'pl';
     },
     saveToLS() {
       // Create a copy of data without logs
@@ -3112,6 +3120,9 @@ export default {
         document.body.classList.add('darkMode');
         document.body.classList.remove('lightMode');
       }
+    },
+    language(newLang) {
+      this.syncDocumentLanguage(newLang);
     },
 
     signals: {

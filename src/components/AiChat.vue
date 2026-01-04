@@ -6,17 +6,17 @@
       <header class="chatHeader">
         <h1>{{ props.title }}</h1>
         <div class="headerBtns">
-          <button class="resetBtn" @click="resetConversation" aria-label="Resetuj czat">
+          <button class="resetBtn" @click="resetConversation" :aria-label="$t('aiChat.resetAria')">
             <AiChatTrashIcon width="22" height="22" class="trashIcon" />
           </button>
-          <button class="closeBtn" @click="startClose" aria-label="Zamknij czat">&times;</button>
+          <button class="closeBtn" @click="startClose" :aria-label="$t('aiChat.closeAria')">&times;</button>
         </div>
       </header>
 
       <div id="conversation" ref="conversationEl">
         <div v-if="apiState === ApiState.CHECKING || apiState === ApiState.WAKING" class="healthBanner">
-          <span v-if="apiState === ApiState.CHECKING">Sprawdzam połączenie z modelem…</span>
-          <span v-else>Wybudzam model na Hugging Face…</span>
+          <span v-if="apiState === ApiState.CHECKING">{{ $t('aiChat.checking') }}</span>
+          <span v-else>{{ $t('aiChat.waking') }}</span>
           <span class="dots"><span></span><span></span><span></span></span>
         </div>
 
@@ -31,24 +31,24 @@
               {{ msg.sender === 'assistant' ? '🤖' : '' }}
             </div>
             <div class="messageContent">
-              <div class="messageHeader">
-                <span class="senderName">{{ msg.sender === 'assistant' ? 'AI' : 'Ty' }}</span>
-                <span
-                  class="timestamp"
-                  :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
-                >
-                  {{ formatTime(msg.timestamp) }}
-                </span>
-                <button
-                  v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
-                  class="cancelBtn"
-                  type="button"
-                  @click="cancelResponse"
-                  :disabled="isCancelling"
-                  aria-label="Anuluj odpowiedź"
-                >
-                  &times;
-                </button>
+            <div class="messageHeader">
+              <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
+              <span
+                class="timestamp"
+                :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
+              >
+                {{ formatTime(msg.timestamp) }}
+              </span>
+              <button
+                v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
+                class="cancelBtn"
+                type="button"
+                @click="cancelResponse"
+                :disabled="isCancelling"
+                :aria-label="$t('aiChat.cancel')"
+              >
+                &times;
+              </button>
               </div>
               <div class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
                 <template v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId && !msg.text">
@@ -72,7 +72,7 @@
         <p v-else-if="generalError" class="inputError">{{ generalError }}</p>
         <form @submit.prevent="sendUserMessage">
           <input ref="textInput" v-model="text" :placeholder="props.placeholder" type="text" :disabled="isBusy" />
-          <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">Wyślij</button>
+          <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">{{ $t('aiChat.send') }}</button>
         </form>
       </div>
     </div>

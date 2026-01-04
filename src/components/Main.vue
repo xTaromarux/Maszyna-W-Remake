@@ -206,9 +206,9 @@
     <AiChat
       :visible="aiChatOpen"
       @close="closePopups('aiChatOpen')"
-      title="Asystent AI 🤖"
-      placeholder="Wpisz wiadomość…"
-      instruction="Opisz operację uzyskania kodu maszynowego:"
+      :title="$t('aiChat.title')"
+      :placeholder="$t('aiChat.placeholder')"
+      :instruction="$t('aiChat.instruction')"
     />
   </div>
 </template>

@@ -24,9 +24,9 @@
       <div class="scrollWrapper">
         <div class="memoryContainer">
           <span class="label">{{ memoryLabel }}</span>
-          <span class="label">Wartość</span>
-          <span class="label">Kod</span>
-          <span class="label">Adres</span>
+          <span class="label">{{ $t('memory.value') }}</span>
+          <span class="label">{{ $t('memory.code') }}</span>
+          <span class="label">{{ $t('memory.address') }}</span>
 
           <template v-for="(value, index) in mem" :key="index">
             <span :class="{ selected: A === index }">{{ formatNumber(index) }}</span>
@@ -44,7 +44,7 @@
               />
             </div>
             <span :class="{ selected: A === index }">
-              {{ decToCommand(value) ? decToCommand(value).name : 'EMPTY' }}
+              {{ decToCommand(value) ? decToCommand(value).name : $t('memory.empty') }}
             </span>
             <span :class="{ selected: A === index }">
               {{ formatNumber(decToArgument(value)) }}
@@ -169,7 +169,7 @@ export default {
       return this.windowWidth < 1080;
     },
     memoryLabel() {
-      return this.windowWidth < 1400 ? 'Adr.' : 'Adres pamięci';
+      return this.windowWidth < 1400 ? this.$t('memory.labelShort') : this.$t('memory.labelFull');
     },
   },
   methods: {
@@ -212,9 +212,7 @@ export default {
         const max = this.signedDec ? (1 << (this.wordBits - 1)) - 1 : this.wordMask();
         if (val < min || val > max) {
           if (this.showToast) {
-            this.showToast(
-              `Wartość ${val} poza zakresem ${min}..${max} (słowo ${this.wordBits}-bit${this.wordBits === 1 ? 'owe' : 'owe'}).`
-            );
+            this.showToast(this.$t('memory.outOfRange', { val, min, max, bits: this.wordBits }));
           }
           event.target.value = this.displayValue(this.mem[index]);
           return;

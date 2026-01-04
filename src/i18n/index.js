@@ -166,6 +166,15 @@ const messages = {
       statusReady: 'READY',
       statusBusy: 'BUSY',
     },
+    memory: {
+      labelShort: 'Adr.',
+      labelFull: 'Adres pamięci',
+      value: 'Wartość',
+      code: 'Kod',
+      address: 'Adres',
+      empty: 'EMPTY',
+      outOfRange: 'Wartość {val} poza zakresem {min}..{max} (słowo {bits}-bitowe).',
+    },
   },
   en: {
     settings: {
@@ -331,6 +340,15 @@ const messages = {
       statusLabel: 'Status (READY/G):',
       statusReady: 'READY',
       statusBusy: 'BUSY',
+    },
+    memory: {
+      labelShort: 'Addr.',
+      labelFull: 'Memory address',
+      value: 'Value',
+      code: 'Opcode',
+      address: 'Address',
+      empty: 'EMPTY',
+      outOfRange: 'Value {val} is out of range {min}..{max} (word is {bits} bits).',
     },
   },
 };

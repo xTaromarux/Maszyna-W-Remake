@@ -1163,8 +1163,9 @@ export default {
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
     addLog(message, classification = 'info', errorObj = null) {
+      const translatedMessage = this.translateLogMessage(message);
       const timestamp = new Date();
-      const key = `${classification}|${message}`;
+      const key = `${classification}|${translatedMessage}`;
       const now = timestamp.getTime();
 
       // reset liczników po przerwie > 1000 ms
@@ -1177,7 +1178,7 @@ export default {
         this._lastLogCount += 1;
         const last = this.logs[this.logs.length - 1];
         if (last) {
-          last.message = `${message} ×${this._lastLogCount + 1}`;
+          last.message = `${translatedMessage} ×${this._lastLogCount + 1}`;
           last.timestamp = timestamp;
         }
         this._lastLogTs = now;
@@ -1191,7 +1192,7 @@ export default {
       // Enhanced log entry structure that supports both legacy and new error formats
       const logEntry = {
         timestamp,
-        message,
+        message: translatedMessage,
         class: classification,
       };
 
@@ -1220,6 +1221,189 @@ export default {
       if (isError) {
         this.hasConsoleErrors = true;
       }
+    },
+    translateLogMessage(message) {
+      const t = this.$t;
+      const stateLabel = (raw) => t(`logs.breakpointStatus.${raw?.toLowerCase() === 'on' ? 'on' : 'off'}`);
+      const patterns = [
+        {
+          regex: /^Breakpoint (dodany|usunięty) @(\d+)$/,
+          handler: (m) => t(`logs.breakpoint.${m[1] === 'dodany' ? 'added' : 'removed'}`, { line: m[2] }),
+        },
+        {
+          regex: /^\[WS\] Odebrano sygnał (.+): (ON|OFF)$/,
+          handler: (m) => t('logs.wsSignalReceived', { id: m[1], state: stateLabel(m[2]) }),
+        },
+        {
+          regex: /^\[ESP32] Przycisk (.+): (ON|OFF)$/,
+          handler: (m) => t('logs.espButton', { button: m[1], state: stateLabel(m[2]) }),
+        },
+        {
+          regex: /^\[WS] Wysłano sygnał (.+): (ON|OFF)$/,
+          handler: (m) => t('logs.wsSignalSent', { signal: m[1], state: stateLabel(m[2]) }),
+        },
+        {
+          regex: /^Stos PUSH \[(.+)\]: (.+) \(AP=(.+), WS=(.+), rozmiar=(.+)\)$/,
+          handler: (m) => t('logs.stackPushAp', { type: m[1], value: m[2], ap: m[3], ws: m[4], size: m[5] }),
+        },
+        {
+          regex: /^Stos PUSH \[(.+)\]: (.+) \(WS=(.+), rozmiar=(.+)\)$/,
+          handler: (m) => t('logs.stackPush', { type: m[1], value: m[2], ws: m[3], size: m[4] }),
+        },
+        {
+          regex: /^Stos POP \[(.+)\]: (.+) \(AP=(.+), WS=(.+), rozmiar=(.+)\)$/,
+          handler: (m) => t('logs.stackPopAp', { type: m[1], value: m[2], ap: m[3], ws: m[4], size: m[5] }),
+        },
+        {
+          regex: /^Stos POP \[(.+)\]: (.+) \(WS=(.+), rozmiar=(.+)\)$/,
+          handler: (m) => t('logs.stackPop', { type: m[1], value: m[2], ws: m[3], size: m[4] }),
+        },
+        {
+          regex: /^Stos POP: oczekiwano (.+), otrzymano (.+)!$/,
+          handler: (m) => t('logs.stackPopExpected', { expected: m[1], actual: m[2] }),
+        },
+        {
+          regex: /^Adres poza zakresem pamięci przy inicjalizacji: (.+)$/,
+          handler: (m) => t('logs.memoryInitOutOfRange', { addr: m[1] }),
+        },
+        {
+          regex: /^Zastosowano inicjalizację pamięci \((\d+) wpisów\)$/,
+          handler: (m) => t('logs.memoryInitApplied', { count: m[1] }),
+        },
+        {
+          regex: /^Pauza na breakpoint @(\d+)$/,
+          handler: (m) => t('logs.breakpointPause', { line: m[1] }),
+        },
+        {
+          regex: /^Skok poza zakres programu: PC=(.+)$/,
+          handler: (m) => t('logs.jumpOob', { target: m[1] }),
+        },
+        {
+          regex: /^Wyczyszczono komórkę pamięci \[(.+)\] po zdjęciu ze stosu$/,
+          handler: (m) => t('logs.memoryClearedFromStack', { idx: m[1] }),
+        },
+        {
+          regex: /^RM ustawione na (.+) \(maska przerwań\) \[BusS=(.+)\]$/,
+          handler: (m) => t('logs.rmSet', { rm: m[1], busS: m[2] }),
+        },
+        {
+          regex: /^RZ ustawione na (.+) \(zgłoszenia przerwań\)$/,
+          handler: (m) => t('logs.rzSet', { rz: m[1] }),
+        },
+        {
+          regex: /^RP ustawione na (.+) \(priorytet przerwania\)$/,
+          handler: (m) => t('logs.rpSet', { rp: m[1] }),
+        },
+        {
+          regex: /^Ustawiono bit (.+) w RM \(RM=(.+)\) - zablokowano IRQ(.+)$/,
+          handler: (m) => t('logs.rmBitSet', { bit: m[1], rm: m[2], irq: m[3] }),
+        },
+        {
+          regex: /^Wyczyszczono bit (.+) w RM \(RM=(.+)\) - odblokowano IRQ(.+)$/,
+          handler: (m) => t('logs.rmBitCleared', { bit: m[1], rm: m[2], irq: m[3] }),
+        },
+      ];
+
+      for (const p of patterns) {
+        const m = message.match(p.regex);
+        if (m) return p.handler(m);
+      }
+
+      switch (message) {
+        case 'Usunięto wszystkie breakpointy':
+          return t('logs.breakpointsCleared');
+        case 'Stos POP: stos pusty!':
+          return t('logs.stackPopEmpty');
+        case '[WS] Connected to server':
+          return t('logs.wsConnected');
+        case '[WS] Disconnected':
+          return t('logs.wsDisconnected');
+        case '[WS] Connection error':
+          return t('logs.wsError');
+        case '[WS] Init failed':
+          return t('logs.wsInitFailed');
+        case 'Program skompilowany (strukturalny mikro‑program).':
+        case 'Program skompilowany (strukturalny mikro–program).':
+        case 'Program skompilowany (strukturalny mikro-program).':
+          return t('logs.programCompiledStructured');
+        case 'Przejście w tryb ręczny – program wstrzymany i wyczyszczony.':
+          return t('logs.manualModeEnabled');
+        case 'Kod skompilowany pomyślnie (mikro-ASM)':
+          return t('logs.asmCompiled');
+        case 'handleInterrupt: brak aktywnego przerwania':
+          return t('logs.handleInterruptNone');
+        case '─────────────────────────────────────':
+          return t('logs.separator');
+        case 'Przerwano: przekroczono limit kroków (prawdopodobna pętla).':
+          return t('logs.loopGuard');
+        case 'Kod zakończony':
+          return t('logs.codeFinished');
+        case 'STOP - program zatrzymany':
+          return t('logs.stopInstr');
+        case 'Wykonanie przerwane przyciskiem STOP.':
+          return t('logs.stoppedByUser');
+        case 'Przerwano: limit kroków RUN osiągnięty.':
+          return t('logs.runStepLimit');
+        case 'Przerwano: limit kroków RUN-FAST osiągnięty.':
+          return t('logs.runFastLimit');
+        case 'Ustawienia zostały przywrócone do wartości domyślnych':
+          return t('logs.settingsRestored');
+        case 'Konsola została wyczyszczona':
+          return t('logs.consoleCleared');
+        case 'System inicjalizowany':
+          return t('logs.systemInit');
+        case 'Wystąpił błąd leksykalny podczas parsowania':
+          return t('logs.lexError');
+        case 'Ostrzeżenie kompilatora':
+          return t('logs.compilerWarning');
+        case 'Błąd krytyczny':
+          return t('logs.criticalError');
+        case 'System zainicjalizowany.':
+          return t('logs.systemInitialized');
+        default:
+          break;
+      }
+
+      if (message?.startsWith('Błąd kompilacji ASM: ')) {
+        return t('logs.asmCompileError', { message: message.replace('Błąd kompilacji ASM: ', '') });
+      }
+      if (message?.startsWith('[WS] Reconnect failed')) {
+        return t('logs.wsReconnectFailed');
+      }
+      if (message?.startsWith('PRZERWANIE IRQ')) {
+        const num = message.replace('PRZERWANIE IRQ', '');
+        return t('logs.interruptStart', { num });
+      }
+      if (message?.startsWith('   RP ← ')) {
+        const num = message.replace(/[^\d]/g, '');
+        return t('logs.interruptRp', { num });
+      }
+      if (message?.startsWith('   Stos: zapisano PC=')) {
+        const match = message.match(/PC=(.+), WS=(.+)\)/);
+        if (match) return t('logs.interruptStackSaved', { pc: match[1], ws: match[2] });
+      }
+      if (message?.startsWith('   Błąd: wektor ')) {
+        const match = message.match(/wektor (.+) poza programem/);
+        if (match) return t('logs.interruptVectorOob', { vector: match[1] });
+      }
+      if (message?.startsWith('   A ← ')) {
+        const match = message.match(/A ← (.+) \(wskaźnik na wektor\)/);
+        if (match) return t('logs.interruptALoad', { a: match[1] });
+      }
+      if (message?.startsWith('   PC ← ')) {
+        const match = message.match(/PC ← (.+) \(adres wektora IRQ(.+)\)/);
+        if (match) return t('logs.interruptPcSet', { vector: match[1], num: match[2] });
+      }
+      if (message?.startsWith('   → Wykonanie: ')) {
+        const line = message.replace('   → Wykonanie: ', '');
+        return t('logs.interruptExec', { line });
+      }
+      if (message?.startsWith('   RZ ← ')) {
+        const match = message.match(/RZ ← (.+) \(wyzerowano IRQ(.+)\)/);
+        if (match) return t('logs.interruptRzClear', { rz: match[1], num: match[2] });
+      }
+
+      return message;
     },
     formatNumber(number) {
       if (typeof number !== 'number' || isNaN(number)) {

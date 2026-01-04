@@ -1,12 +1,17 @@
 <template>
   <div id="settings-overlay" v-if="open" @click.self="startClose">
-    <CreatorsPanel :is-mobile="isMobile" :is-animated="isAnimated" :creators="creators" :caregivers="caregivers" />
+    <CreatorsPanel
+      :is-mobile="isMobile"
+      :is-animated="isAnimated"
+      :creators="creatorsLocalized"
+      :caregivers="caregiversLocalized"
+    />
 
     <SettingsPanel
       :is-animated="isAnimated"
       :is-mobile="isMobile"
       :creators="creators"
-      :caregivers="caregivers"
+      :caregivers="caregiversLocalized"
       :light-mode="lightMode"
       :language="language"
       :number-format="numberFormat"
@@ -91,9 +96,9 @@ export default {
     },
     caregivers: {
       default: () => [
-        { name: 'Dr inż. Robert Tutajewicz', linkedin: '', roles: [] },
-        { name: 'Dr hab. inż. Krzysztof Simiński', linkedin: '', roles: [] },
-        { name: 'Dr inż. Tomasz Rudnicki', linkedin: '', roles: [] },
+        { baseName: 'Robert Tutajewicz', titles: ['dr', 'inz'], linkedin: '', roles: [] },
+        { baseName: 'Krzysztof Simiński', titles: ['drHab', 'inz'], linkedin: '', roles: [] },
+        { baseName: 'Tomasz Rudnicki', titles: ['dr', 'inz'], linkedin: '', roles: [] },
       ],
     },
   },
@@ -144,6 +149,14 @@ export default {
       }
     },
   },
+  computed: {
+    caregiversLocalized() {
+      return this.localizePeopleList(this.caregivers);
+    },
+    creatorsLocalized() {
+      return this.localizePeopleList(this.creators);
+    },
+  },
   mounted() {
     if (this.settingsOpen) {
       this.disableBodyScroll();
@@ -171,6 +184,17 @@ export default {
       setTimeout(() => {
         this.open = false;
       }, 400);
+    },
+    localizePeopleList(list) {
+      const translateTitles = (titles = []) => titles.map((t) => this.$t(`titles.${t}`)).filter(Boolean).join(' ');
+      return (list || []).map((person) => {
+        if (person && person.baseName && Array.isArray(person.titles)) {
+          const prefix = translateTitles(person.titles);
+          const localizedName = prefix ? `${prefix} ${person.baseName}` : person.baseName;
+          return { ...person, name: localizedName };
+        }
+        return person;
+      });
     },
   },
 };

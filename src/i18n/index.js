@@ -1,0 +1,255 @@
+import { createI18n } from 'vue-i18n';
+
+const messages = {
+  pl: {
+    settings: {
+      title: 'Ustawienia',
+      actions: {
+        close: 'Zamknij ustawienia',
+        resetRegisters: 'Resetuj wartości rejestrów',
+        defaultSettings: 'Przywróć domyślne ustawienia',
+        commandList: 'Lista rozkazów',
+        sendAllColors: '📡 Wyślij wszystkie kolory do ESP32',
+      },
+      theme: {
+        light: 'Jasny',
+        dark: 'Ciemny',
+      },
+      language: {
+        label: 'Język interfejsu',
+        pl: 'Polski',
+        en: 'Angielski',
+      },
+      numberFormat: {
+        label: 'Domyślny format liczb',
+        options: {
+          dec: 'DEC',
+          hex: 'HEX',
+          bin: 'BIN',
+        },
+      },
+      decSigned: {
+        label: 'Wyświetlanie DEC',
+        options: {
+          unsigned: 'Bez znaku',
+          signed: 'U2 (ze znakiem)',
+        },
+        hint: 'U2 używa szerokości słowa {bits} bitów (np. 4027 → -69).',
+      },
+      bits: {
+        codeLabel: 'Bity kodu:',
+        codeHelp: 'Liczba bitów dla kodu rozkazu.',
+        addressLabel: 'Bity adresu:',
+        addressHelp: 'Liczba bitów dla argumentu.',
+      },
+      delays: {
+        microLabel: 'Opóźnienie mikro-kroku (ms):',
+        microHelp: 'Opóźnienie między mikro-operacjami w milisekundach.',
+        stepLabel: 'Opóźnienie kroku automatycznego (ms):',
+        stepHelp: 'Czas między kolejnymi krokami w trybie krokowym (cykle na sekundę = 1000/ms).',
+      },
+      extras: {
+        heading: 'Dodatki:',
+        labels: {
+          xRegister: 'Rejestr X',
+          yRegister: 'Rejestr Y',
+          dl: 'DL',
+          jamlExtras: 'Dodatki JAML',
+          busConnectors: 'Łączniki magistrali',
+          showInvisibleRegisters: 'Pokaż niewidoczne rejestry magistral',
+        },
+        groups: {
+          io: {
+            title: 'Urządzenia wejścia/wyjścia',
+            rbRegister: 'Rejestr RB',
+            gRegister: 'Rejestr G',
+          },
+          stack: {
+            title: 'Obsługa stosu',
+            wsRegister: 'Rejestr WS',
+            wylsSignal: 'Sygnał wyls',
+          },
+          interrupts: {
+            title: 'Przerwania',
+            rzRegister: 'Rejestr RZ',
+            rpRegister: 'Rejestr RP',
+            rmRegister: 'Rejestr RM',
+            apRegister: 'Rejestr AP',
+            rintSignal: 'Sygnał rint',
+            eniSignal: 'Sygnał eni',
+          },
+        },
+      },
+      editor: {
+        heading: 'Edytor:',
+        autocomplete: 'Auto-uzupełnianie (podpowiedzi)',
+      },
+      asm: {
+        heading: 'Kompilacja ASM:',
+        reset: 'Resetuj rejestry przy kompilacji',
+        help: 'Po włączeniu rejestry i pamięć są czyszczone automatycznie przed kompilacją assemblera.',
+      },
+      colors: {
+        heading: 'Kolory LED',
+        signalLines: 'Linie sygnałowe',
+        display: 'Wyświetlacz',
+        bus: 'Magistrala',
+      },
+      colorPicker: {
+        signalLine: 'Kolor linii sygnałowych',
+        display: 'Kolor wyświetlacza',
+        bus: 'Kolor magistrali',
+      },
+      people: {
+        caregivers: 'Opiekunowie',
+        creators: 'Twórcy',
+      },
+    },
+    titles: {
+      dr: 'Dr',
+      drHab: 'Dr hab.',
+      inz: 'inż.',
+    },
+    common: {
+      social: {
+        linkedin: 'LinkedIn',
+        github: 'GitHub',
+      },
+    },
+  },
+  en: {
+    settings: {
+      title: 'Settings',
+      actions: {
+        close: 'Close settings',
+        resetRegisters: 'Reset register values',
+        defaultSettings: 'Restore default settings',
+        commandList: 'Command list',
+        sendAllColors: '📡 Send all colors to ESP32',
+      },
+      theme: {
+        light: 'Light',
+        dark: 'Dark',
+      },
+      language: {
+        label: 'Interface language',
+        pl: 'Polish',
+        en: 'English',
+      },
+      numberFormat: {
+        label: 'Default number format',
+        options: {
+          dec: 'DEC',
+          hex: 'HEX',
+          bin: 'BIN',
+        },
+      },
+      decSigned: {
+        label: 'DEC display',
+        options: {
+          unsigned: 'Unsigned',
+          signed: "Two's complement (signed)",
+        },
+        hint: "Two's complement uses a word width of {bits} bits (e.g. 4027 → -69).",
+      },
+      bits: {
+        codeLabel: 'Instruction bits:',
+        codeHelp: 'Number of bits for the opcode.',
+        addressLabel: 'Address bits:',
+        addressHelp: 'Number of bits for the argument.',
+      },
+      delays: {
+        microLabel: 'Micro-step delay (ms):',
+        microHelp: 'Delay between micro-operations in milliseconds.',
+        stepLabel: 'Auto-step delay (ms):',
+        stepHelp: 'Time between subsequent steps in stepping mode (cycles per second = 1000/ms).',
+      },
+      extras: {
+        heading: 'Extras:',
+        labels: {
+          xRegister: 'X register',
+          yRegister: 'Y register',
+          dl: 'DL',
+          jamlExtras: 'JAML extras',
+          busConnectors: 'Bus connectors',
+          showInvisibleRegisters: 'Show hidden bus registers',
+        },
+        groups: {
+          io: {
+            title: 'Input/Output devices',
+            rbRegister: 'RB register',
+            gRegister: 'G register',
+          },
+          stack: {
+            title: 'Stack handling',
+            wsRegister: 'WS register',
+            wylsSignal: 'wyls signal',
+          },
+          interrupts: {
+            title: 'Interrupts',
+            rzRegister: 'RZ register',
+            rpRegister: 'RP register',
+            rmRegister: 'RM register',
+            apRegister: 'AP register',
+            rintSignal: 'rint signal',
+            eniSignal: 'eni signal',
+          },
+        },
+      },
+      editor: {
+        heading: 'Editor:',
+        autocomplete: 'Autocomplete (suggestions)',
+      },
+      asm: {
+        heading: 'ASM compilation:',
+        reset: 'Reset registers on compile',
+        help: 'When enabled, registers and memory are cleared automatically before assembly.',
+      },
+      colors: {
+        heading: 'LED colors',
+        signalLines: 'Signal lines',
+        display: 'Display',
+        bus: 'Bus',
+      },
+      colorPicker: {
+        signalLine: 'Signal line color',
+        display: 'Display color',
+        bus: 'Bus color',
+      },
+      people: {
+        caregivers: 'Supervisors',
+        creators: 'Authors',
+      },
+    },
+    titles: {
+      dr: 'Dr.',
+      drHab: 'Associate Professor',
+      inz: 'Eng.',
+    },
+    common: {
+      social: {
+        linkedin: 'LinkedIn',
+        github: 'GitHub',
+      },
+    },
+  },
+};
+
+export const i18n = createI18n({
+  legacy: true,
+  globalInjection: true,
+  locale: 'pl',
+  fallbackLocale: 'en',
+  messages,
+});
+
+export function setLocale(locale) {
+  const supported = Object.keys(messages);
+  const target = supported.includes(locale) ? locale : i18n.global.fallbackLocale || supported[0] || 'en';
+  i18n.global.locale = target;
+  return target;
+}
+
+export function translate(key, params) {
+  return i18n.global.t(key, params);
+}

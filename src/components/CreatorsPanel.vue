@@ -4,15 +4,15 @@
     id="creators"
     :class="{ 'slide-in-left': isAnimated, 'slide-out-left': !isAnimated }"
     @click.stop
-    aria-label="Twórcy projektu"
+    :aria-label="$t('settings.people.creators')"
   >
-    <PeopleSection title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
-    <PeopleSection title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
+    <PeopleSection :title="$t('settings.people.caregivers')" :people="caregivers" :showGithub="false" :columns="2" />
+    <PeopleSection :title="$t('settings.people.creators')" :people="creators" :showGithub="true" :columns="2" />
   </div>
 </template>
 
 <script>
-import PeopleSection from './PeopleSection.vue'
+import PeopleSection from './PeopleSection.vue';
 
 export default {
   name: 'CreatorsPanel',
@@ -23,7 +23,7 @@ export default {
     creators: { type: Array, default: () => [] },
     caregivers: { type: Array, default: () => [] },
   },
-}
+};
 </script>
 <style scoped>
 #creators {
@@ -37,10 +37,15 @@ export default {
   background-color: var(--panelBackgroundColor);
   border-right: 1px solid var(--panelOutlineColor);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-#creators.slide-in-left { transform: translateX(0) }
-#creators.slide-out-left { transform: translateX(-100%) }
+#creators.slide-in-left {
+  transform: translateX(0);
+}
+#creators.slide-out-left {
+  transform: translateX(-100%);
+}
 </style>

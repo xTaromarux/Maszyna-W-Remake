@@ -234,6 +234,7 @@ import ProgramEditor from './ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
 import { compileCodeExternal } from '@/WLAN/compiler';
+import { setLocale } from '@/i18n';
 
 export default {
   name: 'MainComponent',
@@ -1150,7 +1151,9 @@ export default {
       this.syncDocumentLanguage();
     },
     syncDocumentLanguage(lang = this.language) {
-      document.documentElement.lang = lang || 'pl';
+      const resolved = lang || 'pl';
+      const applied = setLocale(resolved);
+      document.documentElement.lang = applied || resolved;
     },
     saveToLS() {
       // Create a copy of data without logs

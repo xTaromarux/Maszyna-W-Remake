@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import type { AstNode } from './model';
 import { buildFromCommandList } from './commandAdapter';
 import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
@@ -16,9 +17,12 @@ function toMicroPhaseFromSignalSet(set: SignalSet): MicroPhase {
 }
 const nameKey = (n: string) => (n || '').toLowerCase();
 
-type Phase = { op: string; [k: string]: any };
+interface Phase {
+  [k: string]: any;
+  op: string;
+}
 
-type CJumpMeta = {
+interface CJumpMeta {
   kind: 'CJUMP';
   flagName: 'Z' | 'N' | 'C' | 'V' | 'M';
   trueTarget?: number;
@@ -26,7 +30,7 @@ type CJumpMeta = {
   joinTarget?: number;
   _branchLocked?: boolean;
   srcLine?: number;
-};
+}
 
 /* IF Z THEN @zero ELSE @notzero; */
 const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
@@ -123,12 +127,12 @@ export function buildConditionalForInstr(lines: string[]): {
 
 export function generateMicroProgram(
   ast: AstNode[],
-  commandList: Array<{
+  commandList: {
     name: string;
     args: number;
     description?: string;
     lines: string;
-  }>
+  }[]
 ): MicroProgramEntry[] {
   if (!Array.isArray(commandList) || commandList.length === 0) {
     throw new WlanError('Pusta lista rozkazów - brak definicji do generowania mikroprogramu.', {
@@ -138,8 +142,8 @@ export function generateMicroProgram(
 
   const { templates: TEMPLATES, postAsm: POSTASM } = buildFromCommandList(commandList);
 
-  let currentAddr = 0,
-    pc = 0;
+  let currentAddr = 0;
+  let pc = 0;
   const addrToPc = new Map<number, number>();
   const instrNodes: any[] = [];
 

@@ -5,31 +5,47 @@
     </header>
 
     <div class="creatorsContent">
-        <div class="creatorsList" :style="{ '--cols': columns }">
-            <div v-for="(p, idx) in people" :key="idx" class="creatorItem">
-                <span class="creatorName">{{ p.name }}</span>
+      <div class="creatorsList" :style="{ '--cols': columns }">
+        <div v-for="(p, idx) in people" :key="idx" class="creatorItem">
+          <span class="creatorName">{{ p.name }}</span>
 
-                <div v-if="p.roles?.length" class="creatorRoles">
-                    <span v-for="(r, i) in p.roles" :key="i" class="creatorRole">{{ r }}</span>
-                </div>
+          <div v-if="p.roles?.length" class="creatorRoles">
+            <span v-for="(r, i) in p.roles" :key="i" class="creatorRole">{{ r }}</span>
+          </div>
 
-                <div class="creatorLinks">
-                    <a v-if="p.linkedin" :href="p.linkedin" target="_blank" rel="noopener noreferrer" class="iconLink" aria-label="LinkedIn" title="LinkedIn">
-                    <LinkedInIcon />
-                    </a>
-                    <a v-if="showGithub && p.github" :href="p.github" target="_blank" rel="noopener noreferrer" class="iconLink" aria-label="GitHub" title="GitHub">
-                    <GitHubIcon />
-                    </a>
-                </div>
-            </div>
+          <div class="creatorLinks">
+            <a
+              v-if="p.linkedin"
+              :href="p.linkedin"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="iconLink"
+              :aria-label="$t('common.social.linkedin')"
+              :title="$t('common.social.linkedin')"
+            >
+              <LinkedInIcon />
+            </a>
+            <a
+              v-if="showGithub && p.github"
+              :href="p.github"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="iconLink"
+              :aria-label="$t('common.social.github')"
+              :title="$t('common.social.github')"
+            >
+              <GitHubIcon />
+            </a>
+          </div>
         </div>
+      </div>
     </div>
   </section>
 </template>
 
 <script>
-import LinkedInIcon from '@/assets/svg/LinkedInIcon.vue'
-import GitHubIcon from '@/assets/svg/GitHubIcon.vue'
+import LinkedInIcon from '@/assets/svg/LinkedInIcon.vue';
+import GitHubIcon from '@/assets/svg/GitHubIcon.vue';
 
 export default {
   name: 'PeopleSection',
@@ -41,15 +57,16 @@ export default {
     showGithub: { type: Boolean, default: true },
     columns: { type: Number, default: 2 },
   },
-}
+};
 </script>
 
 <style scoped>
 .creatorsContent {
   flex: 1;
-  overflow: visible;               /* nie zawijamy dodatkowego scrolla w sekcji */
-  padding: .5rem 1rem 0.75rem 1rem;/* trochę ciaśniej */
-  display: flex; flex-direction: column;
+  overflow: visible; /* nie zawijamy dodatkowego scrolla w sekcji */
+  padding: 0.5rem 1rem 0.75rem 1rem; /* trochę ciaśniej */
+  display: flex;
+  flex-direction: column;
 }
 
 /* GRID na 2 kolumny, z możliwością sterowania przez props `columns` */
@@ -59,11 +76,11 @@ export default {
   grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
   gap: 8px;
   margin-top: 8px;
-  padding: 8px;                    /* ciaśniej */
+  padding: 8px; /* ciaśniej */
   background-color: var(--backgroundColorItem);
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
-  align-items: stretch;            /* karty równej wysokości w wierszu */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: stretch; /* karty równej wysokości w wierszu */
 }
 
 /* Karta kompaktowa, równa wysokość */
@@ -72,23 +89,63 @@ export default {
   padding: 8px 10px;
   background-color: var(--panelBackgroundColor);
   border-radius: 6px;
-  font-size: .9em;
+  font-size: 0.9em;
   text-align: center;
   color: #000;
-  transition: .2s;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition: 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
-.creatorItem:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px) }
+.creatorItem:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
 
-.creatorName { font-weight: 600; line-height: 1.2; color: var(--fontColor); }
+.creatorName {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--fontColor);
+}
 
 /* Role zwijamy ciaśniej, żeby nie rozwlekały wysokości */
-.creatorRoles { display:flex; gap:4px; flex-wrap:wrap; justify-content:center }
-.creatorRole { font-size:.72rem; opacity:.85; padding:1px 6px; border-radius:999px; border:1px solid rgba(255,255,255,0.15) }
+.creatorRoles {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.creatorRole {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
 
-.creatorLinks { display:flex; justify-content:center; gap:6px; margin-top: 2px; }
-.iconLink { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; color:#666; transition:.2s; border-radius:4px; padding:2px }
-.iconLink:hover { color:#fff; background:rgba(255,255,255,0.1); transform: scale(1.06) }
+.creatorLinks {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.iconLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: #666;
+  transition: 0.2s;
+  border-radius: 4px;
+  padding: 2px;
+}
+.iconLink:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.06);
+}
 
 /* Nagłówek sekcji na stałej wysokości – opcjonalnie "sticky" dla lepszej orientacji */
 .creatorsHeader {
@@ -108,9 +165,13 @@ export default {
 
 /* Responsywność: na bardzo wąskim panelu (np. na telefonie) przejdź na 1 kolumnę */
 @media (max-width: 340px) {
-  .creatorsList { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .creatorsList {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
 }
 
 /* Dystans między sekcjami */
-.people-section + .people-section { margin-top: 10px; }
+.people-section + .people-section {
+  margin-top: 10px;
+}
 </style>

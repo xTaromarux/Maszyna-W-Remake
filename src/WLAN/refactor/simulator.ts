@@ -1,3 +1,5 @@
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+/* eslint-disable no-bitwise */
 export const DEFAULT_VECTOR_BASE = 0x10;
 
 import type { Store, ConditionalPhase, Phase } from '../model';
@@ -7,7 +9,7 @@ import type { Store, ConditionalPhase, Phase } from '../model';
 export function initStore(
   memorySize = 256,
   vectorBase = DEFAULT_VECTOR_BASE,
-  initialMemoryAssignments: Array<{ addr: number; val: number }> = []
+  initialMemoryAssignments: { addr: number; val: number }[] = []
 ): Store {
   const mem = new Uint8Array(memorySize);
   for (const { addr, val } of initialMemoryAssignments) {
@@ -93,15 +95,15 @@ export function applySignals(phase: any, store: Store) {
   if (phase.wei) store.I = store.magS;
   if (phase.wel) store.L = store.magA;
   if (phase.wyg) {
-    const readyBit = (store.ioIn.length > 0) ? 0 : 1;
-    store.magS   = readyBit & 0xff;
+    const readyBit = store.ioIn.length > 0 ? 0 : 1;
+    store.magS = readyBit & 0xff;
     store.portIn = readyBit & 0xff;
   }
 
   if (phase.wyrb) {
     const hasData = store.ioIn.length > 0;
-    const v = hasData ? (store.ioIn.shift()! & 0xff) : 0;
-    store.magS   = v;
+    const v = hasData ? store.ioIn.shift()! & 0xff : 0;
+    store.magS = v;
     store.portIn = v;
   }
 

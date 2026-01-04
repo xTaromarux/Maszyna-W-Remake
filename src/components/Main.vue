@@ -345,7 +345,7 @@ export default {
       stack: [],
 
       code: 'czyt wys wei il;\nwyad wea;\nczyt wys weja dod weak wyl wea;',
-      program: 'DOD',
+      program: 'DOD 0',
       compiledCode: [],
       // Structured micro-program (preferred execution format)
       compiledProgram: [],
@@ -785,7 +785,7 @@ export default {
           if (msg.type === 'button_press') {
             this.handleRemoteToggleESPWebSocket(msg.buttonName);
           }
-          
+
           if (msg.type === 'signal-toggle') {
             this.handleRemoteToggleLocalWebSocket(msg.signal, msg.state);
           }
@@ -896,11 +896,11 @@ export default {
         this.nextLine.delete(value);
       }
       this.signals[value] = !this.signals[value];
-      
+
       this.addLog(`[ESP32] Przycisk ${value}: ${this.signals[value] ? 'ON' : 'OFF'}`, 'system');
-      
+
       this.sendSignalToESP(value, this.signals[value]);
-      
+
       this.suppressBroadcast = false;
     },
 
@@ -972,7 +972,7 @@ export default {
         this.nextLine.add(signalName);
         this.signals[signalName] = true;
       }
-      
+
       this.sendSignalToESP(signalName, this.signals[signalName]);
     },
 
@@ -1067,7 +1067,7 @@ export default {
           `[LED] Wysłano kolor ${colorData.type}: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`,
           'system'
         );
-        
+
         // Wyślij pełne dane po zmianie koloru, aby ESP32 od razu zaktualizował LED z nowymi wartościami
         this.sendFullDataToESP();
       }
@@ -2023,13 +2023,11 @@ export default {
     async runToEndFast() {
       if (!this.codeCompiled) return;
 
-      // jeżeli coś „biegnie”, najpierw to ukróć
       this._stopRun();
 
       this.manualMode = false;
       this.clearActiveTimeouts();
 
-      // tryb bez-animacji: brak highlightów, brak timeoutów, brak broadcastów WS
       this._headless = true;
       this.suppressBroadcast = true;
 

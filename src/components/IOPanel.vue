@@ -1,28 +1,28 @@
 <template>
     <div class="io-card">
-        <h3>Urządzenie zewnętrzne</h3>
+        <h3>{{ $t('ioPanel.title') }}</h3>
 
         <div class="row">
-            <label for="devin">Wejście (DEV_IN):</label>
-            <input id="devin" ref="inputEl" type="text" maxlength="1" placeholder="Wpisz znak…" @input="onInput" />
+            <label for="devin">{{ $t('ioPanel.inputLabel') }}</label>
+            <input id="devin" ref="inputEl" type="text" maxlength="1" :placeholder="$t('ioPanel.inputPlaceholder')" @input="onInput" />
         </div>
 
         <div class="row hint">
-            <label for="devin" class="hint-label">Aktualny DEV_IN:</label>
+            <label for="devin" class="hint-label">{{ $t('ioPanel.currentInput') }}</label>
             <span class="hint-value">{{ formatNumber(devIn) }}</span>
         </div>
 
         <div class="row">
-            <label>Wyjście (DEV_OUT):</label>
+            <label>{{ $t('ioPanel.outputLabel') }}</label>
             <div class="value-box">
                 {{ formatNumber(devOut) }} ({{ String.fromCharCode(devOut || 32) }})
             </div>
         </div>
 
         <div class="row">
-            <label>Status (READY/G):</label>
+            <label>{{ $t('ioPanel.statusLabel') }}</label>
             <div class="status" :class="devReady ? 'ready' : 'busy'">
-                {{ devReady ? 'READY' : 'BUSY' }}
+                {{ devReady ? $t('ioPanel.statusReady') : $t('ioPanel.statusBusy') }}
             </div>
         </div>
     </div>

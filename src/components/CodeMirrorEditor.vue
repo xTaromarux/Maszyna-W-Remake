@@ -37,12 +37,12 @@
     <div v-if="language === 'macroW' && isFullScreen" class="fullscreen-controls">
       <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="execution-btn execution-btn--compile">
         <CompileIcon />
-        <span>Kompiluj</span>
+        <span>{{ $t('execution.compile') }}</span>
       </button>
 
       <button v-else @click="onEdit" class="compile-btn compile-btn--edit">
         <EditIcon />
-        <span>Edytuj</span>
+        <span>{{ $t('execution.edit') }}</span>
       </button>
     </div>
 

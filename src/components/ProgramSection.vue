@@ -21,12 +21,12 @@
         class="execution-btn execution-btn--compile"
       >
         <CompileIcon />
-        <span>Kompiluj</span>
+        <span>{{ $t('execution.compile') }}</span>
       </button>
 
       <button v-else @click="enableProgramEditing" :disabled="manualMode" class="execution-btn execution-btn--edit">
         <EditIcon />
-        <span>Edytuj</span>
+        <span>{{ $t('execution.edit') }}</span>
       </button>
     </div>
   </div>

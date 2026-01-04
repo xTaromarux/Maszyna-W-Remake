@@ -6,10 +6,10 @@
       @click="$emit('compile')"
       :disabled="manualMode || isRunning || !code || !code.trim()"
       class="execution-btn execution-btn--compile"
-      title="Skompiluj program"
+      :title="$t('execution.compileTitle')"
     >
       <CompileIcon />
-      <span>Kompiluj</span>
+      <span>{{ $t('execution.compile') }}</span>
     </button>
 
     <button
@@ -17,10 +17,10 @@
       @click="$emit('edit')"
       :disabled="isRunning"
       class="execution-btn execution-btn--edit"
-      title="Wróć do edycji"
+      :title="$t('execution.editTitle')"
     >
       <EditIcon />
-      <span>Edytuj</span>
+      <span>{{ $t('execution.edit') }}</span>
     </button>
 
     <!-- Single-step execution -->
@@ -28,10 +28,10 @@
       @click="$emit('step')"
       :disabled="isRunning || (!manualMode && !codeCompiled)"
       class="execution-btn execution-btn--step"
-      title="Krok wykonania"
+      :title="$t('execution.stepTitle')"
     >
       <NextLineIcon />
-      <span>{{ !manualMode ? 'Następny takt' : 'Wykonaj takt' }}</span>
+      <span>{{ !manualMode ? $t('execution.stepAuto') : $t('execution.stepManual') }}</span>
     </button>
     <!-- Run / Stop -->
     <button
@@ -39,20 +39,15 @@
       @click="$emit('run')"
       :disabled="manualMode || !codeCompiled"
       class="execution-btn execution-btn--run"
-      title="Uruchom program"
+      :title="$t('execution.runTitle')"
     >
       <RunIcon />
-      <span>Uruchom</span>
+      <span>{{ $t('execution.run') }}</span>
     </button>
 
-    <button
-      v-else
-      @click="$emit('stop')"
-      class="execution-btn execution-btn--run"
-      title="Zatrzymaj wykonywanie"
-    >
+    <button v-else @click="$emit('stop')" class="execution-btn execution-btn--run" :title="$t('execution.stopTitle')">
       <RunIcon />
-      <span>Stop</span>
+      <span>{{ $t('execution.stop') }}</span>
     </button>
 
     <button
@@ -60,23 +55,21 @@
       @click="$emit('run-fast')"
       :disabled="manualMode || !codeCompiled"
       class="execution-btn execution-btn--run"
-      title="Uruchom całość (bez animacji)"
+      :title="$t('execution.runFastTitle')"
     >
       <RunIcon />
-      <span>Uruchom (bez animacji)</span>
+      <span>{{ $t('execution.runFast') }}</span>
     </button>
 
-    <!-- Kiedy trwa run-fast, pokaż „zajętość” i % -->
     <button
       v-else-if="isFastRunning"
       @click="$emit('stop')"
       class="execution-btn execution-btn--run"
-      title="Zatrzymaj wykonywanie"
+      :title="$t('execution.stopTitle')"
     >
       <span class="spinner" aria-hidden="true"></span>
-      <span>Pracuję… {{ fastProgress }}%</span>
+      <span>{{ $t('execution.runningFast', { progress: fastProgress }) }}</span>
     </button>
-
   </div>
 </template>
 
@@ -90,12 +83,12 @@ export default {
   name: 'ExecutionControls',
   components: { CompileIcon, EditIcon, NextLineIcon, RunIcon },
   props: {
-    manualMode:   { type: Boolean, required: true },
+    manualMode: { type: Boolean, required: true },
     codeCompiled: { type: Boolean, required: true },
-    code:         { type: String,  required: true },
-    isRunning:    { type: Boolean, required: true },
-    isFastRunning:{ type: Boolean, required: false, default: false },
-    fastProgress: { type: Number,  required: false, default: 0 },
+    code: { type: String, required: true },
+    isRunning: { type: Boolean, required: true },
+    isFastRunning: { type: Boolean, required: false, default: false },
+    fastProgress: { type: Number, required: false, default: 0 },
   },
   emits: ['compile', 'edit', 'step', 'run', 'run-fast', 'stop'],
 };
@@ -103,15 +96,19 @@ export default {
 
 <style scoped>
 .spinner {
-  width: 1em; height: 1em;
+  width: 1em;
+  height: 1em;
   border: 2px solid currentColor;
   border-bottom-color: transparent;
   border-radius: 50%;
   display: inline-block;
-  margin-right: .5rem;
+  margin-right: 0.5rem;
   animation: sp 0.6s linear infinite;
   vertical-align: -0.15em;
 }
-@keyframes sp { to { transform: rotate(360deg); } }
-
+@keyframes sp {
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>

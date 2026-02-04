@@ -6,7 +6,14 @@
       
       <div class="inputWrapper">
         <span>{{ formattedValue }}</span>
-        <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" @blur="onBlur" />
+        <input
+          :type="inputType"
+          :inputmode="inputMode"
+          class="hoverInput"
+          :value="inputValue"
+          @input="updateValue"
+          @blur="onBlur"
+        />
       </div>
     </div>
     <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
@@ -110,6 +117,26 @@ export default {
       };
       return (formatters[this.numberFormat] || formatters.dec)(this.model);
     },
+    inputType() {
+      return this.numberFormat === 'dec' ? 'number' : 'text';
+    },
+    inputMode() {
+      if (this.numberFormat === 'hex') return 'text';
+      return 'numeric';
+    },
+    inputValue() {
+      if (typeof this.model !== 'number' || isNaN(this.model)) {
+        return '';
+      }
+      switch (this.numberFormat) {
+        case 'hex':
+          return Math.floor(this.model).toString(16).toUpperCase();
+        case 'bin':
+          return Math.floor(this.model).toString(2);
+        default:
+          return String(this.model);
+      }
+    },
      registerType() {
       // Map label to register type for validation
       const typeMap = {
@@ -133,33 +160,93 @@ export default {
     },
   },
   methods: {
+    parseInputValue(raw) {
+      const txt = String(raw ?? '').trim();
+      if (txt === '' || txt === '-') return null;
+
+      let sign = 1n;
+      let body = txt;
+      if (body.startsWith('-')) {
+        sign = -1n;
+        body = body.slice(1);
+      }
+
+      body = body.replace(/_/g, '');
+      if (!body) return null;
+
+      let base = 10;
+      if (this.numberFormat === 'hex') base = 16;
+      if (this.numberFormat === 'bin') base = 2;
+
+      if (/^0x/i.test(body)) {
+        base = 16;
+        body = body.slice(2);
+      } else if (/^0b/i.test(body)) {
+        base = 2;
+        body = body.slice(2);
+      }
+
+      if (!body) return null;
+      if (base === 2 && /[^01]/.test(body)) return null;
+      if (base === 16 && /[^0-9a-f]/i.test(body)) return null;
+      if (base === 10 && /[^0-9]/.test(body)) return null;
+
+      try {
+        let big;
+        if (base === 16) big = BigInt(`0x${body}`);
+        else if (base === 2) big = BigInt(`0b${body}`);
+        else big = BigInt(body);
+        return { big: sign < 0n ? -big : big };
+      } catch {
+        return null;
+      }
+    },
+    formatInputValue(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '';
+      switch (this.numberFormat) {
+        case 'hex':
+          return Math.floor(value).toString(16).toUpperCase();
+        case 'bin':
+          return Math.floor(value).toString(2);
+        default:
+          return String(value);
+      }
+    },
     updateValue(event) {
-      const value = parseInt(event.target.value, 10);
-      if (!isNaN(value)) {
+      const raw = event.target.value;
+      const parsed = this.parseInputValue(raw);
+      if (parsed === null) {
+        const trimmed = String(raw ?? '').trim();
+        if (trimmed === '' || trimmed === '-') return;
+        event.target.value = this.inputValue;
+        return;
+      }
+
         const registerName = this.fullName || this.label;
         const maxValue = this.getMaxValueForRegister
           ? this.getMaxValueForRegister(this.registerType)
           : null;
 
         if (typeof maxValue === 'number' && Number.isFinite(maxValue) && maxValue >= 0) {
-          const base = maxValue + 1;
-          let normalized = value;
+          const base = BigInt(maxValue) + 1n;
+          let normalizedBig = parsed.big;
 
-          if (value < 0 || value > maxValue) {
-            normalized = ((value % base) + base) % base;
+          if (parsed.big < 0n || parsed.big > BigInt(maxValue)) {
+            normalizedBig = ((parsed.big % base) + base) % base;
             if (this.showToast) {
               const msg = this.$t
                 ? this.$t('common.validation.registerModulo', {
-                    value,
+                    value: String(parsed.big),
                     max: maxValue,
                     name: registerName,
-                    result: normalized,
+                    result: Number(normalizedBig),
                   })
-                : `Wartość ${value} przekracza zakres ${maxValue} dla ${registerName}. Zapisano ${normalized}.`;
+                : `Wartość ${parsed.big} przekracza zakres ${maxValue} dla ${registerName}. Zapisano ${Number(normalizedBig)}.`;
               this.showToast(msg);
             }
           }
 
+          const normalized = Number(normalizedBig);
           if (this.validateRegisterValue) {
             const ok = this.validateRegisterValue(normalized, this.registerType, registerName);
             if (!ok) {
@@ -169,28 +256,28 @@ export default {
           }
 
           this.$emit('update:model', normalized);
+          event.target.value = this.formatInputValue(normalized);
           return;
         }
 
         if (this.validateRegisterValue) {
-          if (this.validateRegisterValue(value, this.registerType, registerName)) {
-            this.$emit('update:model', value);
+          if (this.validateRegisterValue(Number(parsed.big), this.registerType, registerName)) {
+            this.$emit('update:model', Number(parsed.big));
           } else {
             event.target.value = this.model;
           }
           return;
         }
 
-        this.$emit('update:model', value);
-      } else {
-        this.$emit('update:model', null);
-      }
+        this.$emit('update:model', Number(parsed.big));
     },
     onBlur(e) {
       // ustaw 0 tylko jeśli pole jest puste
       if (e.target.value === '' || e.target.value === null) {
         e.target.value = 0;
         this.$emit('update:model', 0);
+      } else {
+        e.target.value = this.inputValue;
       }
     },
     handleMouseEnter() {

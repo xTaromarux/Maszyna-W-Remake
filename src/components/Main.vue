@@ -211,6 +211,10 @@
       :instruction="$t('aiChat.instruction')"
     />
   </div>
+
+  <div v-if="toast.visible" class="app-toast" role="status" aria-live="polite">
+    {{ toast.message }}
+  </div>
 </template>
 
 <script>
@@ -284,6 +288,13 @@ export default {
 
   created() {
     this.ws = null;
+  },
+
+  provide() {
+    return {
+      showToast: (message, options) => this.showToast(message, options),
+      getMaxValueForRegister: (registerType) => this.getMaxValueForRegister(registerType),
+    };
   },
 
   data() {
@@ -519,6 +530,13 @@ export default {
       commandListOpen: false,
       aiChatOpen: false,
 
+      toast: {
+        visible: false,
+        message: '',
+        type: 'warning',
+      },
+      toastTimer: null,
+
       lightMode: true,
       language: 'pl',
 
@@ -527,6 +545,35 @@ export default {
     };
   },
   methods: {
+    showToast(message, options = {}) {
+      if (!message) return;
+      const { type = 'warning', duration = 2400 } = options || {};
+      this.toast.message = message;
+      this.toast.type = type;
+      this.toast.visible = true;
+
+      if (this.toastTimer) {
+        clearTimeout(this.toastTimer);
+        this.toastTimer = null;
+      }
+
+      this.toastTimer = setTimeout(() => {
+        this.toast.visible = false;
+      }, duration);
+    },
+    getMaxValueForRegister(registerType) {
+      const type = String(registerType || '');
+      const wordBits = this.codeBits + this.addresBits;
+      const wordMax = (1 << wordBits) - 1;
+      const addrMax = (1 << this.addresBits) - 1;
+      const irqMax = 0x0f;
+
+      if (['RM', 'RZ', 'RP'].includes(type)) return irqMax;
+      if (['programCounter', 'L', 'I', 'A', 'S', 'AP', 'WS', 'BusA'].includes(type)) return addrMax;
+      if (['ACC', 'AK', 'JAML', 'JAL', 'X', 'Y', 'RB', 'G', 'BusS', 'memory'].includes(type)) return wordMax;
+
+      return wordMax;
+    },
     toggleBreakpoint(lineIdx) {
       if (typeof lineIdx !== 'number') return;
       if (this.breakpoints.has(lineIdx)) this.breakpoints.delete(lineIdx);
@@ -3408,6 +3455,7 @@ export default {
   beforeDestroy() {
     window.removeEventListener('keydown', this.handleKeyPress);
     if (this.wsPingTimer) clearInterval(this.wsPingTimer);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
   },
 };
 </script>
@@ -3431,5 +3479,25 @@ ol {
 }
 .toolbar select {
   padding: 0.2rem;
+}
+
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  background: var(--panelBackgroundColor, #2a2c33);
+  color: var(--fontColor, #eee);
+  border: 1px solid var(--panelOutlineColor, #3a3d45);
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 2000;
+  max-width: min(90vw, 560px);
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 </style>

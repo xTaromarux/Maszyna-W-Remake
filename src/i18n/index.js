@@ -118,6 +118,9 @@ const messages = {
       segmentedToggle: {
         aria: 'Przełącznik segmentowy',
       },
+      validation: {
+        registerModulo: 'Wartość {value} przekracza zakres rejestru (max {max}). Zapisano {result}.',
+      },
     },
     programEditor: {
       manualInstruction: "Aby uruchomić program, kliknij wybrany sygnał i naciśnij 'Wykonaj takt'",
@@ -399,6 +402,9 @@ const messages = {
       },
       segmentedToggle: {
         aria: 'Segmented toggle',
+      },
+      validation: {
+        registerModulo: 'Value {value} exceeds the range of register (max {max}). Stored {result}.',
       },
     },
     programEditor: {

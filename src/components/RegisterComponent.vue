@@ -136,31 +136,52 @@ export default {
     updateValue(event) {
       const value = parseInt(event.target.value, 10);
       if (!isNaN(value)) {
-        // Use injected validation function if available
-        if (this.validateRegisterValue) {
-          const registerName = this.fullName || this.label;
-          if (this.validateRegisterValue(value, this.registerType, registerName)) {
-            this.$emit('update:model', value);
-          } else {
-            // if validation fails then reset input to current model value
-            event.target.value = this.model;
+        const registerName = this.fullName || this.label;
+        const maxValue = this.getMaxValueForRegister
+          ? this.getMaxValueForRegister(this.registerType)
+          : null;
+
+        if (typeof maxValue === 'number' && Number.isFinite(maxValue) && maxValue >= 0) {
+          const base = maxValue + 1;
+          let normalized = value;
+
+          if (value < 0 || value > maxValue) {
+            normalized = ((value % base) + base) % base;
+            if (this.showToast) {
+              const msg = this.$t
+                ? this.$t('common.validation.registerModulo', {
+                    value,
+                    max: maxValue,
+                    name: registerName,
+                    result: normalized,
+                  })
+                : `Wartość ${value} przekracza zakres ${maxValue} dla ${registerName}. Zapisano ${normalized}.`;
+              this.showToast(msg);
+            }
           }
-        } else {
-          // fallback to basic validation using  getMaxValueForRegister
-          if (this.getMaxValueForRegister) {
-            const maxValue = this.getMaxValueForRegister(this.registerType);
-            if (value > maxValue) {
-              if (this.showToast) {
-                this.showToast(
-                  `Wartość ${value} przekracza maksymalną dozwoloną wartość ${maxValue} dla rejestru ${this.fullName || this.label}.`
-                );
-              }
+
+          if (this.validateRegisterValue) {
+            const ok = this.validateRegisterValue(normalized, this.registerType, registerName);
+            if (!ok) {
               event.target.value = this.model;
               return;
             }
           }
-          this.$emit('update:model', value);
+
+          this.$emit('update:model', normalized);
+          return;
         }
+
+        if (this.validateRegisterValue) {
+          if (this.validateRegisterValue(value, this.registerType, registerName)) {
+            this.$emit('update:model', value);
+          } else {
+            event.target.value = this.model;
+          }
+          return;
+        }
+
+        this.$emit('update:model', value);
       } else {
         this.$emit('update:model', null);
       }

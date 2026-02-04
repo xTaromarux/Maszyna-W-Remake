@@ -205,7 +205,7 @@ export default {
   gap: 0.75rem;
   align-items: stretch;
   width: 100%;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: inherit;
   
   /* Smooth transitions for collapsing/expanding */
   transition:
@@ -227,28 +227,13 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 0.5rem;
-  border: 1px solid #2a3441;
+  border: 1px solid var(--panelOutlineColor, #2a3441);
   border-radius: 8px;
-  background: linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 100%);
+  background: var(--panelBackgroundColor, #1e1f24);
   box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 4px 14px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
-  
-  /* Smooth entrance animation */
-  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: left center;
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
 }
 
 .controls-rail::after {
@@ -258,8 +243,8 @@ export default {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #64ffda, transparent);
-  opacity: 0.3;
+  background: linear-gradient(90deg, transparent, var(--accentColor, #00aaff), transparent);
+  opacity: 0.35;
   border-radius: 8px 8px 0 0;
 }
 
@@ -269,207 +254,92 @@ export default {
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
+  padding: 0;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
   border-radius: 6px;
-  border: 1px solid rgba(100, 255, 218, 0.3);
-  background: rgba(255, 255, 255, 0.02);
-  color: #64ffda;
+  border: 1px solid var(--panelOutlineColor, #2a3441);
+  background: var(--buttonBackgroundColor, #373a41);
+  color: var(--buttonTextColor, #d5d6db);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
   position: relative;
   font-size: 0;
-  
-  /* Staggered entrance animation for buttons */
-  animation: buttonSlideIn 0.3s ease-out both;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
-
-@keyframes buttonSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Stagger animation delays for each button */
-.rail-btn:nth-child(1) { animation-delay: 0.1s; }
-.rail-btn:nth-child(2) { animation-delay: 0.15s; }
-.rail-btn:nth-child(3) { animation-delay: 0.2s; }
-.rail-btn:nth-child(4) { animation-delay: 0.25s; }
-.rail-btn:nth-child(5) { animation-delay: 0.3s; }
-.rail-btn:nth-child(6) { animation-delay: 0.35s; }
-.rail-btn:nth-child(7) { animation-delay: 0.4s; }
-.rail-btn:nth-child(8) { animation-delay: 0.45s; }
 
 .rail-btn:hover {
-  background: rgba(100, 255, 218, 0.1);
-  border-color: #64ffda;
-  box-shadow: 0 0 12px rgba(100, 255, 218, 0.3);
+  background: var(--buttonHoverColor, #676b75);
+  border-color: var(--accentColor, #00aaff);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   transform: translateY(-1px);
 }
 
 .rail-btn:active {
   transform: translateY(0);
-  box-shadow: 0 0 8px rgba(100, 255, 218, 0.2);
+  background: var(--buttonActiveColor, #181a1f);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
 }
 
 .rail-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.45;
   cursor: not-allowed;
-  border-color: rgba(136, 146, 176, 0.2);
-  color: #8892b0;
-  background: rgba(255, 255, 255, 0.01);
+  border-color: var(--panelOutlineColor, #3a3d45);
+  color: var(--buttonTextColor, #d5d6db);
+  background: var(--buttonBackgroundColor, #373a41);
 }
 
 .rail-btn:disabled:hover {
   transform: none;
   box-shadow: none;
-  background: rgba(255, 255, 255, 0.01);
-  border-color: rgba(136, 146, 176, 0.2);
+  background: var(--buttonBackgroundColor, #373a41);
+  border-color: var(--panelOutlineColor, #3a3d45);
 }
 
 .rail-btn.active {
-  background: rgba(100, 255, 218, 0.2);
-  border-color: #64ffda;
-  box-shadow: 
-    0 0 15px rgba(100, 255, 218, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: var(--primaryColor, #003c7d);
+  border-color: var(--primaryColor, #003c7d);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
   color: #ffffff;
-}
-
-.rail-btn.active::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  bottom: -1px;
-  background: linear-gradient(45deg, #64ffda, #4fd1c7);
-  border-radius: 6px;
-  z-index: -1;
-  opacity: 0.5;
 }
 
 .divider {
   width: 80%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, var(--panelOutlineColor, #3a3d45), transparent);
   margin: 0.25rem 0;
-  position: relative;
-  
-  /* Divider entrance animation */
-  animation: dividerExpand 0.4s ease-out 0.3s both;
-}
-
-@keyframes dividerExpand {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 80%;
-    opacity: 1;
-  }
-}
-
-.divider::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px;
-  height: 4px;
-  background: #64ffda;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #64ffda;
-  
-  /* Glowing dot animation */
-  animation: 
-    dotAppear 0.3s ease-out 0.5s both,
-    dotGlow 2s ease-in-out 0.8s infinite alternate;
-}
-
-@keyframes dotAppear {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-@keyframes dotGlow {
-  from {
-    box-shadow: 0 0 6px #64ffda;
-  }
-  to {
-    box-shadow: 0 0 12px #64ffda, 0 0 20px rgba(100, 255, 218, 0.3);
-  }
 }
 
 .console-wrap {
   min-height: 14rem;
   border-radius: 8px;
-  
-  /* Smooth entrance animation */
-  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: right center;
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
 }
 
 /* Enhanced spinner animation */
 .spinning {
-  background: rgba(100, 255, 218, 0.15) !important;
-  border-color: #64ffda !important;
-  box-shadow: 0 0 20px rgba(100, 255, 218, 0.4) !important;
+  background: var(--buttonHoverColor, #676b75) !important;
+  border-color: var(--accentColor, #00aaff) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 .spinning svg {
   animation: spin 0.8s linear infinite;
-  filter: drop-shadow(0 0 3px #64ffda);
+  filter: drop-shadow(0 0 2px var(--accentColor, #00aaff));
 }
 
 @keyframes spin { 
   to { transform: rotate(360deg); } 
 }
 
-/* Pulse animation for active states */
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(100, 255, 218, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(100, 255, 218, 0.6);
-  }
-}
-
-.rail-btn.active {
-  animation: pulse 2s infinite;
-}
-
-/* Subtle glow for enabled buttons */
-.rail-btn:not(:disabled):not(.active) {
-  box-shadow: 0 0 5px rgba(100, 255, 218, 0.1);
-}
-
 /* Enhanced hover effects */
 .rail-btn:not(:disabled):hover svg {
-  filter: drop-shadow(0 0 2px currentColor);
+  filter: drop-shadow(0 0 1px currentColor);
 }
 
 /* Collapsed state for the entire console dock */
@@ -503,7 +373,7 @@ export default {
   grid-area: c;
   height: 4px;
   width: 100%;
-  background: linear-gradient(90deg, transparent, #64ffda, transparent);
+  background: linear-gradient(90deg, transparent, var(--panelOutlineColor, #3a3d45), transparent);
   border-radius: 2px;
   cursor: pointer;
   transition:
@@ -513,28 +383,14 @@ export default {
   position: relative;
   justify-self: stretch;
   align-self: end;
-  
-  /* Entrance animation when console collapses */
-  animation: fadeInUp 0.3s ease-out 0.2s both;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .console-dock-indicator:hover {
   height: 6px;
-  background: linear-gradient(90deg, transparent, #4fd1c7, transparent);
+  background: linear-gradient(90deg, transparent, var(--accentColor, #00aaff), transparent);
   box-shadow: 
-    0 0 15px rgba(100, 255, 218, 0.4),
-    0 2px 8px rgba(100, 255, 218, 0.2);
+    0 0 12px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
   transition:
     height 0.2s ease,

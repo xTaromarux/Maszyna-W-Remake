@@ -3309,6 +3309,16 @@ export default {
     language(newLang) {
       this.syncDocumentLanguage(newLang);
     },
+    numberFormat(newVal, oldVal) {
+      if (!newVal || newVal === oldVal) return;
+
+      const updated = { ...this.registerFormats };
+      Object.keys(updated).forEach((key) => {
+        updated[key] = newVal;
+      });
+
+      this.registerFormats = updated;
+    },
 
     signals: {
       deep: true,

@@ -9,7 +9,7 @@ const messages = {
         resetRegisters: 'Resetuj wartości rejestrów',
         defaultSettings: 'Przywróć domyślne ustawienia',
         commandList: 'Lista rozkazów',
-        sendAllColors: '📡 Wyślij wszystkie kolory do ESP32',
+        sendAllColors: 'Wyślij wszystkie kolory do ESP32',
       },
       theme: {
         light: 'Jasny',

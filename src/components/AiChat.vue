@@ -31,24 +31,24 @@
               {{ msg.sender === 'assistant' ? '🤖' : '' }}
             </div>
             <div class="messageContent">
-            <div class="messageHeader">
-              <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
-              <span
-                class="timestamp"
-                :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
-              >
-                {{ formatTime(msg.timestamp) }}
-              </span>
-              <button
-                v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
-                class="cancelBtn"
-                type="button"
-                @click="cancelResponse"
-                :disabled="isCancelling"
-                :aria-label="$t('aiChat.cancel')"
-              >
-                &times;
-              </button>
+              <div class="messageHeader">
+                <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
+                <span
+                  class="timestamp"
+                  :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
+                >
+                  {{ formatTime(msg.timestamp) }}
+                </span>
+                <button
+                  v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
+                  class="cancelBtn"
+                  type="button"
+                  @click="cancelResponse"
+                  :disabled="isCancelling"
+                  :aria-label="$t('aiChat.cancel')"
+                >
+                  &times;
+                </button>
               </div>
               <div class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
                 <template v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId && !msg.text">

@@ -760,7 +760,7 @@ export default {
       if (!this.autoResetOnAsmCompile) return;
       this.resetValues({
         resetLogs: false,
-        logMessage: 'Rejestry automatycznie zresetowane przed kompilacją assemblera.',
+        logMessage: this.$t('logs.asmAutoReset'),
       });
     },
 
@@ -1528,6 +1528,7 @@ export default {
           availableSignals: this.avaiableSignals,
           extras: this.extras,
         });
+        console.log('Compiled program:', program);
         // console.log(program, rawLines);
 
         // 1) Ustawiamy program + surowe linie do podglądu
@@ -1547,11 +1548,10 @@ export default {
               // IF
               phase.srcLine = linePtr;
 
-              // pierwsze pod-fazy — nadajemy im "wirtualne" źródła do poprawnego highlightu
               const t0 = phase.truePhases && phase.truePhases[0];
               const f0 = phase.falsePhases && phase.falsePhases[0];
-              if (t0) t0.srcLine = linePtr + 1; // linia z @zero ...
-              if (f0) f0.srcLine = linePtr + 2; // linia z @notzero ...
+              if (t0) t0.srcLine = linePtr + 1;
+              if (f0) f0.srcLine = linePtr + 2;
 
               linePtr += 3;
             } else {

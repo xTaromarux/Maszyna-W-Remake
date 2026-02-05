@@ -1,11 +1,14 @@
-// semanticAnalyzer.ts – analiza semantyczna dla Maszyny W
-import type { ProgramAst, AstNode, DirectiveNode } from './model';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable arrow-body-style */
+/* eslint-disable no-bitwise */
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+/* eslint-disable @typescript-eslint/member-ordering */
+
+import type { ProgramAst, AstNode, DirectiveNode } from './types/model';
+import type { CmdSpec } from './types/semanticAnalyzer';
 import { WlanError } from './error';
 import { commandList } from '../utils/data/commands';
 
-/* =========================
-   CASE-INSENSITIVE SYMBOLS
-   ========================= */
 export class SymbolTable {
   table: Map<string, number>;
 
@@ -41,10 +44,7 @@ export class SymbolTable {
   }
 }
 
-type CmdSpec = { name: string; args?: number; argsMin?: number; argsMax?: number; description?: string; lines?: string };
-const COMMAND_SPECS = new Map<string, CmdSpec>(
-  commandList.map(c => [String(c.name).toUpperCase(), c as CmdSpec])
-);
+const COMMAND_SPECS = new Map<string, CmdSpec>(commandList.map((c) => [String(c.name).toUpperCase(), c as CmdSpec]));
 
 function getArity(name: string): { min: number; max: number } {
   const spec = COMMAND_SPECS.get(name.toUpperCase());
@@ -72,12 +72,12 @@ export function collectLabels(nodes: AstNode[]): SymbolTable {
         const dir = node as DirectiveNode;
         switch (dir.name) {
           case 'ORG':
-            currentAddress = (dir.operands[0] as any as number);
+            currentAddress = dir.operands[0] as any as number;
             break;
           case 'DATA':
           case 'RST':
           case 'RPA':
-            currentAddress += (dir.operands.length || 1);
+            currentAddress += dir.operands.length || 1;
             break;
           case 'VECTOR_BASE':
             symtab.define('VECTOR_BASE', (dir as any).operands[0].value);
@@ -100,9 +100,6 @@ export function collectLabels(nodes: AstNode[]): SymbolTable {
   return symtab;
 }
 
-/**
- * Weryfikacja poprawności operandów (bez rozwiązywania etykiet)
- */
 export function validateOperands(nodes: AstNode[]) {
   const validRegs = new Set(['A', 'S', 'L', 'I', 'AK', 'PC', 'IR']);
   const MAX_IMM = 0xffff;
@@ -127,17 +124,15 @@ export function validateOperands(nodes: AstNode[]) {
             });
           }
           break;
-        case 'Immediate': 
+        case 'Immediate':
           // Czy jesteśmy w dyrektywie danych (RST/RPA/DATA)?
           const isDataDirective =
-            (node as any).type === 'Directive' &&
-            ['RST', 'RPA', 'DATA'].includes(((node as any).name || '').toUpperCase());
+            (node as any).type === 'Directive' && ['RST', 'RPA', 'DATA'].includes(((node as any).name || '').toUpperCase());
 
           if (isDataDirective) {
-            // Akceptujemy wartości w zakresie 8-bit ze znakiem / bez (i tak maskujesz do 0xFF przy inicjalizacji)
             const CELL_BITS = 8;
-            const MIN = -(1 << (CELL_BITS - 1));  // -128
-            const MAX = (1 << CELL_BITS) - 1;     // 255
+            const MIN = -(1 << (CELL_BITS - 1)); // -128
+            const MAX = (1 << CELL_BITS) - 1; // 255
             if (op.value < MIN || op.value > MAX) {
               throw new WlanError(`Wartość poza zakresem (RST/RPA/DATA) w linii ${(node as any).line}`, {
                 code: 'SEM_IMMEDIATE_RANGE',
@@ -145,7 +140,6 @@ export function validateOperands(nodes: AstNode[]) {
               });
             }
           } else {
-            // Normalne operandy – nadal tylko nieujemne (adresy/immediate w instrukcjach)
             if (op.value < 0 || op.value > MAX_IMM) {
               throw new WlanError(`Wartość poza zakresem w linii ${(node as any).line}`, {
                 code: 'SEM_IMMEDIATE_RANGE',
@@ -155,7 +149,6 @@ export function validateOperands(nodes: AstNode[]) {
           }
           break;
 
-        // identyfikatory/etykiety rozwiążemy później
         case 'LabelRef':
         case 'Identifier':
         case 'identifier':
@@ -207,9 +200,7 @@ export function resolveLabelRefs(nodes: AstNode[], symtab: SymbolTable) {
 
     if (node.type === 'Directive') {
       (node as any).operands = (node as any).operands.map((op: any) => {
-        return op?.type === 'LabelRef'
-          ? { type: 'Immediate', value: symtab.lookup(op.name), line: op.line }
-          : op;
+        return op?.type === 'LabelRef' ? { type: 'Immediate', value: symtab.lookup(op.name), line: op.line } : op;
       });
     }
   }
@@ -231,7 +222,7 @@ function readIdent(op: any): string | null {
   if (op && typeof op.value === 'string') return op.value;
   if (op && typeof op.text === 'string') return op.text;
   if (op && typeof op.type === 'string' && /^(Identifier|identifier|LabelRef)$/i.test(op.type)) {
-    return (op.name ?? op.value ?? op.text) ?? null;
+    return op.name ?? op.value ?? op.text ?? null;
   }
   return null;
 }
@@ -246,7 +237,6 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
     const opName = String((n as any).name || '').toUpperCase();
     const { min, max } = getArity(opName);
 
-    // sprawdzenie liczby operandów wg commandList
     const ops = (n as any).operands || [];
     if (ops.length < min) {
       throw new WlanError(`Instrukcja ${opName} wymaga co najmniej ${min} argumentów.`, { code: 'SEM_MISSING_OPERAND' });
@@ -255,13 +245,10 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
       throw new WlanError(`Instrukcja ${opName} przyjmuje najwyżej ${max} argumentów.`, { code: 'SEM_TOO_MANY_OPERANDS' });
     }
 
-    // Jeżeli rozkaz nie ma operandów wg specyfikacji — nic nie robimy (np. PWR: args=0)
     if (max === 0 || ops.length === 0) continue;
 
-    // Dla Twojego ISA zakładamy, że operand 0 (jeśli istnieje) to adres/etykieta
     const op0 = ops[0];
 
-    // 1) liczba → Immediate
     const num = readNumber(op0);
     if (num !== null) {
       ops[0] = op0?.type === 'Immediate' ? op0 : toImmediate(num, op0?.line);
@@ -269,7 +256,6 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
       continue;
     }
 
-    // 2) rejestr → dozwolone tylko, jeśli istnieje etykieta o tej nazwie (case-insensitive)
     if (op0?.type === 'Register' && typeof op0.name === 'string') {
       const name = op0.name;
       if (symtab.has(name)) {
@@ -277,13 +263,12 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
         (n as any).operands = ops;
         continue;
       }
-      throw new WlanError(
-        `Operand instrukcji ${opName} musi wskazywać adres (liczba/etykieta), a nie rejestr ${name}.`,
-        { code: 'SEM_BAD_OPERAND_TYPE', hint: `Użyj np.: "${opName} a" albo "${opName} 12".` }
-      );
+      throw new WlanError(`Operand instrukcji ${opName} musi wskazywać adres (liczba/etykieta), a nie rejestr ${name}.`, {
+        code: 'SEM_BAD_OPERAND_TYPE',
+        hint: `Użyj np.: "${opName} a" albo "${opName} 12".`,
+      });
     }
 
-    // 3) identyfikator/etykieta → lookup
     const name = readIdent(op0);
     if (name) {
       ops[0] = toImmediate(symtab.lookup(name), op0?.line);
@@ -291,11 +276,10 @@ function resolveAddressingOperands(nodes: AstNode[], symtab: SymbolTable) {
       continue;
     }
 
-    // 4) nic nie pasuje
-    throw new WlanError(
-      `Operand instrukcji ${opName} musi być adresem (liczbą) albo etykietą.`,
-      { code: 'SEM_BAD_OPERAND_TYPE', hint: `Użyj: "${opName} a" albo "${opName} 12".` }
-    );
+    throw new WlanError(`Operand instrukcji ${opName} musi być adresem (liczbą) albo etykietą.`, {
+      code: 'SEM_BAD_OPERAND_TYPE',
+      hint: `Użyj: "${opName} a" albo "${opName} 12".`,
+    });
   }
 }
 

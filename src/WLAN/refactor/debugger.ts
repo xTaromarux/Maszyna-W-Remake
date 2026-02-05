@@ -1,5 +1,5 @@
 import { initStore, stepMicro } from './simulator.js';
-import type { Store, MicroProgramEntry } from '../model.js';
+import type { Store, MicroProgramEntry } from '../types/model.js';
 
 export class Debugger {
   store: Store;

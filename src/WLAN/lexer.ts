@@ -1,4 +1,5 @@
-import type { Token, TokenType } from './model';
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { Token, TokenType } from './types/model';
 import { WlanError, errorAt } from './error';
 
 const tokenSpecs: [string, RegExp][] = [

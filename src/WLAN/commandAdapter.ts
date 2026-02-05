@@ -1,6 +1,7 @@
-import type { Phase as TemplatePhase, Signal, SignalSet, ConditionalPhase } from './instructions';
-
-type Cmd = { name: string; args: number; description?: string; lines: string };
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import type { Phase as TemplatePhase, Signal, SignalSet, ConditionalPhase } from './types/instructions';
+import type { Cmd, Built } from './types/commandAdapter';
 
 const KNOWN: ReadonlySet<string> = new Set([
   'czyt',
@@ -90,8 +91,6 @@ function pickBranchBodyFromChunk(chunk: string, label: string): SignalSet[] {
   const any = Object.keys(sset).length > 0;
   return any ? [sset] : [];
 }
-
-type Built = { templates: Record<string, TemplatePhase[]>; postAsm: Record<string, string[]> };
 
 export function buildFromCommandList(list: Cmd[]): Built {
   const templates: Record<string, TemplatePhase[]> = {};

@@ -1,6 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { lex } from './lexer';
-import { Token, TokenType, ProgramAst, AstNode, Operand, DirectiveNode, InstructionNode, ConditionalNode } from './model';
-import { WlanError, errorFromToken, errorAt } from './error';
+import { TokenType } from './types/model';
+import type { Token, ProgramAst, AstNode, Operand, DirectiveNode, InstructionNode, ConditionalNode } from './types/model';
+import { WlanError, errorFromToken } from './error';
 
 const REGISTER_REGEX = /^(A|S|L|I|AK|PC|IR)$/i;
 
@@ -67,7 +71,7 @@ export class Parser {
         const result = this.parseLabelDefinition();
         Array.isArray(result) ? body.push(...result) : body.push(result);
       } else if (tok.type === 'IDENT') {
-        body.push(this.parseInstruction()); // tu złapie RST/RPA jako Directive
+        body.push(this.parseInstruction());
       } else {
         throw errorFromToken(
           this.source,
@@ -113,7 +117,7 @@ export class Parser {
       const operand = this.parseOperand();
       return {
         type: 'Directive',
-        name: name,
+        name,
         operands: [operand],
         line: tok.line,
       } as DirectiveNode;
@@ -123,7 +127,7 @@ export class Parser {
       // RPA nie przyjmuje operandów
       return {
         type: 'Directive',
-        name: name,
+        name,
         operands: [],
         line: tok.line,
       } as DirectiveNode;
@@ -219,11 +223,6 @@ export class Parser {
   }
 }
 
-/**
- * Parser helper
- * @param {string} source
- * @returns {object} AST
- */
 export function parse(source: string): ProgramAst {
   return new Parser(source).parseProgram();
 }

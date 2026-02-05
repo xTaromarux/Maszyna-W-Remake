@@ -1,30 +1,8 @@
-import type {
-  MicroProgramEntry,
-  Phase as RuntimePhase,
-  MicroPhase,
-} from "./model";
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { MicroProgramEntry, Phase as RuntimePhase, MicroPhase } from './types/model';
+import type { CompileExternalOptions } from './types/compiler';
 
-type Extras = {
-  xRegister?: boolean;
-  yRegister?: boolean;
-  dl?: boolean;
-  jamlExtras?: boolean;
-  busConnectors?: boolean;
-};
-
-type SignalsConfig = {
-  always: string[];
-  xRegister: string[];
-  yRegister: string[];
-  dl: string[];
-  jamlExtras: string[];
-  busConnectors: string[];
-};
-
-export type CompileExternalOptions = {
-  availableSignals: SignalsConfig;
-  extras?: Extras;
-};
+export type { CompileExternalOptions } from './types/compiler';
 
 /* =============================
    POMOCNICZE
@@ -47,7 +25,7 @@ function tokenize(line: string): string[] {
 function stripLabels(tokens: string[]): { labels: string[]; rest: string[] } {
   const labels: string[] = [];
   let i = 0;
-  while (i < tokens.length && tokens[i].startsWith("@")) {
+  while (i < tokens.length && tokens[i].startsWith('@')) {
     labels.push(tokens[i].slice(1));
     i++;
   }
@@ -55,25 +33,20 @@ function stripLabels(tokens: string[]): { labels: string[]; rest: string[] } {
 }
 
 function isFetchPhase(sigSet: Set<string>): boolean {
-  // Nowy wpis zaczyna się od „poboru argumentu” – czytanie pamięci programu i ładowanie I, zwiększenie L
-  return sigSet.has("czyt") && sigSet.has("wei") && sigSet.has("il");
+  return sigSet.has('czyt') && sigSet.has('wei') && sigSet.has('il');
 }
 
-function sigsFromTokens(
-  tokens: string[],
-  known: Set<string>
-): Record<string, boolean> {
+function sigsFromTokens(tokens: string[], known: Set<string>): Record<string, boolean> {
   const set: Record<string, boolean> = {};
   for (const t of tokens) {
     const up = t.toLowerCase();
-    if (up === "koniec") break;
-    if (known.has(up)) set[up] = true; // ⬅ porównanie i zapis w lowercase
+    if (up === 'koniec') break;
+    if (known.has(up)) set[up] = true;
   }
   return set;
 }
 
 function parseIF(tokens: string[]) {
-  // znajdź 'IF' gdziekolwiek
   const ifIdx = tokens.findIndex((t) => /^if$/i.test(t));
   if (ifIdx < 0) return null;
 
@@ -84,20 +57,18 @@ function parseIF(tokens: string[]) {
 
   const tTok = tokens[thenIdx + 1];
   const fTok = tokens[elseIdx + 1];
-  if (!tTok || !fTok || !tTok.startsWith("@") || !fTok.startsWith("@")) return null;
+  if (!tTok || !fTok || !tTok.startsWith('@') || !fTok.startsWith('@')) return null;
 
-  // mapowanie aliasów flag
   const flagNorm = (() => {
     const f = flagRaw;
-    if (f === "M") return "N";
-    if (f === "NEG") return "N";
-    if (f === "NZERO") return "NZ";
-    if (f === "ZERO") return "Z";
-    if (f === "POS") return "P";
+    if (f === 'M') return 'N';
+    if (f === 'NEG') return 'N';
+    if (f === 'NZERO') return 'NZ';
+    if (f === 'ZERO') return 'Z';
+    if (f === 'POS') return 'P';
     return f; // Z, N, NZ, P itd.
   })();
 
-  // prefiks (sygnały) przed IF — nie egzekwujemy tu (tylko ignorujemy przy walidacji)
   const prefix = tokens.slice(0, ifIdx);
 
   return {
@@ -108,20 +79,13 @@ function parseIF(tokens: string[]) {
   };
 }
 
-/* =============================
-   GŁÓWNA FUNKCJA
-   ============================= */
-export function compileCodeExternal(
-  source: string,
-  opts: CompileExternalOptions
-): { program: MicroProgramEntry[]; rawLines: string[] } {
+export function compileCodeExternal(source: string, opts: CompileExternalOptions): { program: MicroProgramEntry[]; rawLines: string[] } {
   if (!source || !source.trim()) {
-    throw new Error("Brak kodu do kompilacji.");
+    throw new Error('Brak kodu do kompilacji.');
   }
 
   const { availableSignals, extras } = opts;
 
-  // słownik sygnałów – identyczny jak w Main.vue
   const KNOWN = new Set<string>([
     ...availableSignals.always,
     ...(extras?.xRegister ? availableSignals.xRegister : []),
@@ -131,10 +95,9 @@ export function compileCodeExternal(
     ...(extras?.busConnectors ? availableSignals.busConnectors : []),
   ]);
 
-  // surowe linie = fazy rozdzielone średnikiem
   const rawLines = source
-    .split(";")
-    .map((l) => l.replace(/\r?\n/g, " ").trim())
+    .split(';')
+    .map((l) => l.replace(/\r?\n/g, ' ').trim())
     .filter((l) => l.length > 0);
 
   const program: MicroProgramEntry[] = [];
@@ -151,18 +114,16 @@ export function compileCodeExternal(
     const line = rawLines[i];
     const tokens0 = tokenize(line);
 
-    // zdejmij ewentualne wiodące etykiety
     const { labels: leadingLabels, rest } = stripLabels(tokens0);
 
-    // 1) Najpierw spróbuj IF (obsługuje też prefiks przed 'IF')
     const ifSpec = parseIF(rest);
     if (ifSpec) {
       if (!current) {
-        current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
+        current = { pc: program.length, asmLine: '(micro)', phases: [], meta: { kind: 'NONE' } };
       }
 
-      const tLine = rawLines[i + 1] ?? "";
-      const fLine = rawLines[i + 2] ?? "";
+      const tLine = rawLines[i + 1] ?? '';
+      const fLine = rawLines[i + 2] ?? '';
 
       const tTok = tokenize(tLine);
       const fTok = tokenize(fLine);
@@ -192,26 +153,24 @@ export function compileCodeExternal(
 
       if (tBodyOk) i += 1;
       if (fBodyOk) i += 1;
-      continue; // <<< ważne: nie walidujemy już tej linii ogólną walidacją
+      continue;
     }
 
-    // 2) Linia NIE-będąca IF — twarda walidacja pisowni
     for (const tok of rest) {
       const up = tok.toUpperCase();
-      if (up === "END") continue;
+      if (up === 'END') continue;
       if (!KNOWN.has(tok.toLowerCase())) {
-        throw new Error(`Nieznany symbol „${tok}” w linii ${i + 1}: ${line}`);
+        throw new Error(`Nieznany symbol "${tok}" w linii ${i + 1}: ${line}`);
       }
     }
 
-    // 3) Zwykła faza
     const sigSet = new Set(rest.map((t) => t.toLowerCase()).filter((t) => KNOWN.has(t)));
 
     if (isFetchPhase(sigSet)) {
       finishCurrent();
-      current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
+      current = { pc: program.length, asmLine: '(micro)', phases: [], meta: { kind: 'NONE' } };
     } else if (!current) {
-      current = { pc: program.length, asmLine: "(micro)", phases: [], meta: { kind: "NONE" } };
+      current = { pc: program.length, asmLine: '(micro)', phases: [], meta: { kind: 'NONE' } };
     }
 
     if (sigSet.size === 0) continue;
@@ -223,7 +182,6 @@ export function compileCodeExternal(
     if (phaseObj.stop) finishCurrent();
   }
 
-  // domknij ostatni wpis
   finishCurrent();
 
   return { program, rawLines };

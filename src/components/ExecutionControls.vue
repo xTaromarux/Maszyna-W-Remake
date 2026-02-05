@@ -9,7 +9,7 @@
       :title="$t('execution.compileTitle')"
     >
       <CompileIcon />
-      <span>{{ $t('execution.compile') }}</span>
+      <span>{{ $t('execution.compile') }} (DEBUG)</span>
     </button>
 
     <button
@@ -61,12 +61,7 @@
       <span>{{ $t('execution.runFast') }}</span>
     </button>
 
-    <button
-      v-else-if="isFastRunning"
-      @click="$emit('stop')"
-      class="execution-btn execution-btn--run"
-      :title="$t('execution.stopTitle')"
-    >
+    <button v-else-if="isFastRunning" @click="$emit('stop')" class="execution-btn execution-btn--run" :title="$t('execution.stopTitle')">
       <span class="spinner" aria-hidden="true"></span>
       <span>{{ $t('execution.runningFast', { progress: fastProgress }) }}</span>
     </button>

@@ -2,7 +2,7 @@
 /* eslint-disable no-bitwise */
 export const DEFAULT_VECTOR_BASE = 0x10;
 
-import type { Store, ConditionalPhase, Phase } from '../model';
+import type { Store, ConditionalPhase, Phase } from '../types/model';
 
 //Entire section of a code must be reavaluated after changes in #151
 

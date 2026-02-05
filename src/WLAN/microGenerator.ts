@@ -1,8 +1,9 @@
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
-import type { AstNode } from './model';
+import type { AstNode } from './types/model';
 import { buildFromCommandList } from './commandAdapter';
-import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
-import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './model';
+import type { Phase as TemplatePhase, Signal, SignalSet } from './types/instructions';
+import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './types/model';
+import type { Phase, CJumpMeta } from './types/microGenerator';
 import { WlanError } from './error';
 
 function toMicroPhaseFromSignals(signals: Signal[]): MicroPhase {
@@ -16,21 +17,6 @@ function toMicroPhaseFromSignalSet(set: SignalSet): MicroPhase {
   return phase;
 }
 const nameKey = (n: string) => (n || '').toLowerCase();
-
-interface Phase {
-  [k: string]: any;
-  op: string;
-}
-
-interface CJumpMeta {
-  kind: 'CJUMP';
-  flagName: 'Z' | 'N' | 'C' | 'V' | 'M';
-  trueTarget?: number;
-  falseTarget?: number;
-  joinTarget?: number;
-  _branchLocked?: boolean;
-  srcLine?: number;
-}
 
 /* IF Z THEN @zero ELSE @notzero; */
 const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;

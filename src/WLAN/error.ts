@@ -1,22 +1,7 @@
-// Rich diagnostic error utilities for WLAN toolchain (lexer/parser/analyzer)
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 
 import { BaseAppError, ErrorLevel } from '../errors';
-
-export type Severity = 'error' | 'warning' | 'info';
-
-export interface DiagnosticLocation {
-  line: number; // 1-based
-  col: number; // 1-based, visual column
-  length?: number; // length of the offending span (defaults to 1)
-}
-
-export interface DiagnosticData {
-  code?: string;
-  hint?: string;
-  severity?: Severity;
-  loc?: DiagnosticLocation;
-  frame?: string;
-}
+import type { Severity, DiagnosticLocation, DiagnosticData } from './types/error';
 
 export function makeCodeFrame(
   source: string,

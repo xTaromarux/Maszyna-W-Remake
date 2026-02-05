@@ -34,6 +34,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
@@ -57,8 +58,11 @@ const emit = defineEmits(['update:code', 'log', 'initMemory', 'reset-registers']
 
 const programLocal = ref(props.program);
 const programCompiled = ref(false);
+const { t } = useI18n();
 
+// ENTRY POINT FUNCTION FOR COMPILATION
 function compileProgram() {
+  console.log(t('logs.compileStart'));
   try {
     if (props.autoResetOnAsmCompile) {
       emit('reset-registers');
@@ -76,11 +80,9 @@ function compileProgram() {
       }
     });
 
-    const addrBits = props.addresBits;
-    const codeBits = props.codeBits;
-    const addressSpace = 2 ** addrBits;
+    const addressSpace = 2 ** props.addresBits;
     const addressMask = addressSpace - 1;
-    const maxOpcode = 2 ** codeBits - 1;
+    const maxOpcode = 2 ** props.codeBits - 1;
 
     const initAssignments = [];
     for (const node of analyzedNodes) {
@@ -100,17 +102,15 @@ function compileProgram() {
         const opcodeKey = String(node.name || '').toUpperCase();
         const opcode = opcodeLookup.get(opcodeKey);
         if (opcode == null) {
-          throw new Error(`Nie znaleziono definicji rozkazu "${node.name}" w aktualnej liscie rozkazow.`);
+          throw new Error(t('logs.compileMissingOpcode', { name: node.name }));
         }
         if (opcode > maxOpcode) {
-          throw new Error(`Rozkaz "${node.name}" o indeksie ${opcode} przekracza limit ${maxOpcode} wynikajacy z ${codeBits} bitow kodu.`);
+          throw new Error(t('logs.compileOpcodeTooLarge', { name: node.name, opcode, maxOpcode, codeBits }));
         }
 
         const argVal = node.operands?.[0]?.value ?? 0;
         if (argVal < 0 || argVal > addressMask) {
-          throw new Error(
-            `Argument ${argVal} instrukcji "${node.name}" wykracza poza zakres 0..${addressMask} dla ${addrBits} bitow adresu.`
-          );
+          throw new Error(t('logs.compileArgOutOfRange', { arg: argVal, name: node.name, max: addressMask, addrBits }));
         }
 
         const encodedValue = opcode * addressSpace + argVal;
@@ -127,6 +127,7 @@ function compileProgram() {
 
     let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
     microProgram = injectCJumpMeta(microProgram);
+    console.log('Generated micro program:', microProgram);
 
     const asmFragments = [];
     let lineNo = 0;
@@ -191,18 +192,18 @@ function compileProgram() {
     emit('update:code', { text: finalMicroSignals, program: microProgram });
 
     programCompiled.value = true;
-    emit('log', { message: 'Program skompilowany pomyślnie przy użyciu systemu WLAN', class: 'kompilator rozkazów' });
+    emit('log', { message: t('logs.programCompiledWlan'), class: 'kompilator rozkazów' });
   } catch (error) {
     if (error && (error.level || error.code || error.hint || error.loc || error.frame)) {
       emit('log', {
-        message: `Błąd kompilacji: ${error.message || String(error)}`,
+        message: t('logs.compileError', { message: error.message || String(error) }),
         class: 'Error',
         error: error,
       });
     } else {
-      const parts = [`Błąd kompilacji: ${error?.message || String(error)}`];
+      const parts = [t('logs.compileError', { message: error?.message || String(error) })];
       if (error && error.frame) parts.push('\n' + error.frame);
-      if (error && error.hint) parts.push(`\nPodpowiedź: ${error.hint}`);
+      if (error && error.hint) parts.push(`\n${t('logs.compileHint', { hint: error.hint })}`);
       emit('log', { message: parts.join(''), class: 'Error' });
     }
   }
@@ -210,7 +211,7 @@ function compileProgram() {
 
 function enableProgramEditing() {
   programCompiled.value = false;
-  emit('log', { message: 'Program odblokowany do edycji', class: 'system' });
+  emit('log', { message: t('logs.programUnlocked'), class: 'system' });
 }
 </script>
 

@@ -158,6 +158,15 @@ const messages = {
       title: 'Asystent AI 🤖',
       placeholder: 'Wpisz wiadomość…',
       instruction: 'Opisz operację uzyskania kodu maszynowego:',
+      suggestions: {
+        title: 'Przyk??adowe pytania',
+        closeAria: 'Ukryj propozycje',
+        items: {
+          whatIsW: 'Co to jest maszyna W?',
+          addTwoNumbers: 'Jak doda?? dwie liczby do siebie?',
+          firstProgram: 'Poka?? prosty program startowy.',
+        },
+      },
     },
     ioPanel: {
       title: 'Urządzenie zewnętrzne',
@@ -452,6 +461,15 @@ const messages = {
       title: 'AI Assistant 🤖',
       placeholder: 'Type a message…',
       instruction: 'Describe the operation to obtain machine code:',
+      suggestions: {
+        title: 'Example prompts',
+        closeAria: 'Hide suggestions',
+        items: {
+          whatIsW: 'What is the W machine?',
+          addTwoNumbers: 'How do I add two numbers together?',
+          firstProgram: 'Show a simple starter program.',
+        },
+      },
     },
     ioPanel: {
       title: 'External device',

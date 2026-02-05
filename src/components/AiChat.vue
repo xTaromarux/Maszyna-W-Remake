@@ -20,6 +20,20 @@
           <span class="dots"><span></span><span></span><span></span></span>
         </div>
 
+        <div v-if="shouldShowSuggestions" class="suggestionPanel">
+          <div class="suggestionHeader">
+            <span class="suggestionTitle">{{ $t('aiChat.suggestions.title') }}</span>
+            <button class="suggestionClose" type="button" @click="dismissSuggestions" :aria-label="$t('aiChat.suggestions.closeAria')">
+              &times;
+            </button>
+          </div>
+          <div class="suggestionGrid">
+            <button v-for="item in suggestions" :key="item.id" class="suggestionTile" type="button" @click="applySuggestion(item.text)">
+              <span class="suggestionText">{{ item.text }}</span>
+            </button>
+          </div>
+        </div>
+
         <transition-group name="messageEnter" tag="div" class="conversationBox">
           <div
             v-for="msg in messages"
@@ -81,6 +95,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AiChatTrashIcon from '@/components/AiChatTrashIcon.vue';
 import {
   ApiState,
@@ -116,13 +131,21 @@ const rateLimitMessage = ref('');
 const generalError = ref('');
 const requestTimestamps = ref([]);
 const sessionId = ref('');
+const showSuggestions = ref(true);
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 const HEALTH_URL = API_URL ? API_URL.replace(/\/api\/chat\/?$/, '/health') : '';
+const { t } = useI18n();
 
 const isBusy = computed(
   () => aiTyping.value || isCancelling.value || apiState.value === ApiState.CHECKING || apiState.value === ApiState.WAKING
 );
+const suggestions = computed(() => [
+  { id: 'what-is-w', text: t('aiChat.suggestions.items.whatIsW') },
+  { id: 'add-two', text: t('aiChat.suggestions.items.addTwoNumbers') },
+  { id: 'first-program', text: t('aiChat.suggestions.items.firstProgram') },
+]);
+const shouldShowSuggestions = computed(() => showSuggestions.value && messages.value.length === 0);
 
 const MIN_WIDTH = 480;
 const MAX_WIDTH = 1000;
@@ -140,6 +163,18 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function startClose() {
   emit('close');
+}
+
+function dismissSuggestions() {
+  showSuggestions.value = false;
+}
+
+function applySuggestion(value) {
+  if (!value) return;
+  text.value = value;
+  nextTick(() => {
+    textInput.value?.focus();
+  });
 }
 
 function generateId(prefix = 'msg') {
@@ -525,6 +560,7 @@ function resetConversation() {
   requestTimestamps.value = [];
   generalError.value = '';
   rateLimitMessage.value = '';
+  showSuggestions.value = true;
 
   scheduleSave();
   try {
@@ -797,5 +833,78 @@ onBeforeUnmount(() => {
   40% {
     opacity: 1;
   }
+}
+
+.suggestionPanel {
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 3px solid var(--panelOutlineColor, #003c7d);
+  background: var(--panelBackgroundColor, #ffffff);
+  color: var(--fontColor, #0f172a);
+}
+
+.suggestionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.suggestionTitle {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.suggestionClose {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fontColor, #0f172a);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.suggestionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.suggestionTile {
+  text-align: left;
+  border: 2px solid #003c7d;
+  border-radius: 8px;
+  padding: 0.55rem 0.6rem;
+  background: #f8fafc;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.suggestionTile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+  border-color: #0ea5e9;
+}
+
+.suggestionText {
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+body.darkMode .suggestionPanel {
+  background: var(--panelBackgroundColor, #0f172a);
+}
+
+body.darkMode .suggestionTile {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #1d4ed8;
 }
 </style>

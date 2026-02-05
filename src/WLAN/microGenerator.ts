@@ -116,7 +116,7 @@ export function generateMicroProgram(
   commandList: {
     name: string;
     args: number;
-    description?: string;
+    description?: string | Record<string, string>;
     lines: string;
   }[]
 ): MicroProgramEntry[] {

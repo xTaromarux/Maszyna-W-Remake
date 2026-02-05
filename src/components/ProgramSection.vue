@@ -154,7 +154,7 @@ function compileProgram() {
           const prefix = prefixArr && prefixArr.length ? prefixArr.join(' ') + ' ' : '';
 
           cond.srcLine = lineNo;
-          asmFragments.push(`@${fLabel} ${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
+          asmFragments.push(`${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
           lineNo++;
 
           t.srcLine = lineNo;

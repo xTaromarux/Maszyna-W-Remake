@@ -3,7 +3,7 @@ import { StateField, RangeSetBuilder, EditorState } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { autocompletion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 
-type Cmd = { name: string; description?: string };
+type Cmd = { name: string; description?: string | Record<string, string> };
 
 function escapeRx(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -64,8 +64,17 @@ export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension
   return [field] as const;
 }
 
+function normalizeDescription(description?: Cmd['description']): string {
+  if (!description) return 'rozkaz';
+  if (typeof description === 'string') return description;
+  const values = Object.values(description);
+  return values.length ? String(values[0]) : 'rozkaz';
+}
+
 export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
-  const base = (commands || []).filter((c) => c?.name).map((c) => ({ name: c.name, description: c.description || 'rozkaz' }));
+  const base = (commands || [])
+    .filter((c) => c?.name)
+    .map((c) => ({ name: c.name, description: normalizeDescription(c.description) }));
 
   function source(ctx: CompletionContext): CompletionResult | null {
     // Unicode: litery/cyfry/podkreślenie

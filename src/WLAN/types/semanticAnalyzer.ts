@@ -1,1 +1,8 @@
-export type CmdSpec = { name: string; args?: number; argsMin?: number; argsMax?: number; description?: string; lines?: string };
+export type CmdSpec = {
+  name: string;
+  args?: number;
+  argsMin?: number;
+  argsMax?: number;
+  description?: string | Record<string, string>;
+  lines?: string;
+};

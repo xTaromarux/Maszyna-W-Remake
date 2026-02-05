@@ -452,10 +452,12 @@ export default {
         return;
       }
 
+      const rawLocale = this.$i18n?.locale;
+      const locale = typeof rawLocale === 'string' ? rawLocale : rawLocale?.value || 'pl';
       const newCommand = {
         name: newCommandName,
         args: 0,
-        description: this.$t('commandList.commandDescription', { name: newCommandName }),
+        description: { [locale]: this.$t('commandList.commandDescription', { name: newCommandName }) },
         lines: this.newCommandLines || '',
       };
 

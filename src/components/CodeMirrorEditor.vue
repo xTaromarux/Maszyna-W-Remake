@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { EditorView } from 'codemirror';
 import { EditorState, StateEffect } from '@codemirror/state';
 import {
@@ -83,6 +84,7 @@ import EditIcon from '@/assets/svg/EditIcon.vue';
 
 const isFullScreen = ref(false);
 const editorWrapper = ref<HTMLDivElement | null>(null);
+const { locale, t } = useI18n();
 
 function toggleFullScreen() {
   if (!editorWrapper.value) return;
@@ -129,7 +131,7 @@ const props = defineProps<{
   onCompile?: () => void;
   onEdit?: () => void;
   autocompleteEnabled?: boolean;
-  commandList?: Array<{ name: string; description?: string }>;
+  commandList?: Array<{ name: string; description?: string | Record<string, string> }>;
   maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();
@@ -145,10 +147,34 @@ const emit = defineEmits<{
 const editorContainer = ref<HTMLDivElement | null>(null);
 let editorView: EditorView | null = null;
 
+function resolveCommandDescription(description: unknown, name?: string): string | undefined {
+  if (!description) return name ? t('commandList.commandDescription', { name }) : undefined;
+  if (typeof description === 'string') return description;
+  if (typeof description === 'object') {
+    const descMap = description as Record<string, string>;
+    const current = locale.value;
+    return (
+      descMap[current] ||
+      descMap[current?.split('-')[0]] ||
+      descMap.en ||
+      descMap.pl ||
+      Object.values(descMap)[0]
+    );
+  }
+  return String(description);
+}
+
+const localizedCommandList = computed(() =>
+  (props.commandList || []).map((cmd) => ({
+    ...cmd,
+    description: resolveCommandDescription(cmd.description, cmd.name),
+  }))
+);
+
 function getAutocompleteExtensions() {
   if (props.autocompleteEnabled === false) return [];
   if (props.language === 'macroW') {
-    return macroWRuntimeCompletions(props.commandList || []);
+    return macroWRuntimeCompletions(localizedCommandList.value);
   }
   return [];
 }
@@ -268,7 +294,7 @@ function createExtensions() {
     getLanguageExtension(props.language),
     ...getThemeExtension(props.theme),
     ...getAutocompleteExtensions(),
-    ...(props.language === 'macroW' ? macroWRuntimeHighlight(props.commandList || []) : []),
+    ...(props.language === 'macroW' ? macroWRuntimeHighlight(localizedCommandList.value) : []),
     // ...(props.language === 'macroW' && props.devStickyCompletion ? [stickyCompletion()] : []),
     EditorView.theme({
       '&': {
@@ -463,6 +489,17 @@ watch(
 // 11. Watch for theme changes
 watch(
   () => props.theme,
+  () => {
+    if (editorView) {
+      editorView.dispatch({
+        effects: StateEffect.reconfigure.of(createExtensions()),
+      });
+    }
+  }
+);
+
+watch(
+  () => locale.value,
   () => {
     if (editorView) {
       editorView.dispatch({

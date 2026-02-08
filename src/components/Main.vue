@@ -220,7 +220,7 @@
 <script>
 import MaszynaW from '@/components/MaszynaW.vue';
 import CommandList from './CommandList.vue';
-import ProgramSection from './ProgramSection.vue';
+import ProgramSection from './InstructionsEditor/ProgramSection.vue';
 import CounterComponent from '@/components/CounterComponent.vue';
 import BusSignal from '@/components/BusSignal.vue';
 import SignalButton from '@/components/SignalButton.vue';
@@ -231,10 +231,10 @@ import XRegisterSection from '@/components/XRegisterSection.vue';
 import YRegisterSection from '@/components/YRegisterSection.vue';
 import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
-import ConsoleDock from '@/components/ConsoleDock.vue';
-import SettingsOverlay from '@/components/SettingsOverlay.vue';
-import ExecutionControls from './ExecutionControls.vue';
-import ProgramEditor from './ProgramEditor.vue';
+import ConsoleDock from '@/components/Console/ConsoleDock.vue';
+import SettingsOverlay from '@/components/Settings/SettingsOverlay.vue';
+import ExecutionControls from './MicroInstructionsEdtior/ExecutionControls.vue';
+import ProgramEditor from './MicroInstructionsEdtior/ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
 import { compileCodeExternal } from '@/WLAN/compiler';

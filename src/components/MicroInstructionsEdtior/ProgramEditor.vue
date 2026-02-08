@@ -9,6 +9,7 @@
       @update:model-value="$emit('setManualMode', $event)"
       class="toggleButtonProgram"
     />
+
     <IOPanel
       v-if="showIo"
       :dev-in="devIn"
@@ -77,9 +78,9 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
-import SegmentedToggle from './SegmentedToggle.vue';
+import SegmentedToggle from '@/components/SegmentedToggle.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
-import IOPanel from '@/components/IOPanel.vue';
+import IOPanel from './IOPanel.vue';
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },

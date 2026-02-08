@@ -245,7 +245,7 @@ import SunIcon from '@/assets/svg/SunIcon.vue';
 import MoonIcon from '@/assets/svg/MoonIcon.vue';
 import RefreshIcon from '@/assets/svg/RefreshIcon.vue';
 import CommandListIcon from '@/assets/svg/CommandListIcon.vue';
-import SegmentedToggle from './SegmentedToggle.vue';
+import SegmentedToggle from '@/components/SegmentedToggle.vue';
 import PeopleSection from './PeopleSection.vue';
 import ColorPickerPopup from './ColorPickerPopup.vue';
 

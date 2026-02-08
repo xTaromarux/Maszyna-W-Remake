@@ -5,15 +5,10 @@
         <h3>{{ title }}</h3>
         <button class="close-btn" @click="close">&times;</button>
       </div>
-      
+
       <div class="color-popup-content">
-        <ColorPicker 
-          v-model="localColor" 
-          v-model:brightness="localBrightness" 
-          :size="260" 
-          @change="onColorChange" 
-        />
-        
+        <ColorPicker v-model="localColor" v-model:brightness="localBrightness" :size="260" @change="onColorChange" />
+
         <div class="color-preview">
           <div class="preview-box" :style="{ backgroundColor: localColor }"></div>
           <div class="color-info">
@@ -22,7 +17,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="color-popup-footer">
         <button class="cancel-btn" @click="close">Anuluj</button>
         <button class="apply-btn" @click="apply">Zastosuj</button>
@@ -41,14 +36,14 @@ export default {
     visible: { type: Boolean, default: false },
     title: { type: String, required: true },
     color: { type: String, default: '#ff0000' },
-    brightness: { type: Number, default: 1 }
+    brightness: { type: Number, default: 1 },
   },
   emits: ['close', 'apply'],
   data() {
     return {
       localColor: this.color,
       localBrightness: this.brightness,
-      currentColorData: null
+      currentColorData: null,
     };
   },
   watch: {
@@ -64,28 +59,28 @@ export default {
         this.localColor = this.color;
         this.localBrightness = this.brightness;
       }
-    }
+    },
   },
   methods: {
     onColorChange(colorData) {
       this.currentColorData = colorData;
     },
-    
+
     close() {
       this.$emit('close');
     },
-    
+
     apply() {
       if (this.currentColorData) {
         this.$emit('apply', {
           color: this.localColor,
           brightness: this.localBrightness,
-          colorData: this.currentColorData
+          colorData: this.currentColorData,
         });
       }
       this.close();
-    }
-  }
+    },
+  },
 };
 </script>
 

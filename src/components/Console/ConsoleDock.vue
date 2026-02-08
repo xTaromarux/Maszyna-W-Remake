@@ -163,7 +163,7 @@
 </template>
 
 <script>
-import Console from '@/components/Console.vue'
+import Console from '@/components/Console/Console.vue'
 
 export default {
   name: 'ConsoleDock',

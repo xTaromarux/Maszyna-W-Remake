@@ -457,6 +457,7 @@ export default {
       const newCommand = {
         name: newCommandName,
         args: 0,
+        kind: 'exec',
         description: { [locale]: this.$t('commandList.commandDescription', { name: newCommandName }) },
         lines: this.newCommandLines || '',
       };
@@ -490,10 +491,16 @@ export default {
         reader.onload = (ev) => {
           try {
             const parsed = JSON.parse(ev.target.result);
+            const normalized = Array.isArray(parsed)
+              ? parsed.map((cmd) => ({
+                  ...cmd,
+                  kind: cmd?.kind || 'exec',
+                }))
+              : [];
 
             const maxCommands = Math.pow(2, this.codeBits);
-            this.fullCommandList = parsed;
-            this.localList = parsed.slice(0, maxCommands);
+            this.fullCommandList = normalized;
+            this.localList = normalized.slice(0, maxCommands);
 
             if (this.localList.length > 0) {
               this.selectedCommand = 0;

@@ -131,7 +131,7 @@ const props = defineProps<{
   onCompile?: () => void;
   onEdit?: () => void;
   autocompleteEnabled?: boolean;
-  commandList?: Array<{ name: string; description?: string | Record<string, string> }>;
+  commandList?: Array<{ name: string; kind?: 'exec' | 'memory' | 'directive'; description?: string | Record<string, string> }>;
   maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();

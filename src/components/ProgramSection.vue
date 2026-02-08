@@ -40,9 +40,7 @@ import EditIcon from '@/assets/svg/EditIcon.vue';
 import CodeMirrorEditor from '@/components/CodeMirrorEditor.vue';
 
 // WLAN
-import { parse } from '@/WLAN/parser';
-import { analyzeSemantics } from '@/WLAN/semanticAnalyzer';
-import { generateMicroProgram, injectCJumpMeta } from '@/WLAN/microGenerator';
+import { compileAsmToMicroProgram } from '@/WLAN/asmPipeline';
 
 const props = defineProps({
   manualMode: { type: Boolean, required: true },
@@ -68,8 +66,10 @@ function compileProgram() {
       emit('reset-registers');
     }
 
-    const ast = parse(programLocal.value);
-    const analyzedNodes = analyzeSemantics(ast);
+    const { ir, initAssignments: dataAssignments, microProgram, microAsmText } = compileAsmToMicroProgram(
+      programLocal.value,
+      props.commandList
+    );
 
     const opcodeLookup = new Map();
     props.commandList.forEach((cmd, idx) => {
@@ -84,112 +84,47 @@ function compileProgram() {
     const addressMask = addressSpace - 1;
     const maxOpcode = 2 ** props.codeBits - 1;
 
-    const initAssignments = [];
-    for (const node of analyzedNodes) {
-      if (node.type === 'Directive' && node._initMemory) {
-        const { addr, val } = node._initMemory;
-        initAssignments.push({ addr, val });
-      } else if (node.type === 'Directive' && Array.isArray(node._initMemoryList)) {
-        for (const entry of node._initMemoryList) {
-          initAssignments.push({ addr: entry.addr, val: entry.val });
-        }
+    const initAssignments = dataAssignments.map((entry) => ({ addr: entry.addr, val: entry.val }));
+
+    for (const node of ir.instructions) {
+      const opcodeKey = String(node.name || '').toUpperCase();
+      const opcode = opcodeLookup.get(opcodeKey);
+      if (opcode == null) {
+        throw new Error(t('logs.compileMissingOpcode', { name: node.name }));
       }
-    }
-
-    let pcAddr = 0;
-    for (const node of analyzedNodes) {
-      if (node.type === 'Instruction') {
-        const opcodeKey = String(node.name || '').toUpperCase();
-        const opcode = opcodeLookup.get(opcodeKey);
-        if (opcode == null) {
-          throw new Error(t('logs.compileMissingOpcode', { name: node.name }));
-        }
-        if (opcode > maxOpcode) {
-          throw new Error(t('logs.compileOpcodeTooLarge', { name: node.name, opcode, maxOpcode, codeBits }));
-        }
-
-        const argVal = node.operands?.[0]?.value ?? 0;
-        if (argVal < 0 || argVal > addressMask) {
-          throw new Error(t('logs.compileArgOutOfRange', { arg: argVal, name: node.name, max: addressMask, addrBits }));
-        }
-
-        const encodedValue = opcode * addressSpace + argVal;
-        initAssignments.push({ addr: pcAddr, val: encodedValue });
-        pcAddr++;
-      } else if (node.type === 'Directive' && node.name?.toUpperCase() === 'ORG') {
-        pcAddr = node.operands?.[0]?.value ?? pcAddr;
+      if (opcode > maxOpcode) {
+        throw new Error(
+          t('logs.compileOpcodeTooLarge', {
+            name: node.name,
+            opcode,
+            maxOpcode,
+            codeBits: props.codeBits,
+          })
+        );
       }
+
+      const argVal = node.operands?.[0]?.value ?? 0;
+      if (argVal < 0 || argVal > addressMask) {
+        throw new Error(
+          t('logs.compileArgOutOfRange', {
+            arg: argVal,
+            name: node.name,
+            max: addressMask,
+            addrBits: props.addresBits,
+          })
+        );
+      }
+
+      const encodedValue = opcode * addressSpace + argVal;
+      initAssignments.push({ addr: node.address, val: encodedValue });
     }
 
     if (initAssignments.length) {
       emit('initMemory', initAssignments);
     }
 
-    let microProgram = generateMicroProgram(analyzedNodes, props.commandList);
-    microProgram = injectCJumpMeta(microProgram);
     console.log('Generated micro program:', microProgram);
-
-    const asmFragments = [];
-    let lineNo = 0;
-
-    for (const entry of microProgram) {
-      for (const phase of entry.phases) {
-        if (phase.conditional === true) {
-          const cond = phase;
-          const flag = cond.flag;
-          const labels = cond.__labels || {};
-          const tLabel = labels.t || 'zero';
-          const fLabel = labels.f || 'notzero';
-          const prefixArr = cond.__prefix;
-
-          const t = cond.truePhases?.[0] ?? {};
-          const f = cond.falsePhases?.[0] ?? {};
-          const trueSignals = Object.keys(t)
-            .filter((k) => t[k])
-            .join(' ');
-          const falseSignals = Object.keys(f)
-            .filter((k) => f[k])
-            .join(' ');
-
-          const prefix = prefixArr && prefixArr.length ? prefixArr.join(' ') + ' ' : '';
-
-          cond.srcLine = lineNo;
-          asmFragments.push(`${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
-          lineNo++;
-
-          t.srcLine = lineNo;
-          asmFragments.push(trueSignals ? `@${tLabel} ${trueSignals};` : `@${tLabel};`);
-          lineNo++;
-
-          if (falseSignals) {
-            f.srcLine = lineNo;
-            asmFragments.push(`@${fLabel} ${falseSignals};`);
-            lineNo++;
-          }
-        } else {
-          const signals = Object.keys(phase)
-            .filter((key) => phase[key] === true)
-            .join(' ');
-
-          if (signals.trim()) {
-            phase.srcLine = lineNo;
-            asmFragments.push(`${signals};`);
-            lineNo++;
-          }
-        }
-      }
-
-      const extra = entry.meta?.postAsm;
-      if (extra?.length) {
-        for (const line of extra) {
-          asmFragments.push(`${line};`);
-          lineNo++;
-        }
-      }
-    }
-
-    const finalMicroSignals = asmFragments.join('\n');
-    emit('update:code', { text: finalMicroSignals, program: microProgram });
+    emit('update:code', { text: microAsmText, program: microProgram });
 
     programCompiled.value = true;
     emit('log', { message: t('logs.programCompiledWlan'), class: 'kompilator rozkazów' });

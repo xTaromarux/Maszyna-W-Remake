@@ -239,6 +239,7 @@ import { commandList } from '@/utils/data/commands.js';
 import { parse } from '@/WLAN/parser';
 import { compileCodeExternal } from '@/WLAN/compiler';
 import { setLocale } from '@/i18n';
+import { mainMicroInstructionExecutionMethods } from './microInstructions/microInstructionExecutionMethods';
 
 export default {
   name: 'MainComponent',
@@ -545,6 +546,7 @@ export default {
     };
   },
   methods: {
+    ...mainMicroInstructionExecutionMethods,
     showToast(message, options = {}) {
       if (!message) return;
       const { type = 'warning', duration = 2400 } = options || {};
@@ -592,7 +594,6 @@ export default {
           this.ws = null;
         }
         this.wsStatus = 'connecting';
-        // malutkie opóźnienie żeby zamknąć stary socket „do końca”
         setTimeout(() => this.initWebsocket(), 150);
       } catch (e) {
         this.wsStatus = 'error';
@@ -781,6 +782,7 @@ export default {
       this.mem = nextMem;
       this.addLog(`Zastosowano inicjalizację pamięci (${assignments.length} wpisów)`, 'system');
     },
+
     initWebsocket() {
       try {
         this.wsStatus = 'connecting';
@@ -896,7 +898,7 @@ export default {
           for (const other of group) {
             if (other === signalName) continue;
             if (this.signals[other]) {
-              return `Nie można włączyć „${signalName}" – koliduje z „${other}".`;
+              return `Nie można włączyć „${signalName}" - koliduje z „${other}".`;
             }
           }
         }
@@ -907,7 +909,7 @@ export default {
         for (const other of busASignals) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" – koliduje z „${other}" (magistrala A zajęta).`;
+            return `Nie można włączyć „${signalName}" - koliduje z „${other}" (magistrala A zajęta).`;
           }
         }
       }
@@ -1197,11 +1199,13 @@ export default {
       }
       this.syncDocumentLanguage();
     },
+
     syncDocumentLanguage(lang = this.language) {
       const resolved = lang || 'pl';
       const applied = setLocale(resolved);
       document.documentElement.lang = applied || resolved;
     },
+
     saveToLS() {
       // Create a copy of data without logs
       const dataToSave = { ...this.$data };
@@ -1209,6 +1213,7 @@ export default {
       delete dataToSave.hasConsoleErrors;
       localStorage.setItem('W', JSON.stringify(dataToSave));
     },
+
     addLog(message, classification = 'info', errorObj = null) {
       const translatedMessage = this.translateLogMessage(message);
       const timestamp = new Date();
@@ -1269,6 +1274,7 @@ export default {
         this.hasConsoleErrors = true;
       }
     },
+
     translateLogMessage(message) {
       const t = this.$t;
       const stateLabel = (raw) => t(`logs.breakpointStatus.${raw?.toLowerCase() === 'on' ? 'on' : 'off'}`);
@@ -1649,21 +1655,18 @@ export default {
     },
 
     executeLine() {
-      // Lokalny helper do highlightu
-      const hlFrom = (obj) => {
+      const setHighlight = (node) => {
         if (this._headless) return;
-        if (obj && Number.isFinite(obj.srcLine)) {
-          this.activeLine = obj.srcLine;
+        if (node && Number.isFinite(node.srcLine)) {
+          this.activeLine = node.srcLine;
           return;
         }
         this._refreshHighlight();
       };
 
-      // Lokalny helper do pauzy na breakpointach (działa tylko przy RUN/RUN-FAST)
       const shouldPauseOn = (line) => {
-        // jeśli mamy do pominięcia pierwszy breakpoint – zrób to tylko raz
         if (this._skipNextBreakpoint) {
-          this._skipNextBreakpoint = false; // ← wypal „bezpiecznik”
+          this._skipNextBreakpoint = false;
           return false;
         }
         return (
@@ -1676,9 +1679,52 @@ export default {
         );
       };
 
-      // --- tryb mikro-programu ---
+      const stopAtBreakpoint = (line) => {
+        if (!shouldPauseOn(line)) return false;
+        if (Number.isFinite(line)) this.activeLine = line;
+        this.addLog(`Pauza na breakpoint @${line}`, 'system');
+        this._stopRun();
+        return true;
+      };
+
+      const finishStructuredProgram = () => {
+        this.uncompileCode();
+        this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
+      };
+
+      const moveToNextPhase = () => {
+        this.activePhaseIndex += 1;
+        const instruction = this.compiledProgram[this.activeInstrIndex];
+        if (this.activePhaseIndex >= (instruction?.phases?.length || 0)) {
+          this.activeInstrIndex += 1;
+          this.activePhaseIndex = 0;
+        }
+      };
+
+      const jumpToProgramCounter = () => {
+        const target = this.programCounter;
+        if (target >= 0 && target < this.compiledProgram.length) {
+          this.activeInstrIndex = target;
+          this.activePhaseIndex = 0;
+          this._condState = null;
+          const nextInstruction = this.compiledProgram[this.activeInstrIndex];
+          const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
+          setHighlight(nextPhase ?? nextInstruction);
+          return true;
+        }
+
+        this.addLog(`Skok poza zakres programu: PC=${target}`, 'B\u0142\u0105d');
+        this.uncompileCode();
+        return false;
+      };
+
+      const executeMicroPhase = (phase) => {
+        const signals = new Set(Object.keys(phase || {}).filter((key) => phase[key] === true));
+        this.nextLine = signals;
+        this.executeSignalsFromNextLine();
+      };
+
       if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
-        // Inicjalizacja przy pierwszym uruchomieniu
         if (this.activeInstrIndex < 0) {
           this.activeInstrIndex = 0;
           this.activePhaseIndex = 0;
@@ -1690,229 +1736,135 @@ export default {
           this.handleInterrupt();
           return;
         }
-        //console.log(this.compiledProgram[this.activeInstrIndex].asmLine);
 
-        // Zabezpieczenie przed nieskończoną pętlą
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
-          this.addLog('Przerwano: przekroczono limit kroków (prawdopodobna pętla).', 'system');
+          this.addLog('Przerwano: przekroczono limit krok\u00f3w (prawdopodobna p\u0119tla).', 'system');
           this.uncompileCode();
           return;
         }
 
-        // Sprawdzenie końca programu
         if (this.activeInstrIndex >= this.compiledProgram.length) {
-          this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          finishStructuredProgram();
           return;
         }
 
-        const instr = this.compiledProgram[this.activeInstrIndex];
-        const rawPhase = instr.phases?.[this.activePhaseIndex] || {};
+        const instruction = this.compiledProgram[this.activeInstrIndex];
+        const currentPhase = instruction?.phases?.[this.activePhaseIndex];
 
-        // --- FAZA WARUNKOWA ---
-        if (rawPhase && rawPhase.conditional === true) {
-          // 1) Pierwszy krok: pokaż IF (bez wykonywania)
-          if (!this._condState) {
-            const cond = this.evaluateFlag(rawPhase.flag);
-            const list = (cond ? rawPhase.truePhases : rawPhase.falsePhases) || [];
+        if (!currentPhase) {
+          moveToNextPhase();
+          if (this.activeInstrIndex >= this.compiledProgram.length) {
+            finishStructuredProgram();
+            return;
+          }
+          const nextInstruction = this.compiledProgram[this.activeInstrIndex];
+          const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
+          setHighlight(nextPhase ?? nextInstruction);
+          return;
+        }
 
+        let phaseToExecute = currentPhase;
+        let sourceLine = Number.isFinite(phaseToExecute?.srcLine) ? phaseToExecute.srcLine : undefined;
+        let executingConditionalBranch = false;
+
+        if (currentPhase.conditional === true) {
+          executingConditionalBranch = true;
+
+          if (!this._condState || this._condState.phaseRef !== currentPhase) {
+            const cond = this.evaluateFlag(currentPhase.flag);
+            const list = (cond ? currentPhase.truePhases : currentPhase.falsePhases) || [];
             this._condState = {
               list,
               idx: 0,
               pick: cond ? 'T' : 'F',
-              phaseRef: phase,
-              stage: 'SHOW_IF',
+              phaseRef: currentPhase,
             };
 
-            // Linia IF to srcLine fazy warunkowej
-            const nextSrc = Number.isFinite(rawPhase.srcLine) ? rawPhase.srcLine : undefined;
+            const ifLine = Number.isFinite(currentPhase.srcLine) ? currentPhase.srcLine : undefined;
+            if (stopAtBreakpoint(ifLine)) return;
+          }
 
-            // Pauza na breakpoint dokładnie na linii IF
-            if (shouldPauseOn(nextSrc)) {
-              if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
-              this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
-              this._stopRun();
+          const state = this._condState;
+          const branchPhase = state?.list?.[state.idx];
+          if (!branchPhase) {
+            this._condState = null;
+            moveToNextPhase();
+            if (this.activeInstrIndex >= this.compiledProgram.length) {
+              finishStructuredProgram();
               return;
             }
-
-            hlFrom(rawPhase);
-
+            const nextInstruction = this.compiledProgram[this.activeInstrIndex];
+            const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
+            setHighlight(nextPhase ?? nextInstruction);
             return;
           }
 
-          // 2) Wykonywanie ciała wybranej gałęzi – po jednej pod-fazie na krok
-          const st = this._condState;
-          const curr = st.list[st.idx];
-
-          // Brak więcej podfaz -> zamknij warunkową i idź dalej
-          if (!curr) {
-            this._condState = null;
-            this.activePhaseIndex += 1;
-
-            // Koniec faz tej instrukcji?
-            if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-              this.activeInstrIndex += 1;
-              this.activePhaseIndex = 0;
-            }
-
-            // Podświetl następną fazę/instrukcję
-            if (this.activeInstrIndex < this.compiledProgram.length) {
-              const ni = this.compiledProgram[this.activeInstrIndex];
-              const np = ni?.phases?.[this.activePhaseIndex];
-              hlFrom(np ?? ni);
-            } else {
-              this.uncompileCode();
-              this.addLog('Kod zakończony', 'kompilator rozkazów');
-            }
-            return;
-          }
-
-          // Kandydat na srcLine tej POD-FAZY (gdy nie ma, fallback to linia @zero/@notzero)
-          const fallback = Number.isFinite(st.phaseRef?.srcLine) ? st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2) : undefined;
-          const nextSrc = Number.isFinite(curr?.srcLine) ? curr.srcLine : fallback;
-
-          // Pauza na breakpoint PRZED wykonaniem tej pod-fazy
-          if (shouldPauseOn(nextSrc)) {
-            if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
-            this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
-            this._stopRun();
-            return;
-          }
-          hlFrom(curr, st.phaseRef, st.pick);
-          // Wykonaj JEDNĄ pod-fazę wybranej gałęzi
-          const signals = new Set(Object.keys(curr).filter((k) => curr[k] === true));
-          this.nextLine = signals;
-          this.executeSignalsFromNextLine();
-
-          // Jeśli podfaza zawierała sygnał 'wel', to programCounter został zmieniony
-          if (curr.wel === true) {
-            const target = this.programCounter;
-            if (target >= 0 && target < this.compiledProgram.length) {
-              this.activeInstrIndex = target;
-              this.activePhaseIndex = 0;
-              this._condState = null;
-              const ai = this.compiledProgram[this.activeInstrIndex];
-              const ap = ai?.phases?.[this.activePhaseIndex];
-              hlFrom(ap ?? ai);
-            } else {
-              this.addLog(`Skok poza zakres programu: PC=${target}`, 'Błąd');
-              this.uncompileCode();
-            }
-            return;
-          }
-
-          st.idx += 1;
-
-          // Jeśli skończyły się podfazy, zamknij warunkową
-          if (st.idx >= st.list.length) {
-            this._condState = null;
-            this.activePhaseIndex += 1;
-
-            if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-              this.activeInstrIndex += 1;
-              this.activePhaseIndex = 0;
-            }
-
-            if (this.activeInstrIndex < this.compiledProgram.length) {
-              const ni = this.compiledProgram[this.activeInstrIndex];
-              const np = ni?.phases?.[this.activePhaseIndex];
-              hlFrom(np ?? ni);
-            } else {
-              this.uncompileCode();
-              this.addLog('Kod zakończony', 'kompilator rozkazów');
-            }
-            return;
-          }
-
-          // Podświetl następną podfazę (wykona się w kolejnym kroku)
-          const nextSub = st.list[st.idx];
-          hlFrom(nextSub, st.phaseRef, st.pick);
-          return;
+          phaseToExecute = branchPhase;
+          const fallbackLine = Number.isFinite(state?.phaseRef?.srcLine)
+            ? state.phaseRef.srcLine + (state.pick === 'T' ? 1 : 2)
+            : undefined;
+          sourceLine = Number.isFinite(branchPhase?.srcLine) ? branchPhase.srcLine : fallbackLine;
+        } else {
+          this._condState = null;
         }
 
-        // STOP - zatrzymaj program
-        if (rawPhase.stop === true) {
-          hlFrom(phase);
+        if (phaseToExecute?.stop === true) {
+          setHighlight(phaseToExecute);
           this.uncompileCode();
-          this.addLog('STOP - program zatrzymany', 'kompilator rozkazów');
+          this.addLog('STOP - program zatrzymany', 'kompilator rozkaz\u00f3w');
           return;
         }
 
-        // Pauza na breakpoint PRZED wykonaniem zwykłej fazy
-        {
-          const nextSrc = Number.isFinite(rawPhase?.srcLine) ? rawPhase.srcLine : undefined;
-          if (shouldPauseOn(nextSrc)) {
-            if (Number.isFinite(nextSrc)) this.activeLine = nextSrc;
-            this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
-            this._stopRun();
+        if (stopAtBreakpoint(sourceLine)) return;
+
+        setHighlight(phaseToExecute);
+        executeMicroPhase(phaseToExecute);
+
+        if (phaseToExecute?.wel === true) {
+          jumpToProgramCounter();
+          return;
+        }
+
+        if (executingConditionalBranch && this._condState) {
+          this._condState.idx += 1;
+          if (this._condState.idx < this._condState.list.length) {
+            const nextBranchPhase = this._condState.list[this._condState.idx];
+            const fallbackLine = Number.isFinite(this._condState.phaseRef?.srcLine)
+              ? this._condState.phaseRef.srcLine + (this._condState.pick === 'T' ? 1 : 2)
+              : undefined;
+            const nextLine = Number.isFinite(nextBranchPhase?.srcLine) ? nextBranchPhase.srcLine : fallbackLine;
+            if (!this._headless && Number.isFinite(nextLine)) this.activeLine = nextLine;
             return;
           }
+          this._condState = null;
         }
 
-        // Podświetl i wykonaj
-        hlFrom(rawPhase);
-        {
-          const signalsSet = new Set(Object.keys(rawPhase).filter((k) => rawPhase[k] === true));
-          this.nextLine = signalsSet;
-          this.executeSignalsFromNextLine();
-        }
-
-        // Jeśli faza zawierała 'wel', programCounter został zmieniony
-        if (rawPhase.wel === true) {
-          // PC w kontekście compiledProgram[] to indeks instrukcji, nie adres pamięci
-          const target = this.programCounter;
-          if (target >= 0 && target < this.compiledProgram.length) {
-            this.activeInstrIndex = target;
-            this.activePhaseIndex = 0;
-            const ai = this.compiledProgram[this.activeInstrIndex];
-            const ap = ai?.phases?.[this.activePhaseIndex];
-            hlFrom(ap ?? ai);
-          } else {
-            this.addLog(`Skok poza zakres programu: PC=${target}`, 'Błąd');
-            this.uncompileCode();
-          }
-          return;
-        }
-
-        // Przejdź do następnej fazy
-        this.activePhaseIndex += 1;
-
-        // Koniec faz tej instrukcji? Przejdź do następnej
-        if (this.activePhaseIndex >= (instr.phases?.length || 0)) {
-          this.activeInstrIndex += 1;
-          this.activePhaseIndex = 0;
-        }
-
-        // Sprawdź czy nie wyszliśmy poza program
+        moveToNextPhase();
         if (this.activeInstrIndex >= this.compiledProgram.length) {
-          this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          finishStructuredProgram();
           return;
         }
 
-        // Podświetl następną fazę
-        const ni = this.compiledProgram[this.activeInstrIndex];
-        const np = ni?.phases?.[this.activePhaseIndex];
-        hlFrom(np ?? ni);
+        const nextInstruction = this.compiledProgram[this.activeInstrIndex];
+        const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
+        setHighlight(nextPhase ?? nextInstruction);
         return;
       }
 
-      //  (tekstowe fazy po średnikach) ---
       if (!this.manualMode) {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
           return;
         }
 
-        // Pauza na breakpoint PRZED wykonaniem tej linii
-        const nextSrc = this.activeLine; // za chwilę będzie wykonana
+        const nextSrc = this.activeLine;
         if (shouldPauseOn(nextSrc)) {
           this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
           this._stopRun();
-          this.activeLine = nextSrc; // zostaw highlight na tej linii
+          this.activeLine = nextSrc;
           if (!this._headless) this._refreshHighlight();
           return;
         }
@@ -1926,12 +1878,11 @@ export default {
 
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog('Kod zakończony', 'kompilator rozkazów');
+          this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
         } else if (!this._headless) {
           this._refreshHighlight();
         }
       } else {
-        // Tryb ręczny – ignorujemy breakpointy (użytkownik sam decyduje o kroku)
         this.executeSignalsFromNextLine();
         if (!this._headless) this._refreshHighlight();
       }
@@ -1997,139 +1948,6 @@ export default {
       // legacy zakres
       const max = (this.compiledCode?.length || 1) - 1;
       this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
-    },
-
-    detectAndHandleStackOperations() {
-      const signals = this.nextLine;
-
-      // DNS wyws wea wyak wes
-      if (signals.has('wyws') && signals.has('wea') && signals.has('wyak') && signals.has('wes')) {
-        this.stackPush('Data', this.ACC);
-        return;
-      }
-
-      // PZS - zdejmij dane ze stosu
-      if (
-        signals.has('czyt') &&
-        signals.has('wys') &&
-        signals.has('weja') &&
-        signals.has('przep') &&
-        signals.has('weak') &&
-        signals.has('iws') &&
-        signals.has('wyl') &&
-        signals.has('wea')
-      ) {
-        console.log('PZS: popping stack to ACC');
-        // Zapisz adres przed zwiększeniem WS (iws wykona się później w executeSignalsFromNextLine)
-        const memAddrToClear = this.WS & this.addrMask();
-
-        // Zdejmij wartość z logicznego stosu
-        this.stackPop('Data');
-
-        // Zaplanuj wyczyszczenie pamięci po wykonaniu wszystkich sygnałów
-        this._pendingMemoryClear = memAddrToClear;
-        return;
-      }
-
-      // SDP
-      if (signals.has('dws') && signals.has('wyws') && signals.has('wyls') && signals.has('pisz')) {
-        this.stackPush('Address', this.programCounter);
-        return;
-      }
-
-      // PWR - powrót z podprogramu (zdejmij adres ze stosu)
-      if (signals.has('czyt') && signals.has('wys') && signals.has('sa') && signals.has('wel') && signals.has('iws')) {
-        console.log('PWR: powrót z podprogramu');
-        const memAddrToClear = this.WS & this.addrMask();
-
-        const returnAddr = this.stackPop('Address');
-        console.log('PWR: returnAddr=', returnAddr);
-
-        this._pendingMemoryClear = memAddrToClear;
-        return;
-      }
-    },
-
-    executeSignalsFromNextLine() {
-      // Clear all active timeouts to prevent signal overlap
-      if (!this.isFastRunning) this.clearActiveTimeouts();
-
-      // Debug: log all signals in this phase
-      // console.log('executeSignalsFromNextLine: signals=', Array.from(this.nextLine));
-
-      // Detect stack operations based on signal combinations
-      this.detectAndHandleStackOperations();
-
-      // all wy's first
-      if (this.nextLine.has('wyl')) this.wyl();
-      if (this.nextLine.has('czyt')) this.czyt();
-      if (this.nextLine.has('pisz')) this.pisz();
-      if (this.nextLine.has('wys')) this.wys();
-      if (this.nextLine.has('stop')) this.stop();
-      if (this.nextLine.has('wyad')) this.wyad();
-      if (this.nextLine.has('wyak')) this.wyak();
-      if (this.nextLine.has('wyx')) this.wyx();
-      if (this.nextLine.has('wyy')) this.wyy();
-      if (this.nextLine.has('wyws')) this.wyws();
-      if (this.nextLine.has('wyls')) this.wyls();
-      if (this.nextLine.has('wyg')) this.wyg();
-      if (this.nextLine.has('wyrb')) this.wyrb();
-      if (this.nextLine.has('wyap')) this.wyap();
-      if (this.nextLine.has('wyrm')) this.wyrm();
-      if (this.nextLine.has('wyrz')) this.wyrz();
-      if (this.nextLine.has('wyrp')) this.wyrp();
-
-      if (this.nextLine.has('sa')) this.sa();
-      if (this.nextLine.has('as')) this.as();
-
-      // then all we's
-      if (this.nextLine.has('wea')) this.wea();
-      if (this.nextLine.has('weja')) this.weja();
-      if (this.nextLine.has('wex')) this.wex();
-      if (this.nextLine.has('wey')) this.wey();
-      if (this.nextLine.has('wes')) this.wes();
-      if (this.nextLine.has('wei')) this.wei();
-      if (this.nextLine.has('wel')) this.wel();
-      if (this.nextLine.has('werm')) this.werm();
-      if (this.nextLine.has('weap')) this.weap();
-      if (this.nextLine.has('werz')) this.werz();
-      if (this.nextLine.has('werp')) this.werp();
-
-      // all math
-      if (this.nextLine.has('dod')) this.dod();
-      if (this.nextLine.has('ode')) this.ode();
-      if (this.nextLine.has('przep')) this.przep();
-      if (this.nextLine.has('mno')) this.mno();
-      if (this.nextLine.has('dziel')) this.dziel();
-      if (this.nextLine.has('shr')) this.shr();
-      if (this.nextLine.has('shl')) this.shl();
-      if (this.nextLine.has('neg')) this.neg();
-      if (this.nextLine.has('lub')) this.lub();
-      if (this.nextLine.has('i')) this.i();
-
-      if (this.nextLine.has('iak')) this.iak();
-      if (this.nextLine.has('dak')) this.dak();
-
-      if (this.nextLine.has('weak')) this.weak();
-
-      if (this.nextLine.has('il')) this.il();
-      if (this.nextLine.has('dl')) this.dl();
-
-      if (this.nextLine.has('iws')) this.iws();
-      if (this.nextLine.has('dws')) this.dws();
-      if (this.nextLine.has('werb')) this.werb();
-      if (this.nextLine.has('start')) this.start();
-      if (this.nextLine.has('ustrm')) this.ustrm();
-      if (this.nextLine.has('czrm')) this.czrm();
-      this.nextLine.clear();
-
-      // Wykonaj odroczone wyczyszczenie pamięci (po PZS/PWR)
-      if (this._pendingMemoryClear !== null) {
-        const idx = this._pendingMemoryClear;
-        this.mem[idx] = 0;
-        this.addLog(`Wyczyszczono komórkę pamięci [${idx}] po zdjęciu ze stosu`, 'stos');
-        this._pendingMemoryClear = null;
-      }
     },
 
     getResolvedPhase(phase) {
@@ -2326,833 +2144,6 @@ export default {
         this.fastProgress = 0;
         document.title = prevTitle;
       }
-    },
-
-    // natychmiastowy tryb – używany przez runToEndFast (bez sygnałów i bez timeoutów)
-    _instant(fn) {
-      if (this.isFastRunning) {
-        fn();
-        return true;
-      }
-      return false;
-    },
-
-    /* COMMANDS */
-    il() {
-      if (
-        this._instant(() => {
-          this.programCounter++;
-        })
-      )
-        return;
-      this.signals.il = true;
-      this.programCounter++;
-      const timeoutId = setTimeout(() => {
-        this.signals.il = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    dl() {
-      if (
-        this._instant(() => {
-          this.programCounter--;
-        })
-      )
-        return;
-      this.signals.dl = true;
-      this.programCounter--;
-      const timeoutId = setTimeout(() => {
-        this.signals.dl = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    wyl() {
-      if (
-        this._instant(() => {
-          this.BusA = this.programCounter;
-        })
-      )
-        return;
-      this.signals.wyl = true;
-      this.signals.busA = true;
-      this.BusA = this.programCounter;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyl = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-    },
-    wel() {
-      if (
-        this._instant(() => {
-          this.programCounter = this.BusA;
-        })
-      )
-        return;
-      this.signals.wel = true;
-      this.signals.busA = true;
-      this.programCounter = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.wel = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-    },
-    wyad() {
-      if (
-        this._instant(() => {
-          this.BusA = this.I;
-        })
-      )
-        return;
-      this.signals.wyad = true;
-      this.signals.busA = true;
-      this.BusA = this.I;
-      const timeoutId = setTimeout(() => {
-        this.signals.wyad = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-    },
-    wei() {
-      if (
-        this._instant(() => {
-          const mask = (1 << this.addresBits) - 1;
-          this.I = this.BusS & mask;
-        })
-      )
-        return;
-      this.signals.wei = true;
-      this.signals.busS = true;
-      const mask = (1 << this.addresBits) - 1;
-      this.I = this.BusS & mask;
-      const timeoutId = setTimeout(() => {
-        this.signals.wei = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-
-    iak() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.ACC + 1);
-        })
-      )
-        return;
-      this.signals.iak = true;
-      this.ACC = this.toWord(this.ACC + 1);
-      const timeoutId = setTimeout(() => {
-        this.signals.iak = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    dak() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.ACC - 1);
-        })
-      )
-        return;
-      this.signals.dak = true;
-      this.ACC = this.toWord(this.ACC - 1);
-      const timeoutId = setTimeout(() => {
-        this.signals.dak = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-
-    weak() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.JAML);
-        })
-      )
-        return;
-      this.signals.weak = true;
-      this.ACC = this.toWord(this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.weak = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    weja() {
-      if (
-        this._instant(() => {
-          this.JAML = this.toWord(this.BusS);
-        })
-      )
-        return;
-      this.signals.weja = true;
-      this.signals.busS = true;
-      this.JAML = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.weja = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-    wyak() {
-      if (
-        this._instant(() => {
-          this.BusS = this.toWord(this.ACC);
-        })
-      )
-        return;
-      this.signals.wyak = true;
-      this.signals.busS = true;
-      this.BusS = this.toWord(this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyak = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-
-    dod() {
-      if (
-        this._instant(() => {
-          this.JAML = this.toWord(this.JAML + this.ACC);
-        })
-      )
-        return;
-      this.signals.dod = true;
-      this.JAML = this.toWord(this.JAML + this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.dod = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    ode() {
-      if (
-        this._instant(() => {
-          this.JAML = this.toWord(this.ACC - this.JAML);
-        })
-      )
-        return;
-      this.signals.ode = true;
-      this.JAML = this.toWord(this.ACC - this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.ode = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    przep() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.JAML);
-        })
-      )
-        return;
-      this.signals.przep = true;
-      this.ACC = this.toWord(this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.przep = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    mno() {
-      if (
-        this._instant(() => {
-          this.JAML = this.toWord(this.ACC * this.JAML);
-        })
-      )
-        return;
-      this.signals.mno = true;
-      this.JAML = this.toWord(this.ACC * this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.mno = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    dziel() {
-      if (
-        this._instant(() => {
-          const d = this.JAML & 0xff;
-          this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
-        })
-      )
-        return;
-      this.signals.dziel = true;
-      const d = this.JAML & 0xff;
-      this.JAML = this.toWord(d === 0 ? 0 : Math.trunc(this.ACC / d));
-      const timeoutId = setTimeout(() => {
-        this.signals.dziel = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    shr() {
-      if (
-        this._instant(() => {
-          const sh = this.JAML & 7;
-          this.ACC = this.toWord((this.ACC & this.wordMask()) >>> sh);
-        })
-      )
-        return;
-      this.signals.shr = true;
-      const sh = this.JAML & 7;
-      this.ACC = this.toWord((this.ACC & this.wordMask()) >>> sh);
-      const timeoutId = setTimeout(() => {
-        this.signals.shr = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    shl() {
-      if (
-        this._instant(() => {
-          const sh = this.JAML & 7;
-          this.ACC = this.toWord(this.ACC << sh);
-        })
-      )
-        return;
-      this.signals.shl = true;
-      const sh = this.JAML & 7;
-      this.ACC = this.toWord(this.ACC << sh);
-      const timeoutId = setTimeout(() => {
-        this.signals.shl = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    neg() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(-this.ACC);
-        })
-      )
-        return;
-      this.signals.neg = true;
-      this.ACC = this.toWord(-this.ACC);
-      const timeoutId = setTimeout(() => {
-        this.signals.neg = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    lub() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.ACC | this.JAML);
-        })
-      )
-        return;
-      this.signals.lub = true;
-      this.ACC = this.toWord(this.ACC | this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.lub = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-    i() {
-      if (
-        this._instant(() => {
-          this.ACC = this.toWord(this.ACC & this.JAML);
-        })
-      )
-        return;
-      this.signals.i = true;
-      this.ACC = this.toWord(this.ACC & this.JAML);
-      const timeoutId = setTimeout(() => {
-        this.signals.i = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-
-    wyx() {
-      if (
-        this._instant(() => {
-          this.BusS = this.toWord(this.X);
-        })
-      )
-        return;
-      this.signals.wyx = true;
-      this.signals.busS = true;
-      this.BusS = this.toWord(this.X);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyx = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-    wex() {
-      if (
-        this._instant(() => {
-          this.X = this.toWord(this.BusS);
-        })
-      )
-        return;
-      this.signals.wex = true;
-      this.signals.busS = true;
-      this.X = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wex = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-    wyy() {
-      if (
-        this._instant(() => {
-          this.BusS = this.toWord(this.Y);
-        })
-      )
-        return;
-      this.signals.wyy = true;
-      this.signals.busS = true;
-      this.BusS = this.toWord(this.Y);
-      const timeoutId = setTimeout(() => {
-        this.signals.wyy = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-    wey() {
-      if (
-        this._instant(() => {
-          this.Y = this.toWord(this.BusS);
-        })
-      )
-        return;
-      this.signals.wey = true;
-      this.signals.busS = true;
-      this.Y = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wey = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-
-    wea() {
-      if (
-        this._instant(() => {
-          this.A = this.BusA & this.addrMask();
-        })
-      )
-        return;
-      this.signals.wea = true;
-      this.signals.busA = true;
-      this.A = this.BusA & this.addrMask();
-      const timeoutId = setTimeout(() => {
-        this.signals.wea = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-    },
-    wes() {
-      if (
-        this._instant(() => {
-          this.S = this.toWord(this.BusS);
-        })
-      )
-        return;
-      this.signals.wes = true;
-      this.signals.busS = true;
-      this.S = this.toWord(this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wes = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-    wys() {
-      if (
-        this._instant(() => {
-          this.BusS = this.toWord(this.S);
-        })
-      )
-        return;
-      this.signals.wys = true;
-      this.signals.busS = true;
-      this.BusS = this.toWord(this.S);
-      console.log('WYS: S=', this.S, 'BusS=', this.BusS);
-      const timeoutId = setTimeout(() => {
-        this.signals.wys = false;
-        // this.signals.busS = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('S');
-    },
-
-    stop() {
-      if (
-        this._instant(() => {
-          // zatrzymaj natychmiast w szybkim trybie
-          this._stopRun();
-          this.codeCompiled = false;
-          this.nextLine.clear();
-        })
-      )
-        return;
-
-      this.signals.stop = true;
-      const id = setTimeout(() => {
-        this.signals.stop = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-
-      this._stopRun();
-      this.codeCompiled = false;
-      this.nextLine.clear();
-    },
-
-    as() {
-      if (
-        this._instant(() => {
-          this.BusS = this.BusA;
-        })
-      )
-        return;
-      this.signals.as = true;
-      this.signals.busA = true;
-      this.signals.busS = true;
-      this.BusS = this.BusA;
-      const timeoutId = setTimeout(() => {
-        this.signals.as = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-      this.holdBus('S');
-    },
-    sa() {
-      if (
-        this._instant(() => {
-          this.BusA = this.BusS;
-        })
-      )
-        return;
-      this.signals.sa = true;
-      this.signals.busA = true;
-      this.signals.busS = true;
-      this.BusA = this.BusS;
-      const timeoutId = setTimeout(() => {
-        this.signals.sa = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-      this.holdBus('A');
-      this.holdBus('S');
-    },
-
-    czyt() {
-      if (
-        this._instant(() => {
-          const idx = this.A & this.addrMask();
-          this.S = this.toWord(this.mem[idx] ?? 0);
-        })
-      )
-        return;
-      this.signals.czyt = true;
-      const idx = this.A & this.addrMask();
-      this.S = this.toWord(this.mem[idx] ?? 0);
-      console.log('CZYT: A=', this.A, 'idx=', idx, 'mem[idx]=', this.mem[idx], 'S=', this.S);
-      const timeoutId = setTimeout(() => {
-        this.signals.czyt = false;
-      }, this.oddDelay);
-
-      this.activeTimeouts.push(timeoutId);
-    },
-    pisz() {
-      if (
-        this._instant(() => {
-          const idx = this.A & this.addrMask();
-          this.mem[idx] = this.toWord(this.S);
-        })
-      )
-        return;
-      this.signals.pisz = true;
-      const idx = this.A & this.addrMask();
-      this.mem[idx] = this.toWord(this.S);
-      const timeoutId = setTimeout(() => {
-        this.signals.pisz = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(timeoutId);
-    },
-
-    wyws() {
-      if (
-        this._instant(() => {
-          this.BusA = this.WS & this.addrMask();
-        })
-      )
-        return;
-      this.signals.wyws = true;
-      this.signals.busA = true;
-      this.BusA = this.WS & this.addrMask();
-      const id = setTimeout(() => {
-        this.signals.wyws = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('A');
-    },
-    iws() {
-      if (
-        this._instant(() => {
-          const size = 1 << this.addresBits;
-          this.WS = (this.WS + 1) % size;
-        })
-      )
-        return;
-      this.signals.iws = true;
-      const size = 1 << this.addresBits;
-      this.WS = (this.WS + 1) % size;
-      const id = setTimeout(() => {
-        this.signals.iws = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-    },
-    dws() {
-      if (
-        this._instant(() => {
-          const size = 1 << this.addresBits;
-          this.WS = (this.WS - 1 + size) % size;
-        })
-      )
-        return;
-      this.signals.dws = true;
-      const size = 1 << this.addresBits;
-      this.WS = (this.WS - 1 + size) % size;
-      const id = setTimeout(() => {
-        this.signals.dws = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-    },
-
-    wyls() {
-      if (
-        this._instant(() => {
-          this.BusS = this.toWord(this.programCounter);
-        })
-      )
-        return;
-      this.signals.wyls = true;
-      this.signals.busS = true;
-      this.BusS = this.toWord(this.programCounter);
-      const id = setTimeout(() => {
-        this.signals.wyls = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-    wyg() {
-      if (
-        this._instant(() => {
-          const g = this.DEV_READY ? 1 : 0;
-          this.BusS = this.toWord(g);
-          this.G = g;
-        })
-      )
-        return;
-      this.signals.wyg = true;
-      this.signals.busS = true;
-      const g = this.DEV_READY ? 1 : 0;
-      this.BusS = this.toWord(this.DEV_READY ? 1 : 0);
-      this.G = this.DEV_READY ? 1 : 0;
-      const id = setTimeout(() => {
-        this.signals.wyg = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-    werb() {
-      if (
-        this._instant(() => {
-          const v = this.ACC & this.wordMask();
-          this.DEV_OUT = v;
-          this.RB = v;
-        })
-      )
-        return;
-      this.signals.werb = true;
-      const v = this.ACC & this.wordMask();
-      this.DEV_OUT = v;
-      this.RB = v;
-      const id = setTimeout(() => {
-        this.signals.werb = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-    },
-    wyrb() {
-      if (
-        this._instant(() => {
-          const canRead = this.DEV_READY === 0;
-          const v = canRead ? this.DEV_IN & this.wordMask() : 0;
-          this.BusS = v;
-          this.RB = v;
-          if (canRead) {
-            this.DEV_IN = 0;
-            this.DEV_READY = 1;
-            this.G = 1;
-          }
-        })
-      )
-        return;
-      this.signals.wyrb = true;
-      this.signals.busS = true;
-      const canRead = this.DEV_READY === 0;
-      const v = canRead ? this.DEV_IN & this.wordMask() : 0;
-      this.BusS = v;
-      this.RB = v;
-      if (canRead) {
-        this.DEV_IN = 0;
-        this.DEV_READY = 1;
-        this.G = 1;
-      }
-      const id = setTimeout(() => {
-        this.signals.wyrb = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-    start() {
-      if (
-        this._instant(() => {
-          if (this.DEV_BUSY) return;
-          // w szybkim trybie „symulujemy” natychmiastowe przygotowanie
-          this.DEV_BUSY = true;
-          this.DEV_READY = this.DEV_IN ? 0 : 1;
-          this.DEV_BUSY = false;
-          this.DEV_READY = this.DEV_IN ? 0 : 1;
-          this.G = this.DEV_READY ? 1 : 0;
-        })
-      )
-        return;
-
-      if (this.DEV_BUSY) return;
-      this.DEV_BUSY = true;
-      this.signals.start = true;
-      this.DEV_READY = this.DEV_IN ? 0 : 1;
-      const id = setTimeout(() => {
-        this.signals.start = false;
-        this.DEV_BUSY = false;
-        this.DEV_READY = this.DEV_IN ? 0 : 1;
-        this.G = this.DEV_READY ? 1 : 0;
-      }, this.oddDelay * 2);
-      this.activeTimeouts.push(id);
-    },
-
-    // Interrupt register signals
-    werm() {
-      // BusS -> RM (Write to Mask Register)
-      console.log('WERM called: BusS=', this.BusS, 'S=', this.S, 'A=', this.A);
-      this.signals.werm = true;
-      this.signals.busS = true;
-      this.RM = this.BusS & 0xf; // 4-bitowa maska
-      const id = setTimeout(() => {
-        this.signals.werm = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      console.log('WERM result: RM=', this.RM);
-      this.addLog(`RM ustawione na ${this.RM} (maska przerwań) [BusS=${this.BusS}]`, 'system');
-    },
-
-    wyrm() {
-      // RM -> BusS (Read from Mask Register)
-      this.signals.wyrm = true;
-      this.signals.busS = true;
-      this.BusS = this.RM & 0xf;
-      const id = setTimeout(() => {
-        this.signals.wyrm = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-
-    wyap() {
-      // AP -> BusA (Read from Address Pointer)
-      this.signals.wyap = true;
-      this.signals.busA = true;
-      this.BusA = this.AP & this.addrMask();
-      const id = setTimeout(() => {
-        this.signals.wyap = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('A');
-    },
-
-    weap() {
-      // BusA -> AP (Write to Address Pointer)
-      this.signals.weap = true;
-      this.signals.busA = true;
-      this.AP = this.BusA & this.addrMask();
-      const id = setTimeout(() => {
-        this.signals.weap = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-    },
-
-    wyrz() {
-      // RZ -> BusS (Read from Request Register)
-      this.signals.wyrz = true;
-      this.signals.busS = true;
-      this.BusS = this.RZ & 0xf;
-      const id = setTimeout(() => {
-        this.signals.wyrz = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-
-    werz() {
-      // BusS -> RZ (Write to Request Register)
-      this.signals.werz = true;
-      this.signals.busS = true;
-      this.RZ = this.BusS & 0xf;
-      const id = setTimeout(() => {
-        this.signals.werz = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.addLog(`RZ ustawione na ${this.RZ} (zgłoszenia przerwań)`, 'system');
-    },
-
-    wyrp() {
-      // RP -> BusS (Read from Priority Register)
-      this.signals.wyrp = true;
-      this.signals.busS = true;
-      this.BusS = this.RP & 0xf;
-      const id = setTimeout(() => {
-        this.signals.wyrp = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.holdBus('S');
-    },
-
-    werp() {
-      // BusS -> RP (Write to Priority Register)
-      this.signals.werp = true;
-      this.signals.busS = true;
-      this.RP = this.BusS & 0xf;
-      const id = setTimeout(() => {
-        this.signals.werp = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.addLog(`RP ustawione na ${this.RP} (priorytet przerwania)`, 'system');
-    },
-
-    ustrm() {
-      // Ustaw bit w RM (z magistrali A) - zablokuj przerwanie
-      console.log('USTRM called, BusA=', this.BusA);
-      this.signals.ustrm = true;
-      this.signals.busA = true;
-      const bitNum = this.BusA & 0x3; // 0-3
-      this.RM |= 1 << bitNum; // Ustaw bit
-      this.RM &= 0xf; // Maska 4-bitowa
-      const id = setTimeout(() => {
-        this.signals.ustrm = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.addLog(`Ustawiono bit ${bitNum} w RM (RM=${this.RM}) - zablokowano IRQ${bitNum + 1}`, 'przerwanie');
-    },
-
-    czrm() {
-      // Wyczyść bit w RM (z magistrali A) - odblokuj przerwanie
-      this.signals.czrm = true;
-      this.signals.busA = true;
-      const bitNum = this.BusA & 0x3; // 0-3
-      this.RM &= ~(1 << bitNum); // Wyczyść bit
-      this.RM &= 0xf; // Maska 4-bitowa
-      const id = setTimeout(() => {
-        this.signals.czrm = false;
-      }, this.oddDelay);
-      this.activeTimeouts.push(id);
-      this.addLog(`Wyczyszczono bit ${bitNum} w RM (RM=${this.RM}) - odblokowano IRQ${bitNum + 1}`, 'przerwanie');
     },
 
     resetValues(options = {}) {

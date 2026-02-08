@@ -1,4 +1,4 @@
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
+﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Phase as TemplatePhase, Signal, SignalSet, ConditionalPhase } from './types/instructions';
 import type { Cmd, Built } from './types/commandAdapter';
@@ -56,7 +56,6 @@ const IF_RE = /\bIF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\b/i;
 const IF_LINE_RE = /^\s*IF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\s*$/i;
 
 function cutEND(text: string): string {
-  // wycina pojedyncze słowo END (bez ;), zostawiając resztę
   return text.replace(/\bEND\b/gi, '').trim();
 }
 
@@ -76,7 +75,7 @@ function splitChunkAtIF(chunk: string): { before?: string; ifPart?: string } {
   const m = IF_RE.exec(chunk);
   if (!m) return {};
   const idx = m.index;
-  const before = chunk.slice(0, idx).trim().replace(/;+$/, ''); // usuń ewentualny średnik na końcu prefiksu
+  const before = chunk.slice(0, idx).trim().replace(/;+$/, '');
   const ifPart = chunk.slice(idx).trim().replace(/;+$/, '');
   return { before: before || undefined, ifPart };
 }
@@ -87,7 +86,6 @@ function pickBranchBodyFromChunk(chunk: string, label: string): SignalSet[] {
   if (!mm) return [];
   const body = cutEND(mm[1]);
   const sset = toSignalSet(body);
-  // jeśli ciało nie zawiera żadnych znanych sygnałów – zwracamy pustą listę
   const any = Object.keys(sset).length > 0;
   return any ? [sset] : [];
 }
@@ -124,14 +122,12 @@ export function buildFromCommandList(list: Cmd[]): Built {
         const tLabel = m[2];
         const fLabel = m[3];
 
-        // 2) Spodziewamy się, że kolejne dwa chunki to "@tLabel ..." oraz "@fLabel ..."
         const next1 = rawChunks[i + 1] ?? '';
         const next2 = rawChunks[i + 2] ?? '';
 
         const truePhases = pickBranchBodyFromChunk(next1, tLabel);
         const falsePhases = pickBranchBodyFromChunk(next2, fLabel);
 
-        // Jeżeli nie trafiliśmy - nie przesuwamy indeksu na ślepo
         if (truePhases.length) i++;
         if (falsePhases.length) i++;
 
@@ -148,7 +144,6 @@ export function buildFromCommandList(list: Cmd[]): Built {
         continue;
       }
 
-      // 3) Linia zaczyna się od etykiety @label - faza bezwarunkowa (spoza IF)
       if (ln.startsWith('@')) {
         const body = cutEND(ln.replace(/^@\S+\s+/, ''));
         const arr = toSignalArray(body);
@@ -156,13 +151,11 @@ export function buildFromCommandList(list: Cmd[]): Built {
         continue;
       }
 
-      // 4) STOP jako "postAsm" (np. STP na końcu)
       if (/^stop$/i.test(ln)) {
         extras.push('stop');
         continue;
       }
 
-      // 5) Zwykła faza sygnałowa
       const arr = toSignalArray(cutEND(ln));
       if (arr.length) phases.push(arr);
     }

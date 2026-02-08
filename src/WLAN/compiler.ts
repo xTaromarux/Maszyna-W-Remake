@@ -4,13 +4,9 @@ import type { CompileExternalOptions } from './types/compiler';
 
 export type { CompileExternalOptions } from './types/compiler';
 
-/* =============================
-   POMOCNICZE
-   ============================= */
 function toMicroPhaseFromSet(set: Record<string, any>): MicroPhase {
   const p: any = {};
   for (const k of Object.keys(set)) if (set[k] === true) p[k] = true;
-  // zachowaj metadane mapowania linii
   if (Number.isFinite(set.srcLine)) p.srcLine = set.srcLine;
   return p as MicroPhase;
 }
@@ -66,7 +62,7 @@ function parseIF(tokens: string[]) {
     if (f === 'NZERO') return 'NZ';
     if (f === 'ZERO') return 'Z';
     if (f === 'POS') return 'P';
-    return f; // Z, N, NZ, P itd.
+    return f;
   })();
 
   const prefix = tokens.slice(0, ifIdx);
@@ -75,7 +71,7 @@ function parseIF(tokens: string[]) {
     flag: flagNorm,
     trueLabel: tTok.slice(1),
     falseLabel: fTok.slice(1),
-    prefix, // opcjonalnie do dalszego użycia tekstowego
+    prefix,
   };
 }
 
@@ -143,7 +139,7 @@ export function compileCodeExternal(source: string, opts: CompileExternalOptions
         truePhases: tBodyOk ? [toMicroPhaseFromSet(tSignals)] : [],
         falsePhases: fBodyOk ? [toMicroPhaseFromSet(fSignals)] : [],
         srcLine: i,
-        __prefix: ifSpec.prefix?.slice() || [], // opcjonalnie, do późniejszego użycia tekstowego
+        __prefix: ifSpec.prefix?.slice() || [],
       };
 
       if (tBodyOk && condPhase.truePhases[0]) (condPhase.truePhases[0] as any).srcLine = i + 1;

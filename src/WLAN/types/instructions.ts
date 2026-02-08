@@ -62,6 +62,7 @@ export type InstructionTemplates = Record<string, Phase[]>;
 export interface Cmd {
   name: string;
   args: number;
+  kind?: 'exec' | 'memory' | 'directive';
   description?: string | Record<string, string>;
   lines: string;
 }

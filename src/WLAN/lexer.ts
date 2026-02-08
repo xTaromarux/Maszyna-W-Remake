@@ -46,7 +46,6 @@ export function lex(input: string): Token[] {
 
       pos += text.length;
 
-      // Pomiń whitespace i komentarze
       if (['WHITESPACE', 'COMMENT_SLASH', 'COMMENT_SEMI'].includes(type)) break;
 
       tokens.push({ type, text, line: tokenStartLine, col: tokenStartCol });
@@ -72,5 +71,4 @@ export function lex(input: string): Token[] {
   return tokens;
 }
 
-// Eksport alternatywny
 export { lex as tokenize };

@@ -1,11 +1,18 @@
-
 @keyframes slideIn {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 @keyframes slideOut {
-  from { transform: translateX(0); }
-  to   { transform: translateX(100%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 #aiChat.chatPanel {
@@ -22,7 +29,7 @@
   border-left: 1px solid var(--panelOutlineColor, #ddd);
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   z-index: 100;
 }
 
@@ -67,10 +74,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
+  height: var(--topbar-height, calc(43.877px + 1rem));
+  box-sizing: border-box;
   background: #003c7d;
   color: #fff;
 }
+
 .chatHeader h1 {
   font-size: 1.25rem;
   margin: 0;
@@ -177,12 +187,12 @@
   margin-left: 0.5rem;
 }
 .messageText {
-  color: #FFFFFF;
+  color: #ffffff;
   white-space: pre-wrap;
   text-align: left;
   margin: 10px 0 0 0;
   line-height: 17px;
-  font-family: "Helvetica Neue", monospace;
+  font-family: 'Helvetica Neue', monospace;
   font-size: 0.9rem;
 }
 
@@ -267,7 +277,7 @@
   cursor: pointer;
   padding: 0 0 3px 0;
   line-height: 1;
-  transition: color .2s;
+  transition: color 0.2s;
 }
 
 .cancelBtn:hover {
@@ -295,7 +305,9 @@
 }
 
 @keyframes bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {

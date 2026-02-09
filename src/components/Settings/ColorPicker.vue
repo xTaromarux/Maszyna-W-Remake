@@ -1,6 +1,6 @@
-<template>
+﻿<template>
   <div class="cp-root" @dragstart.prevent>
-    <!-- Koło barw -->
+    <!-- KoĹ‚o barw -->
     <div class="cp-wheel-wrap" :style="{ width: size + 'px', height: size + 'px' }">
       <canvas
         ref="wheel"
@@ -15,9 +15,9 @@
       <div ref="hit" class="cp-hitbox" @pointerdown="startPick" @pointermove="movePick" @pointerup="endPick" @pointercancel="endPick"></div>
     </div>
 
-    <!-- Suwak jasności koloru (HSV: V) -->
+    <!-- Suwak jasnoĹ›ci koloru (HSV: V) -->
     <div class="cp-section">
-      <div class="cp-label">Jasność koloru</div>
+      <div class="cp-label">{{ $t('colorPicker.colorBrightness') }}</div>
       <div class="cp-bar" :style="{ background: `linear-gradient(90deg, #000, ${hexPure})` }"></div>
       <input class="cp-range" type="range" min="0" max="1" step="0.001" v-model.number="hsv.v" @input="updateFromHSV" />
       <div class="cp-mini">{{ Math.round(hsv.v * 100) }}%</div>
@@ -25,18 +25,18 @@
 
     <!-- Suwak mocy LED (global brightness) -->
     <div class="cp-section">
-      <div class="cp-label">Jasność LED (skaluje hex)</div>
+      <div class="cp-label">{{ $t('colorPicker.ledBrightness') }}</div>
       <div class="cp-bar cp-bar-grey"></div>
       <input class="cp-range" type="range" min="0" max="1" step="0.001" :value="brightnessLocal" @input="onPowerInput($event)" />
       <div class="cp-mini">{{ Math.round(brightnessLocal * 100) }}%</div>
     </div>
 
-    <!-- Próbki -->
+    <!-- PrĂłbki -->
     <div class="cp-swatches">
       <button v-for="c in swatches" :key="c" class="cp-swatch" :style="{ background: c }" @click="applyHex(c)"></button>
     </div>
 
-    <!-- Podgląd -->
+    <!-- PodglÄ…d -->
     <div class="cp-readout">
       <div class="cp-current" :style="{ background: hex }"></div>
       <div class="cp-text">
@@ -70,7 +70,7 @@ const scale = window.devicePixelRatio || 1;
 const hsv = reactive({ h: 300, s: 0.5, v: 1 });
 const rgb = reactive({ r: 255, g: 0, b: 255 });
 
-// Hex z zastosowaną jasnością (do wyświetlania)
+// Hex z zastosowanÄ… jasnoĹ›ciÄ… (do wyĹ›wietlania)
 const hex = computed(() => {
   const s = brightnessLocal.value;
   const finalRgb = {
@@ -82,10 +82,10 @@ const hex = computed(() => {
 });
 const hexPure = computed(() => rgbToHex(hsvToRgb(hsv.h, hsv.s, 1)));
 
-// wskaźnik
+// wskaĹşnik
 const indicator = reactive({ x: size / 2, y: size / 2 });
 
-// przeciąganie
+// przeciÄ…ganie
 let picking = false;
 let rafId = 0;
 let lastEvent = null;
@@ -129,7 +129,7 @@ function drawWheel() {
   const H = W;
   const cx = W / 2 - 3;
   const cy = H / 2 - 3;
-  const r = W / 2 - 0.5; // klucz: -0.5 usuwa półprzezroczysty ring
+  const r = W / 2 - 0.5; // klucz: -0.5 usuwa pĂłĹ‚przezroczysty ring
   const img = ctx.createImageData(W, H);
 
   for (let y = 0; y < H; y++) {
@@ -212,7 +212,7 @@ function updateFromHSV() {
   rgb.b = b;
   updateIndicator();
 
-  // Zastosuj jasność bezpośrednio do RGB dla hex
+  // Zastosuj jasnoĹ›Ä‡ bezpoĹ›rednio do RGB dla hex
   const s = brightnessLocal.value;
   const finalRgb = {
     r: Math.round(rgb.r * s),
@@ -229,7 +229,7 @@ function updateFromHSV() {
     brightness: s,
     rgbScaled: finalRgb,
     pwm: finalRgb,
-    baseRgb: { ...rgb }, // Oryginalne RGB bez jasności
+    baseRgb: { ...rgb }, // Oryginalne RGB bez jasnoĹ›ci
   });
 }
 
@@ -247,7 +247,7 @@ function onPowerInput(e) {
   brightnessLocal.value = v;
   emit('update:brightness', v);
 
-  // Zastosuj jasność bezpośrednio do RGB dla hex
+  // Zastosuj jasnoĹ›Ä‡ bezpoĹ›rednio do RGB dla hex
   const finalRgb = {
     r: Math.round(rgb.r * v),
     g: Math.round(rgb.g * v),
@@ -263,7 +263,7 @@ function onPowerInput(e) {
     brightness: v,
     rgbScaled: finalRgb,
     pwm: finalRgb,
-    baseRgb: { ...rgb }, // Oryginalne RGB bez jasności
+    baseRgb: { ...rgb }, // Oryginalne RGB bez jasnoĹ›ci
   });
 }
 
@@ -271,7 +271,7 @@ function applyHex(h) {
   const parsed = hexToRgb(h);
   if (!parsed) return;
 
-  // Ustaw jasność na maksimum i użyj podanego hex jako bazowego koloru
+  // Ustaw jasnoĹ›Ä‡ na maksimum i uĹĽyj podanego hex jako bazowego koloru
   brightnessLocal.value = 1;
   emit('update:brightness', 1);
 
@@ -364,17 +364,17 @@ function clamp01(x) {
   margin: 0 auto 12px auto;
   cursor: crosshair;
 
-  /* obramowanie i maska KOŁA na wrapperze */
+  /* obramowanie i maska KOĹA na wrapperze */
   border: 3px solid #003c7d;
   border-radius: 50%;
-  overflow: hidden; /* utnie wszystko poza kołem */
+  overflow: hidden; /* utnie wszystko poza koĹ‚em */
   background-clip: padding-box;
 }
 
 .cp-wheel {
   display: block;
   border: none;
-  border-radius: 0; /* już niepotrzebne */
+  border-radius: 0; /* juĹĽ niepotrzebne */
 }
 
 .cp-hitbox {
@@ -383,7 +383,7 @@ function clamp01(x) {
   touch-action: none;
 }
 
-/* interakcja po całym kole */
+/* interakcja po caĹ‚ym kole */
 .cp-indicator {
   position: absolute;
   width: 14px;
@@ -498,3 +498,4 @@ function clamp01(x) {
   opacity: 0.9;
 }
 </style>
+

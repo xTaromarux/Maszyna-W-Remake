@@ -1,6 +1,7 @@
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
+﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
 
 import { BaseAppError, ErrorLevel } from '../errors';
+import { translate as t } from '../i18n';
 import type { Severity, DiagnosticLocation, DiagnosticData } from './types/error';
 
 export function makeCodeFrame(
@@ -58,14 +59,14 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
   static composeMessage(message: string, options?: DiagnosticData & { source?: string }): string {
     const parts: string[] = [];
     const code = options?.code ? `[${options.code}] ` : '';
-    const where = options?.loc ? ` (linia ${options.loc.line}, kolumna ${options.loc.col})` : '';
+    const where = options?.loc ? ` (${t('wlan.error.location', { line: options.loc.line, col: options.loc.col })})` : '';
     parts.push(`${code}${message}${where}`);
 
     const frame =
       options?.frame ||
       (options?.source && options.loc ? makeCodeFrame(options.source, options.loc.line, options.loc.col, options.loc.length || 1) : '');
     if (frame) parts.push('\n' + frame);
-    if (options?.hint) parts.push(`\nPodpowiedź: ${options.hint}`);
+    if (options?.hint) parts.push(`\n${t('wlan.error.hintPrefix')}: ${options.hint}`);
     return parts.join('');
   }
 }
@@ -109,3 +110,4 @@ function severityToLevel(sev?: Severity): ErrorLevel {
       return ErrorLevel.ERROR;
   }
 }
+

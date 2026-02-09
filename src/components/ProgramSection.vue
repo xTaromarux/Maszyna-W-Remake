@@ -127,7 +127,7 @@ function compileProgram() {
     emit('update:code', { text: microAsmText, program: microProgram });
 
     programCompiled.value = true;
-    emit('log', { message: t('logs.programCompiledWlan'), class: 'kompilator rozkazów' });
+    emit('log', { message: t('logs.programCompiledWlan'), class: 'compiler' });
   } catch (error) {
     if (error && (error.level || error.code || error.hint || error.loc || error.frame)) {
       emit('log', {

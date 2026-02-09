@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <header id="topBar">
     <polsl-logo-long-white class="logo" />
 
@@ -14,22 +14,22 @@
           'ws--off': wsStatus === 'disconnected',
         }"
         :title="wsTitle"
-        aria-label="Status połączenia z maszyną fizyczną"
+        :aria-label="t('topBar.wsStatusAria')"
         @click="$emit('ws-reconnect')"
       >
         <span class="dot" :class="{ spin: wsStatus === 'connecting' }" />
         <span class="label">{{ wsLabel }}</span>
       </button>
 
-      <button class="simpleSvgButton" aria-label="Otwórz konsolę" @click="$emit('toggle-console')">
+      <button class="simpleSvgButton" :aria-label="t('topBar.openConsole')" @click="$emit('toggle-console')">
         <ConsoleIcon :hasError="hasConsoleErrors" />
       </button>
 
-      <button v-if="platform !== 'esp'" class="simpleSvgButton" aria-label="Otwórz czat AI" @click="$emit('open-chat')">
+      <button v-if="platform !== 'esp'" class="simpleSvgButton" :aria-label="t('topBar.openChat')" @click="$emit('open-chat')">
         <AiChatIcon fillColor="#ddd" strokeColor="#ddd" strokeWidth="250" />
       </button>
 
-      <button class="simpleSvgButton" aria-label="Otwórz ustawienia" @click="$emit('open-settings')">
+      <button class="simpleSvgButton" :aria-label="t('topBar.openSettings')" @click="$emit('open-settings')">
         <KogWheelIcon />
       </button>
     </div>
@@ -38,6 +38,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import polslLogoLongWhite from '@/assets/svg/polslLogoLongWhite.vue';
 import AiChatIcon from '@/components/AiChatIcon.vue';
 import KogWheelIcon from '@/assets/svg/KogWheelIcon.vue';
@@ -52,30 +53,31 @@ const props = defineProps({
 });
 
 defineEmits(['open-chat', 'open-settings', 'toggle-console', 'ws-reconnect']);
+const { t } = useI18n();
 
 const wsLabel = computed(() => {
   switch (props.wsStatus) {
     case 'connected':
-      return 'Połączono z maszyną fizyczną';
+      return t('topBar.wsConnected');
     case 'connecting':
-      return 'Łączenie…';
+      return t('topBar.wsConnecting');
     case 'error':
-      return 'Błąd połączenia z maszyną fizyczną';
+      return t('topBar.wsError');
     default:
-      return 'Brak połączenia z maszyną fizyczną';
+      return t('topBar.wsDisconnected');
   }
 });
 
 const wsTitle = computed(() => {
   switch (props.wsStatus) {
     case 'connected':
-      return 'Połączenie aktywne - kliknij, aby odświeżyć.';
+      return t('topBar.wsConnectedTitle');
     case 'connecting':
-      return 'Łączenie… - kliknij, aby spróbować ponownie.';
+      return t('topBar.wsConnectingTitle');
     case 'error':
-      return 'Błąd - kliknij, aby ponowić połączenie.';
+      return t('topBar.wsErrorTitle');
     default:
-      return 'Nie połączono - kliknij, aby połączyć.';
+      return t('topBar.wsDisconnectedTitle');
   }
 });
 </script>
@@ -156,3 +158,5 @@ const wsTitle = computed(() => {
   border-color: rgba(189, 189, 189, 0.28);
 }
 </style>
+
+

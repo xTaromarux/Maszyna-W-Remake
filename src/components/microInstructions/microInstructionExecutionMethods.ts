@@ -1,4 +1,4 @@
-/* eslint-disable no-bitwise */
+﻿/* eslint-disable no-bitwise */
 export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[]) => any> = {
   detectAndHandleStackOperations() {
     const signals = this.nextLine;
@@ -27,7 +27,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
       return;
     }
     if (signals.has('czyt') && signals.has('wys') && signals.has('sa') && signals.has('wel') && signals.has('iws')) {
-      console.log('PWR: powrót z podprogramu');
+      console.log('PWR: return from subroutine');
       const memAddrToClear = this.WS & this.addrMask();
 
       const returnAddr = this.stackPop('Address');
@@ -101,7 +101,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
     if (this._pendingMemoryClear !== null) {
       const idx = this._pendingMemoryClear;
       this.mem[idx] = 0;
-      this.addLog(`Wyczyszczono komórkę pamięci [${idx}] po zdjęciu ze stosu`, 'stos');
+      this.addLog(this.$t('logs.memoryClearedFromStack', { idx }), 'stack');
       this._pendingMemoryClear = null;
     }
   },
@@ -810,7 +810,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
     }, this.oddDelay);
     this.activeTimeouts.push(id);
     console.log('WERM result: RM=', this.RM);
-    this.addLog(`RM ustawione na ${this.RM} (maska przerwań) [BusS=${this.BusS}]`, 'system');
+    this.addLog(this.$t('logs.rmSet', { rm: this.RM, busS: this.BusS }), 'system');
   },
 
   wyrm() {
@@ -864,7 +864,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
       this.signals.werz = false;
     }, this.oddDelay);
     this.activeTimeouts.push(id);
-    this.addLog(`RZ ustawione na ${this.RZ} (zgłoszenia przerwań)`, 'system');
+    this.addLog(this.$t('logs.rzSet', { rz: this.RZ }), 'system');
   },
 
   wyrp() {
@@ -886,7 +886,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
       this.signals.werp = false;
     }, this.oddDelay);
     this.activeTimeouts.push(id);
-    this.addLog(`RP ustawione na ${this.RP} (priorytet przerwania)`, 'system');
+    this.addLog(this.$t('logs.rpSet', { rp: this.RP }), 'system');
   },
 
   ustrm() {
@@ -900,7 +900,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
       this.signals.ustrm = false;
     }, this.oddDelay);
     this.activeTimeouts.push(id);
-    this.addLog(`Ustawiono bit ${bitNum} w RM (RM=${this.RM}) - zablokowano IRQ${bitNum + 1}`, 'przerwanie');
+    this.addLog(this.$t('logs.rmBitSet', { bit: bitNum, rm: this.RM, irq: bitNum + 1 }), 'interrupt');
   },
 
   czrm() {
@@ -913,6 +913,7 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
       this.signals.czrm = false;
     }, this.oddDelay);
     this.activeTimeouts.push(id);
-    this.addLog(`Wyczyszczono bit ${bitNum} w RM (RM=${this.RM}) - odblokowano IRQ${bitNum + 1}`, 'przerwanie');
+    this.addLog(this.$t('logs.rmBitCleared', { bit: bitNum, rm: this.RM, irq: bitNum + 1 }), 'interrupt');
   },
 };
+

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="console-dock">
     <!-- Left vertical rail (like IntelliJ) -->
     <aside v-if="consoleOpen" class="controls-rail">
@@ -8,7 +8,7 @@
         v-if="!codeCompiled"
         class="rail-btn"
         :disabled="isRunning || !hasCode"
-        :title="'Skompiluj program'"
+        :title="$t('execution.compileTitle')"
         @click="$emit('compile')"
       >
         <!-- compile icon -->
@@ -21,7 +21,7 @@
         v-else
         class="rail-btn"
         :disabled="isRunning"
-        :title="'Wróć do edycji'"
+        :title="$t('execution.editTitle')"
         @click="$emit('edit')"
       >
         <!-- edit icon -->
@@ -35,7 +35,7 @@
       <button
         class="rail-btn"
         :disabled="isRunning || (!manualMode && !codeCompiled)"
-        :title="!manualMode ? 'Następny takt' : 'Wykonaj rozkaz'"
+        :title="!manualMode ? $t('execution.stepAuto') : $t('execution.stepManual')"
         @click="$emit('step')"
       >
         <!-- step icon -->
@@ -50,7 +50,7 @@
         v-if="!isRunning"
         class="rail-btn"
         :disabled="manualMode || !codeCompiled"
-        title="Uruchom program"
+        :title="$t('execution.runTitle')"
         @click="$emit('run')"
       >
         <!-- run icon -->
@@ -62,7 +62,7 @@
       <button
         v-else
         class="rail-btn"
-        title="Zatrzymaj wykonywanie"
+        :title="$t('execution.stopTitle')"
         @click="$emit('stop')"
       >
         <!-- stop icon -->
@@ -76,7 +76,7 @@
         v-if="!isRunning"
         class="rail-btn"
         :disabled="manualMode || !codeCompiled"
-        title="Uruchom całość (bez animacji)"
+        :title="$t('execution.runFastTitle')"
         @click="$emit('run-fast')"
       >
         <!-- rocket/fast icon -->
@@ -89,7 +89,7 @@
       <button
         v-else-if="isFastRunning"
         class="rail-btn spinning"
-        title="Pracuję…"
+        :title="$t('execution.runningFast', { progress: fastProgress })"
         @click="$emit('stop')"
       >
         <!-- spinner -->
@@ -105,7 +105,7 @@
       <button
         class="rail-btn"
         :class="{ active: breakpointsEnabled }"
-        :title="breakpointsEnabled ? 'Wyłącz breakpointy (wygaszenie)' : 'Włącz breakpointy'"
+        :title="breakpointsEnabled ? $t('consoleDock.breakpointsDisable') : $t('consoleDock.breakpointsEnable')"
         @click="$emit('update:breakpointsEnabled', !breakpointsEnabled)"
       >
         <!-- dot icon -->
@@ -114,10 +114,10 @@
         </svg>
       </button>
 
-      <!-- Tymczasowo wyłącz wszystkie (toggle off) -->
+      <!-- Tymczasowo wyĹ‚Ä…cz wszystkie (toggle off) -->
       <button
         class="rail-btn"
-        title="Tymczasowo wyłącz wszystkie breakpointy"
+        :title="$t('consoleDock.breakpointsDisableAll')"
         @click="$emit('disable-all-breakpoints')"
       >
         <!-- crossed dot -->
@@ -127,10 +127,10 @@
         </svg>
       </button>
 
-      <!-- Wyczyść (usuń wszystkie) -->
+      <!-- WyczyĹ›Ä‡ (usuĹ„ wszystkie) -->
       <button
         class="rail-btn"
-        title="Usuń wszystkie breakpointy"
+        :title="$t('consoleDock.breakpointsClearAll')"
         @click="$emit('clear-breakpoints')"
       >
         <!-- trash -->
@@ -157,7 +157,7 @@
       class="console-dock-indicator"
       :class="{ 'has-errors': hasConsoleErrors }"
       @click="$emit('open')"
-      title="Kliknij aby otworzyć konsolę"
+      :title="$t('consoleDock.openConsole')"
     />
   </div>
 </template>
@@ -418,3 +418,4 @@ export default {
   }
 }
 </style>
+

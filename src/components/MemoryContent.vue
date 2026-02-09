@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="memory">
     <SignalButton
       id="wea"
@@ -202,7 +202,7 @@ export default {
       }
 
       if (this.validateRegisterValue) {
-        const ok = this.validateRegisterValue(val, 'memory', `Pamięć[${index}]`);
+        const ok = this.validateRegisterValue(val, 'memory', this.$t('memory.cellLabel', { index }));
         if (!ok) {
           event.target.value = this.displayValue(this.mem[index]);
           return;
@@ -238,7 +238,7 @@ export default {
         this.$emit('update:mem', newMem);
         event.target.value = this.displayValue(0);
       } else {
-        // wyrównaj prezentację do trybu signed/unsigned
+        // wyrĂłwnaj prezentacjÄ™ do trybu signed/unsigned
         event.target.value = this.displayValue(this.mem[index]);
       }
     },
@@ -251,3 +251,4 @@ export default {
   },
 };
 </script>
+

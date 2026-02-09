@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div :id="id" :class="[classNames, edgeClass, 'register-container']">
     <div v-if="isEnableEditValue" class="register-container">
       <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span>
@@ -78,29 +78,29 @@ export default {
   },
   computed: {
     fullName() {
-      const names = {
-        AK: 'Akumulator',
-        X: 'Rejestr X',
-        Y: 'Rejestr Y',
-        I: 'Rejestr I (adresowy)',
-        L: 'Licznik',
-        S: 'Rejestr S',
-        A: 'Rejestr A',
-        JAML: 'Rejestr JAL',
-        JAL: 'Rejestr JAL',
-        RZ: 'Rejestr zgłoszeń przerwań',
-        RP: 'Rejestr priorytetów przerwań',
-        AP: 'Rejestr adresu przerwania',
-        RM: 'Rejestr maski przerwań',
-        G:  'Rejestr gotowości urządzenia',
-        RB: 'Rejestr bufora urządzenia',
-        WS: 'Wskaźnik stosu', 
+      const nameKeys = {
+        AK: 'registers.names.AK',
+        X: 'registers.names.X',
+        Y: 'registers.names.Y',
+        I: 'registers.names.I',
+        L: 'registers.names.L',
+        S: 'registers.names.S',
+        A: 'registers.names.A',
+        JAML: 'registers.names.JAML',
+        JAL: 'registers.names.JAL',
+        RZ: 'registers.names.RZ',
+        RP: 'registers.names.RP',
+        AP: 'registers.names.AP',
+        RM: 'registers.names.RM',
+        G: 'registers.names.G',
+        RB: 'registers.names.RB',
+        WS: 'registers.names.WS',
       };
-      return names[this.label] || this.label;
+      return this.$t(nameKeys[this.label] || this.label);
     },
     formattedValue() {
       if (typeof this.model !== 'number' || isNaN(this.model)) {
-        return 'Błąd';
+        return this.$t('registers.invalid');
       }
       
       const toSigned = (value, bits) => {
@@ -236,14 +236,12 @@ export default {
           if (parsed.big < 0n || parsed.big > BigInt(maxValue)) {
             normalizedBig = ((parsed.big % base) + base) % base;
             if (this.showToast) {
-              const msg = this.$t
-                ? this.$t('common.validation.registerModulo', {
+              const msg = this.$t('common.validation.registerModulo', {
                     value: String(parsed.big),
                     max: maxValue,
                     name: registerName,
                     result: Number(normalizedBig),
-                  })
-                : `Wartość ${parsed.big} przekracza zakres ${maxValue} dla ${registerName}. Zapisano ${Number(normalizedBig)}.`;
+                  });
               this.showToast(msg);
             }
           }
@@ -274,7 +272,7 @@ export default {
         this.$emit('update:model', Number(parsed.big));
     },
     onBlur(e) {
-      // ustaw 0 tylko jeśli pole jest puste
+      // ustaw 0 tylko jeĹ›li pole jest puste
       if (e.target.value === '' || e.target.value === null) {
         e.target.value = 0;
         this.$emit('update:model', 0);
@@ -381,3 +379,4 @@ export default {
   color: white;
 }
 </style>
+

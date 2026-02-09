@@ -34,7 +34,7 @@
                 @update:mem="$emit('update:mem', $event)"
                 @clickItem="handleClick"
               />
-              <button class="closeBtn closeButtonModal" @click="closeMobileModal" aria-label="Zamknij modal">&times;</button>
+              <button class="closeBtn closeButtonModal" @click="closeMobileModal" :aria-label="$t('memory.closeModal')">&times;</button>
             </div>
           </transition>
         </div>

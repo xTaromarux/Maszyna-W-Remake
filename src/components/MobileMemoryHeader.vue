@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="mobile-memory-header" >
     <div class="memory-signal-in">
         <SignalButton
@@ -26,7 +26,7 @@
       style="grid-area: memory"
     >
       <ListLinesIcon />
-      <span>Pamięć</span>
+      <span>{{ $t('memory.sectionTitle') }}</span>
     </button>
 
     <div class="memory-signals-in" style="grid-area: memory-signals-in">
@@ -122,3 +122,4 @@ export default {
     align-items: end;
   }
 </style>
+

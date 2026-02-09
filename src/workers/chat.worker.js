@@ -1,4 +1,4 @@
-function pickTextFromResponse(data) {
+﻿function pickTextFromResponse(data) {
   if (!data) return '';
   if (typeof data.response === 'string') return data.response;
   if (typeof data.text === 'string') return data.text;
@@ -126,8 +126,7 @@ async function handleStartMessage(msg) {
       return;
     }
 
-    const message = `Nie udało się pobrać odpowiedzi od AI. ${err?.message || ''}`.trim();
-    emit(messageId, { error: message, done: true });
+    emit(messageId, { errorKey: 'aiChat.fetchFailed', errorDetail: err?.message || '', done: true });
   } finally {
     inFlight.delete(messageId);
   }
@@ -156,4 +155,5 @@ self.addEventListener('message', (event) => {
     });
   }
 });
+
 

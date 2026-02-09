@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <div v-if="props.visible" class="chatOverlay" @click.self="startClose">
     <div id="aiChat" class="chatPanel" @click.stop :class="{ show: props.visible }" :style="{ width: panelWidth + 'px' }">
       <div class="resizer" @mousedown="startResize"></div>
 
       <header class="chatHeader">
-        <h1>{{ props.title }}</h1>
+        <h1>{{ resolvedTitle }}</h1>
         <div class="headerBtns">
           <button class="resetBtn" @click="resetConversation" :aria-label="$t('aiChat.resetAria')">
             <AiChatTrashIcon width="22" height="22" class="trashIcon" />
@@ -42,7 +42,7 @@
             :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'assistant' }"
           >
             <div class="iconWrapper">
-              {{ msg.sender === 'assistant' ? '🤖' : '' }}
+              {{ msg.sender === 'assistant' ? 'đź¤–' : '' }}
             </div>
             <div class="messageContent">
               <div class="messageHeader">
@@ -81,11 +81,11 @@
       </div>
 
       <div class="inputArea">
-        <p class="inputInstruction">{{ props.instruction }}</p>
+        <p class="inputInstruction">{{ resolvedInstruction }}</p>
         <p v-if="rateLimitMessage" class="inputError">{{ rateLimitMessage }}</p>
         <p v-else-if="generalError" class="inputError">{{ generalError }}</p>
         <form @submit.prevent="sendUserMessage">
-          <input ref="textInput" v-model="text" :placeholder="props.placeholder" type="text" :disabled="isBusy" />
+          <input ref="textInput" v-model="text" :placeholder="resolvedPlaceholder" type="text" :disabled="isBusy" />
           <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">{{ $t('aiChat.send') }}</button>
         </form>
       </div>
@@ -111,9 +111,9 @@ import {
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
-  title: { type: String, default: 'Asystent AI' },
-  placeholder: { type: String, default: 'Napisz wiadomość…' },
-  instruction: { type: String, default: 'Opisz operację, aby otrzymać kod maszynowy:' },
+  title: { type: String, default: '' },
+  placeholder: { type: String, default: '' },
+  instruction: { type: String, default: '' },
 });
 
 const emit = defineEmits(['close']);
@@ -145,6 +145,9 @@ const suggestions = computed(() => [
   { id: 'add-two', text: t('aiChat.suggestions.items.addTwoNumbers') },
   { id: 'first-program', text: t('aiChat.suggestions.items.firstProgram') },
 ]);
+const resolvedTitle = computed(() => props.title || t('aiChat.title'));
+const resolvedPlaceholder = computed(() => props.placeholder || t('aiChat.placeholder'));
+const resolvedInstruction = computed(() => props.instruction || t('aiChat.instruction'));
 const shouldShowSuggestions = computed(() => showSuggestions.value && messages.value.length === 0);
 
 const MIN_WIDTH = 480;
@@ -413,7 +416,7 @@ function buildHistory(excludeId) {
 
 function handleWorkerMessage(event) {
   const data = event.data || {};
-  const { messageId, text: fullText, done, error, cancelled } = data;
+  const { messageId, text: fullText, done, error, errorKey, errorDetail, cancelled } = data;
   if (!messageId) return;
 
   const msg = findMessage(messageId);
@@ -429,9 +432,9 @@ function handleWorkerMessage(event) {
     });
   }
 
-  if (error) {
+  if (error || errorKey) {
     stopMessageAnimation(messageId);
-    msg.text = error;
+    msg.text = errorKey ? t(errorKey, { message: errorDetail || '' }).trim() : error;
     scheduleSave();
   }
 
@@ -468,7 +471,7 @@ async function sendUserMessage() {
   const now = Date.now();
   requestTimestamps.value = requestTimestamps.value.filter((ts) => now - ts < RATE_LIMIT.windowMs);
   if (requestTimestamps.value.length >= RATE_LIMIT.maxRequests) {
-    setRateLimitNotice(RATE_LIMIT.message || 'Przekroczono limit zapytań.');
+    setRateLimitNotice(RATE_LIMIT.message || t('aiChat.rateLimitExceeded'));
     return;
   }
 
@@ -490,7 +493,7 @@ async function sendUserMessage() {
   try {
     await ensureModelAwake();
   } catch (err) {
-    const errorMessage = `Nie udało się połączyć z modelem. ${err?.message || ''}`.trim();
+    const errorMessage = t('aiChat.connectFailed', { message: err?.message || '' }).trim();
     generalError.value = errorMessage;
     aiTyping.value = false;
     isCancelling.value = false;
@@ -589,8 +592,8 @@ function renderMessage(textValue) {
   out = out.replace(/\r?\n/g, '<br>');
 
   blocks.forEach((block, index) => {
-    const langLabel = block.lang ? `<span class="code-lang">${block.lang}</span>` : `<span class="code-lang no-lang">kod</span>`;
-    const toolbar = `<div class="code-toolbar-outside">${langLabel}<button type="button" class="copy-btn" aria-label="Skopiuj kod">Kopiuj</button></div>`;
+    const langLabel = block.lang ? `<span class="code-lang">${block.lang}</span>` : `<span class="code-lang no-lang">${t('aiChat.codeLabel')}</span>`;
+    const toolbar = `<div class="code-toolbar-outside">${langLabel}<button type="button" class="copy-btn" aria-label="${t('aiChat.copyCodeAria')}">${t('aiChat.copyCode')}</button></div>`;
     const group = `<div class="code-group">${toolbar}<pre class="code-block"><code>${block.code}</code></pre></div>`;
     out = out.replace(`%%CODEBLOCK_${index}%%`, group);
   });
@@ -908,3 +911,4 @@ body.darkMode .suggestionTile {
   border-color: #1d4ed8;
 }
 </style>
+

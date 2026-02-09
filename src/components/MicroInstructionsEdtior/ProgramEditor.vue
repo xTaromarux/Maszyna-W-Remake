@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="programEditor">
     <SegmentedToggle
       :options="[
@@ -39,6 +39,7 @@
     />
 
     <div v-else class="compiledCode" ref="compiledEl" :class="{ 'bp-disabled': !breakpointsEnabled }">
+      <div v-if="!breakpointsEnabled" class="bp-disabled-banner">{{ $t('programEditor.breakpoints.disabled') }}</div>
       <span
         v-for="(line, index) in compiledCode"
         :key="index"
@@ -49,13 +50,13 @@
         }"
         :data-row="index"
       >
-        <!-- Gutter z kropką -->
+        <!-- Gutter z kropkÄ… -->
         <button
           class="bp-dot gutter"
           :class="{ 'bp-dot--active': breakpoints?.has(index) }"
           :disabled="!breakpointsEnabled"
           @click.stop="emit('toggle-breakpoint', index)"
-          :title="!breakpointsEnabled ? 'Breakpoints wyłączone' : breakpoints?.has(index) ? 'Usuń breakpoint' : 'Dodaj breakpoint'"
+          :title="!breakpointsEnabled ? $t('programEditor.breakpoints.disabled') : breakpoints?.has(index) ? $t('programEditor.breakpoints.remove') : $t('programEditor.breakpoints.add')"
           aria-label="Toggle breakpoint"
         />
         <!-- Numer linii -->
@@ -311,13 +312,13 @@ watch(
   line-height: 1.35;
 }
 
-/* --- GUTTER DOT (mała, intellij-owa kropka) --- */
+/* --- GUTTER DOT (maĹ‚a, intellij-owa kropka) --- */
 .gutter {
-  /* zajmuje całą pierwszą kolumnę gridu */
+  /* zajmuje caĹ‚Ä… pierwszÄ… kolumnÄ™ gridu */
   justify-self: center;
 }
 
-/* linia z breakpointem – bardzo delikatne tło */
+/* linia z breakpointem â€“ bardzo delikatne tĹ‚o */
 .bp-line {
   transition: none !important;
   background-color: rgba(209, 17, 17, 0.1);
@@ -327,7 +328,7 @@ watch(
   background-color: rgba(209, 17, 17, 0.16);
 }
 
-/* kropka – mała, bez animacji */
+/* kropka â€“ maĹ‚a, bez animacji */
 .bp-dot {
   width: 8px;
   height: 8px;
@@ -351,20 +352,19 @@ watch(
   border-color: #e22;
 }
 
-/* --- STYL, GDY BREAKPOINTY SĄ WYŁĄCZONE --- */
+/* --- STYL, GDY BREAKPOINTY SÄ„ WYĹÄ„CZONE --- */
 .bp-disabled {
   position: relative;
 }
 
-/* cienki banner u góry listy kodu */
-.bp-disabled::before {
-  content: 'BREAKPOINTY WYŁĄCZONE';
+/* cienki banner u gĂłry listy kodu */
+.bp-disabled-banner {
   position: sticky;
   top: -0.5rem;
-  /* lekko nad listą */
+  /* lekko nad listÄ… */
   display: block;
   margin: -0.25rem -0.5rem 0;
-  /* wyrównanie do ramki compiledCode */
+  /* wyrĂłwnanie do ramki compiledCode */
   padding: 0.15rem 0.5rem;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
@@ -386,11 +386,11 @@ watch(
 
 .bp-disabled .bp-dot.bp-dot--active {
   background: transparent !important;
-  /* nie wypełniaj, nawet jeśli był postawiony */
+  /* nie wypeĹ‚niaj, nawet jeĹ›li byĹ‚ postawiony */
   border-color: #8b8b8b !important;
 }
 
-/* linie z BP: inne (chłodniejsze) tło, ale bardzo delikatne */
+/* linie z BP: inne (chĹ‚odniejsze) tĹ‚o, ale bardzo delikatne */
 .bp-disabled .bp-line {
   background-color: rgba(120, 120, 120, 0.08) !important;
   opacity: 0.95;
@@ -402,3 +402,4 @@ watch(
   color: #9a9a9a !important;
 }
 </style>
+

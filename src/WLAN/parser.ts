@@ -5,6 +5,7 @@ import { lex } from './lexer';
 import { buildInstructionRegistry } from './instructionRegistry';
 import { errorFromToken, WlanError } from './error';
 import { TokenType } from './types/model';
+import { translate as t } from '../i18n';
 import type { Token } from './types/model';
 import type {
   IRDirective,
@@ -100,9 +101,9 @@ function ensureAddressRange(source: string, token: Token, value: number, context
     throw errorFromToken(
       source,
       token,
-      `Wartość adresowa poza zakresem dla ${context}: ${value}`,
+      t('wlan.parser.addressOutOfRange', { context, value }),
       'PARSE_ADDRESS_RANGE',
-      `Dopuszczalny zakres adresu: ${ADDRESS_MIN}..${ADDRESS_MAX}.`
+      t('wlan.parser.addressRangeHint', { min: ADDRESS_MIN, max: ADDRESS_MAX })
     );
   }
 }
@@ -112,9 +113,9 @@ function ensureDataRange(source: string, token: Token, value: number, context: s
     throw errorFromToken(
       source,
       token,
-      `Wartość danych poza zakresem dla ${context}: ${value}`,
+      t('wlan.parser.dataOutOfRange', { context, value }),
       'PARSE_DATA_RANGE',
-      `Dopuszczalny zakres danych: ${DATA_MIN}..${DATA_MAX}.`
+      t('wlan.parser.dataRangeHint', { min: DATA_MIN, max: DATA_MAX })
     );
   }
 }
@@ -127,18 +128,18 @@ function validateArity(source: string, token: Token, cmd: NormalizedRuntimeComma
     throw errorFromToken(
       source,
       token,
-      `Instrukcja ${cmd.name} wymaga dokładnie ${argsMin} argumentów, otrzymano ${count}.`,
+      t('wlan.parser.arityExact', { name: cmd.name, argsMin, count }),
       'PARSE_BAD_ARITY',
-      `Popraw liczbę argumentów dla ${cmd.name}.`
+      t('wlan.parser.arityHint', { name: cmd.name })
     );
   }
 
   throw errorFromToken(
     source,
     token,
-    `Instrukcja ${cmd.name} wymaga ${argsMin}..${argsMax} argumentów, otrzymano ${count}.`,
+    t('wlan.parser.arityRange', { name: cmd.name, argsMin, argsMax, count }),
     'PARSE_BAD_ARITY',
-    `Popraw liczbę argumentów dla ${cmd.name}.`
+    t('wlan.parser.arityHint', { name: cmd.name })
   );
 }
 
@@ -150,7 +151,7 @@ export class Parser {
 
   constructor(source: string, options: ParseOptions) {
     if (!options || !Array.isArray(options.commandList)) {
-      throw new WlanError('Parser wymaga commandList do budowy registry instrukcji.', {
+      throw new WlanError(t('wlan.parser.noCommandList'), {
         code: 'PARSE_NO_COMMAND_LIST',
       });
     }
@@ -198,14 +199,14 @@ export class Parser {
   private parseOperand(): UnresolvedOperand {
     const tok = this.peek();
     if (!tok) {
-      throw new WlanError('Nieoczekiwany koniec wejścia podczas parsowania argumentu.', {
+      throw new WlanError(t('wlan.parser.unexpectedEofOperand'), {
         code: 'PARSE_NO_OPERAND',
       });
     }
 
     if (tok.type === TokenType.AT) {
       this.consume();
-      const ident = this.expect(TokenType.IDENT, 'Po znaku @ oczekiwano nazwy etykiety.');
+      const ident = this.expect(TokenType.IDENT, t('wlan.parser.expectedLabelAfterAt'));
       return { kind: 'Symbol', name: ident.text, token: ident };
     }
 
@@ -216,9 +217,9 @@ export class Parser {
         throw errorFromToken(
           this.source,
           numTok,
-          `Nie mogę odczytać liczby "${numTok.text}".`,
+          t('wlan.parser.cannotParseNumber', { text: numTok.text }),
           'PARSE_BAD_NUMBER',
-          'Obsługiwane formaty: 123, -123, 0xFF, -0b1010.'
+          t('wlan.parser.supportedFormats')
         );
       }
       return { kind: 'Immediate', value, token: numTok };
@@ -229,12 +230,12 @@ export class Parser {
       return { kind: 'Symbol', name: ident.text, token: ident };
     }
 
-    throw errorFromToken(
+  throw errorFromToken(
       this.source,
       tok,
-      `Nieoczekiwany token w argumencie: ${tok.type}:${tok.text}`,
+      t('wlan.parser.unexpectedTokenInOperand', { type: tok.type, text: tok.text }),
       'PARSE_BAD_OPERAND',
-      'Dozwolony argument: liczba, etykieta lub @etykieta.'
+      t('wlan.parser.allowedOperand')
     );
   }
 
@@ -267,9 +268,9 @@ export class Parser {
         throw errorFromToken(
           this.source,
           mnemonic || first,
-          `Nieoczekiwany token na początku instrukcji: ${mnemonic?.type}:${mnemonic?.text}`,
+          t('wlan.parser.unexpectedTokenAtInstructionStart', { type: mnemonic?.type, text: mnemonic?.text }),
           'PARSE_EXPECT_MNEMONIC',
-          'Po etykiecie oczekiwano nazwy instrukcji lub końca linii.'
+          t('wlan.parser.expectedInstructionAfterLabel')
         );
       }
 
@@ -282,9 +283,9 @@ export class Parser {
           throw errorFromToken(
             this.source,
             tok,
-            'Przecinek nie może wystąpić bez poprzedzającego argumentu.',
+            t('wlan.parser.commaWithoutOperand'),
             'PARSE_UNEXPECTED_COMMA',
-            'Usuń zbędny przecinek lub dodaj brakujący argument.'
+            t('wlan.parser.commaWithoutOperandHint')
           );
         }
 
@@ -299,9 +300,9 @@ export class Parser {
             throw errorFromToken(
               this.source,
               next,
-              'Linia kończy się przecinkiem.',
+              t('wlan.parser.trailingComma'),
               'PARSE_TRAILING_COMMA',
-              'Usuń końcowy przecinek albo dopisz argument.'
+              t('wlan.parser.trailingCommaHint')
             );
           }
           continue;
@@ -310,9 +311,9 @@ export class Parser {
         throw errorFromToken(
           this.source,
           next!,
-          `Nieoczekiwany token po argumencie: ${next?.type}:${next?.text}`,
+          t('wlan.parser.unexpectedTokenAfterOperand', { type: next?.type, text: next?.text }),
           'PARSE_EXPECT_SEPARATOR',
-          'Argumenty rozdzielaj przecinkami.'
+          t('wlan.parser.separateArgsWithCommas')
         );
       }
 
@@ -332,9 +333,9 @@ export class Parser {
       throw errorFromToken(
         this.source,
         op.token,
-        `Niezdefiniowana etykieta "${op.name}".`,
+        t('wlan.parser.undefinedLabel', { name: op.name }),
         'SEM_UNDEFINED_SYMBOL',
-        'Sprawdź literówkę lub kolejność deklaracji etykiet.'
+        t('wlan.parser.undefinedLabelHint')
       );
     }
 
@@ -357,9 +358,9 @@ export class Parser {
           throw errorFromToken(
             this.source,
             line.labelTok,
-            `Zduplikowana etykieta "${line.labelTok.text}".`,
+            t('wlan.parser.duplicateLabel', { name: line.labelTok.text }),
             'SEM_DUPLICATE_SYMBOL',
-            'Każda etykieta może zostać zdefiniowana tylko raz.'
+            t('wlan.parser.duplicateLabelHint')
           );
         }
 
@@ -380,9 +381,9 @@ export class Parser {
         throw errorFromToken(
           this.source,
           line.mnemonicTok,
-          `Nieznana instrukcja lub dyrektywa: "${line.mnemonicTok.text}".`,
+          t('wlan.parser.unknownMnemonic', { name: line.mnemonicTok.text }),
           'PARSE_UNKNOWN_MNEMONIC',
-          'Dodaj instrukcję do commandList lub popraw nazwę.'
+          t('wlan.parser.unknownMnemonicHint')
         );
       }
 
@@ -407,7 +408,7 @@ export class Parser {
             throw errorFromToken(
               this.source,
               line.mnemonicTok,
-              `Nieobsługiwana deklaracja pamięci: ${cmd.name}`,
+              t('wlan.parser.unsupportedMemoryDecl', { name: cmd.name }),
               'PARSE_UNSUPPORTED_MEMORY'
             );
           }
@@ -433,9 +434,9 @@ export class Parser {
               throw errorFromToken(
                 this.source,
                 op.token,
-                'ORG wymaga liczby lub etykiety zdefiniowanej wcześniej.',
+                t('wlan.parser.orgNeedsImmediateOrKnownLabel'),
                 'PARSE_ORG_UNRESOLVED',
-                'Dla ORG użyj liczby lub etykiety dostępnej przed tą linią.'
+                t('wlan.parser.orgNeedsImmediateOrKnownLabelHint')
               );
             }
 
@@ -467,14 +468,14 @@ export class Parser {
             break;
           }
 
-          throw errorFromToken(this.source, line.mnemonicTok, `Nieobsługiwana dyrektywa: ${cmd.name}`, 'PARSE_UNSUPPORTED_DIRECTIVE');
+          throw errorFromToken(this.source, line.mnemonicTok, t('wlan.parser.unsupportedDirective', { name: cmd.name }), 'PARSE_UNSUPPORTED_DIRECTIVE');
         }
 
         default:
           throw errorFromToken(
             this.source,
             line.mnemonicTok,
-            `Nieobsługiwany typ rozkazu: ${String((cmd as any).kind)}`,
+            t('wlan.parser.unsupportedCommandType', { kind: String((cmd as any).kind) }),
             'PARSE_UNKNOWN_KIND'
           );
       }
@@ -490,7 +491,7 @@ export class Parser {
         case 'Instruction': {
           const resolved: IRImmediateOperand[] = node.operands.map((op) => {
             const value = this.resolveOperandValue(op, labels);
-            ensureAddressRange(this.source, op.token, value, `instrukcji ${node.name}`);
+            ensureAddressRange(this.source, op.token, value, t('wlan.parser.instructionContext', { name: node.name }));
             return {
               type: 'Immediate',
               value,
@@ -503,9 +504,9 @@ export class Parser {
             throw errorFromToken(
               this.source,
               node.mnemonicTok,
-              `${node.name} wymaga dokładnie jednego argumentu adresowego.`,
+              t('wlan.parser.jumpNeedsOneAddressArg', { name: node.name }),
               'PARSE_BAD_JUMP_OPERANDS',
-              `Użyj składni: ${node.name} etykieta_lub_adres`
+              t('wlan.parser.jumpSyntaxHint', { name: node.name })
             );
           }
 

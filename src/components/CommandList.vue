@@ -347,7 +347,7 @@ export default {
 
       if (duplicates.length > 0) {
         const uniqueDuplicates = [...new Set(duplicates)];
-        console.warn(`Duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
+        console.warn(`Duplicate command names: ${uniqueDuplicates.join(', ')}`);
       }
     },
     handleKeydown(event) {

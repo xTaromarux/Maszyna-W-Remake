@@ -146,7 +146,7 @@
         (() => {
           breakpoints.clear();
           breakpoints = new Set(breakpoints);
-          addLog('Usunięto wszystkie breakpointy', 'system');
+          addLog($t('logs.breakpointsCleared'), 'system');
         })()
       "
       :class="{ 'console-collapsed': !consoleOpen }"
@@ -158,7 +158,7 @@
       class="console-indicator"
       :class="{ 'has-errors': hasConsoleErrors }"
       @click="toggleConsole"
-      title="Click to open console"
+      :title="$t('consoleDock.openConsole')"
     />
 
     <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
@@ -198,7 +198,7 @@
 
     <LabCatalogDialog
       :visible="labDialogOpen"
-      :labs="labCatalog"
+      :labs="localizedLabCatalog"
       :selected-lab-id="selectedLabId"
       @close="closeLabDialog()"
       @select-lab="selectLab($event)"
@@ -279,6 +279,15 @@ export default {
   computed: {
     anyPopupOpen() {
       return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
+    },
+
+    localizedLabCatalog() {
+      return this.labCatalog.map((lab) => ({
+        ...lab,
+        title: this.$t(lab.titleKey),
+        description: this.$t(lab.descriptionKey),
+        outcomes: (lab.outcomesKeys || []).map((key) => this.$t(key)),
+      }));
     },
 
     selectedLab() {
@@ -506,25 +515,37 @@ export default {
       labCatalog: [
         {
           id: 'lab-add-intro',
-          title: 'Lab 1: Podstawy dodawania',
-          description: 'Poznasz najprostszy przeplyw danych dla dodawania i sposob mapowania logiki na kroki ASM.',
-          outcomes: ['jak czytac wartosci z pamieci', 'jak wykonac operacje DOD', 'jak obserwowac wynik i stan rejestrow'],
+          titleKey: 'labs.catalog.addIntro.title',
+          descriptionKey: 'labs.catalog.addIntro.description',
+          outcomesKeys: [
+            'labs.catalog.addIntro.outcomes.readMemory',
+            'labs.catalog.addIntro.outcomes.doAdd',
+            'labs.catalog.addIntro.outcomes.observeResult',
+          ],
           pythonOverview: `def run(memory):\n    a = memory[0]\n    b = memory[1]\n    result = a + b\n    return result`,
           asmStub: LAB_ASM_STUB,
         },
         {
           id: 'lab-loop-counter',
-          title: 'Lab 2: Licznik w petli',
-          description: 'Lab pokazuje jak aktualizowac licznik i jak przygotowac grunt pod petle sterowana warunkiem.',
-          outcomes: ['praca na liczniku', 'aktualizacja stanu po kazdym kroku', 'przygotowanie do skokow warunkowych'],
+          titleKey: 'labs.catalog.loopCounter.title',
+          descriptionKey: 'labs.catalog.loopCounter.description',
+          outcomesKeys: [
+            'labs.catalog.loopCounter.outcomes.counterWork',
+            'labs.catalog.loopCounter.outcomes.updateState',
+            'labs.catalog.loopCounter.outcomes.conditionalJumps',
+          ],
           pythonOverview: `def run(limit):\n    counter = 0\n    while counter < limit:\n        counter += 1\n    return counter`,
           asmStub: LAB_ASM_STUB,
         },
         {
           id: 'lab-branching',
-          title: 'Lab 3: Warunek i rozgalezienie',
-          description: 'Zobaczysz jak w praktyce wyglada decyzja warunkowa i jakie zachowanie chcemy uzyskac w ASM.',
-          outcomes: ['porownanie wartosci', 'wybor jednej z dwoch sciezek', 'analiza efektu warunku'],
+          titleKey: 'labs.catalog.branching.title',
+          descriptionKey: 'labs.catalog.branching.description',
+          outcomesKeys: [
+            'labs.catalog.branching.outcomes.compareValues',
+            'labs.catalog.branching.outcomes.pickPath',
+            'labs.catalog.branching.outcomes.analyzeEffect',
+          ],
           pythonOverview: `def run(value):\n    if value == 0:\n        return "zero"\n    return "non-zero"`,
           asmStub: LAB_ASM_STUB,
         },
@@ -579,7 +600,10 @@ export default {
       if (typeof lineIdx !== 'number') return;
       if (this.breakpoints.has(lineIdx)) this.breakpoints.delete(lineIdx);
       else this.breakpoints.add(lineIdx);
-      this.addLog(`Breakpoint ${this.breakpoints.has(lineIdx) ? 'dodany' : 'usunięty'} @${lineIdx}`, 'system');
+      this.addLog(
+        this.$t(`logs.breakpoint.${this.breakpoints.has(lineIdx) ? 'added' : 'removed'}`, { line: lineIdx }),
+        'system'
+      );
     },
     _shouldPauseOnBreakpoint(nextSrcLine) {
       return this.isRunning && Number.isFinite(nextSrcLine) && this.breakpoints.has(nextSrcLine);
@@ -596,7 +620,7 @@ export default {
         setTimeout(() => this.initWebsocket(), 150);
       } catch (e) {
         this.wsStatus = 'error';
-        this.addLog('[WS] Reconnect failed', 'Error', { message: String(e) });
+        this.addLog(this.$t('logs.wsReconnectFailed'), 'error', { message: String(e) });
       }
     },
 
@@ -693,30 +717,33 @@ export default {
 
       if (type === 'Address') {
         this.updateAP();
-        this.addLog(`Stos PUSH [${type}]: ${value} (AP=${this.AP}, WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+        this.addLog(this.$t('logs.stackPushAp', { type, value, ap: this.AP, ws: this.WS, size: this.stack.length }), 'stack');
       } else {
-        this.addLog(`Stos PUSH [${type}]: ${value} (WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+        this.addLog(this.$t('logs.stackPush', { type, value, ws: this.WS, size: this.stack.length }), 'stack');
       }
     },
 
     stackPop(expectedType) {
       // expectedType: 'Data' | 'Address' | null
       if (this.stack.length === 0) {
-        this.addLog(`Stos POP: stos pusty!`, 'Błąd');
+        this.addLog(this.$t('logs.stackPopEmpty'), 'error');
         return 0;
       }
 
       const entry = this.stack.pop();
 
       if (expectedType && entry.type !== expectedType) {
-        this.addLog(`Stos POP: oczekiwano ${expectedType}, otrzymano ${entry.type}!`, 'Ostrzeżenie');
+        this.addLog(this.$t('logs.stackPopExpected', { expected: expectedType, actual: entry.type }), 'warning');
       }
 
       if (entry.type === 'Address') {
         this.updateAP();
-        this.addLog(`Stos POP [${entry.type}]: ${entry.value} (AP=${this.AP}, WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+        this.addLog(
+          this.$t('logs.stackPopAp', { type: entry.type, value: entry.value, ap: this.AP, ws: this.WS, size: this.stack.length }),
+          'stack'
+        );
       } else {
-        this.addLog(`Stos POP [${entry.type}]: ${entry.value} (WS=${this.WS}, rozmiar=${this.stack.length})`, 'stos');
+        this.addLog(this.$t('logs.stackPop', { type: entry.type, value: entry.value, ws: this.WS, size: this.stack.length }), 'stack');
       }
 
       return entry.value;
@@ -753,7 +780,7 @@ export default {
       this.activeInstrIndex = -1;
       this.activePhaseIndex = 0;
       this.nextLine.clear();
-      this.addLog('Program skompilowany (strukturalny mikro‑program).', 'kompilator rozkazów');
+      this.addLog(this.$t('logs.programCompiledStructured'), 'compiler');
     },
 
     handleAsmAutoReset() {
@@ -775,11 +802,11 @@ export default {
         if (addr >= 0 && addr < size) {
           nextMem[addr] = val & mask;
         } else {
-          this.addLog(`Adres poza zakresem pamięci przy inicjalizacji: ${addr}`, 'Error');
+          this.addLog(this.$t('logs.memoryInitOutOfRange', { addr }), 'error');
         }
       }
       this.mem = nextMem;
-      this.addLog(`Zastosowano inicjalizację pamięci (${assignments.length} wpisów)`, 'system');
+      this.addLog(this.$t('logs.memoryInitApplied', { count: assignments.length }), 'system');
     },
 
     initWebsocket() {
@@ -790,7 +817,7 @@ export default {
 
         this.ws.addEventListener('open', () => {
           this.wsStatus = 'connected';
-          this.addLog('[WS] Connected to server', 'system');
+          this.addLog(this.$t('logs.wsConnected'), 'system');
           this.sendFullDataToESP();
 
           // prosty ping, by utrzymać i weryfikować połączenie
@@ -804,14 +831,14 @@ export default {
 
         this.ws.addEventListener('close', () => {
           this.wsStatus = 'disconnected';
-          this.addLog('[WS] Disconnected', 'system');
+          this.addLog(this.$t('logs.wsDisconnected'), 'system');
           this.wsPingTimer && clearInterval(this.wsPingTimer);
           this.wsPingTimer = null;
         });
 
         this.ws.addEventListener('error', (err) => {
           this.wsStatus = 'error';
-          this.addLog('[WS] Connection error', 'Error', { message: String(err) });
+          this.addLog(this.$t('logs.wsError'), 'error', { message: String(err) });
         });
 
         this.ws.addEventListener('message', async ({ data }) => {
@@ -840,7 +867,7 @@ export default {
         });
       } catch (e) {
         this.wsStatus = 'error';
-        this.addLog('[WS] Init failed', 'Error', { message: String(e) });
+        this.addLog(this.$t('logs.wsInitFailed'), 'error', { message: String(e) });
       }
     },
 
@@ -852,7 +879,7 @@ export default {
         this.nextLine.delete(id);
       }
       this.signals[id] = value;
-      this.addLog(`[WS] Odebrano sygnał ${id}: ${value ? 'ON' : 'OFF'}`, 'system');
+      this.addLog(this.$t('logs.wsSignalReceived', { id, state: this.$t(`logs.breakpointStatus.${value ? 'on' : 'off'}`) }), 'system');
       this.suppressBroadcast = false;
     },
 
@@ -897,7 +924,7 @@ export default {
           for (const other of group) {
             if (other === signalName) continue;
             if (this.signals[other]) {
-              return `Nie można włączyć „${signalName}" - koliduje z „${other}".`;
+              return this.$t('signals.conflict', { signal: signalName, other });
             }
           }
         }
@@ -908,7 +935,7 @@ export default {
         for (const other of busASignals) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" - koliduje z „${other}" (magistrala A zajęta).`;
+            return this.$t('signals.conflictBusA', { signal: signalName, other });
           }
         }
       }
@@ -918,7 +945,7 @@ export default {
         for (const other of busSSignals) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" - koliduje z „${other}" (magistrala S zajęta).`;
+            return this.$t('signals.conflictBusS', { signal: signalName, other });
           }
         }
       }
@@ -927,7 +954,7 @@ export default {
         for (const other of jalOperations) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}" - już działa „${other}" (maks. jedna operacja JAML naraz).`;
+            return this.$t('signals.conflictJaml', { signal: signalName, other });
           }
         }
       }
@@ -945,7 +972,10 @@ export default {
       }
       this.signals[value] = !this.signals[value];
 
-      this.addLog(`[ESP32] Przycisk ${value}: ${this.signals[value] ? 'ON' : 'OFF'}`, 'system');
+      this.addLog(
+        this.$t('logs.espButton', { button: value, state: this.$t(`logs.breakpointStatus.${this.signals[value] ? 'on' : 'off'}`) }),
+        'system'
+      );
 
       this.sendSignalToESP(value, this.signals[value]);
 
@@ -969,7 +999,7 @@ export default {
           for (const other of group) {
             if (other === signalName) continue;
             if (this.signals[other]) {
-              return `Nie można włączyć „${signalName}” – koliduje z „${other}”.`;
+              return this.$t('signals.conflict', { signal: signalName, other });
             }
           }
         }
@@ -979,7 +1009,7 @@ export default {
         for (const other of jalOperations) {
           if (other === signalName) continue;
           if (this.signals[other]) {
-            return `Nie można włączyć „${signalName}” – już działa „${other}” (maks. jedna operacja JAML naraz).`;
+            return this.$t('signals.conflictJaml', { signal: signalName, other });
           }
         }
       }
@@ -1033,7 +1063,10 @@ export default {
             state: state,
           })
         );
-        this.addLog(`[WS] Wysłano sygnał ${signalName}: ${state ? 'ON' : 'OFF'}`, 'system');
+        this.addLog(
+          this.$t('logs.wsSignalSent', { signal: signalName, state: this.$t(`logs.breakpointStatus.${state ? 'on' : 'off'}`) }),
+          'system'
+        );
       }
     },
 
@@ -1112,7 +1145,13 @@ export default {
           })
         );
         this.addLog(
-          `[LED] Wysłano kolor ${colorData.type}: ${colorData.hex} (RGB: ${colorData.rgbScaled.r}, ${colorData.rgbScaled.g}, ${colorData.rgbScaled.b})`,
+          this.$t('logs.ledColorSent', {
+            type: colorData.type,
+            hex: colorData.hex,
+            r: colorData.rgbScaled.r,
+            g: colorData.rgbScaled.g,
+            b: colorData.rgbScaled.b,
+          }),
           'system'
         );
 
@@ -1214,7 +1253,7 @@ export default {
     },
 
     addLog(message, classification = 'info', errorObj = null) {
-      const translatedMessage = this.translateLogMessage(message);
+      const translatedMessage = String(message ?? '');
       const timestamp = new Date();
       const key = `${classification}|${translatedMessage}`;
       const now = timestamp.getTime();
@@ -1264,9 +1303,9 @@ export default {
       this.logs.push(logEntry);
 
       // Check if this is an error and set the error flag
-      const errorTypes = ['error', 'błąd parsera kodu', 'Error', 'Błąd parsera kodu', 'błąd sygnału'];
+      const errorTypes = ['error', 'critical'];
       const isError =
-        errorTypes.some((type) => classification.toLowerCase().includes(type.toLowerCase())) ||
+        errorTypes.some((type) => String(classification).toLowerCase().includes(type.toLowerCase())) ||
         (errorObj && ['ERROR', 'CRITICAL'].includes(errorObj.level));
 
       if (isError) {
@@ -1275,191 +1314,11 @@ export default {
     },
 
     translateLogMessage(message) {
-      const t = this.$t;
-      const stateLabel = (raw) => t(`logs.breakpointStatus.${raw?.toLowerCase() === 'on' ? 'on' : 'off'}`);
-      const patterns = [
-        {
-          regex: /^Breakpoint (dodany|usunięty) @(\d+)$/,
-          handler: (m) => t(`logs.breakpoint.${m[1] === 'dodany' ? 'added' : 'removed'}`, { line: m[2] }),
-        },
-        {
-          regex: /^\[WS\] Odebrano sygnał (.+): (ON|OFF)$/,
-          handler: (m) => t('logs.wsSignalReceived', { id: m[1], state: stateLabel(m[2]) }),
-        },
-        {
-          regex: /^\[ESP32] Przycisk (.+): (ON|OFF)$/,
-          handler: (m) => t('logs.espButton', { button: m[1], state: stateLabel(m[2]) }),
-        },
-        {
-          regex: /^\[WS] Wysłano sygnał (.+): (ON|OFF)$/,
-          handler: (m) => t('logs.wsSignalSent', { signal: m[1], state: stateLabel(m[2]) }),
-        },
-        {
-          regex: /^Stos PUSH \[(.+)\]: (.+) \(AP=(.+), WS=(.+), rozmiar=(.+)\)$/,
-          handler: (m) => t('logs.stackPushAp', { type: m[1], value: m[2], ap: m[3], ws: m[4], size: m[5] }),
-        },
-        {
-          regex: /^Stos PUSH \[(.+)\]: (.+) \(WS=(.+), rozmiar=(.+)\)$/,
-          handler: (m) => t('logs.stackPush', { type: m[1], value: m[2], ws: m[3], size: m[4] }),
-        },
-        {
-          regex: /^Stos POP \[(.+)\]: (.+) \(AP=(.+), WS=(.+), rozmiar=(.+)\)$/,
-          handler: (m) => t('logs.stackPopAp', { type: m[1], value: m[2], ap: m[3], ws: m[4], size: m[5] }),
-        },
-        {
-          regex: /^Stos POP \[(.+)\]: (.+) \(WS=(.+), rozmiar=(.+)\)$/,
-          handler: (m) => t('logs.stackPop', { type: m[1], value: m[2], ws: m[3], size: m[4] }),
-        },
-        {
-          regex: /^Stos POP: oczekiwano (.+), otrzymano (.+)!$/,
-          handler: (m) => t('logs.stackPopExpected', { expected: m[1], actual: m[2] }),
-        },
-        {
-          regex: /^Adres poza zakresem pamięci przy inicjalizacji: (.+)$/,
-          handler: (m) => t('logs.memoryInitOutOfRange', { addr: m[1] }),
-        },
-        {
-          regex: /^Zastosowano inicjalizację pamięci \((\d+) wpisów\)$/,
-          handler: (m) => t('logs.memoryInitApplied', { count: m[1] }),
-        },
-        {
-          regex: /^Pauza na breakpoint @(\d+)$/,
-          handler: (m) => t('logs.breakpointPause', { line: m[1] }),
-        },
-        {
-          regex: /^Skok poza zakres programu: PC=(.+)$/,
-          handler: (m) => t('logs.jumpOob', { target: m[1] }),
-        },
-        {
-          regex: /^Wyczyszczono komórkę pamięci \[(.+)\] po zdjęciu ze stosu$/,
-          handler: (m) => t('logs.memoryClearedFromStack', { idx: m[1] }),
-        },
-        {
-          regex: /^RM ustawione na (.+) \(maska przerwań\) \[BusS=(.+)\]$/,
-          handler: (m) => t('logs.rmSet', { rm: m[1], busS: m[2] }),
-        },
-        {
-          regex: /^RZ ustawione na (.+) \(zgłoszenia przerwań\)$/,
-          handler: (m) => t('logs.rzSet', { rz: m[1] }),
-        },
-        {
-          regex: /^RP ustawione na (.+) \(priorytet przerwania\)$/,
-          handler: (m) => t('logs.rpSet', { rp: m[1] }),
-        },
-        {
-          regex: /^Ustawiono bit (.+) w RM \(RM=(.+)\) - zablokowano IRQ(.+)$/,
-          handler: (m) => t('logs.rmBitSet', { bit: m[1], rm: m[2], irq: m[3] }),
-        },
-        {
-          regex: /^Wyczyszczono bit (.+) w RM \(RM=(.+)\) - odblokowano IRQ(.+)$/,
-          handler: (m) => t('logs.rmBitCleared', { bit: m[1], rm: m[2], irq: m[3] }),
-        },
-      ];
-
-      for (const p of patterns) {
-        const m = message.match(p.regex);
-        if (m) return p.handler(m);
-      }
-
-      switch (message) {
-        case 'Usunięto wszystkie breakpointy':
-          return t('logs.breakpointsCleared');
-        case 'Stos POP: stos pusty!':
-          return t('logs.stackPopEmpty');
-        case '[WS] Connected to server':
-          return t('logs.wsConnected');
-        case '[WS] Disconnected':
-          return t('logs.wsDisconnected');
-        case '[WS] Connection error':
-          return t('logs.wsError');
-        case '[WS] Init failed':
-          return t('logs.wsInitFailed');
-        case 'Program skompilowany (strukturalny mikro‑program).':
-        case 'Program skompilowany (strukturalny mikro–program).':
-        case 'Program skompilowany (strukturalny mikro-program).':
-          return t('logs.programCompiledStructured');
-        case 'Przejście w tryb ręczny – program wstrzymany i wyczyszczony.':
-          return t('logs.manualModeEnabled');
-        case 'Kod skompilowany pomyślnie (mikro-ASM)':
-          return t('logs.asmCompiled');
-        case 'handleInterrupt: brak aktywnego przerwania':
-          return t('logs.handleInterruptNone');
-        case '─────────────────────────────────────':
-          return t('logs.separator');
-        case 'Przerwano: przekroczono limit kroków (prawdopodobna pętla).':
-          return t('logs.loopGuard');
-        case 'Kod zakończony':
-          return t('logs.codeFinished');
-        case 'STOP - program zatrzymany':
-          return t('logs.stopInstr');
-        case 'Wykonanie przerwane przyciskiem STOP.':
-          return t('logs.stoppedByUser');
-        case 'Przerwano: limit kroków RUN osiągnięty.':
-          return t('logs.runStepLimit');
-        case 'Przerwano: limit kroków RUN-FAST osiągnięty.':
-          return t('logs.runFastLimit');
-        case 'Ustawienia zostały przywrócone do wartości domyślnych':
-          return t('logs.settingsRestored');
-        case 'Konsola została wyczyszczona':
-          return t('logs.consoleCleared');
-        case 'System inicjalizowany':
-          return t('logs.systemInit');
-        case 'Wystąpił błąd leksykalny podczas parsowania':
-          return t('logs.lexError');
-        case 'Ostrzeżenie kompilatora':
-          return t('logs.compilerWarning');
-        case 'Błąd krytyczny':
-          return t('logs.criticalError');
-        case 'System zainicjalizowany.':
-          return t('logs.systemInitialized');
-        default:
-          break;
-      }
-
-      if (message?.startsWith('Błąd kompilacji ASM: ')) {
-        return t('logs.asmCompileError', { message: message.replace('Błąd kompilacji ASM: ', '') });
-      }
-      if (message?.startsWith('[WS] Reconnect failed')) {
-        return t('logs.wsReconnectFailed');
-      }
-      if (message?.startsWith('PRZERWANIE IRQ')) {
-        const num = message.replace('PRZERWANIE IRQ', '');
-        return t('logs.interruptStart', { num });
-      }
-      if (message?.startsWith('   RP ← ')) {
-        const num = message.replace(/[^\d]/g, '');
-        return t('logs.interruptRp', { num });
-      }
-      if (message?.startsWith('   Stos: zapisano PC=')) {
-        const match = message.match(/PC=(.+), WS=(.+)\)/);
-        if (match) return t('logs.interruptStackSaved', { pc: match[1], ws: match[2] });
-      }
-      if (message?.startsWith('   Błąd: wektor ')) {
-        const match = message.match(/wektor (.+) poza programem/);
-        if (match) return t('logs.interruptVectorOob', { vector: match[1] });
-      }
-      if (message?.startsWith('   A ← ')) {
-        const match = message.match(/A ← (.+) \(wskaźnik na wektor\)/);
-        if (match) return t('logs.interruptALoad', { a: match[1] });
-      }
-      if (message?.startsWith('   PC ← ')) {
-        const match = message.match(/PC ← (.+) \(adres wektora IRQ(.+)\)/);
-        if (match) return t('logs.interruptPcSet', { vector: match[1], num: match[2] });
-      }
-      if (message?.startsWith('   → Wykonanie: ')) {
-        const line = message.replace('   → Wykonanie: ', '');
-        return t('logs.interruptExec', { line });
-      }
-      if (message?.startsWith('   RZ ← ')) {
-        const match = message.match(/RZ ← (.+) \(wyzerowano IRQ(.+)\)/);
-        if (match) return t('logs.interruptRzClear', { rz: match[1], num: match[2] });
-      }
-
-      return message;
+      return String(message ?? '');
     },
     formatNumber(number) {
       if (typeof number !== 'number' || isNaN(number)) {
-        return 'Błąd: Nieprawidłowa liczba.';
+        return this.$t('errors.invalidNumber');
       }
 
       const formatters = {
@@ -1512,7 +1371,7 @@ export default {
 
       if (this.manualMode) {
         this.uncompileCode();
-        this.addLog('Przejście w tryb ręczny – program wstrzymany i wyczyszczony.', 'system');
+        this.addLog(this.$t('logs.manualModeEnabled'), 'system');
       }
     },
     closePopups(popupName) {
@@ -1551,13 +1410,13 @@ export default {
       this.program = selected.asmStub || LAB_ASM_STUB;
       this.labDialogOpen = false;
       this.closePopups('settingsOpen');
-      this.addLog(`Zaladowano lab: ${selected.title}`, 'system');
+      this.addLog(this.$t('logs.labLoaded', { title: this.$t(selected.titleKey) }), 'system');
     },
 
     compileCode() {
       try {
         if (!this.code || !this.code.trim()) {
-          throw new Error('Brak kodu do kompilacji.');
+          throw new Error(this.$t('execution.noCodeToCompile'));
         }
 
         this.compiledProgram = [];
@@ -1575,9 +1434,9 @@ export default {
         this.nextLine.clear();
 
         this.executeLine();
-        this.addLog('Kod skompilowany pomyślnie (mikro-ASM)', 'kompilator rozkazów');
+        this.addLog(this.$t('logs.asmCompiled'), 'compiler');
       } catch (e) {
-        this.addLog(`Błąd kompilacji ASM: ${e?.message || String(e)}`, 'Error');
+        this.addLog(this.$t('logs.asmCompileError', { message: e?.message || String(e) }), 'error');
       }
     },
 
@@ -1593,15 +1452,15 @@ export default {
     handleInterrupt() {
       const irqNum = this.highestPriorityIRQ;
       if (!irqNum) {
-        this.addLog('handleInterrupt: brak aktywnego przerwania', 'Ostrzeżenie');
+        this.addLog(this.$t('logs.handleInterruptNone'), 'warning');
         return;
       }
 
-      this.addLog(`─────────────────────────────────────`, 'przerwanie');
-      this.addLog(`PRZERWANIE IRQ${irqNum}`, 'przerwanie');
+      this.addLog(this.$t('logs.separator'), 'interrupt');
+      this.addLog(this.$t('logs.interruptStart', { num: irqNum }), 'interrupt');
 
       this.RP = irqNum;
-      this.addLog(`   RP ← ${irqNum} (numer aktywnego przerwania)`, 'przerwanie');
+      this.addLog(this.$t('logs.interruptRp', { num: irqNum }), 'interrupt');
 
       const returnAddr = this.programCounter;
       this.stackPush('Address', returnAddr);
@@ -1610,31 +1469,31 @@ export default {
       this.WS = (this.WS - 1 + size) % size;
       const idx = this.WS & this.addrMask();
       this.mem[idx] = returnAddr;
-      this.addLog(`   Stos: zapisano PC=${returnAddr}, WS=${this.WS}`, 'przerwanie');
+      this.addLog(this.$t('logs.interruptStackSaved', { pc: returnAddr, ws: this.WS }), 'interrupt');
 
       const vectorAddress = irqNum;
 
       if (vectorAddress < 0 || vectorAddress >= this.compiledProgram.length) {
-        this.addLog(`   Błąd: wektor ${vectorAddress} poza programem!`, 'Błąd');
+        this.addLog(this.$t('logs.interruptVectorOob', { vector: vectorAddress }), 'error');
         return;
       }
 
       this.A = vectorAddress;
       this.programCounter = vectorAddress;
 
-      this.addLog(`   A ← ${this.A} (wskaźnik na wektor)`, 'przerwanie');
-      this.addLog(`   PC ← ${vectorAddress} (adres wektora IRQ${irqNum})`, 'przerwanie');
+      this.addLog(this.$t('logs.interruptALoad', { a: this.A }), 'interrupt');
+      this.addLog(this.$t('logs.interruptPcSet', { vector: vectorAddress, num: irqNum }), 'interrupt');
 
       this.activeInstrIndex = vectorAddress;
       this.activePhaseIndex = 0;
 
       const vectorInstr = this.compiledProgram[vectorAddress];
-      this.addLog(`   → Wykonanie: ${vectorInstr?.asmLine || 'SOB'}`, 'przerwanie');
+      this.addLog(this.$t('logs.interruptExec', { line: vectorInstr?.asmLine || 'SOB' }), 'interrupt');
 
       this.RZ &= ~(1 << (irqNum - 1));
-      this.addLog(`   RZ ← ${this.RZ} (wyzerowano IRQ${irqNum})`, 'przerwanie');
+      this.addLog(this.$t('logs.interruptRzClear', { rz: this.RZ, num: irqNum }), 'interrupt');
 
-      this.addLog(`─────────────────────────────────────`, 'przerwanie');
+      this.addLog(this.$t('logs.separator'), 'interrupt');
     },
 
     executeLine() {
@@ -1665,14 +1524,14 @@ export default {
       const stopAtBreakpoint = (line) => {
         if (!shouldPauseOn(line)) return false;
         if (Number.isFinite(line)) this.activeLine = line;
-        this.addLog(`Pauza na breakpoint @${line}`, 'system');
+        this.addLog(this.$t('logs.breakpointPause', { line }), 'system');
         this._stopRun();
         return true;
       };
 
       const finishStructuredProgram = () => {
         this.uncompileCode();
-        this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
+        this.addLog(this.$t('logs.codeFinished'), 'compiler');
       };
 
       const moveToNextPhase = () => {
@@ -1696,7 +1555,7 @@ export default {
           return true;
         }
 
-        this.addLog(`Skok poza zakres programu: PC=${target}`, 'B\u0142\u0105d');
+        this.addLog(this.$t('logs.jumpOob', { target }), 'error');
         this.uncompileCode();
         return false;
       };
@@ -1722,7 +1581,7 @@ export default {
 
         this._stepGuard = (this._stepGuard || 0) + 1;
         if (this._stepGuard > 100000) {
-          this.addLog('Przerwano: przekroczono limit krok\u00f3w (prawdopodobna p\u0119tla).', 'system');
+          this.addLog(this.$t('logs.loopGuard'), 'system');
           this.uncompileCode();
           return;
         }
@@ -1795,7 +1654,7 @@ export default {
         if (phaseToExecute?.stop === true) {
           setHighlight(phaseToExecute);
           this.uncompileCode();
-          this.addLog('STOP - program zatrzymany', 'kompilator rozkaz\u00f3w');
+          this.addLog(this.$t('logs.stopInstr'), 'compiler');
           return;
         }
 
@@ -1839,13 +1698,13 @@ export default {
         if (this.activeLine < 0) this.activeLine = 0;
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
+          this.addLog(this.$t('logs.codeFinished'), 'compiler');
           return;
         }
 
         const nextSrc = this.activeLine;
         if (shouldPauseOn(nextSrc)) {
-          this.addLog(`Pauza na breakpoint @${nextSrc}`, 'system');
+          this.addLog(this.$t('logs.breakpointPause', { line: nextSrc }), 'system');
           this._stopRun();
           this.activeLine = nextSrc;
           if (!this._headless) this._refreshHighlight();
@@ -1861,7 +1720,7 @@ export default {
 
         if (this.activeLine >= this.compiledCode.length) {
           this.uncompileCode();
-          this.addLog('Kod zako\u0144czony', 'kompilator rozkaz\u00f3w');
+          this.addLog(this.$t('logs.codeFinished'), 'compiler');
         } else if (!this._headless) {
           this._refreshHighlight();
         }
@@ -1967,7 +1826,7 @@ export default {
 
     stopRun() {
       this._stopRun();
-      this.addLog('Wykonanie przerwane przyciskiem STOP.', 'system');
+      this.addLog(this.$t('logs.stoppedByUser'), 'system');
     },
 
     runCode() {
@@ -2006,7 +1865,7 @@ export default {
           return this._stopRun();
         }
         if (stepsLeft <= 0) {
-          this.addLog('Przerwano: limit kroków RUN osiągnięty.', 'system');
+          this.addLog(this.$t('logs.runStepLimit'), 'system');
           return this._stopRun();
         }
 
@@ -2113,7 +1972,7 @@ export default {
           if (!hasStructured && this.activeLine >= this.compiledCode.length) break;
         }
 
-        if (safety <= 0) this.addLog('Przerwano: limit kroków RUN-FAST osiągnięty.', 'system');
+        if (safety <= 0) this.addLog(this.$t('logs.runFastLimit'), 'system');
       } finally {
         this._headless = false; // ← WRÓĆ do normalnego trybu
         this.suppressBroadcast = false; // ← ponownie pozwól na WS
@@ -2125,7 +1984,7 @@ export default {
     },
 
     resetValues(options = {}) {
-      const { resetMemory = true, resetLogs = true, logMessage = 'Wszystkie wartości rejestrów zostały zresetowane' } = options;
+      const { resetMemory = true, resetLogs = true, logMessage = this.$t('logs.registersReset') } = options;
       // Clear any active timeouts first
       this.clearActiveTimeouts();
 
@@ -2209,7 +2068,7 @@ export default {
       this.logs = [];
       this.hasConsoleErrors = false;
       this.autocompleteEnabled = true;
-      this.addLog('Ustawienia zostały przywrócone do wartości domyślnych', 'system');
+      this.addLog(this.$t('logs.settingsRestored'), 'system');
     },
 
     openCommandList() {
@@ -2238,7 +2097,7 @@ export default {
     clearConsole() {
       this.logs = [];
       this.hasConsoleErrors = false;
-      this.addLog('Konsola została wyczyszczona', 'system');
+      this.addLog(this.$t('logs.consoleCleared'), 'system');
     },
 
     handleKeyPress(event) {
@@ -2269,42 +2128,42 @@ export default {
     // Test method to demonstrate enhanced console with different error types
     testEnhancedConsole() {
       // Test different error levels and formats
-      this.addLog('System inicjalizowany', 'system');
+      this.addLog(this.$t('logs.systemInit'), 'system');
 
       // Test BaseAppError structure
       const mockWlanError = {
-        message: 'Nieznany znak w linii kodu',
+        message: this.$t('wlan.lexer.unknownChar', { char: '#' }),
         level: 'ERROR',
         timestamp: new Date().toISOString(),
         code: 'LEX_UNKNOWN_CHAR',
-        hint: "Usuń lub popraw znak. Jeżeli to komentarz, użyj '/\/' lub rozpocznij linię średnikiem ';'.",
+        hint: this.$t('wlan.lexer.unknownCharHint'),
         loc: { line: 5, col: 12, length: 1 },
         frame: '    3 | ŁAD 15\n    4 | DOD 20\n  > 5 | BŁĘDNY#ZNAK\n        |           ^\n    6 | SOB start',
       };
 
-      this.addLog('Wystąpił błąd leksykalny podczas parsowania', 'Error', mockWlanError);
+      this.addLog(this.$t('logs.lexError'), 'error', mockWlanError);
 
       // Test warning
       const mockWarning = {
-        message: 'Niewykorzystana etykieta',
+        message: this.$t('logs.mockUnusedLabel'),
         level: 'WARNING',
         timestamp: new Date().toISOString(),
         code: 'SEM_UNUSED_LABEL',
-        hint: 'Sprawdź czy etykieta jest faktycznie potrzebna lub czy nie ma literówki w nazwie.',
+        hint: this.$t('logs.mockUnusedLabelHint'),
       };
 
-      this.addLog('Ostrzeżenie kompilatora', 'Warning', mockWarning);
+      this.addLog(this.$t('logs.compilerWarning'), 'warning', mockWarning);
 
       // Test critical error
       const mockCritical = {
-        message: 'Krytyczny błąd systemu',
+        message: this.$t('logs.mockCriticalMessage'),
         level: 'CRITICAL',
         timestamp: new Date().toISOString(),
         code: 'SYS_CRITICAL',
-        hint: 'Skontaktuj się z administratorem systemu.',
+        hint: this.$t('logs.mockCriticalHint'),
       };
 
-      this.addLog('Błąd krytyczny', 'Critical', mockCritical);
+      this.addLog(this.$t('logs.criticalError'), 'critical', mockCritical);
     },
   },
   watch: {
@@ -2418,7 +2277,7 @@ export default {
     this.loadFromLS();
     this.resizeMemory();
 
-    this.addLog('System zainicjalizowany.', 'System');
+    this.addLog(this.$t('logs.systemInitialized'), 'system');
     this.prevSignals = { ...this.signals };
     this.prevMem = [...this.mem];
 

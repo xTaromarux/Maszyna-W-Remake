@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div id="console" class="futuristic-console">
     <div class="console-header">
       <div class="header-left">
@@ -148,17 +148,17 @@ const getLogLevel = (log) => {
 
   // Map legacy class names
   const legacyClass = log.class?.toLowerCase();
-  switch (legacyClass) {
+    switch (legacyClass) {
     case 'error':
-    case 'błąd':
-    case 'błąd parsera kodu':
+    case 'parser-error':
       return ErrorLevel.ERROR;
     case 'warning':
-    case 'ostrzeżenie':
       return ErrorLevel.WARNING;
     case 'info':
     case 'system':
-    case 'kompilator rozkazów':
+    case 'compiler':
+    case 'stack':
+    case 'interrupt':
       return ErrorLevel.INFO;
     default:
       return ErrorLevel.INFO;
@@ -260,3 +260,4 @@ watch(
   { deep: true }
 );
 </script>
+

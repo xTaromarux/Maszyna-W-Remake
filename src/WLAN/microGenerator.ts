@@ -6,6 +6,7 @@ import type { IRInstruction, ProgramIR } from './types/assemblerIR';
 import type { Phase, CJumpMeta } from './types/microGenerator';
 import type { RuntimeCommand } from './types/registry';
 import { WlanError } from './error';
+import { translate as t } from '../i18n';
 
 interface TemplateConditionalWithMetadata extends TemplateConditionalPhase {
   __labels?: { t?: string; f?: string };
@@ -168,12 +169,12 @@ function applySobJumpMetadata(
 ): void {
   const targetAddress = instruction.operands?.[0]?.value;
   if (typeof targetAddress !== 'number') {
-    throw new WlanError('SOB bez adresu', { code: 'GEN_SOB_NO_ADDR' });
+    throw new WlanError(t('wlan.microGenerator.sobNoAddress'), { code: 'GEN_SOB_NO_ADDR' });
   }
 
   const targetPc = addressToPc.get(targetAddress);
   if (targetPc === undefined) {
-    throw new WlanError(`SOB -> ${targetAddress} nie wskazuje instrukcji`, {
+    throw new WlanError(t('wlan.microGenerator.sobBadAddress', { targetAddress }), {
       code: 'GEN_SOB_BAD_ADDR',
     });
   }
@@ -222,7 +223,7 @@ export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[
   const executableCommands = (commandList || []).filter((command) => (command.kind || 'exec') === 'exec');
 
   if (!Array.isArray(executableCommands) || executableCommands.length === 0) {
-    throw new WlanError('Pusta lista rozkazów wykonawczych - brak definicji do generowania mikroprogramu.', {
+    throw new WlanError(t('wlan.microGenerator.emptyExecList'), {
       code: 'GEN_EMPTY_CMDLIST',
     });
   }
@@ -239,9 +240,9 @@ export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[
     const templatePhases = templates[mnemonicKey];
 
     if (!templatePhases) {
-      throw new WlanError(`Brak definicji w commandList dla instrukcji "${(instruction.name || '').toUpperCase()}"`, {
+      throw new WlanError(t('wlan.microGenerator.missingTemplate', { name: (instruction.name || '').toUpperCase() }), {
         code: 'GEN_NO_TEMPLATE',
-        hint: 'Sprawdź nazwę rozkazu w edytorze listy rozkazów lub dodaj wpis.',
+        hint: t('wlan.microGenerator.missingTemplateHint'),
       });
     }
 

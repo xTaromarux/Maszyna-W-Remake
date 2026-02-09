@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div v-if="visible" class="color-popup-overlay" @click.self="close">
     <div class="color-popup" @click.stop>
       <div class="color-popup-header">
@@ -13,14 +13,14 @@
           <div class="preview-box" :style="{ backgroundColor: localColor }"></div>
           <div class="color-info">
             <span>{{ localColor }}</span>
-            <span>Jasność: {{ Math.round(localBrightness * 100) }}%</span>
+            <span>{{ $t('colorPickerPopup.brightness') }}: {{ Math.round(localBrightness * 100) }}%</span>
           </div>
         </div>
       </div>
 
       <div class="color-popup-footer">
-        <button class="cancel-btn" @click="close">Anuluj</button>
-        <button class="apply-btn" @click="apply">Zastosuj</button>
+        <button class="cancel-btn" @click="close">{{ $t('actions.cancel') }}</button>
+        <button class="apply-btn" @click="apply">{{ $t('actions.apply') }}</button>
       </div>
     </div>
   </div>
@@ -55,7 +55,7 @@ export default {
     },
     visible(newVal) {
       if (newVal) {
-        // Reset do wartości props przy otwieraniu
+        // Reset do wartoĹ›ci props przy otwieraniu
         this.localColor = this.color;
         this.localBrightness = this.brightness;
       }
@@ -230,3 +230,4 @@ export default {
   border-color: #0056b3;
 }
 </style>
+

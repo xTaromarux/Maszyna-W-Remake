@@ -177,7 +177,7 @@
         <div class="flexColumn button-column">
           <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="openLabDialog" @click="$emit('open-lab-dialog')">
             <CommandListIcon />
-            <span>Wybierz lab</span>
+            <span>{{ $t('labs.chooseButton') }}</span>
           </button>
           <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="resetValues" @click="$emit('resetValues')">
             <RefreshIcon />

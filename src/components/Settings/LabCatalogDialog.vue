@@ -1,9 +1,9 @@
 <template>
   <div v-if="visible" class="labDialogBackdrop" @click.self="$emit('close')">
-    <section class="labDialog" role="dialog" aria-modal="true" aria-label="Lab selector dialog">
+    <section class="labDialog" role="dialog" aria-modal="true" :aria-label="$t('labs.dialog.aria')">
       <header class="labDialogHeader">
-        <h2>Wybierz lab</h2>
-        <button class="closeBtn" type="button" @click="$emit('close')" aria-label="Close lab dialog">&times;</button>
+        <h2>{{ $t('labs.dialog.title') }}</h2>
+        <button class="closeBtn" type="button" @click="$emit('close')" :aria-label="$t('labs.dialog.closeAria')">&times;</button>
       </header>
 
       <div class="labDialogBody">
@@ -24,19 +24,19 @@
           <h3>{{ selectedLab.title }}</h3>
           <p>{{ selectedLab.description }}</p>
 
-          <h4>Czego nauczysz sie na tym labie</h4>
+          <h4>{{ $t('labs.dialog.outcomesTitle') }}</h4>
           <ul class="labOutcomeList">
             <li v-for="item in selectedLab.outcomes" :key="item">{{ item }}</li>
           </ul>
 
-          <h4>Pythonowy overview</h4>
+          <h4>{{ $t('labs.dialog.pythonOverview') }}</h4>
           <pre class="pythonPreview"><code>{{ selectedLab.pythonOverview }}</code></pre>
         </article>
       </div>
 
       <footer class="labDialogFooter">
         <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" type="button" @click="$emit('load-lab')">
-          Zaladuj lab
+          {{ $t('labs.dialog.load') }}
         </button>
       </footer>
     </section>

@@ -37,6 +37,7 @@
       @resetValues="$emit('resetValues')"
       @defaultSettings="$emit('defaultSettings')"
       @open-command-list="$emit('open-command-list')"
+      @open-lab-dialog="$emit('open-lab-dialog')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
       @update:autoResetOnAsmCompile="$emit('update:autoResetOnAsmCompile', $event)"
       @color-change="$emit('color-change', $event)"
@@ -114,6 +115,7 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
+    'open-lab-dialog',
     'update:decSigned',
     'update:autocompleteEnabled',
     'update:autoResetOnAsmCompile',

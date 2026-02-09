@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CompileIcon from '@/assets/svg/CompileIcon.vue';
 import EditIcon from '@/assets/svg/EditIcon.vue';
@@ -57,6 +57,14 @@ const emit = defineEmits(['update:code', 'log', 'initMemory', 'reset-registers']
 const programLocal = ref(props.program);
 const programCompiled = ref(false);
 const { t } = useI18n();
+
+watch(
+  () => props.program,
+  (nextProgram) => {
+    programLocal.value = typeof nextProgram === 'string' ? nextProgram : '';
+    programCompiled.value = false;
+  }
+);
 
 // ENTRY POINT FUNCTION FOR COMPILATION
 function compileProgram() {

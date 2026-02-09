@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <TopBar
     @open-chat="aiChatOpen = true"
     @open-settings="settingsOpen = true"
@@ -190,9 +190,19 @@
       @resetValues="resetValues()"
       @defaultSettings="restoreDefaults()"
       @open-command-list="openCommandList()"
+      @open-lab-dialog="openLabDialog()"
       @update:autocompleteEnabled="autocompleteEnabled = $event"
       @update:autoResetOnAsmCompile="autoResetOnAsmCompile = $event"
       @color-change="sendColorToESP"
+    />
+
+    <LabCatalogDialog
+      :visible="labDialogOpen"
+      :labs="labCatalog"
+      :selected-lab-id="selectedLabId"
+      @close="closeLabDialog()"
+      @select-lab="selectLab($event)"
+      @load-lab="loadSelectedLab()"
     />
 
     <CommandList
@@ -233,13 +243,14 @@ import TopBar from '@/components/UI/TopBar.vue';
 import AiChat from '@/components/AiChat.vue';
 import ConsoleDock from '@/components/Console/ConsoleDock.vue';
 import SettingsOverlay from '@/components/Settings/SettingsOverlay.vue';
+import LabCatalogDialog from '@/components/Settings/LabCatalogDialog.vue';
 import ExecutionControls from './MicroInstructionsEdtior/ExecutionControls.vue';
 import ProgramEditor from './MicroInstructionsEdtior/ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
-import { parse } from '@/WLAN/parser';
-import { compileCodeExternal } from '@/WLAN/compiler';
 import { setLocale } from '@/i18n';
 import { mainMicroInstructionExecutionMethods } from './microInstructions/microInstructionExecutionMethods';
+
+const LAB_ASM_STUB = Array.from({ length: 11 }, (_, idx) => `DOD ${idx}`).join('\n');
 
 export default {
   name: 'MainComponent',
@@ -260,6 +271,7 @@ export default {
     AiChat,
     ConsoleDock,
     SettingsOverlay,
+    LabCatalogDialog,
     ExecutionControls,
     ProgramEditor,
   },
@@ -267,6 +279,10 @@ export default {
   computed: {
     anyPopupOpen() {
       return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
+    },
+
+    selectedLab() {
+      return this.labCatalog.find((lab) => lab.id === this.selectedLabId) || this.labCatalog[0] || null;
     },
 
     rint() {
@@ -400,51 +416,6 @@ export default {
         BusS: 'dec',
       },
 
-      avaiableSignals: {
-        always: [
-          'il',
-          'wyl',
-          'wel',
-          'wyad',
-          'wei',
-          'wea',
-          'wes',
-          'wys',
-          'czyt',
-          'pisz',
-          'przep',
-          'weja',
-          'weak',
-          'dod',
-          'ode',
-          'wyak',
-          'stop',
-          'wyws',
-          'iws',
-          'dws',
-          'wyls',
-          'wyg',
-          'werb',
-          'wyrb',
-          'start',
-          'ustrm',
-          'czrm',
-          'werm',
-          'wyrm',
-          'werz',
-          'wyrz',
-          'werp',
-          'wyrp',
-          'weap',
-          'wyap',
-        ],
-        busConnectors: ['as', 'sa'],
-        dl: ['dl'],
-        jamlExtras: ['iak', 'dak', 'mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'],
-        xRegister: ['wyx', 'wex'],
-        yRegister: ['wyy', 'wey'],
-      },
-
       signals: {
         as: false,
         sa: false,
@@ -530,6 +501,34 @@ export default {
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
+      labDialogOpen: false,
+      selectedLabId: 'lab-add-intro',
+      labCatalog: [
+        {
+          id: 'lab-add-intro',
+          title: 'Lab 1: Podstawy dodawania',
+          description: 'Poznasz najprostszy przeplyw danych dla dodawania i sposob mapowania logiki na kroki ASM.',
+          outcomes: ['jak czytac wartosci z pamieci', 'jak wykonac operacje DOD', 'jak obserwowac wynik i stan rejestrow'],
+          pythonOverview: `def run(memory):\n    a = memory[0]\n    b = memory[1]\n    result = a + b\n    return result`,
+          asmStub: LAB_ASM_STUB,
+        },
+        {
+          id: 'lab-loop-counter',
+          title: 'Lab 2: Licznik w petli',
+          description: 'Lab pokazuje jak aktualizowac licznik i jak przygotowac grunt pod petle sterowana warunkiem.',
+          outcomes: ['praca na liczniku', 'aktualizacja stanu po kazdym kroku', 'przygotowanie do skokow warunkowych'],
+          pythonOverview: `def run(limit):\n    counter = 0\n    while counter < limit:\n        counter += 1\n    return counter`,
+          asmStub: LAB_ASM_STUB,
+        },
+        {
+          id: 'lab-branching',
+          title: 'Lab 3: Warunek i rozgalezienie',
+          description: 'Zobaczysz jak w praktyce wyglada decyzja warunkowa i jakie zachowanie chcemy uzyskac w ASM.',
+          outcomes: ['porownanie wartosci', 'wybor jednej z dwoch sciezek', 'analiza efektu warunku'],
+          pythonOverview: `def run(value):\n    if value == 0:\n        return "zero"\n    return "non-zero"`,
+          asmStub: LAB_ASM_STUB,
+        },
+      ],
 
       toast: {
         visible: false,
@@ -1527,62 +1526,46 @@ export default {
         }, 1000);
       }
     },
+    openLabDialog() {
+      if (!this.selectedLab && this.labCatalog.length > 0) {
+        this.selectedLabId = this.labCatalog[0].id;
+      }
+      this.labDialogOpen = true;
+    },
+    closeLabDialog() {
+      this.labDialogOpen = false;
+    },
+    selectLab(labId) {
+      if (typeof labId !== 'string' || !labId) return;
+      this.selectedLabId = labId;
+    },
+    loadSelectedLab() {
+      const selected = this.selectedLab;
+      if (!selected) return;
+
+      if (this.manualMode) {
+        this.manualModeUncheck();
+      }
+
+      this.uncompileCode();
+      this.program = selected.asmStub || LAB_ASM_STUB;
+      this.labDialogOpen = false;
+      this.closePopups('settingsOpen');
+      this.addLog(`Zaladowano lab: ${selected.title}`, 'system');
+    },
 
     compileCode() {
       try {
-        const { program, rawLines } = compileCodeExternal(this.code, {
-          availableSignals: this.avaiableSignals,
-          extras: this.extras,
-        });
-        console.log('Compiled program:', program);
-        // console.log(program, rawLines);
-
-        // 1) Ustawiamy program + surowe linie do podglądu
-        this.compiledProgram = Array.isArray(program) ? program : [];
-        this.compiledCode = Array.isArray(rawLines) ? rawLines : [];
-
-        // 2) PRZYPISANIE srcLine
-        //    Dla zwykłej fazy: +1 linia
-        //    Dla fazy warunkowej: +3 linie (IF, @zero, @notzero)
-        //    Po każdej instrukcji doliczamy jej postAsm (jeśli były dopisane linie w assemblerze)
-        let linePtr = 0;
-        for (const entry of this.compiledProgram) {
-          if (!entry || !Array.isArray(entry.phases)) continue;
-
-          for (const phase of entry.phases) {
-            if (phase && phase.conditional === true) {
-              // IF
-              phase.srcLine = linePtr;
-
-              const t0 = phase.truePhases && phase.truePhases[0];
-              const f0 = phase.falsePhases && phase.falsePhases[0];
-              if (t0) t0.srcLine = linePtr + 1;
-              if (f0) f0.srcLine = linePtr + 2;
-
-              linePtr += 3;
-            } else {
-              // zwykła faza
-              if (phase) phase.srcLine = linePtr;
-              linePtr += 1;
-            }
-          }
-
-          // jeśli generator dopisał tekstowe linie po instrukcji (postAsm),
-          // to w podglądzie one istnieją, więc licznik też trzeba przesunąć
-          const extra = entry.meta?.postAsm;
-          if (Array.isArray(extra) && extra.length) {
-            linePtr += extra.length;
-          }
-
-          // bazowy srcLine wpisu — „pierwsza” linia wpisu (pomocniczo)
-          if (entry.phases?.length && Number.isFinite(entry.phases[0]?.srcLine)) {
-            entry.srcLine = entry.phases[0].srcLine;
-          } else {
-            entry.srcLine = entry.srcLine ?? 0;
-          }
+        if (!this.code || !this.code.trim()) {
+          throw new Error('Brak kodu do kompilacji.');
         }
 
-        // 3) Reset stanu i start jak wcześniej
+        this.compiledProgram = [];
+        this.compiledCode = this.code
+          .split(';')
+          .map((line) => line.replace(/\r?\n/g, ' ').trim())
+          .filter((line) => line.length > 0);
+
         this.codeCompiled = true;
         this.activeInstrIndex = -1;
         this.activePhaseIndex = 0;
@@ -1893,28 +1876,25 @@ export default {
 
       if (this._condState) {
         const st = this._condState;
-        // 1) pierwszy klik – SHOW_IF
         if (st.stage === 'SHOW_IF') {
           if (Number.isFinite(st.phaseRef?.srcLine)) {
             this.activeLine = st.phaseRef.srcLine;
             return;
           }
         }
-        // 2) drugi i kolejne – RUN_BRANCH
+
         const idx = Math.min(st.idx ?? 0, (st.list?.length ?? 1) - 1);
         const curr = st.list?.[idx];
         if (curr && Number.isFinite(curr.srcLine)) {
           this.activeLine = curr.srcLine;
           return;
         }
-        // awaryjnie – offset względem IF
         if (Number.isFinite(st.phaseRef?.srcLine)) {
           this.activeLine = st.phaseRef.srcLine + (st.pick === 'T' ? 1 : 2);
           return;
         }
       }
 
-      // Jeżeli mamy przypięte srcLine — to ich używamy.
       if (Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
         const instr = this.compiledProgram[this.activeInstrIndex];
         const phase = instr?.phases?.[this.activePhaseIndex];
@@ -1929,7 +1909,6 @@ export default {
         }
       }
 
-      // awaryjnie: licznik faz „na piechotę”
       let line = 0;
       const instrIdx = Math.max(0, this.activeInstrIndex);
       for (let i = 0; i < instrIdx; i++) {
@@ -1945,7 +1924,6 @@ export default {
       }
       this.activeLine = line;
 
-      // legacy zakres
       const max = (this.compiledCode?.length || 1) - 1;
       this.activeLine = Math.max(0, Math.min(this.activeLine || 0, max));
     },
@@ -2264,6 +2242,11 @@ export default {
     },
 
     handleKeyPress(event) {
+      if (event.key === 'Escape' && this.labDialogOpen) {
+        this.labDialogOpen = false;
+        return;
+      }
+
       // Close console with Escape key
       if (event.key === 'Escape' && this.consoleOpen) {
         this.consoleOpen = false;

@@ -507,6 +507,7 @@ export default {
       codeCompiled: false,
 
       disappearBlour: false,
+      blurHideTimer: null,
       settingsOpen: false,
       commandListOpen: false,
       aiChatOpen: false,
@@ -600,10 +601,7 @@ export default {
       if (typeof lineIdx !== 'number') return;
       if (this.breakpoints.has(lineIdx)) this.breakpoints.delete(lineIdx);
       else this.breakpoints.add(lineIdx);
-      this.addLog(
-        this.$t(`logs.breakpoint.${this.breakpoints.has(lineIdx) ? 'added' : 'removed'}`, { line: lineIdx }),
-        'system'
-      );
+      this.addLog(this.$t(`logs.breakpoint.${this.breakpoints.has(lineIdx) ? 'added' : 'removed'}`, { line: lineIdx }), 'system');
     },
     _shouldPauseOnBreakpoint(nextSrcLine) {
       return this.isRunning && Number.isFinite(nextSrcLine) && this.breakpoints.has(nextSrcLine);
@@ -1379,9 +1377,17 @@ export default {
         this[popupName] = false;
       }
 
+      if (this.blurHideTimer) {
+        clearTimeout(this.blurHideTimer);
+        this.blurHideTimer = null;
+      }
+
       if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
-        setTimeout(() => {
-          this.disappearBlour = false;
+        this.blurHideTimer = setTimeout(() => {
+          this.blurHideTimer = null;
+          if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
+            this.disappearBlour = false;
+          }
         }, 1000);
       }
     },
@@ -1496,6 +1502,7 @@ export default {
       this.addLog(this.$t('logs.separator'), 'interrupt');
     },
 
+    // REFACTOR
     executeLine() {
       const setHighlight = (node) => {
         if (this._headless) return;
@@ -2263,7 +2270,11 @@ export default {
     anyPopupOpen: {
       handler(val) {
         if (val) {
-          this.disappearBlour = val;
+          if (this.blurHideTimer) {
+            clearTimeout(this.blurHideTimer);
+            this.blurHideTimer = null;
+          }
+          this.disappearBlour = true;
         }
       },
       immediate: true,
@@ -2289,6 +2300,7 @@ export default {
     window.removeEventListener('keydown', this.handleKeyPress);
     if (this.wsPingTimer) clearInterval(this.wsPingTimer);
     if (this.toastTimer) clearTimeout(this.toastTimer);
+    if (this.blurHideTimer) clearTimeout(this.blurHideTimer);
   },
 };
 </script>

@@ -2,6 +2,7 @@ export type RuntimeCommandKind = 'exec' | 'memory' | 'directive';
 
 export interface RuntimeCommand {
   name: string;
+  mnemonics?: Record<string, string | string[]>;
   args?: number;
   argsMin?: number;
   argsMax?: number;

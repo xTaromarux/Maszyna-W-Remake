@@ -75,7 +75,8 @@ import { javascript } from '@codemirror/lang-javascript';
 import { maszynaW } from '../codemirror-langs/maszynaW.support.js';
 import { mwTheme, macroTheme } from '../codemirror-langs/themes.js';
 import { macroW } from '../codemirror-langs/macroW.support.js';
-import { macroWRuntimeHighlight, macroWRuntimeCompletions } from '../codemirror-langs/macroW.runtime';
+import { macroWRuntimeHighlight, macroWRuntimeCompletions, type MacroCompletionItem } from '../codemirror-langs/macroW.runtime';
+import { collectCommandAliases } from '@/utils/data/commandMnemonics';
 // import { stickyCompletion } from '../codemirror-langs/stickyCompletion.js';
 
 // Import icons for compilation buttons
@@ -131,7 +132,12 @@ const props = defineProps<{
   onCompile?: () => void;
   onEdit?: () => void;
   autocompleteEnabled?: boolean;
-  commandList?: Array<{ name: string; kind?: 'exec' | 'memory' | 'directive'; description?: string | Record<string, string> }>;
+  commandList?: Array<{
+    name: string;
+    kind?: 'exec' | 'memory' | 'directive';
+    description?: string | Record<string, string>;
+    mnemonics?: Record<string, string | string[]>;
+  }>;
   maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();
@@ -153,28 +159,59 @@ function resolveCommandDescription(description: unknown, name?: string): string 
   if (typeof description === 'object') {
     const descMap = description as Record<string, string>;
     const current = locale.value;
-    return (
-      descMap[current] ||
-      descMap[current?.split('-')[0]] ||
-      descMap.en ||
-      descMap.pl ||
-      Object.values(descMap)[0]
-    );
+    return descMap[current] || descMap[current?.split('-')[0]] || descMap.en || descMap.pl || Object.values(descMap)[0];
   }
   return String(description);
 }
 
-const localizedCommandList = computed(() =>
-  (props.commandList || []).map((cmd) => ({
-    ...cmd,
-    description: resolveCommandDescription(cmd.description, cmd.name),
-  }))
+const macroCommandMetadata = computed(() =>
+  (props.commandList || []).map((cmd) => {
+    const aliases = collectCommandAliases(cmd, {
+      locale: locale.value,
+    });
+
+    return {
+      aliases,
+      description: resolveCommandDescription(cmd.description, cmd.name),
+    };
+  })
 );
+
+const macroCompletionItems = computed<MacroCompletionItem[]>(() => {
+  const items: MacroCompletionItem[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of macroCommandMetadata.value) {
+    const label = entry.aliases.preferred[0] || entry.aliases.canonical;
+    if (!label) continue;
+
+    const dedupeKey = String(label).toUpperCase();
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    items.push({
+      label,
+      detail: entry.description,
+    });
+  }
+
+  return items;
+});
+
+const macroHighlightWords = computed(() => {
+  const words = new Set<string>();
+  for (const entry of macroCommandMetadata.value) {
+    for (const alias of entry.aliases.all) {
+      if (alias) words.add(alias);
+    }
+  }
+  return Array.from(words);
+});
 
 function getAutocompleteExtensions() {
   if (props.autocompleteEnabled === false) return [];
   if (props.language === 'macroW') {
-    return macroWRuntimeCompletions(localizedCommandList.value);
+    return macroWRuntimeCompletions(macroCompletionItems.value);
   }
   return [];
 }
@@ -294,7 +331,7 @@ function createExtensions() {
     getLanguageExtension(props.language),
     ...getThemeExtension(props.theme),
     ...getAutocompleteExtensions(),
-    ...(props.language === 'macroW' ? macroWRuntimeHighlight(localizedCommandList.value) : []),
+    ...(props.language === 'macroW' ? macroWRuntimeHighlight(macroHighlightWords.value) : []),
     // ...(props.language === 'macroW' && props.devStickyCompletion ? [stickyCompletion()] : []),
     EditorView.theme({
       '&': {

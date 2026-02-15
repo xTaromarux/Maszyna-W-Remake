@@ -1,6 +1,7 @@
 ﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { WlanError } from './error';
 import type { InstructionRegistry, NormalizedRuntimeCommand, RuntimeCommand, RuntimeCommandKind } from './types/registry';
+import { collectCommandAliases, normalizeMnemonicToken } from '../utils/data/commandMnemonics';
 
 const BUILT_INS: RuntimeCommand[] = [
   { name: 'RST', kind: 'memory', args: 1 },
@@ -10,9 +11,7 @@ const BUILT_INS: RuntimeCommand[] = [
 ];
 
 function toUpperName(name: unknown): string {
-  return String(name || '')
-    .trim()
-    .toUpperCase();
+  return normalizeMnemonicToken(name, 'upper');
 }
 
 function normalizeArity(cmd: RuntimeCommand): { min: number; max: number } {
@@ -65,29 +64,46 @@ function normalizeCommand(cmd: RuntimeCommand, fallbackKind: RuntimeCommandKind)
   };
 }
 
+function registerCommandWithAliases(byName: Map<string, NormalizedRuntimeCommand>, cmd: NormalizedRuntimeCommand): void {
+  // Canonical mnemonic always wins over existing aliases.
+  byName.set(cmd.name, cmd);
+
+  const { all } = collectCommandAliases(cmd);
+  for (const alias of all) {
+    const key = normalizeMnemonicToken(alias, 'upper');
+    if (!key || key === cmd.name) continue;
+    // Alias conflicts never override existing registration.
+    if (byName.has(key)) continue;
+    byName.set(key, cmd);
+  }
+}
+
 export function buildInstructionRegistry(commandList: RuntimeCommand[] = []): InstructionRegistry {
   const byName = new Map<string, NormalizedRuntimeCommand>();
+  const canonicalEntries = new Map<string, NormalizedRuntimeCommand>();
 
   for (const raw of commandList || []) {
     const cmd = normalizeCommand(raw, 'exec');
-    if (byName.has(cmd.name)) {
+    if (canonicalEntries.has(cmd.name)) {
       throw new WlanError(`Duplicate command definition "${cmd.name}"`, {
         code: 'REG_DUPLICATE',
         hint: 'Remove duplicate command name from commandList.',
       });
     }
-    byName.set(cmd.name, cmd);
+    canonicalEntries.set(cmd.name, cmd);
+    registerCommandWithAliases(byName, cmd);
   }
 
   for (const raw of BUILT_INS) {
     const builtin = normalizeCommand(raw, raw.kind || 'directive');
     // Built-ins always win for reserved keywords.
-    byName.set(builtin.name, builtin);
+    canonicalEntries.set(builtin.name, builtin);
+    registerCommandWithAliases(byName, builtin);
   }
 
   return {
     byName,
-    entries: Array.from(byName.values()),
+    entries: Array.from(canonicalEntries.values()),
   };
 }
 

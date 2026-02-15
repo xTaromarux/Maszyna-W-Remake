@@ -1,5 +1,5 @@
 <template>
-  <div id="settings-overlay" v-if="open" @click.self="startClose">
+  <div id="settings-overlay" v-if="open" :class="{ 'is-closing': !settingsOpen }" @click.self="startClose">
     <CreatorsPanel
       :is-mobile="isMobile"
       :is-animated="isAnimated"
@@ -209,6 +209,10 @@ export default {
   z-index: 100;
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+#settings-overlay.is-closing {
+  pointer-events: none;
 }
 
 @keyframes fadeIn {

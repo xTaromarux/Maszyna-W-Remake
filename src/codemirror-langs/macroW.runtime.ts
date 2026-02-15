@@ -1,9 +1,13 @@
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import type { Extension } from '@codemirror/state';
 import { StateField, RangeSetBuilder, EditorState } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { autocompletion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 
-type Cmd = { name: string; description?: string | Record<string, string> };
+interface Cmd {
+  name: string;
+  description?: string | Record<string, string>;
+}
 
 function escapeRx(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -19,7 +23,6 @@ function matchCase(s: string, pattern: string) {
 export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension[] {
   const words = Array.from(new Set(commands.map((c) => c?.name).filter(Boolean))) as string[];
 
-  // brak komend → pusta dekoracja
   if (words.length === 0) {
     const empty = StateField.define<DecorationSet>({
       create: () => Decoration.none,
@@ -72,16 +75,11 @@ function normalizeDescription(description?: Cmd['description']): string {
 }
 
 export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
-  const base = (commands || [])
-    .filter((c) => c?.name)
-    .map((c) => ({ name: c.name, description: normalizeDescription(c.description) }));
+  const base = (commands || []).filter((c) => c?.name).map((c) => ({ name: c.name, description: normalizeDescription(c.description) }));
 
   function source(ctx: CompletionContext): CompletionResult | null {
-    // Unicode: litery/cyfry/podkreślenie
     const word = ctx.matchBefore(/[\p{L}\p{N}_]*/u);
     if (!word) return null;
-    // (opcjonalnie) jeśli chcesz mieć podpowiedzi tylko gdy coś wpisano:
-    // if (word.from == word.to && !ctx.explicit) return null;
 
     const opts = base.map(({ name, description }) => ({
       label: matchCase(name, word.text),
@@ -95,8 +93,8 @@ export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
     autocompletion({
       override: [source],
       activateOnTyping: true,
-      closeOnBlur: true, // 🔴 nie zamykaj na blur
-      selectOnOpen: true, // opcjonalnie: od razu zaznacz pierwszy
+      closeOnBlur: true,
+      selectOnOpen: true,
     }),
   ] as const;
 }

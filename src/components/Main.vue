@@ -247,10 +247,9 @@ import LabCatalogDialog from '@/components/Settings/LabCatalogDialog.vue';
 import ExecutionControls from './MicroInstructionsEdtior/ExecutionControls.vue';
 import ProgramEditor from './MicroInstructionsEdtior/ProgramEditor.vue';
 import { commandList } from '@/utils/data/commands.js';
+import { createLabCatalog, defaultLabId } from '@/utils/data/labs.js';
 import { setLocale } from '@/i18n';
 import { mainMicroInstructionExecutionMethods } from './microInstructions/microInstructionExecutionMethods';
-
-const LAB_ASM_STUB = Array.from({ length: 11 }, (_, idx) => `DOD ${idx}`).join('\n');
 
 export default {
   name: 'MainComponent',
@@ -512,45 +511,8 @@ export default {
       commandListOpen: false,
       aiChatOpen: false,
       labDialogOpen: false,
-      selectedLabId: 'lab-add-intro',
-      labCatalog: [
-        {
-          id: 'lab-add-intro',
-          titleKey: 'labs.catalog.addIntro.title',
-          descriptionKey: 'labs.catalog.addIntro.description',
-          outcomesKeys: [
-            'labs.catalog.addIntro.outcomes.readMemory',
-            'labs.catalog.addIntro.outcomes.doAdd',
-            'labs.catalog.addIntro.outcomes.observeResult',
-          ],
-          pythonOverview: `def run(memory):\n    a = memory[0]\n    b = memory[1]\n    result = a + b\n    return result`,
-          asmStub: LAB_ASM_STUB,
-        },
-        {
-          id: 'lab-loop-counter',
-          titleKey: 'labs.catalog.loopCounter.title',
-          descriptionKey: 'labs.catalog.loopCounter.description',
-          outcomesKeys: [
-            'labs.catalog.loopCounter.outcomes.counterWork',
-            'labs.catalog.loopCounter.outcomes.updateState',
-            'labs.catalog.loopCounter.outcomes.conditionalJumps',
-          ],
-          pythonOverview: `def run(limit):\n    counter = 0\n    while counter < limit:\n        counter += 1\n    return counter`,
-          asmStub: LAB_ASM_STUB,
-        },
-        {
-          id: 'lab-branching',
-          titleKey: 'labs.catalog.branching.title',
-          descriptionKey: 'labs.catalog.branching.description',
-          outcomesKeys: [
-            'labs.catalog.branching.outcomes.compareValues',
-            'labs.catalog.branching.outcomes.pickPath',
-            'labs.catalog.branching.outcomes.analyzeEffect',
-          ],
-          pythonOverview: `def run(value):\n    if value == 0:\n        return "zero"\n    return "non-zero"`,
-          asmStub: LAB_ASM_STUB,
-        },
-      ],
+      selectedLabId: defaultLabId,
+      labCatalog: createLabCatalog(),
 
       toast: {
         visible: false,
@@ -1413,7 +1375,7 @@ export default {
       }
 
       this.uncompileCode();
-      this.program = selected.asmStub || LAB_ASM_STUB;
+      this.program = selected.asmStub || '';
       this.labDialogOpen = false;
       this.closePopups('settingsOpen');
       this.addLog(this.$t('logs.labLoaded', { title: this.$t(selected.titleKey) }), 'system');

@@ -367,34 +367,80 @@ const messages = {
         "closeAria": "Zamknij okno wyboru labu",
         "outcomesTitle": "Czego nauczysz sie na tym labie",
         "pythonOverview": "Pythonowy overview",
+        "asmMapping": "Mapowanie na ASM",
         "load": "Zaladuj lab"
       },
       "catalog": {
-        "addIntro": {
-          "title": "Lab 1: Podstawy dodawania",
-          "description": "Poznasz najprostszy przeplyw danych dla dodawania i sposob mapowania logiki na kroki ASM.",
+        "fibonacci": {
+          "title": "Lab 1: Ciag Fibonacciego",
+          "description": "Translacja petli Pythona na adresowanie tablicy i iteracyjne wyliczanie kolejnych elementow.",
           "outcomes": {
-            "readMemory": "jak czytac wartosci z pamieci",
-            "doAdd": "jak wykonac operacje DOD",
-            "observeResult": "jak obserwowac wynik i stan rejestrow"
+            "memoryIndexing": "adresowanie elementow tablicy przez wskaznik",
+            "iterativeFlow": "organizacja petli i warunku zakonczenia",
+            "resultExport": "przygotowanie wyniku do wyjscia"
           }
         },
-        "loopCounter": {
-          "title": "Lab 2: Licznik w petli",
-          "description": "Lab pokazuje jak aktualizowac licznik i jak przygotowac grunt pod petle sterowana warunkiem.",
+        "arrayMin": {
+          "title": "Lab 2: Minimum tablicy",
+          "description": "Wyszukiwanie najmniejszej wartosci z wykorzystaniem porownan i skokow warunkowych.",
           "outcomes": {
-            "counterWork": "praca na liczniku",
-            "updateState": "aktualizacja stanu po kazdym kroku",
-            "conditionalJumps": "przygotowanie do skokow warunkowych"
+            "comparisonLogic": "porownywanie elementu z aktualnym minimum",
+            "pointerAdvance": "przesuwanie wskaznika po tablicy",
+            "stateReset": "resetowanie stanu po przejsciu tablicy"
           }
         },
-        "branching": {
-          "title": "Lab 3: Warunek i rozgalezienie",
-          "description": "Zobaczysz jak w praktyce wyglada decyzja warunkowa i jakie zachowanie chcemy uzyskac w ASM.",
+        "powerAdvanced": {
+          "title": "Lab 3: Potegowanie a^b (zaawansowane)",
+          "description": "Program wykorzystuje petle oraz operacje na stosie do budowy bardziej zlozonego przeplywu.",
           "outcomes": {
-            "compareValues": "porownanie wartosci",
-            "pickPath": "wybor jednej z dwoch sciezek",
-            "analyzeEffect": "analiza efektu warunku"
+            "stackOps": "uzycie DNS/PZS/PWR w praktyce",
+            "nestedLoops": "koordynacja petli zagniezdzonych",
+            "compoundComputation": "realizacja potegowania bez instrukcji wysokiego poziomu"
+          }
+        },
+        "gcd": {
+          "title": "Lab 4: NWD dwoch liczb",
+          "description": "Implementacja algorytmu Euklidesa przez odejmowanie i petle while.",
+          "outcomes": {
+            "whileMapping": "mapowanie warunku while na SOM/SOZ/SOB",
+            "branchingUpdate": "aktualizacja jednej z dwoch zmiennych",
+            "terminationCheck": "detekcja warunku zakonczenia programu"
+          }
+        },
+        "arraySum": {
+          "title": "Lab 5: Sumowanie tablicy",
+          "description": "Przejscie po tablicy i akumulacja sumy elementow w dedykowanej zmiennej.",
+          "outcomes": {
+            "accumulation": "sumowanie elementow krok po kroku",
+            "indexAddressing": "obliczanie adresu biezacego elementu",
+            "loopBoundaries": "kontrola poczatku i konca petli"
+          }
+        },
+        "factorial": {
+          "title": "Lab 6: Silnia",
+          "description": "Mapowanie schematu while i *= na mnozenie oraz inkrementacje licznika.",
+          "outcomes": {
+            "loopCondition": "realizacja warunku i <= n",
+            "multiplicativeState": "aktualizacja wyniku przez MNO",
+            "counterProgress": "inkrementacja i i przejscie do kolejnej iteracji"
+          }
+        },
+        "inputFilterMo": {
+          "title": "Lab 7: Filtr znakow po 4 znakach '$'",
+          "description": "Program czyta wejscie, filtruje znaki i po czwartej '$' wypisuje liczebnosci M i O. Uwaga: oryginal z artykulu byl oznaczony jako potencjalnie buggy.",
+          "outcomes": {
+            "inputHandling": "obsluga wejscia przez WPR i warunki",
+            "charFiltering": "filtrowanie znakow z przedzialu i licznikow",
+            "formattedOutput": "wypisanie wynikow w uporzadkowanej formie"
+          }
+        },
+        "interrupts": {
+          "title": "Lab 8: Program z przerwaniami",
+          "description": "Scenariusz ASM z obsluga przerwan 1-4 oraz maskowaniem i odmierzaniem licznikow wyjscia.",
+          "outcomes": {
+            "irqMasking": "uzycie CZM/MAS/MSK do sterowania maska",
+            "irqHandlers": "organizacja procedur P1-P4",
+            "stackRecovery": "zapis i odtwarzanie kontekstu przez DNS/PZS/PWR"
           }
         }
       }
@@ -855,34 +901,80 @@ const messages = {
         "closeAria": "Close lab selection dialog",
         "outcomesTitle": "What you will learn in this lab",
         "pythonOverview": "Python overview",
+        "asmMapping": "ASM mapping",
         "load": "Load lab"
       },
       "catalog": {
-        "addIntro": {
-          "title": "Lab 1: Addition basics",
-          "description": "Learn the simplest data flow for addition and how to map logic to ASM steps.",
+        "fibonacci": {
+          "title": "Lab 1: Fibonacci sequence",
+          "description": "Translate Python loop logic into array indexing and iterative sequence generation.",
           "outcomes": {
-            "readMemory": "how to read values from memory",
-            "doAdd": "how to perform ADD operation",
-            "observeResult": "how to observe result and register state"
+            "memoryIndexing": "indexing array elements through an address pointer",
+            "iterativeFlow": "structuring loop flow and termination condition",
+            "resultExport": "preparing and exporting the final result"
           }
         },
-        "loopCounter": {
-          "title": "Lab 2: Counter loop",
-          "description": "This lab shows how to update a counter and prepare for condition-based loops.",
+        "arrayMin": {
+          "title": "Lab 2: Array minimum",
+          "description": "Find the smallest element using comparisons and conditional branches.",
           "outcomes": {
-            "counterWork": "working with a counter",
-            "updateState": "state updates after each step",
-            "conditionalJumps": "preparing for conditional jumps"
+            "comparisonLogic": "comparing each element against current minimum",
+            "pointerAdvance": "advancing a pointer through array memory",
+            "stateReset": "resetting state after a full scan"
           }
         },
-        "branching": {
-          "title": "Lab 3: Condition and branch",
-          "description": "See how conditional decisions work in practice and what ASM behavior they map to.",
+        "powerAdvanced": {
+          "title": "Lab 3: Power a^b (advanced)",
+          "description": "Uses loops and stack operations to implement a more complex execution flow.",
           "outcomes": {
-            "compareValues": "comparing values",
-            "pickPath": "choosing one of two paths",
-            "analyzeEffect": "analyzing condition effects"
+            "stackOps": "practical use of DNS/PZS/PWR instructions",
+            "nestedLoops": "coordinating nested loop stages",
+            "compoundComputation": "building exponentiation without high-level operators"
+          }
+        },
+        "gcd": {
+          "title": "Lab 4: GCD of two numbers",
+          "description": "Implements Euclid algorithm with subtraction and while-style looping.",
+          "outcomes": {
+            "whileMapping": "mapping while condition to SOM/SOZ/SOB control flow",
+            "branchingUpdate": "updating one of two values after comparison",
+            "terminationCheck": "detecting algorithm termination correctly"
+          }
+        },
+        "arraySum": {
+          "title": "Lab 5: Array sum",
+          "description": "Walk through an array and accumulate all items in a running sum.",
+          "outcomes": {
+            "accumulation": "step-by-step accumulation in a dedicated variable",
+            "indexAddressing": "computing current element address from index",
+            "loopBoundaries": "controlling loop start and end boundaries"
+          }
+        },
+        "factorial": {
+          "title": "Lab 6: Factorial",
+          "description": "Maps while and *= semantics into multiplication plus counter increments.",
+          "outcomes": {
+            "loopCondition": "implementing i <= n condition in ASM flow",
+            "multiplicativeState": "updating result with MNO in each iteration",
+            "counterProgress": "incrementing i and advancing iterations"
+          }
+        },
+        "inputFilterMo": {
+          "title": "Lab 7: Input filter after 4 '$' chars",
+          "description": "Reads input stream, filters characters, and outputs counts for M and O. Note: the paper marks the original variant as potentially buggy.",
+          "outcomes": {
+            "inputHandling": "processing input with WPR and branch checks",
+            "charFiltering": "filtering symbol ranges and counters",
+            "formattedOutput": "printing final output in a structured format"
+          }
+        },
+        "interrupts": {
+          "title": "Lab 8: Interrupt-driven program",
+          "description": "ASM scenario with IRQ 1-4 handlers, masking, and controlled output counters.",
+          "outcomes": {
+            "irqMasking": "using CZM/MAS/MSK to control interrupt masks",
+            "irqHandlers": "structuring interrupt procedures P1-P4",
+            "stackRecovery": "saving and restoring context with DNS/PZS/PWR"
           }
         }
       }

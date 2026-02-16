@@ -31,6 +31,9 @@
 
           <h4>{{ $t('labs.dialog.pythonOverview') }}</h4>
           <pre class="pythonPreview"><code>{{ selectedLab.pythonOverview }}</code></pre>
+
+          <h4>{{ $t('labs.dialog.asmMapping') }}</h4>
+          <pre class="asmPreview"><code>{{ selectedLab.asmStub }}</code></pre>
         </article>
       </div>
 
@@ -179,6 +182,18 @@ export default {
 
 .pythonPreview {
   margin: 0;
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  background: rgba(7, 12, 20, 0.95);
+  color: #dce8ff;
+  padding: 0.8rem;
+  overflow: auto;
+  line-height: 1.45;
+  font-size: 0.86rem;
+}
+
+.asmPreview {
+  margin: 0.5rem 0 0 0;
   border: 1px solid var(--panelOutlineColor);
   border-radius: var(--default-border-radius);
   background: rgba(7, 12, 20, 0.95);

@@ -1,6 +1,6 @@
 <template>
   <div class="segmented" :style="rootStyle">
-    <div class="track" role="tablist" :aria-label="ariaLabel">
+    <div class="track" role="tablist" :aria-label="ariaLabelResolved">
       <div class="thumb" v-if="activeIndex >= 0" aria-hidden="true"></div>
       <button
         v-for="(opt, i) in options"
@@ -25,15 +25,18 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   options: { type: Array, required: true },
   modelValue: { default: null },
-  ariaLabel: { type: String, default: 'Segmented toggle' },
+  ariaLabel: { type: String, default: null },
   valueKey: { type: String, default: 'value' },
   labelKey: { type: String, default: 'label' }
 })
 const emit = defineEmits(['update:modelValue','change'])
+
+const { t } = useI18n()
 
 const values = computed(() =>
   props.options.map(o => (typeof o === 'object' ? o[props.valueKey] : o))
@@ -49,6 +52,8 @@ const rootStyle = computed(() => ({
   '--count': String(props.options.length),
   '--idx': String(activeIndex.value)
 }))
+
+const ariaLabelResolved = computed(() => props.ariaLabel || t('common.segmentedToggle.aria'))
 
 function select(opt) {
   const val = typeof opt === 'object' ? opt[props.valueKey] : opt

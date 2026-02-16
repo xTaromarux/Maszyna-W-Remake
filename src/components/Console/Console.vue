@@ -1,22 +1,22 @@
-<template>
+﻿<template>
   <div id="console" class="futuristic-console">
     <div class="console-header">
       <div class="header-left">
         <div class="status-indicator"></div>
-        <span class="console-title">SYSTEM CONSOLE</span>
+        <span class="console-title">{{ $t('console.title') }}</span>
       </div>
       <div class="header-center">
-        <button @click="scrollToTop" class="scroll-top-btn" title="Scroll to top">
+        <button @click="scrollToTop" class="scroll-top-btn" :title="$t('console.scrollTop')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 15l-6-6-6 6" />
           </svg>
         </button>
-        <button @click="scrollToBottom" class="scroll-bottom-btn" title="Scroll to bottom">
+        <button @click="scrollToBottom" class="scroll-bottom-btn" :title="$t('console.scrollBottom')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
-        <button @click="clearConsole" class="clear-btn" title="Clear console">
+        <button @click="clearConsole" class="clear-btn" :title="$t('console.clear')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 6h18" />
             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -25,8 +25,8 @@
         </button>
       </div>
       <div class="header-right">
-        <span class="entry-count">{{ logs.length }} entries</span>
-        <button @click="closeConsole" class="close-btn" title="Close console">
+        <span class="entry-count">{{ $t('console.entryCount', { count: logs.length }) }}</span>
+        <button @click="closeConsole" class="close-btn" :title="$t('console.close')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6l-12 12" />
             <path d="M6 6l12 12" />
@@ -70,27 +70,27 @@
         <div v-if="expandedEntries.has(i) && hasErrorDetails(log)" class="entry-details">
           <div class="details-content">
             <div v-if="getErrorCode(log)" class="detail-section">
-              <span class="detail-label">Error Code:</span>
+              <span class="detail-label">{{ $t('console.detailCode') }}</span>
               <code class="detail-value">{{ getErrorCode(log) }}</code>
             </div>
 
             <div v-if="getErrorHint(log)" class="detail-section">
-              <span class="detail-label">Hint:</span>
+              <span class="detail-label">{{ $t('console.detailHint') }}</span>
               <div class="detail-value hint-text">{{ getErrorHint(log) }}</div>
             </div>
 
             <div v-if="getErrorLocation(log)" class="detail-section">
-              <span class="detail-label">Location:</span>
+              <span class="detail-label">{{ $t('console.detailLocation') }}</span>
               <code class="detail-value">{{ getErrorLocation(log) }}</code>
             </div>
 
             <div v-if="getErrorFrame(log)" class="detail-section code-frame">
-              <span class="detail-label">Context:</span>
+              <span class="detail-label">{{ $t('console.detailContext') }}</span>
               <pre class="detail-value code-block">{{ getErrorFrame(log) }}</pre>
             </div>
 
             <div v-if="getErrorTimestamp(log)" class="detail-section">
-              <span class="detail-label">Occurred:</span>
+              <span class="detail-label">{{ $t('console.detailOccurred') }}</span>
               <span class="detail-value">{{ formatDetailedTimestamp(getErrorTimestamp(log)) }}</span>
             </div>
           </div>
@@ -102,7 +102,8 @@
 
 <script setup>
 import { ref, nextTick, toRefs, watch } from 'vue';
-import { ErrorLevel, ErrorLevelColor } from '../errors';
+import { useI18n } from 'vue-i18n';
+import { ErrorLevel, ErrorLevelColor } from '@/errors';
 
 const props = defineProps({
   logs: { type: Array, default: () => [] },
@@ -111,6 +112,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'clear']);
 const expandedEntries = ref(new Set());
 const consoleContentRef = ref(null);
+const { t } = useI18n();
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -146,17 +148,17 @@ const getLogLevel = (log) => {
 
   // Map legacy class names
   const legacyClass = log.class?.toLowerCase();
-  switch (legacyClass) {
+    switch (legacyClass) {
     case 'error':
-    case 'błąd':
-    case 'błąd parsera kodu':
+    case 'parser-error':
       return ErrorLevel.ERROR;
     case 'warning':
-    case 'ostrzeżenie':
       return ErrorLevel.WARNING;
     case 'info':
     case 'system':
-    case 'kompilator rozkazów':
+    case 'compiler':
+    case 'stack':
+    case 'interrupt':
       return ErrorLevel.INFO;
     default:
       return ErrorLevel.INFO;
@@ -174,7 +176,7 @@ const getDisplayLevel = (log) => {
 };
 
 const getMainMessage = (log) => {
-  return log.message || log.error?.message || 'Unknown message';
+  return log.message || log.error?.message || t('console.unknownMessage');
 };
 
 const hasErrorDetails = (log) => {
@@ -192,7 +194,7 @@ const getErrorHint = (log) => {
 const getErrorLocation = (log) => {
   const loc = log.error?.loc;
   if (!loc) return null;
-  return `Line ${loc.line}, Column ${loc.col}`;
+  return t('console.locationValue', { line: loc.line, column: loc.col });
 };
 
 const getErrorFrame = (log) => {
@@ -258,3 +260,4 @@ watch(
   { deep: true }
 );
 </script>
+

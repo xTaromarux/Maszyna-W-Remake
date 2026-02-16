@@ -1,9 +1,14 @@
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import type { Extension } from '@codemirror/state';
 import { StateField, RangeSetBuilder, EditorState } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { autocompletion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 
-type Cmd = { name: string; description?: string };
+export interface MacroCompletionItem {
+  label: string;
+  detail?: string;
+  insertText?: string;
+}
 
 function escapeRx(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -16,11 +21,53 @@ function matchCase(s: string, pattern: string) {
   return s;
 }
 
-export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension[] {
-  const words = Array.from(new Set(commands.map((c) => c?.name).filter(Boolean))) as string[];
+function normalizeWordList(words: string[] = []): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
 
-  // brak komend → pusta dekoracja
-  if (words.length === 0) {
+  for (const raw of words || []) {
+    const key = String(raw ?? '')
+      .trim()
+      .toUpperCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+
+  return out;
+}
+
+function normalizeCompletionItems(items: MacroCompletionItem[] = []): MacroCompletionItem[] {
+  const out: MacroCompletionItem[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items || []) {
+    const label = String(item?.label ?? '')
+      .trim()
+      .toUpperCase();
+    if (!label) continue;
+
+    const insertText = String(item?.insertText ?? '')
+      .trim()
+      .toUpperCase();
+    const dedupeKey = `${label}|${insertText}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    out.push({
+      label,
+      detail: item?.detail ? String(item.detail) : undefined,
+      insertText: insertText || undefined,
+    });
+  }
+
+  return out;
+}
+
+export function macroWRuntimeHighlight(words: string[] = []): readonly Extension[] {
+  const normalizedWords = normalizeWordList(words);
+
+  if (normalizedWords.length === 0) {
     const empty = StateField.define<DecorationSet>({
       create: () => Decoration.none,
       update: (v) => v,
@@ -30,7 +77,7 @@ export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension
   }
 
   const boundary = '[\\p{L}\\p{N}_]';
-  const rx = new RegExp(`(?<!${boundary})(?:${words.map(escapeRx).join('|')})(?!${boundary})`, 'giu');
+  const rx = new RegExp(`(?<!${boundary})(?:${normalizedWords.map(escapeRx).join('|')})(?!${boundary})`, 'giu');
   const deco = Decoration.mark({ class: 'cm-macrow-keyword' });
 
   const field = StateField.define<DecorationSet>({
@@ -64,21 +111,32 @@ export function macroWRuntimeHighlight(commands: Cmd[] = []): readonly Extension
   return [field] as const;
 }
 
-export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
-  const base = (commands || []).filter((c) => c?.name).map((c) => ({ name: c.name, description: c.description || 'rozkaz' }));
+export function macroWRuntimeCompletions(items: MacroCompletionItem[] = []): readonly Extension[] {
+  const base = normalizeCompletionItems(items);
 
   function source(ctx: CompletionContext): CompletionResult | null {
-    // Unicode: litery/cyfry/podkreślenie
     const word = ctx.matchBefore(/[\p{L}\p{N}_]*/u);
     if (!word) return null;
-    // (opcjonalnie) jeśli chcesz mieć podpowiedzi tylko gdy coś wpisano:
-    // if (word.from == word.to && !ctx.explicit) return null;
 
-    const opts = base.map(({ name, description }) => ({
-      label: matchCase(name, word.text),
-      type: 'keyword' as const,
-      detail: description,
-    }));
+    const opts = base.map(({ label, detail, insertText }) => {
+      const option: {
+        label: string;
+        type: 'keyword';
+        detail?: string;
+        apply?: string;
+      } = {
+        label: matchCase(label, word.text),
+        type: 'keyword',
+        detail,
+      };
+
+      if (insertText) {
+        option.apply = matchCase(insertText, word.text);
+      }
+
+      return option;
+    });
+
     return { from: word.from, options: opts };
   }
 
@@ -86,8 +144,8 @@ export function macroWRuntimeCompletions(commands: Cmd[] = []): readonly any[] {
     autocompletion({
       override: [source],
       activateOnTyping: true,
-      closeOnBlur: true, // 🔴 nie zamykaj na blur
-      selectOnOpen: true, // opcjonalnie: od razu zaznacz pierwszy
+      closeOnBlur: true,
+      selectOnOpen: true,
     }),
   ] as const;
 }

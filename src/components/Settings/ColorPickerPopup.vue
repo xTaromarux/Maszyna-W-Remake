@@ -1,31 +1,26 @@
-<template>
+﻿<template>
   <div v-if="visible" class="color-popup-overlay" @click.self="close">
     <div class="color-popup" @click.stop>
       <div class="color-popup-header">
         <h3>{{ title }}</h3>
         <button class="close-btn" @click="close">&times;</button>
       </div>
-      
+
       <div class="color-popup-content">
-        <ColorPicker 
-          v-model="localColor" 
-          v-model:brightness="localBrightness" 
-          :size="260" 
-          @change="onColorChange" 
-        />
-        
+        <ColorPicker v-model="localColor" v-model:brightness="localBrightness" :size="260" @change="onColorChange" />
+
         <div class="color-preview">
           <div class="preview-box" :style="{ backgroundColor: localColor }"></div>
           <div class="color-info">
             <span>{{ localColor }}</span>
-            <span>Jasność: {{ Math.round(localBrightness * 100) }}%</span>
+            <span>{{ $t('colorPickerPopup.brightness') }}: {{ Math.round(localBrightness * 100) }}%</span>
           </div>
         </div>
       </div>
-      
+
       <div class="color-popup-footer">
-        <button class="cancel-btn" @click="close">Anuluj</button>
-        <button class="apply-btn" @click="apply">Zastosuj</button>
+        <button class="cancel-btn" @click="close">{{ $t('actions.cancel') }}</button>
+        <button class="apply-btn" @click="apply">{{ $t('actions.apply') }}</button>
       </div>
     </div>
   </div>
@@ -41,14 +36,14 @@ export default {
     visible: { type: Boolean, default: false },
     title: { type: String, required: true },
     color: { type: String, default: '#ff0000' },
-    brightness: { type: Number, default: 1 }
+    brightness: { type: Number, default: 1 },
   },
   emits: ['close', 'apply'],
   data() {
     return {
       localColor: this.color,
       localBrightness: this.brightness,
-      currentColorData: null
+      currentColorData: null,
     };
   },
   watch: {
@@ -60,32 +55,32 @@ export default {
     },
     visible(newVal) {
       if (newVal) {
-        // Reset do wartości props przy otwieraniu
+        // Reset do wartoĹ›ci props przy otwieraniu
         this.localColor = this.color;
         this.localBrightness = this.brightness;
       }
-    }
+    },
   },
   methods: {
     onColorChange(colorData) {
       this.currentColorData = colorData;
     },
-    
+
     close() {
       this.$emit('close');
     },
-    
+
     apply() {
       if (this.currentColorData) {
         this.$emit('apply', {
           color: this.localColor,
           brightness: this.localBrightness,
-          colorData: this.currentColorData
+          colorData: this.currentColorData,
         });
       }
       this.close();
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -235,3 +230,4 @@ export default {
   border-color: #0056b3;
 }
 </style>
+

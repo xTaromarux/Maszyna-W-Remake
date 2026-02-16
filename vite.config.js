@@ -3,7 +3,6 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
-import monacoEditorPlugin from 'vite-plugin-monaco-editor-esm';
 
 const TUNNEL_HOST = process.env.VITE_TUNNEL_HOST || 'maszynaw.loca.lt'; // ustaw w .env gdy używasz tunelu
 const USE_TUNNEL = !!process.env.VITE_TUNNEL; // np. VITE_TUNNEL=1
@@ -12,7 +11,6 @@ export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
-    monacoEditorPlugin({ languages: ['plaintext'] }),
   ],
   server: {
     host: true,

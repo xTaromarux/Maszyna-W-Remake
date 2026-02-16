@@ -1,23 +1,37 @@
-<template>
+﻿<template>
   <div v-if="props.visible" class="chatOverlay" @click.self="startClose">
     <div id="aiChat" class="chatPanel" @click.stop :class="{ show: props.visible }" :style="{ width: panelWidth + 'px' }">
       <div class="resizer" @mousedown="startResize"></div>
 
       <header class="chatHeader">
-        <h1>{{ props.title }}</h1>
+        <h1>{{ resolvedTitle }}</h1>
         <div class="headerBtns">
-          <button class="resetBtn" @click="resetConversation" aria-label="Resetuj czat">
+          <button class="resetBtn" @click="resetConversation" :aria-label="$t('aiChat.resetAria')">
             <AiChatTrashIcon width="22" height="22" class="trashIcon" />
           </button>
-          <button class="closeBtn" @click="startClose" aria-label="Zamknij czat">&times;</button>
+          <button class="closeBtn" @click="startClose" :aria-label="$t('aiChat.closeAria')">&times;</button>
         </div>
       </header>
 
       <div id="conversation" ref="conversationEl">
         <div v-if="apiState === ApiState.CHECKING || apiState === ApiState.WAKING" class="healthBanner">
-          <span v-if="apiState === ApiState.CHECKING">Sprawdzam połączenie z modelem…</span>
-          <span v-else>Wybudzam model na Hugging Face…</span>
+          <span v-if="apiState === ApiState.CHECKING">{{ $t('aiChat.checking') }}</span>
+          <span v-else>{{ $t('aiChat.waking') }}</span>
           <span class="dots"><span></span><span></span><span></span></span>
+        </div>
+
+        <div v-if="shouldShowSuggestions" class="suggestionPanel">
+          <div class="suggestionHeader">
+            <span class="suggestionTitle">{{ $t('aiChat.suggestions.title') }}</span>
+            <button class="suggestionClose" type="button" @click="dismissSuggestions" :aria-label="$t('aiChat.suggestions.closeAria')">
+              &times;
+            </button>
+          </div>
+          <div class="suggestionGrid">
+            <button v-for="item in suggestions" :key="item.id" class="suggestionTile" type="button" @click="applySuggestion(item.text)">
+              <span class="suggestionText">{{ item.text }}</span>
+            </button>
+          </div>
         </div>
 
         <transition-group name="messageEnter" tag="div" class="conversationBox">
@@ -28,11 +42,11 @@
             :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'assistant' }"
           >
             <div class="iconWrapper">
-              {{ msg.sender === 'assistant' ? '🤖' : '' }}
+              {{ msg.sender === 'assistant' ? 'đź¤–' : '' }}
             </div>
             <div class="messageContent">
               <div class="messageHeader">
-                <span class="senderName">{{ msg.sender === 'assistant' ? 'AI' : 'Ty' }}</span>
+                <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
                 <span
                   class="timestamp"
                   :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
@@ -45,7 +59,7 @@
                   type="button"
                   @click="cancelResponse"
                   :disabled="isCancelling"
-                  aria-label="Anuluj odpowiedź"
+                  :aria-label="$t('aiChat.cancel')"
                 >
                   &times;
                 </button>
@@ -67,12 +81,12 @@
       </div>
 
       <div class="inputArea">
-        <p class="inputInstruction">{{ props.instruction }}</p>
+        <p class="inputInstruction">{{ resolvedInstruction }}</p>
         <p v-if="rateLimitMessage" class="inputError">{{ rateLimitMessage }}</p>
         <p v-else-if="generalError" class="inputError">{{ generalError }}</p>
         <form @submit.prevent="sendUserMessage">
-          <input ref="textInput" v-model="text" :placeholder="props.placeholder" type="text" :disabled="isBusy" />
-          <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">Wyślij</button>
+          <input ref="textInput" v-model="text" :placeholder="resolvedPlaceholder" type="text" :disabled="isBusy" />
+          <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">{{ $t('aiChat.send') }}</button>
         </form>
       </div>
     </div>
@@ -81,6 +95,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AiChatTrashIcon from '@/components/AiChatTrashIcon.vue';
 import {
   ApiState,
@@ -96,9 +111,9 @@ import {
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
-  title: { type: String, default: 'Asystent AI' },
-  placeholder: { type: String, default: 'Napisz wiadomość…' },
-  instruction: { type: String, default: 'Opisz operację, aby otrzymać kod maszynowy:' },
+  title: { type: String, default: '' },
+  placeholder: { type: String, default: '' },
+  instruction: { type: String, default: '' },
 });
 
 const emit = defineEmits(['close']);
@@ -116,13 +131,24 @@ const rateLimitMessage = ref('');
 const generalError = ref('');
 const requestTimestamps = ref([]);
 const sessionId = ref('');
+const showSuggestions = ref(true);
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 const HEALTH_URL = API_URL ? API_URL.replace(/\/api\/chat\/?$/, '/health') : '';
+const { t } = useI18n();
 
 const isBusy = computed(
   () => aiTyping.value || isCancelling.value || apiState.value === ApiState.CHECKING || apiState.value === ApiState.WAKING
 );
+const suggestions = computed(() => [
+  { id: 'what-is-w', text: t('aiChat.suggestions.items.whatIsW') },
+  { id: 'add-two', text: t('aiChat.suggestions.items.addTwoNumbers') },
+  { id: 'first-program', text: t('aiChat.suggestions.items.firstProgram') },
+]);
+const resolvedTitle = computed(() => props.title || t('aiChat.title'));
+const resolvedPlaceholder = computed(() => props.placeholder || t('aiChat.placeholder'));
+const resolvedInstruction = computed(() => props.instruction || t('aiChat.instruction'));
+const shouldShowSuggestions = computed(() => showSuggestions.value && messages.value.length === 0);
 
 const MIN_WIDTH = 480;
 const MAX_WIDTH = 1000;
@@ -140,6 +166,18 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function startClose() {
   emit('close');
+}
+
+function dismissSuggestions() {
+  showSuggestions.value = false;
+}
+
+function applySuggestion(value) {
+  if (!value) return;
+  text.value = value;
+  nextTick(() => {
+    textInput.value?.focus();
+  });
 }
 
 function generateId(prefix = 'msg') {
@@ -378,7 +416,7 @@ function buildHistory(excludeId) {
 
 function handleWorkerMessage(event) {
   const data = event.data || {};
-  const { messageId, text: fullText, done, error, cancelled } = data;
+  const { messageId, text: fullText, done, error, errorKey, errorDetail, cancelled } = data;
   if (!messageId) return;
 
   const msg = findMessage(messageId);
@@ -394,9 +432,9 @@ function handleWorkerMessage(event) {
     });
   }
 
-  if (error) {
+  if (error || errorKey) {
     stopMessageAnimation(messageId);
-    msg.text = error;
+    msg.text = errorKey ? t(errorKey, { message: errorDetail || '' }).trim() : error;
     scheduleSave();
   }
 
@@ -433,7 +471,7 @@ async function sendUserMessage() {
   const now = Date.now();
   requestTimestamps.value = requestTimestamps.value.filter((ts) => now - ts < RATE_LIMIT.windowMs);
   if (requestTimestamps.value.length >= RATE_LIMIT.maxRequests) {
-    setRateLimitNotice(RATE_LIMIT.message || 'Przekroczono limit zapytań.');
+    setRateLimitNotice(RATE_LIMIT.message || t('aiChat.rateLimitExceeded'));
     return;
   }
 
@@ -455,7 +493,7 @@ async function sendUserMessage() {
   try {
     await ensureModelAwake();
   } catch (err) {
-    const errorMessage = `Nie udało się połączyć z modelem. ${err?.message || ''}`.trim();
+    const errorMessage = t('aiChat.connectFailed', { message: err?.message || '' }).trim();
     generalError.value = errorMessage;
     aiTyping.value = false;
     isCancelling.value = false;
@@ -525,6 +563,7 @@ function resetConversation() {
   requestTimestamps.value = [];
   generalError.value = '';
   rateLimitMessage.value = '';
+  showSuggestions.value = true;
 
   scheduleSave();
   try {
@@ -553,8 +592,8 @@ function renderMessage(textValue) {
   out = out.replace(/\r?\n/g, '<br>');
 
   blocks.forEach((block, index) => {
-    const langLabel = block.lang ? `<span class="code-lang">${block.lang}</span>` : `<span class="code-lang no-lang">kod</span>`;
-    const toolbar = `<div class="code-toolbar-outside">${langLabel}<button type="button" class="copy-btn" aria-label="Skopiuj kod">Kopiuj</button></div>`;
+    const langLabel = block.lang ? `<span class="code-lang">${block.lang}</span>` : `<span class="code-lang no-lang">${t('aiChat.codeLabel')}</span>`;
+    const toolbar = `<div class="code-toolbar-outside">${langLabel}<button type="button" class="copy-btn" aria-label="${t('aiChat.copyCodeAria')}">${t('aiChat.copyCode')}</button></div>`;
     const group = `<div class="code-group">${toolbar}<pre class="code-block"><code>${block.code}</code></pre></div>`;
     out = out.replace(`%%CODEBLOCK_${index}%%`, group);
   });
@@ -798,4 +837,78 @@ onBeforeUnmount(() => {
     opacity: 1;
   }
 }
+
+.suggestionPanel {
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 3px solid var(--panelOutlineColor, #003c7d);
+  background: var(--panelBackgroundColor, #ffffff);
+  color: var(--fontColor, #0f172a);
+}
+
+.suggestionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.suggestionTitle {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.suggestionClose {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fontColor, #0f172a);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.suggestionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.suggestionTile {
+  text-align: left;
+  border: 2px solid #003c7d;
+  border-radius: 8px;
+  padding: 0.55rem 0.6rem;
+  background: #f8fafc;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.suggestionTile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+  border-color: #0ea5e9;
+}
+
+.suggestionText {
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+body.darkMode .suggestionPanel {
+  background: var(--panelBackgroundColor, #0f172a);
+}
+
+body.darkMode .suggestionTile {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #1d4ed8;
+}
 </style>
+

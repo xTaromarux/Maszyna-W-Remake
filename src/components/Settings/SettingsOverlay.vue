@@ -1,13 +1,19 @@
 <template>
-  <div id="settings-overlay" v-if="open" @click.self="startClose">
-    <CreatorsPanel :is-mobile="isMobile" :is-animated="isAnimated" :creators="creators" :caregivers="caregivers" />
+  <div id="settings-overlay" v-if="open" :class="{ 'is-closing': !settingsOpen }" @click.self="startClose">
+    <CreatorsPanel
+      :is-mobile="isMobile"
+      :is-animated="isAnimated"
+      :creators="creatorsLocalized"
+      :caregivers="caregiversLocalized"
+    />
 
     <SettingsPanel
       :is-animated="isAnimated"
       :is-mobile="isMobile"
       :creators="creators"
-      :caregivers="caregivers"
+      :caregivers="caregiversLocalized"
       :light-mode="lightMode"
+      :language="language"
       :number-format="numberFormat"
       :code-bits="codeBits"
       :addres-bits="addresBits"
@@ -20,6 +26,7 @@
       :auto-reset-on-asm-compile="autoResetOnAsmCompile"
       @close="startClose"
       @update:lightMode="$emit('update:lightMode', $event)"
+      @update:language="$emit('update:language', $event)"
       @update:numberFormat="$emit('update:numberFormat', $event)"
       @update:decSigned="$emit('update:decSigned', $event)"
       @update:codeBits="$emit('update:codeBits', $event)"
@@ -30,6 +37,7 @@
       @resetValues="$emit('resetValues')"
       @defaultSettings="$emit('defaultSettings')"
       @open-command-list="$emit('open-command-list')"
+      @open-lab-dialog="$emit('open-lab-dialog')"
       @update:autocompleteEnabled="$emit('update:autocompleteEnabled', $event)"
       @update:autoResetOnAsmCompile="$emit('update:autoResetOnAsmCompile', $event)"
       @color-change="$emit('color-change', $event)"
@@ -48,6 +56,7 @@ export default {
     settingsOpen: { type: Boolean, default: false },
     isMobile: { type: Boolean, required: true },
     lightMode: { type: Boolean, required: true },
+    language: { type: String, default: 'pl' },
     numberFormat: { type: String, required: true },
     codeBits: { type: Number, required: true },
     autocompleteEnabled: { type: Boolean, default: true },
@@ -88,15 +97,16 @@ export default {
     },
     caregivers: {
       default: () => [
-        { name: 'Dr inż. Robert Tutajewicz', linkedin: '', roles: [] },
-        { name: 'Dr hab. inż. Krzysztof Simiński', linkedin: '', roles: [] },
-        { name: 'Dr inż. Tomasz Rudnicki', linkedin: '', roles: [] },
+        { baseName: 'Robert Tutajewicz', titles: ['dr', 'inz'], linkedin: '', roles: [] },
+        { baseName: 'Krzysztof Simiński', titles: ['drHab', 'inz'], linkedin: '', roles: [] },
+        { baseName: 'Tomasz Rudnicki', titles: ['dr', 'inz'], linkedin: '', roles: [] },
       ],
     },
   },
   emits: [
     'close',
     'update:lightMode',
+    'update:language',
     'update:numberFormat',
     'update:codeBits',
     'update:addresBits',
@@ -105,6 +115,7 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
+    'open-lab-dialog',
     'update:decSigned',
     'update:autocompleteEnabled',
     'update:autoResetOnAsmCompile',
@@ -140,6 +151,14 @@ export default {
       }
     },
   },
+  computed: {
+    caregiversLocalized() {
+      return this.localizePeopleList(this.caregivers);
+    },
+    creatorsLocalized() {
+      return this.localizePeopleList(this.creators);
+    },
+  },
   mounted() {
     if (this.settingsOpen) {
       this.disableBodyScroll();
@@ -168,6 +187,17 @@ export default {
         this.open = false;
       }, 400);
     },
+    localizePeopleList(list) {
+      const translateTitles = (titles = []) => titles.map((t) => this.$t(`titles.${t}`)).filter(Boolean).join(' ');
+      return (list || []).map((person) => {
+        if (person && person.baseName && Array.isArray(person.titles)) {
+          const prefix = translateTitles(person.titles);
+          const localizedName = prefix ? `${prefix} ${person.baseName}` : person.baseName;
+          return { ...person, name: localizedName };
+        }
+        return person;
+      });
+    },
   },
 };
 </script>
@@ -179,6 +209,10 @@ export default {
   z-index: 100;
   opacity: 0;
   animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+#settings-overlay.is-closing {
+  pointer-events: none;
 }
 
 @keyframes fadeIn {

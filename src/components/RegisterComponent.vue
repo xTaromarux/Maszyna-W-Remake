@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div :id="id" :class="[classNames, edgeClass, 'register-container']">
     <div v-if="isEnableEditValue" class="register-container">
       <span :title="fullName" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">{{ label }}</span>
@@ -6,7 +6,14 @@
       
       <div class="inputWrapper">
         <span>{{ formattedValue }}</span>
-        <input inputmode="numeric" pattern="[0-9]*" type="number" class="hoverInput" :value="model" @input="updateValue" @blur="onBlur" />
+        <input
+          :type="inputType"
+          :inputmode="inputMode"
+          class="hoverInput"
+          :value="inputValue"
+          @input="updateValue"
+          @blur="onBlur"
+        />
       </div>
     </div>
     <div v-if="showFormatSelector" class="format-selector" ref="formatSelector">
@@ -71,28 +78,29 @@ export default {
   },
   computed: {
     fullName() {
-      const names = {
-        AK: 'Akumulator',
-        X: 'Rejestr X',
-        Y: 'Rejestr Y',
-        I: 'Rejestr I (adresowy)',
-        L: 'Licznik',
-        S: 'Rejestr S',
-        A: 'Rejestr A',
-        JAML: 'Rejestr JAL',
-        RZ: 'Rejestr zgłoszeń przerwań',
-        RP: 'Rejestr priorytetów przerwań',
-        AP: 'Rejestr adresu przerwania',
-        RM: 'Rejestr maski przerwań',
-        G:  'Rejestr gotowości urządzenia',
-        RB: 'Rejestr bufora urządzenia',
-        WS: 'Wskaźnik stosu', 
+      const nameKeys = {
+        AK: 'registers.names.AK',
+        X: 'registers.names.X',
+        Y: 'registers.names.Y',
+        I: 'registers.names.I',
+        L: 'registers.names.L',
+        S: 'registers.names.S',
+        A: 'registers.names.A',
+        JAML: 'registers.names.JAML',
+        JAL: 'registers.names.JAL',
+        RZ: 'registers.names.RZ',
+        RP: 'registers.names.RP',
+        AP: 'registers.names.AP',
+        RM: 'registers.names.RM',
+        G: 'registers.names.G',
+        RB: 'registers.names.RB',
+        WS: 'registers.names.WS',
       };
-      return names[this.label] || this.label;
+      return this.$t(nameKeys[this.label] || this.label);
     },
     formattedValue() {
       if (typeof this.model !== 'number' || isNaN(this.model)) {
-        return 'Błąd';
+        return this.$t('registers.invalid');
       }
       
       const toSigned = (value, bits) => {
@@ -109,6 +117,26 @@ export default {
         bin: (num) => '0b' + num.toString(2),
       };
       return (formatters[this.numberFormat] || formatters.dec)(this.model);
+    },
+    inputType() {
+      return this.numberFormat === 'dec' ? 'number' : 'text';
+    },
+    inputMode() {
+      if (this.numberFormat === 'hex') return 'text';
+      return 'numeric';
+    },
+    inputValue() {
+      if (typeof this.model !== 'number' || isNaN(this.model)) {
+        return '';
+      }
+      switch (this.numberFormat) {
+        case 'hex':
+          return Math.floor(this.model).toString(16).toUpperCase();
+        case 'bin':
+          return Math.floor(this.model).toString(2);
+        default:
+          return String(this.model);
+      }
     },
      registerType() {
       // Map label to register type for validation
@@ -128,48 +156,128 @@ export default {
         G: 'G', 
         RB: 'RB', 
         JAML: 'JAL',
+        JAL: 'JAL',
       };
       return typeMap[this.label] || this.label;
     },
   },
   methods: {
+    parseInputValue(raw) {
+      const txt = String(raw ?? '').trim();
+      if (txt === '' || txt === '-') return null;
+
+      let sign = 1n;
+      let body = txt;
+      if (body.startsWith('-')) {
+        sign = -1n;
+        body = body.slice(1);
+      }
+
+      body = body.replace(/_/g, '');
+      if (!body) return null;
+
+      let base = 10;
+      if (this.numberFormat === 'hex') base = 16;
+      if (this.numberFormat === 'bin') base = 2;
+
+      if (/^0x/i.test(body)) {
+        base = 16;
+        body = body.slice(2);
+      } else if (/^0b/i.test(body)) {
+        base = 2;
+        body = body.slice(2);
+      }
+
+      if (!body) return null;
+      if (base === 2 && /[^01]/.test(body)) return null;
+      if (base === 16 && /[^0-9a-f]/i.test(body)) return null;
+      if (base === 10 && /[^0-9]/.test(body)) return null;
+
+      try {
+        let big;
+        if (base === 16) big = BigInt(`0x${body}`);
+        else if (base === 2) big = BigInt(`0b${body}`);
+        else big = BigInt(body);
+        return { big: sign < 0n ? -big : big };
+      } catch {
+        return null;
+      }
+    },
+    formatInputValue(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '';
+      switch (this.numberFormat) {
+        case 'hex':
+          return Math.floor(value).toString(16).toUpperCase();
+        case 'bin':
+          return Math.floor(value).toString(2);
+        default:
+          return String(value);
+      }
+    },
     updateValue(event) {
-      const value = parseInt(event.target.value, 10);
-      if (!isNaN(value)) {
-        // Use injected validation function if available
-        if (this.validateRegisterValue) {
-          const registerName = this.fullName || this.label;
-          if (this.validateRegisterValue(value, this.registerType, registerName)) {
-            this.$emit('update:model', value);
-          } else {
-            // if validation fails then reset input to current model value
-            event.target.value = this.model;
+      const raw = event.target.value;
+      const parsed = this.parseInputValue(raw);
+      if (parsed === null) {
+        const trimmed = String(raw ?? '').trim();
+        if (trimmed === '' || trimmed === '-') return;
+        event.target.value = this.inputValue;
+        return;
+      }
+
+        const registerName = this.fullName || this.label;
+        const maxValue = this.getMaxValueForRegister
+          ? this.getMaxValueForRegister(this.registerType)
+          : null;
+
+        if (typeof maxValue === 'number' && Number.isFinite(maxValue) && maxValue >= 0) {
+          const base = BigInt(maxValue) + 1n;
+          let normalizedBig = parsed.big;
+
+          if (parsed.big < 0n || parsed.big > BigInt(maxValue)) {
+            normalizedBig = ((parsed.big % base) + base) % base;
+            if (this.showToast) {
+              const msg = this.$t('common.validation.registerModulo', {
+                    value: String(parsed.big),
+                    max: maxValue,
+                    name: registerName,
+                    result: Number(normalizedBig),
+                  });
+              this.showToast(msg);
+            }
           }
-        } else {
-          // fallback to basic validation using  getMaxValueForRegister
-          if (this.getMaxValueForRegister) {
-            const maxValue = this.getMaxValueForRegister(this.registerType);
-            if (value > maxValue) {
-              if (this.showToast) {
-                this.showToast(
-                  `Wartość ${value} przekracza maksymalną dozwoloną wartość ${maxValue} dla rejestru ${this.fullName || this.label}.`
-                );
-              }
+
+          const normalized = Number(normalizedBig);
+          if (this.validateRegisterValue) {
+            const ok = this.validateRegisterValue(normalized, this.registerType, registerName);
+            if (!ok) {
               event.target.value = this.model;
               return;
             }
           }
-          this.$emit('update:model', value);
+
+          this.$emit('update:model', normalized);
+          event.target.value = this.formatInputValue(normalized);
+          return;
         }
-      } else {
-        this.$emit('update:model', null);
-      }
+
+        if (this.validateRegisterValue) {
+          if (this.validateRegisterValue(Number(parsed.big), this.registerType, registerName)) {
+            this.$emit('update:model', Number(parsed.big));
+          } else {
+            event.target.value = this.model;
+          }
+          return;
+        }
+
+        this.$emit('update:model', Number(parsed.big));
     },
     onBlur(e) {
-      // ustaw 0 tylko jeśli pole jest puste
+      // ustaw 0 tylko jeĹ›li pole jest puste
       if (e.target.value === '' || e.target.value === null) {
         e.target.value = 0;
         this.$emit('update:model', 0);
+      } else {
+        e.target.value = this.inputValue;
       }
     },
     handleMouseEnter() {
@@ -271,3 +379,4 @@ export default {
   color: white;
 }
 </style>
+

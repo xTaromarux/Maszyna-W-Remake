@@ -1,73 +1,186 @@
-import type { AstNode } from './model';
+﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { buildFromCommandList } from './commandAdapter';
-import type { Phase as TemplatePhase, Signal, SignalSet } from './instructions';
-import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './model';
+import type { ConditionalPhase as TemplateConditionalPhase, Phase as TemplatePhase, Signal, SignalSet } from './types/instructions';
+import type { MicroProgramEntry, MicroPhase, Phase as RuntimePhase } from './types/model';
+import type { IRInstruction, ProgramIR } from './types/assemblerIR';
+import type { Phase, CJumpMeta } from './types/microGenerator';
+import type { RuntimeCommand } from './types/registry';
 import { WlanError } from './error';
+import { translate as t } from '../i18n';
+
+interface TemplateConditionalWithMetadata extends TemplateConditionalPhase {
+  __labels?: { t?: string; f?: string };
+  __prefix?: Signal[];
+}
+
+const CONDITIONAL_LINE_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
+
+function normalizeMnemonic(name: string): string {
+  return (name || '').toLowerCase();
+}
+
+function normalizeConditionalFlag(flag: string): string {
+  return flag === 'M' ? 'N' : flag;
+}
+
+function isTemplateConditionalPhase(phase: TemplatePhase): phase is TemplateConditionalWithMetadata {
+  return !Array.isArray(phase) && (phase as TemplateConditionalWithMetadata).conditional === true;
+}
 
 function toMicroPhaseFromSignals(signals: Signal[]): MicroPhase {
-  const phase: MicroPhase = {};
-  for (const s of signals) phase[s] = true;
-  return phase;
-}
-function toMicroPhaseFromSignalSet(set: SignalSet): MicroPhase {
-  const phase: MicroPhase = {};
-  for (const k in set) if (set[k]) (phase as any)[k] = true;
-  return phase;
-}
-const nameKey = (n: string) => (n || '').toLowerCase();
-
-type Phase = { op: string; [k: string]: any };
-
-type CJumpMeta = {
-  kind: 'CJUMP';
-  flagName: 'Z' | 'N' | 'C' | 'V' | 'M';
-  trueTarget?: number;
-  falseTarget?: number;
-  joinTarget?: number;
-  _branchLocked?: boolean;
-  srcLine?: number;
-};
-
-/* IF Z THEN @zero ELSE @notzero; */
-const IF_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
-
-function cutAtKoniec(phases: Phase[]): Phase[] {
-  const i = phases.findIndex((p) => p.op === 'END' || p.op === 'END_BRANCH');
-  return i >= 0 ? phases.slice(0, i) : phases;
+  const microPhase: MicroPhase = {};
+  for (const signalName of signals) microPhase[signalName] = true;
+  return microPhase;
 }
 
-function collectBetweenLabels(lines: string[], startLabel: string): string[] {
-  const start = lines.findIndex((l) => new RegExp(`^\\s*@${startLabel}\\b`, 'u').test(l));
-  if (start === -1) return [];
-  const body: string[] = [];
-  for (let i = start + 1; i < lines.length; i++) {
+function toMicroPhaseFromSignalSet(signalSet: SignalSet): MicroPhase {
+  const microPhase: MicroPhase = {};
+  for (const signalName in signalSet) if (signalSet[signalName]) (microPhase as any)[signalName] = true;
+  return microPhase;
+}
+
+function trimAtEndMarker(phases: Phase[]): Phase[] {
+  const endIndex = phases.findIndex((phase) => phase.op === 'END' || phase.op === 'END_BRANCH');
+  return endIndex >= 0 ? phases.slice(0, endIndex) : phases;
+}
+
+function collectLabelBodyLines(lines: string[], labelName: string): string[] {
+  const labelStartIndex = lines.findIndex((line) => new RegExp(`^\\s*@${labelName}\\b`, 'u').test(line));
+  if (labelStartIndex === -1) return [];
+
+  const bodyLines: string[] = [];
+  for (let i = labelStartIndex + 1; i < lines.length; i++) {
     if (/^\s*@[\p{L}\w]+/u.test(lines[i])) break;
-    body.push(lines[i]);
+    bodyLines.push(lines[i]);
   }
-  return body;
+
+  return bodyLines;
 }
 
-function tokenizeLineToPhases(line: string): Phase[] {
+function tokenizeLineToOps(line: string): Phase[] {
   return line
     .split(/\s+/)
-    .map((tok) => tok.trim())
+    .map((token) => token.trim())
     .filter(Boolean)
-    .map((tok) => ({ op: tok }));
+    .map((token) => ({ op: token }));
 }
 
-function linesToPhases(lines: string[]): Phase[] {
-  const out: Phase[] = [];
-  for (const l of lines) out.push(...tokenizeLineToPhases(l));
-  return out;
+function flattenLinesToOps(lines: string[]): Phase[] {
+  const phases: Phase[] = [];
+  for (const line of lines) phases.push(...tokenizeLineToOps(line));
+  return phases;
 }
 
-function splitBeforeIF(lines: string[]): {
-  before: string[];
-  ifLineIdx: number;
-} {
-  const idx = lines.findIndex((l) => IF_RE.test(l));
-  if (idx === -1) return { before: lines.slice(), ifLineIdx: -1 };
-  return { before: lines.slice(0, idx), ifLineIdx: idx };
+function splitLinesBeforeConditional(lines: string[]): { prefixLines: string[]; conditionalLineIndex: number } {
+  const conditionalLineIndex = lines.findIndex((line) => CONDITIONAL_LINE_RE.test(line));
+  if (conditionalLineIndex === -1) return { prefixLines: lines.slice(), conditionalLineIndex: -1 };
+  return { prefixLines: lines.slice(0, conditionalLineIndex), conditionalLineIndex };
+}
+
+function opsToSingleBranchPhases(ops: Phase[]): MicroPhase[] {
+  if (!ops.length) return [];
+
+  const signalSet: SignalSet = {};
+  for (const op of ops) {
+    const signalName = op.op?.toLowerCase();
+    if (signalName && signalName !== 'koniec' && signalName !== 'end_branch') {
+      signalSet[signalName as Signal] = true;
+    }
+  }
+
+  return Object.keys(signalSet).length ? [toMicroPhaseFromSignalSet(signalSet)] : [];
+}
+
+function toRuntimeTemplatePhase(phase: TemplatePhase): RuntimePhase {
+  if (Array.isArray(phase)) {
+    return toMicroPhaseFromSignals(phase);
+  }
+
+  if (isTemplateConditionalPhase(phase)) {
+    const runtimeConditionalPhase: RuntimePhase = {
+      conditional: true,
+      flag: normalizeConditionalFlag(phase.flag) as any,
+      truePhases: phase.truePhases.map(toMicroPhaseFromSignalSet),
+      falsePhases: phase.falsePhases.map(toMicroPhaseFromSignalSet),
+    };
+
+    if (phase.__labels) (runtimeConditionalPhase as any).__labels = phase.__labels;
+    if (phase.__prefix) (runtimeConditionalPhase as any).__prefix = phase.__prefix;
+
+    return runtimeConditionalPhase;
+  }
+
+  return toMicroPhaseFromSignalSet(phase as SignalSet);
+}
+
+function buildAddressToPcMap(instructions: ProgramIR['instructions']): Map<number, number> {
+  const addressToPc = new Map<number, number>();
+  instructions.forEach((instruction, programCounter) => {
+    addressToPc.set(instruction.address, programCounter);
+  });
+  return addressToPc;
+}
+
+function formatAsmLine(instruction: IRInstruction): string {
+  const mnemonic = (instruction.name || '').toUpperCase();
+  const operands = instruction.operands?.map((operand) => operand.value).join(', ');
+  return operands ? `${mnemonic} ${operands}` : mnemonic;
+}
+
+function getRawTemplateLines(templates: Record<string, TemplatePhase[]>, key: string): string[] | undefined {
+  return (templates as Record<string, unknown>)[`__raw__${key}`] as string[] | undefined;
+}
+
+function resolveFallbackLines(
+  templates: Record<string, TemplatePhase[]>,
+  executableCommands: RuntimeCommand[],
+  key: string
+): string[] | undefined {
+  const rawTemplateLines = getRawTemplateLines(templates, key);
+  if (rawTemplateLines?.length) return rawTemplateLines;
+
+  const command = executableCommands.find((candidate) => normalizeMnemonic(candidate.name) === key);
+  if (!command?.lines) return undefined;
+
+  return command.lines
+    .split('\n')
+    .map((line) => line.replace(/;\s*$/g, '').trim())
+    .filter(Boolean);
+}
+
+function prependPrefixSignals(runtimePhases: RuntimePhase[], prefixOps?: Phase[]): void {
+  if (!prefixOps?.length) return;
+
+  const prefixSignalSet: SignalSet = {};
+  for (const op of prefixOps) {
+    const signalName = op.op?.toLowerCase();
+    if (signalName) prefixSignalSet[signalName as Signal] = true;
+  }
+
+  if (Object.keys(prefixSignalSet).length) {
+    runtimePhases.unshift(toMicroPhaseFromSignalSet(prefixSignalSet));
+  }
+}
+
+function applySobJumpMetadata(
+  metadata: NonNullable<MicroProgramEntry['meta']>,
+  instruction: IRInstruction,
+  addressToPc: Map<number, number>
+): void {
+  const targetAddress = instruction.operands?.[0]?.value;
+  if (typeof targetAddress !== 'number') {
+    throw new WlanError(t('wlan.microGenerator.sobNoAddress'), { code: 'GEN_SOB_NO_ADDR' });
+  }
+
+  const targetPc = addressToPc.get(targetAddress);
+  if (targetPc === undefined) {
+    throw new WlanError(t('wlan.microGenerator.sobBadAddress', { targetAddress }), {
+      code: 'GEN_SOB_BAD_ADDR',
+    });
+  }
+
+  metadata.kind = 'JUMP';
+  metadata.trueTarget = targetPc;
 }
 
 export function buildConditionalForInstr(lines: string[]): {
@@ -75,223 +188,132 @@ export function buildConditionalForInstr(lines: string[]): {
   phases?: Phase[];
   condPhase?: RuntimePhase;
 } {
-  const { before, ifLineIdx } = splitBeforeIF(lines);
-  if (ifLineIdx === -1) return {};
+  const { prefixLines, conditionalLineIndex } = splitLinesBeforeConditional(lines);
+  if (conditionalLineIndex === -1) return {};
 
-  const m = lines[ifLineIdx].match(IF_RE);
-  if (!m) return {};
+  const conditionalLine = lines[conditionalLineIndex];
+  const match = conditionalLine.match(CONDITIONAL_LINE_RE);
+  if (!match) return {};
 
-  const flagName = (m[1] as CJumpMeta['flagName']) || 'Z';
-  const trueLbl = m[2];
-  const falseLbl = m[3];
+  const flagName = (match[1] as CJumpMeta['flagName']) || 'Z';
+  const trueLabel = match[2];
+  const falseLabel = match[3];
 
-  const trueLines = collectBetweenLabels(lines, trueLbl);
-  const falseLines = collectBetweenLabels(lines, falseLbl);
+  const trueBranchLines = collectLabelBodyLines(lines, trueLabel);
+  const falseBranchLines = collectLabelBodyLines(lines, falseLabel);
 
-  let truePhases = linesToPhases(trueLines);
-  let falsePhases = linesToPhases(falseLines);
-
-  truePhases = cutAtKoniec(truePhases).map((p) => (p.op === 'END' ? { op: 'END_BRANCH' } : p));
-  falsePhases = cutAtKoniec(falsePhases).map((p) => (p.op === 'END' ? { op: 'END_BRANCH' } : p));
-
-  const meta: CJumpMeta = {
-    kind: 'CJUMP',
-    flagName,
-  };
-
-  const phases = linesToPhases(before);
-
-  const toMicro = (px: Phase[]): MicroPhase[] => {
-    if (!px || px.length === 0) return [];
-    const sigs: SignalSet = {};
-    for (const p of px) {
-      const op = p.op?.toLowerCase();
-      if (op && op !== 'koniec' && op !== 'end_branch') sigs[op as Signal] = true;
-    }
-    return [toMicroPhaseFromSignalSet(sigs)];
-  };
+  const trueBranchOps = trimAtEndMarker(flattenLinesToOps(trueBranchLines));
+  const falseBranchOps = trimAtEndMarker(flattenLinesToOps(falseBranchLines));
 
   const condPhase: RuntimePhase = {
     conditional: true,
-    flag: flagName === 'M' ? 'N' : flagName,
-    truePhases: toMicro(truePhases),
-    falsePhases: toMicro(falsePhases),
+    flag: normalizeConditionalFlag(flagName) as any,
+    truePhases: opsToSingleBranchPhases(trueBranchOps),
+    falsePhases: opsToSingleBranchPhases(falseBranchOps),
   };
 
-  return { meta, phases, condPhase };
+  return {
+    meta: { kind: 'CJUMP', flagName },
+    phases: flattenLinesToOps(prefixLines),
+    condPhase,
+  };
 }
 
-export function generateMicroProgram(
-  ast: AstNode[],
-  commandList: Array<{
-    name: string;
-    args: number;
-    description?: string;
-    lines: string;
-  }>
-): MicroProgramEntry[] {
-  if (!Array.isArray(commandList) || commandList.length === 0) {
-    throw new WlanError('Pusta lista rozkazów - brak definicji do generowania mikroprogramu.', {
+export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[]): MicroProgramEntry[] {
+  const executableCommands = (commandList || []).filter((command) => (command.kind || 'exec') === 'exec');
+
+  if (!Array.isArray(executableCommands) || executableCommands.length === 0) {
+    throw new WlanError(t('wlan.microGenerator.emptyExecList'), {
       code: 'GEN_EMPTY_CMDLIST',
     });
   }
 
-  const { templates: TEMPLATES, postAsm: POSTASM } = buildFromCommandList(commandList);
+  const { templates, postAsm } = buildFromCommandList(executableCommands as any);
+  const instructions = Array.isArray(ir?.instructions) ? ir.instructions : [];
+  const addressToPc = buildAddressToPcMap(instructions);
 
-  let currentAddr = 0,
-    pc = 0;
-  const addrToPc = new Map<number, number>();
-  const instrNodes: any[] = [];
+  const microProgram: MicroProgramEntry[] = [];
 
-  for (const node of ast) {
-    switch (node.type) {
-      case 'Directive': {
-        const name = (node as any).name?.toUpperCase();
-        if (name === 'RST' || name === 'RPA' || name === 'DATA') {
-          currentAddr += Math.max(1, (node as any).operands?.length ?? 1);
-        } else if (name === 'ORG') {
-          currentAddr = (node as any).operands?.[0]?.value ?? currentAddr;
-        }
-        break;
-      }
-      case 'Instruction': {
-        addrToPc.set(currentAddr, pc);
-        instrNodes[pc] = node;
-        currentAddr += 1;
-        pc += 1;
-        break;
-      }
-      default:
-        break;
-    }
-  }
+  for (let programCounter = 0; programCounter < instructions.length; programCounter++) {
+    const instruction = instructions[programCounter];
+    const mnemonicKey = normalizeMnemonic(instruction.name || '');
+    const templatePhases = templates[mnemonicKey];
 
-  const program: MicroProgramEntry[] = [];
-
-  for (let i = 0; i < instrNodes.length; i++) {
-    const node = instrNodes[i];
-    const key = nameKey(node.name || '');
-    const template = TEMPLATES[key];
-
-    if (!template) {
-      throw new WlanError(`Brak definicji w commandList dla instrukcji "${(node.name || '').toUpperCase()}"`, {
+    if (!templatePhases) {
+      throw new WlanError(t('wlan.microGenerator.missingTemplate', { name: (instruction.name || '').toUpperCase() }), {
         code: 'GEN_NO_TEMPLATE',
-        hint: 'Sprawdź nazwę rozkazu w edytorze listy rozkazów lub dodaj wpis.',
+        hint: t('wlan.microGenerator.missingTemplateHint'),
       });
     }
 
-    const asmLine =
-      `${(node.name || '').toUpperCase()}` +
-      `${node.operands?.length ? ' ' + node.operands.map((op: any) => op.name ?? op.value).join(', ') : ''}`;
+    const phases = templatePhases.map(toRuntimeTemplatePhase);
+    const hasConditionalPhase = phases.some((phase) => (phase as any).conditional === true);
 
-    let phases: RuntimePhase[] = [];
-    let hasConditional = false;
-
-    phases = (template as TemplatePhase[]).map((tplPhase: TemplatePhase) => {
-      if (Array.isArray(tplPhase)) return toMicroPhaseFromSignals(tplPhase as any);
-      if ((tplPhase as any).conditional === true) {
-        hasConditional = true;
-        const flag = ((tplPhase as any).flag === 'M' ? 'N' : (tplPhase as any).flag) as 'Z' | 'N' | string;
-        const rp: any = {
-          conditional: true,
-          flag,
-          truePhases: (tplPhase as any).truePhases.map(toMicroPhaseFromSignalSet),
-          falsePhases: (tplPhase as any).falsePhases.map(toMicroPhaseFromSignalSet),
-        };
-        if ((tplPhase as any).__labels) rp.__labels = (tplPhase as any).__labels;
-        if ((tplPhase as any).__prefix) rp.__prefix = (tplPhase as any).__prefix;
-        return rp as RuntimePhase;
-      }
-      return toMicroPhaseFromSignalSet(tplPhase as any);
-    });
-
-    if (!hasConditional) {
-      const rawLines = (TEMPLATES as any)[`__raw__${key}`] as string[] | undefined;
-      const fallbackLines: string[] | undefined = rawLines
-        ? rawLines
-        : (() => {
-            const rec = commandList.find((c) => nameKey(c.name) === key);
-            if (!rec?.lines) return undefined;
-            return rec.lines
-              .split('\n')
-              .map((l) => l.replace(/;\s*$/g, '').trim())
-              .filter(Boolean);
-          })();
-
-      if (fallbackLines && fallbackLines.length) {
-        const parsed = buildConditionalForInstr(fallbackLines);
-        if (parsed.meta && parsed.condPhase) {
-          hasConditional = true;
-          const beforeSet: SignalSet = {};
-          for (const p of parsed.phases || []) {
-            const op = p.op?.toLowerCase();
-            if (op) beforeSet[op as Signal] = true;
-          }
-          if (Object.keys(beforeSet).length) {
-            phases.unshift(toMicroPhaseFromSignalSet(beforeSet));
-          }
-          phases.push(parsed.condPhase);
+    if (!hasConditionalPhase) {
+      const fallbackLines = resolveFallbackLines(templates, executableCommands, mnemonicKey);
+      if (fallbackLines?.length) {
+        const parsedConditional = buildConditionalForInstr(fallbackLines);
+        if (parsedConditional.meta && parsedConditional.condPhase) {
+          prependPrefixSignals(phases, parsedConditional.phases);
+          phases.push(parsedConditional.condPhase);
         }
       }
     }
 
-    const meta: MicroProgramEntry['meta'] = { kind: 'NONE' } as any;
+    const metadata: NonNullable<MicroProgramEntry['meta']> = { kind: 'NONE' };
 
-    if ((node.name || '').toUpperCase() === 'SOB') {
-      const targetAddr = node.operands?.[0]?.value;
-      if (typeof targetAddr !== 'number') {
-        throw new WlanError(`SOB bez adresu`, { code: 'GEN_SOB_NO_ADDR' });
-      }
-      const targetPc = addrToPc.get(targetAddr);
-      if (targetPc === undefined) {
-        throw new WlanError(`SOB -> ${targetAddr} nie wskazuje instrukcji`, {
-          code: 'GEN_SOB_BAD_ADDR',
-        });
-      }
-      (meta as any).kind = 'JUMP';
-      (meta as any).trueTarget = targetPc;
+    if ((instruction.name || '').toUpperCase() === 'SOB') {
+      applySobJumpMetadata(metadata, instruction, addressToPc);
     }
 
-    if (phases.some((p) => (p as any).conditional === true)) {
-      (meta as CJumpMeta).kind = 'CJUMP';
+    if (phases.some((phase) => (phase as any).conditional === true)) {
+      metadata.kind = 'CJUMP';
     }
 
-    const extra = POSTASM[key];
-    if (extra?.length) (meta as any).postAsm = extra.slice();
+    const extraPostAsm = postAsm[mnemonicKey];
+    if (extraPostAsm?.length) metadata.postAsm = extraPostAsm.slice();
 
-    program.push({ pc: i, asmLine, phases, meta });
+    microProgram.push({
+      pc: programCounter,
+      asmLine: formatAsmLine(instruction),
+      phases,
+      meta: metadata,
+    });
   }
 
-  return program;
+  return microProgram;
 }
 
 export function injectCJumpMeta(program: MicroProgramEntry[]): MicroProgramEntry[] {
-  for (let i = 0; i < program.length; i++) {
-    const ent = program[i];
+  for (let programCounter = 0; programCounter < program.length; programCounter++) {
+    const entry = program[programCounter];
 
-    if (ent?.phases?.some((p) => (p as any)?.conditional === true)) {
-      if (!ent.meta || ent.meta.kind === 'NONE') {
-        ent.meta = { ...(ent.meta || {}), kind: 'CJUMP' } as any;
+    if (entry?.phases?.some((phase) => (phase as any)?.conditional === true)) {
+      if (!entry.meta || entry.meta.kind === 'NONE') {
+        entry.meta = { ...(entry.meta || {}), kind: 'CJUMP' } as any;
       }
       continue;
     }
 
-    if (typeof ent?.asmLine === 'string' && /^IF\s+/i.test(ent.asmLine)) {
-      const trueTarget = i + 1;
-      const falseTarget = i + 2;
-      const joinTarget = i + 3;
-      const m = ent.asmLine.match(/^IF\s+([A-Za-z]+)/);
-      const flagName = ((m?.[1] || 'Z').toUpperCase() as CJumpMeta['flagName']) || 'Z';
-      ent.meta = {
-        ...(ent.meta || {}),
+    if (typeof entry?.asmLine === 'string' && /^IF\s+/i.test(entry.asmLine)) {
+      const trueTarget = programCounter + 1;
+      const falseTarget = programCounter + 2;
+      const joinTarget = programCounter + 3;
+      const flagMatch = entry.asmLine.match(/^IF\s+([A-Za-z]+)/);
+      const flagName = ((flagMatch?.[1] || 'Z').toUpperCase() as CJumpMeta['flagName']) || 'Z';
+
+      entry.meta = {
+        ...(entry.meta || {}),
         kind: 'CJUMP',
         flagName,
         trueTarget,
         falseTarget,
         joinTarget,
       } as any;
-      if (!Array.isArray(ent.phases)) ent.phases = [];
+
+      if (!Array.isArray(entry.phases)) entry.phases = [];
     }
   }
+
   return program;
 }

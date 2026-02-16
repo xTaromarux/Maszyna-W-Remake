@@ -73,8 +73,7 @@
     </div>
     <div class="wylsBusConteiner">
       <div v-if="extras?.stack?.wylsSignal" class="wylsBusDiv">
-        <div class="wylsBusExt">
-      </div>
+        <div class="wylsBusExt"></div>
       </div>
       <BusSignal
         :signalStatus="signals.busA"
@@ -93,12 +92,11 @@
           id="wyls"
           :signal="signals.wyls"
           label="wyls"
-          :divClassNames="isMobile ? 'impulse pathDownOnLeft': 'impulse pathDownOnRight'"
+          :divClassNames="isMobile ? 'impulse pathDownOnLeft' : 'impulse pathDownOnRight'"
           :spanClassNames="isMobile ? 'lineLeftOnBottom' : 'lineRightOnBottom'"
           @click="handleClick('wyls')"
         />
       </div>
-
 
       <div class="layer">
         <RegisterISection
@@ -207,7 +205,7 @@
           id="weja"
           :signal="signals.weja"
           label="weja"
-          style="height: 91%; min-height: 40px;"
+          style="height: 91%; min-height: 40px"
           divClassNames="pathDownOnRight"
           spanClassNames="arrowRightOnBottom"
           @click="handleClick('weja')"
@@ -217,7 +215,7 @@
           id="wyak"
           :signal="signals.wyak"
           label="wyak"
-          style="height: 91%; min-height: 40px;"
+          style="height: 91%; min-height: 40px"
           divClassNames="pathUpOnLeft"
           spanClassNames="arrowLeftOnBottom"
           @click="handleClick('wyak')"
@@ -327,9 +325,8 @@
           @clickItem="(name) => $emit('clickItem', name)"
           @update:WS="$emit('update:WS', $event)"
         />
-    </div>
+      </div>
     </template>
-
   </div>
 </template>
 
@@ -367,16 +364,16 @@ export default {
     APRegisterSection,
     RZRegisterSection,
     RPRegisterSection,
-    WSRegisterSection
+    WSRegisterSection,
   },
   data() {
     return {
-      isMobile: window.innerWidth <= 768
-    }
+      isMobile: window.innerWidth <= 768,
+    };
   },
   computed: {
     hasAnyInterrupts() {
-      return Object.values(this.extras?.interrupts || {}).some(Boolean)
+      return Object.values(this.extras?.interrupts || {}).some(Boolean);
     },
   },
   methods: {
@@ -384,7 +381,7 @@ export default {
       this.$emit('clickItem', id);
     },
     checkMobile() {
-       this.isMobile = window.innerWidth <= 768;
+      this.isMobile = window.innerWidth <= 768;
     },
   },
   mounted() {
@@ -417,7 +414,7 @@ export default {
     RZ: { type: Number, required: true },
     RP: { type: Number, required: true },
     WS: { type: Number, required: true },
-    rzInputs: { type: Array, default: () => [0,0,0,0] },
+    rzInputs: { type: Array, default: () => [0, 0, 0, 0] },
     wordBits: { type: Number, default: 8 },
     decSigned: { type: Boolean, default: false },
     decToCommand: { type: Function, required: true },
@@ -447,5 +444,4 @@ export default {
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -1,9 +1,9 @@
-export type Token = {
+export interface Token {
   col: number;
   line: number;
   text: string;
   type: string;
-};
+}
 
 export enum TokenType {
   IDENT = 'IDENT',
@@ -18,9 +18,24 @@ export enum TokenType {
 // ===== AST Types =====
 export type RegisterName = 'A' | 'S' | 'L' | 'I' | 'AK' | 'PC' | 'IR';
 
-export type RegisterOperand = { type: 'Register'; name: RegisterName; line: number };
-export type ImmediateOperand = { type: 'Immediate'; value: number; line: number };
-export type LabelRefOperand = { type: 'LabelRef'; name: string; line: number };
+export interface RegisterOperand {
+  type: 'Register';
+  name: RegisterName;
+  line: number;
+}
+
+export interface ImmediateOperand {
+  type: 'Immediate';
+  value: number;
+  line: number;
+}
+
+export interface LabelRefOperand {
+  type: 'LabelRef';
+  name: string;
+  line: number;
+}
+
 export type Operand = RegisterOperand | ImmediateOperand | LabelRefOperand;
 
 export interface LabelDefinitionNode {
@@ -32,7 +47,7 @@ export interface LabelDefinitionNode {
 export interface DirectiveNode {
   type: 'Directive';
   name: string;
-  operands: Array<ImmediateOperand | LabelRefOperand>;
+  operands: (ImmediateOperand | LabelRefOperand)[];
   line: number;
   _initMemory?: { addr: number; val: number };
 }
@@ -146,7 +161,7 @@ export interface Store {
   };
   mem: Uint8Array;
   dataStack: number[];
-  callStack: Array<{ L: number; phaseIdx: number }>;
+  callStack: { L: number; phaseIdx: number }[];
   program: MicroProgramEntry[];
   phaseIdx: number;
   ioIn: number[];

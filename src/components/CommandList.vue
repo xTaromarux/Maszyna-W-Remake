@@ -2,8 +2,8 @@
   <div class="modal-overlay" v-if="visible" @click.self="$emit('close')">
     <div id="commandList">
       <div class="header">
-        <h1>Lista rozkazów</h1>
-        <button class="closeBtn closeButton" @click="$emit('close')" aria-label="Zamknij listę rozkazów">&times;</button>
+        <h1>{{ $t('commandList.title') }}</h1>
+        <button class="closeBtn closeButton" @click="$emit('close')" :aria-label="$t('commandList.closeAria')">&times;</button>
       </div>
 
       <div id="commandListTable">
@@ -24,13 +24,13 @@
           <div class="roskazCode">
             <textarea v-if="selectedCommand !== null && !editCommandEnabled" v-model="localList[selectedCommand].lines" disabled />
             <textarea v-else-if="selectedCommand !== null && editCommandEnabled" v-model="EditCommandField" />
-            <textarea v-else v-model="newCommandLines" placeholder="Wpisz kod dla nowego rozkazu..." />
+            <textarea v-else v-model="newCommandLines" :placeholder="$t('commandList.codePlaceholder')" />
           </div>
         </div>
 
         <div class="actionButtons">
           <div class="top-actions" v-if="selectedCommand !== null">
-            <button @click="deleteCommand" title="Usuń rozkaz" class="execution-btn execution-btn--run">
+            <button @click="deleteCommand" :title="$t('commandList.deleteTitle')" class="execution-btn execution-btn--run">
               <!-- ikona kosza -->
               <svg
                 width="24"
@@ -47,20 +47,25 @@
                 <path d="M10 11v6m4-6v6" />
                 <path d="M15 6V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2" />
               </svg>
-              <span>Usuń</span>
+              <span>{{ $t('commandList.delete') }}</span>
             </button>
 
             <button
               class="execution-btn execution-btn--run"
               @click="onEdit"
               :disabled="!canEdit || editCommandEnabled"
-              title="Edytuj treść rozkazu"
+              :title="$t('commandList.editTitle')"
             >
-              <span>Edytuj</span>
+              <span>{{ $t('commandList.edit') }}</span>
             </button>
 
-            <button class="execution-btn execution-btn--run" @click="onSave" :disabled="!editCommandEnabled" title="Zapisz zmiany">
-              <span>Zapisz</span>
+            <button
+              class="execution-btn execution-btn--run"
+              @click="onSave"
+              :disabled="!editCommandEnabled"
+              :title="$t('commandList.saveTitle')"
+            >
+              <span>{{ $t('commandList.save') }}</span>
             </button>
           </div>
           <div class="commandInputSection">
@@ -75,23 +80,23 @@
               />
             </div>
             <div class="editingButtons" v-if="isEditingName">
-              <button @click="confirmNameEdit" title="Potwierdź zmianę nazwy" class="execution-btn execution-btn--run">
+              <button @click="confirmNameEdit" :title="$t('commandList.confirmTitle')" class="execution-btn execution-btn--run">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span>Potwierdź</span>
+                <span>{{ $t('commandList.confirm') }}</span>
               </button>
-              <button @click="cancelNameEdit" title="Anuluj edycję" class="execution-btn execution-btn--run">
+              <button @click="cancelNameEdit" :title="$t('commandList.cancelTitle')" class="execution-btn execution-btn--run">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
-                <span>Anuluj</span>
+                <span>{{ $t('commandList.cancel') }}</span>
               </button>
             </div>
             <button
               v-else-if="matchingCommand && !isEditingName"
               @click="startNameEdit"
-              title="Edytuj nazwę rozkazu"
+              :title="$t('commandList.editNameTitle')"
               class="execution-btn execution-btn--run"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
@@ -102,13 +107,13 @@
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                 />
               </svg>
-              <span>Edytuj</span>
+              <span>{{ $t('commandList.edit') }}</span>
             </button>
             <button
               v-else
               @click="handleAddCommand"
               :disabled="!commandInputValue.trim()"
-              title="Dodaj nowy rozkaz"
+              :title="$t('commandList.addTitle')"
               class="execution-btn execution-btn--run"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
@@ -117,12 +122,12 @@
                   <circle cx="12" cy="12" r="9" />
                 </g>
               </svg>
-              <span>Dodaj</span>
+              <span>{{ $t('commandList.add') }}</span>
             </button>
           </div>
 
           <div class="fileActions">
-            <button @click="loadCommandList" title="Wgraj listę rozkazów" class="execution-btn execution-btn--run">
+            <button @click="loadCommandList" :title="$t('commandList.loadTitle')" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -131,9 +136,9 @@
                   d="M12 10v9m0-9l3 3m-3-3l-3 3m8.5 2c1.519 0 2.5-1.231 2.5-2.75a2.75 2.75 0 00-2.016-2.65A5 5 0 008.37 8.108a3.5 3.5 0 00-1.87 6.746"
                 />
               </svg>
-              <span>Wgraj</span>
+              <span>{{ $t('commandList.load') }}</span>
             </button>
-            <button @click="downloadCommandList" title="Pobierz listę rozkazów" class="execution-btn execution-btn--run">
+            <button @click="downloadCommandList" :title="$t('commandList.downloadTitle')" class="execution-btn execution-btn--run">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="20" height="20" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -142,7 +147,7 @@
                   d="M12 5v8.5m0 0l3-3m-3 3l-3-3M5 15v2a2 2 0 002 2h10a2 2 0 002-2v-2"
                 />
               </svg>
-              <span>Pobierz</span>
+              <span>{{ $t('commandList.download') }}</span>
             </button>
           </div>
         </div>
@@ -192,12 +197,12 @@ export default {
     },
     commandInputPlaceholder() {
       if (this.isEditingName) {
-        return `Edytuj nazwę z "${this.editingCommandOriginalName}"`;
+        return this.$t('commandList.placeholder.editName', { name: this.editingCommandOriginalName });
       }
       if (this.matchingCommand) {
-        return `Edytuj rozkaz: ${this.matchingCommand.name}`;
+        return this.$t('commandList.placeholder.editCommand', { name: this.matchingCommand.name });
       }
-      return 'Nazwa nowego rozkazu';
+      return this.$t('commandList.placeholder.newName');
     },
 
     matchingCommand() {
@@ -342,7 +347,7 @@ export default {
 
       if (duplicates.length > 0) {
         const uniqueDuplicates = [...new Set(duplicates)];
-        console.warn(`Duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
+        console.warn(`Duplicate command names: ${uniqueDuplicates.join(', ')}`);
       }
     },
     handleKeydown(event) {
@@ -366,7 +371,7 @@ export default {
     startNameEdit() {
       if (!this.matchingCommand || !this.matchingCommand.name) {
         console.error('No matching command found or command has no name');
-        alert('Błąd: nie znaleziono rozkazu do edycji');
+        alert(this.$t('commandList.errors.notFound'));
         return;
       }
 
@@ -378,7 +383,7 @@ export default {
       console.log('confirmNameEdit called with:', newName);
 
       if (newName === '') {
-        alert('Nazwa rozkazu nie może być pusta!');
+        alert(this.$t('commandList.errors.emptyName'));
         this.commandInputValue = this.editingCommandOriginalName;
         return;
       }
@@ -386,7 +391,7 @@ export default {
       const commandToEdit = this.localList.find((cmd) => cmd.name.trim().toLowerCase() === this.editingCommandOriginalName.toLowerCase());
 
       if (!commandToEdit) {
-        alert('Błąd: nie znaleziono rozkazu do edycji');
+        alert(this.$t('commandList.errors.notFound'));
         this.cancelNameEdit();
         return;
       }
@@ -403,7 +408,7 @@ export default {
           otherFullCommands.find((cmd) => cmd.name.trim().toLowerCase() === newName.toLowerCase());
 
         if (duplicate) {
-          alert(`Rozkaz o nazwie "${newName}" już istnieje!`);
+          alert(this.$t('commandList.errors.duplicate', { name: newName }));
           this.commandInputValue = this.editingCommandOriginalName;
           return;
         }
@@ -431,26 +436,29 @@ export default {
     },
     handleAddCommand() {
       if (this.localList.length >= Math.pow(2, this.codeBits)) {
-        alert('Limit rozkazów osiągnięty');
+        alert(this.$t('commandList.errors.limitReached'));
         return;
       }
 
       const newCommandName = this.commandInputValue.trim();
 
       if (newCommandName === '') {
-        alert('Nazwa rozkazu nie może być pusta!');
+        alert(this.$t('commandList.errors.emptyName'));
         return;
       }
 
       if (this.matchingCommand) {
-        alert(`Rozkaz o nazwie "${newCommandName}" już istnieje!`);
+        alert(this.$t('commandList.errors.duplicate', { name: newCommandName }));
         return;
       }
 
+      const rawLocale = this.$i18n?.locale;
+      const locale = typeof rawLocale === 'string' ? rawLocale : rawLocale?.value || 'pl';
       const newCommand = {
         name: newCommandName,
         args: 0,
-        description: `Rozkaz ${newCommandName}`,
+        kind: 'exec',
+        description: { [locale]: this.$t('commandList.commandDescription', { name: newCommandName }) },
         lines: this.newCommandLines || '',
       };
 
@@ -483,10 +491,16 @@ export default {
         reader.onload = (ev) => {
           try {
             const parsed = JSON.parse(ev.target.result);
+            const normalized = Array.isArray(parsed)
+              ? parsed.map((cmd) => ({
+                  ...cmd,
+                  kind: cmd?.kind || 'exec',
+                }))
+              : [];
 
             const maxCommands = Math.pow(2, this.codeBits);
-            this.fullCommandList = parsed;
-            this.localList = parsed.slice(0, maxCommands);
+            this.fullCommandList = normalized;
+            this.localList = normalized.slice(0, maxCommands);
 
             if (this.localList.length > 0) {
               this.selectedCommand = 0;
@@ -497,7 +511,7 @@ export default {
 
             this.emitUpdate();
           } catch {
-            alert('Błąd wczytywania listy');
+            alert(this.$t('commandList.errors.loadFailed'));
           }
         };
         reader.readAsText(file);
@@ -556,7 +570,7 @@ export default {
 
       if (duplicates.length > 0) {
         const uniqueDuplicates = [...new Set(duplicates)];
-        alert(`Nie można zapisać - znaleziono duplikaty nazw rozkazów: ${uniqueDuplicates.join(', ')}`);
+        alert(this.$t('commandList.errors.duplicatesFound', { names: uniqueDuplicates.join(', ') }));
         return;
       }
 

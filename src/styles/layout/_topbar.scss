@@ -1,9 +1,15 @@
+:root {
+  --topbar-height: calc(43.877px + 1rem);
+}
+
 #topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem;
+  height: var(--topbar-height);
+  box-sizing: border-box;
   width: 100%;
   background-color: #003c7d;
 }

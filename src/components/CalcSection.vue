@@ -115,7 +115,7 @@
 
       <RegisterComponent 
         id="jaml" 
-        label="JAML" 
+        label="JAL" 
         :model="JAML" 
         @update:model="$emit('update:JAML', $event)" 
         :formatNumber="formatNumber"

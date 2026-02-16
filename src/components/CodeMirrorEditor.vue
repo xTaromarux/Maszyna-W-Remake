@@ -37,12 +37,12 @@
     <div v-if="language === 'macroW' && isFullScreen" class="fullscreen-controls">
       <button v-if="!programCompiled" @click="onCompile" :disabled="!modelValue.trim()" class="execution-btn execution-btn--compile">
         <CompileIcon />
-        <span>Kompiluj</span>
+        <span>{{ $t('execution.compile') }}</span>
       </button>
 
       <button v-else @click="onEdit" class="compile-btn compile-btn--edit">
         <EditIcon />
-        <span>Edytuj</span>
+        <span>{{ $t('execution.edit') }}</span>
       </button>
     </div>
 
@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { EditorView } from 'codemirror';
 import { EditorState, StateEffect } from '@codemirror/state';
 import {
@@ -74,7 +75,8 @@ import { javascript } from '@codemirror/lang-javascript';
 import { maszynaW } from '../codemirror-langs/maszynaW.support.js';
 import { mwTheme, macroTheme } from '../codemirror-langs/themes.js';
 import { macroW } from '../codemirror-langs/macroW.support.js';
-import { macroWRuntimeHighlight, macroWRuntimeCompletions } from '../codemirror-langs/macroW.runtime';
+import { macroWRuntimeHighlight, macroWRuntimeCompletions, type MacroCompletionItem } from '../codemirror-langs/macroW.runtime';
+import { collectCommandAliases } from '@/utils/data/commandMnemonics';
 // import { stickyCompletion } from '../codemirror-langs/stickyCompletion.js';
 
 // Import icons for compilation buttons
@@ -83,6 +85,7 @@ import EditIcon from '@/assets/svg/EditIcon.vue';
 
 const isFullScreen = ref(false);
 const editorWrapper = ref<HTMLDivElement | null>(null);
+const { locale, t } = useI18n();
 
 function toggleFullScreen() {
   if (!editorWrapper.value) return;
@@ -129,7 +132,12 @@ const props = defineProps<{
   onCompile?: () => void;
   onEdit?: () => void;
   autocompleteEnabled?: boolean;
-  commandList?: Array<{ name: string; description?: string }>;
+  commandList?: Array<{
+    name: string;
+    kind?: 'exec' | 'memory' | 'directive';
+    description?: string | Record<string, string>;
+    mnemonics?: Record<string, string | string[]>;
+  }>;
   maxHeight?: string;
   devStickyCompletion?: boolean;
 }>();
@@ -145,10 +153,65 @@ const emit = defineEmits<{
 const editorContainer = ref<HTMLDivElement | null>(null);
 let editorView: EditorView | null = null;
 
+function resolveCommandDescription(description: unknown, name?: string): string | undefined {
+  if (!description) return name ? t('commandList.commandDescription', { name }) : undefined;
+  if (typeof description === 'string') return description;
+  if (typeof description === 'object') {
+    const descMap = description as Record<string, string>;
+    const current = locale.value;
+    return descMap[current] || descMap[current?.split('-')[0]] || descMap.en || descMap.pl || Object.values(descMap)[0];
+  }
+  return String(description);
+}
+
+const macroCommandMetadata = computed(() =>
+  (props.commandList || []).map((cmd) => {
+    const aliases = collectCommandAliases(cmd, {
+      locale: locale.value,
+    });
+
+    return {
+      aliases,
+      description: resolveCommandDescription(cmd.description, cmd.name),
+    };
+  })
+);
+
+const macroCompletionItems = computed<MacroCompletionItem[]>(() => {
+  const items: MacroCompletionItem[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of macroCommandMetadata.value) {
+    const label = entry.aliases.preferred[0] || entry.aliases.canonical;
+    if (!label) continue;
+
+    const dedupeKey = String(label).toUpperCase();
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    items.push({
+      label,
+      detail: entry.description,
+    });
+  }
+
+  return items;
+});
+
+const macroHighlightWords = computed(() => {
+  const words = new Set<string>();
+  for (const entry of macroCommandMetadata.value) {
+    for (const alias of entry.aliases.all) {
+      if (alias) words.add(alias);
+    }
+  }
+  return Array.from(words);
+});
+
 function getAutocompleteExtensions() {
   if (props.autocompleteEnabled === false) return [];
   if (props.language === 'macroW') {
-    return macroWRuntimeCompletions(props.commandList || []);
+    return macroWRuntimeCompletions(macroCompletionItems.value);
   }
   return [];
 }
@@ -268,7 +331,7 @@ function createExtensions() {
     getLanguageExtension(props.language),
     ...getThemeExtension(props.theme),
     ...getAutocompleteExtensions(),
-    ...(props.language === 'macroW' ? macroWRuntimeHighlight(props.commandList || []) : []),
+    ...(props.language === 'macroW' ? macroWRuntimeHighlight(macroHighlightWords.value) : []),
     // ...(props.language === 'macroW' && props.devStickyCompletion ? [stickyCompletion()] : []),
     EditorView.theme({
       '&': {
@@ -463,6 +526,17 @@ watch(
 // 11. Watch for theme changes
 watch(
   () => props.theme,
+  () => {
+    if (editorView) {
+      editorView.dispatch({
+        effects: StateEffect.reconfigure.of(createExtensions()),
+      });
+    }
+  }
+);
+
+watch(
+  () => locale.value,
   () => {
     if (editorView) {
       editorView.dispatch({

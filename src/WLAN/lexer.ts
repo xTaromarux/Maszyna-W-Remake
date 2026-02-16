@@ -1,5 +1,7 @@
-import type { Token, TokenType } from './model';
-import { WlanError, errorAt } from './error';
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { Token, TokenType } from './types/model';
+import { errorAt } from './error';
+import { translate as t } from '../i18n';
 
 const tokenSpecs: [string, RegExp][] = [
   ['WHITESPACE', /^[ \t\r]+/],
@@ -45,10 +47,9 @@ export function lex(input: string): Token[] {
 
       pos += text.length;
 
-      // Pomiń whitespace i komentarze
       if (['WHITESPACE', 'COMMENT_SLASH', 'COMMENT_SEMI'].includes(type)) break;
 
-      tokens.push({ type, text, line: tokenStartLine, col: tokenStartCol });
+      tokens.push({ type: type as TokenType, text, line: tokenStartLine, col: tokenStartCol });
       break;
     }
 
@@ -62,14 +63,13 @@ export function lex(input: string): Token[] {
         input,
         line,
         col,
-        `Nieznany znak: '${unknownChar}'`,
+        t('wlan.lexer.unknownChar', { char: unknownChar }),
         'LEX_UNKNOWN_CHAR',
-        `Usuń lub popraw znak. Jeżeli to komentarz, użyj '//' lub rozpocznij linię średnikiem ';'.`
+        t('wlan.lexer.unknownCharHint')
       );
     }
   }
   return tokens;
 }
 
-// Eksport alternatywny
 export { lex as tokenize };

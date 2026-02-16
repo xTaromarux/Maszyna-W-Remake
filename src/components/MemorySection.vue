@@ -34,7 +34,7 @@
                 @update:mem="$emit('update:mem', $event)"
                 @clickItem="handleClick"
               />
-              <button class="closeBtn closeButtonModal" @click="closeMobileModal" aria-label="Zamknij modal">&times;</button>
+              <button class="closeBtn closeButtonModal" @click="closeMobileModal" :aria-label="$t('memory.closeModal')">&times;</button>
             </div>
           </transition>
         </div>
@@ -86,7 +86,7 @@ export default {
     busSValue: { type: Number, required: true },
     showInvisibleRegisters: { type: Boolean, default: false },
     signedDec: { type: Boolean, default: false },
-    wordBits:  { type: Number,  default: 8 }, 
+    wordBits: { type: Number, default: 8 },
   },
   emits: ['clickItem', 'update:A', 'update:S', 'update:mem', 'update:aFormat', 'update:sFormat'],
   data() {

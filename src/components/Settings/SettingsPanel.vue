@@ -1,53 +1,39 @@
 <template>
   <div id="settings" :class="{ 'slide-in': isAnimated, 'slide-out': !isAnimated }" @click.stop>
     <header class="settingsHeader">
-      <h1>Ustawienia</h1>
+      <h1>{{ $t('settings.title') }}</h1>
       <div class="headerBtns">
-        <button class="closeBtn" @click="$emit('close')" aria-label="Zamknij ustawienia">&times;</button>
+        <button class="closeBtn" @click="$emit('close')" :aria-label="$t('settings.actions.close')">&times;</button>
       </div>
     </header>
 
     <div class="settingsContent">
       <div class="flexColumn">
-        <SegmentedToggle
-          :options="[
-            { label: 'Jasny', value: true },
-            { label: 'Ciemny', value: false },
-          ]"
-          :model-value="lightMode"
-          @update:model-value="$emit('update:lightMode', $event)"
-        />
+        <SegmentedToggle :options="themeOptions" :model-value="lightMode" @update:model-value="$emit('update:lightMode', $event)" />
       </div>
 
       <div class="flexColumn">
-        <label>Domyślny format liczb:</label>
+        <label>{{ $t('settings.language.label') }}:</label>
+        <SegmentedToggle :options="languageOptions" :model-value="language" @update:model-value="$emit('update:language', $event)" />
+      </div>
+
+      <div class="flexColumn">
+        <label>{{ $t('settings.numberFormat.label') }}:</label>
         <SegmentedToggle
-          :options="[
-            { label: 'DEC', value: 'dec' },
-            { label: 'HEX', value: 'hex' },
-            { label: 'BIN', value: 'bin' },
-          ]"
+          :options="numberFormatOptions"
           :model-value="numberFormat"
           @update:model-value="$emit('update:numberFormat', $event)"
-          class=""
           :class="{ active: lightMode }"
         />
       </div>
       <div class="flexColumn" v-if="numberFormat === 'dec'">
-        <label>Wyświetlanie DEC:</label>
-        <SegmentedToggle
-          :options="[
-            { label: 'Bez znaku', value: false },
-            { label: 'U2 (ze znakiem)', value: true },
-          ]"
-          :model-value="decSigned"
-          @update:model-value="$emit('update:decSigned', $event)"
-        />
-        <p>U2 używa szerokości słowa {{ codeBits + addresBits }} bitów (np. 4027 → −69).</p>
+        <label>{{ $t('settings.decSigned.label') }}:</label>
+        <SegmentedToggle :options="decDisplayOptions" :model-value="decSigned" @update:model-value="$emit('update:decSigned', $event)" />
+        <p>{{ $t('settings.decSigned.hint', { bits: codeBits + addresBits }) }}</p>
       </div>
 
       <div class="flexColumn">
-        <label for="commandBits">Bity kodu:</label>
+        <label for="commandBits">{{ $t('settings.bits.codeLabel') }}</label>
         <input
           id="commandBits"
           type="number"
@@ -58,11 +44,11 @@
           max="16"
           @input="updateNumber('codeBits', $event.target.value)"
         />
-        <p>Liczba bitów dla kodu rozkazu.</p>
+        <p>{{ $t('settings.bits.codeHelp') }}</p>
       </div>
 
       <div class="flexColumn">
-        <label for="addresBits">Bity adresu:</label>
+        <label for="addresBits">{{ $t('settings.bits.addressLabel') }}</label>
         <input
           id="addresBits"
           type="number"
@@ -73,11 +59,11 @@
           max="32"
           @input="updateNumber('addresBits', $event.target.value)"
         />
-        <p>Liczba bitów dla argumentu.</p>
+        <p>{{ $t('settings.bits.addressHelp') }}</p>
       </div>
 
       <div class="flexColumn">
-        <label for="oddDelay">Opóźnienie mikro-kroku (ms):</label>
+        <label for="oddDelay">{{ $t('settings.delays.microLabel') }}</label>
         <input
           id="oddDelay"
           type="number"
@@ -88,11 +74,11 @@
           max="10000"
           @input="updateNumber('oddDelay', $event.target.value)"
         />
-        <p>Opóźnienie między mikro-operacjami w milisekundach.</p>
+        <p>{{ $t('settings.delays.microHelp') }}</p>
       </div>
 
       <div class="flexColumn">
-        <label for="stepDelay">Opóźnienie kroku automatycznego (ms):</label>
+        <label for="stepDelay">{{ $t('settings.delays.stepLabel') }}</label>
         <input
           id="stepDelay"
           type="number"
@@ -103,11 +89,11 @@
           max="10000"
           @input="updateNumber('stepDelay', $event.target.value)"
         />
-        <p>Czas między kolejnymi krokami w trybie krokowym (cykle na sekundę = 1000/ms).</p>
+        <p>{{ $t('settings.delays.stepHelp') }}</p>
       </div>
 
       <div class="extras" v-if="platform !== 'esp'">
-        <label>Dodatki:</label>
+        <label>{{ $t('settings.extras.heading') }}</label>
 
         <!-- PROSTE BOOLEANY -->
         <template v-for="key in booleanKeys" :key="key">
@@ -162,9 +148,9 @@
       </div>
 
       <div class="flexColumn">
-        <label>Edytor:</label>
+        <label>{{ $t('settings.editor.heading') }}</label>
         <div class="module-toggle-wrapper">
-          <span class="module-label">Auto-uzupełnianie (podpowiedzi)</span>
+          <span class="module-label">{{ $t('settings.editor.autocomplete') }}</span>
           <label class="switch">
             <input type="checkbox" :checked="autocompleteEnabled" @change="$emit('update:autocompleteEnabled', $event.target.checked)" />
             <span class="slider round"></span>
@@ -172,9 +158,9 @@
         </div>
       </div>
       <div class="flexColumn">
-        <label>Kompilacja ASM:</label>
+        <label>{{ $t('settings.asm.heading') }}</label>
         <div class="module-toggle-wrapper">
-          <span class="module-label">Resetuj rejestry przy kompilacji</span>
+          <span class="module-label">{{ $t('settings.asm.reset') }}</span>
           <label class="switch">
             <input
               type="checkbox"
@@ -184,14 +170,18 @@
             <span class="slider round"></span>
           </label>
         </div>
-        <p>Po włączeniu rejestry i pamięć są czyszczone automatycznie przed kompilacją assemblera.</p>
+        <p>{{ $t('settings.asm.help') }}</p>
       </div>
 
       <div class="flexColumn">
         <div class="flexColumn button-column">
+          <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="openLabDialog" @click="$emit('open-lab-dialog')">
+            <CommandListIcon />
+            <span>{{ $t('labs.chooseButton') }}</span>
+          </button>
           <button class="SvgAndTextButton compact-button execution-btn execution-btn--step" id="resetValues" @click="$emit('resetValues')">
             <RefreshIcon />
-            <span>Resetuj wartości rejestrów</span>
+            <span>{{ $t('settings.actions.resetRegisters') }}</span>
           </button>
           <button
             class="SvgAndTextButton compact-button execution-btn execution-btn--step"
@@ -199,7 +189,7 @@
             @click="$emit('defaultSettings')"
           >
             <RefreshIcon />
-            <span>Przywróć domyślne ustawienia</span>
+            <span>{{ $t('settings.actions.defaultSettings') }}</span>
           </button>
           <button
             class="SvgAndTextButton compact-button execution-btn execution-btn--step"
@@ -207,34 +197,34 @@
             @click="$emit('open-command-list')"
           >
             <CommandListIcon />
-            <span>Lista rozkazów</span>
+            <span>{{ $t('settings.actions.commandList') }}</span>
           </button>
         </div>
       </div>
 
       <!-- Sekcja kolorów dla ESP32 -->
       <div v-if="platform == 'esp'" class="color-section">
-        <h3 class="color-section-title">Kolory LED</h3>
+        <h3 class="color-section-title">{{ $t('settings.colors.heading') }}</h3>
 
         <div class="color-buttons-list">
           <button class="color-selection-btn" @click="openColorPicker('signal_line')">
-            <span class="color-label">Linie sygnałowe</span>
+            <span class="color-label">{{ $t('settings.colors.signalLines') }}</span>
             <div class="color-dot" :style="{ backgroundColor: signalLineColor }"></div>
           </button>
 
           <button class="color-selection-btn" @click="openColorPicker('display')">
-            <span class="color-label">Wyświetlacz</span>
+            <span class="color-label">{{ $t('settings.colors.display') }}</span>
             <div class="color-dot" :style="{ backgroundColor: displayColor }"></div>
           </button>
 
           <button class="color-selection-btn" @click="openColorPicker('bus')">
-            <span class="color-label">Magistrala</span>
+            <span class="color-label">{{ $t('settings.colors.bus') }}</span>
             <div class="color-dot" :style="{ backgroundColor: busColor }"></div>
           </button>
         </div>
 
         <button class="send-colors-btn" @click="sendAllColors" :disabled="!hasColorChanges">
-          <span>📡 Wyślij wszystkie kolory do ESP32</span>
+          <span>{{ $t('settings.actions.sendAllColors') }}</span>
         </button>
       </div>
 
@@ -248,8 +238,8 @@
         @apply="applyColor"
       />
 
-      <PeopleSection :isMobile="isMobile" title="Opiekunowie" :people="caregivers" :showGithub="false" :columns="2" />
-      <PeopleSection :isMobile="isMobile" title="Twórcy" :people="creators" :showGithub="true" :columns="2" />
+      <PeopleSection :isMobile="isMobile" :title="$t('settings.people.caregivers')" :people="caregivers" :showGithub="false" :columns="2" />
+      <PeopleSection :isMobile="isMobile" :title="$t('settings.people.creators')" :people="creators" :showGithub="true" :columns="2" />
     </div>
   </div>
 </template>
@@ -259,7 +249,7 @@ import SunIcon from '@/assets/svg/SunIcon.vue';
 import MoonIcon from '@/assets/svg/MoonIcon.vue';
 import RefreshIcon from '@/assets/svg/RefreshIcon.vue';
 import CommandListIcon from '@/assets/svg/CommandListIcon.vue';
-import SegmentedToggle from './SegmentedToggle.vue';
+import SegmentedToggle from '@/components/SegmentedToggle.vue';
 import PeopleSection from './PeopleSection.vue';
 import ColorPickerPopup from './ColorPickerPopup.vue';
 
@@ -273,6 +263,7 @@ export default {
     numberFormat: { type: String, required: true },
     creators: { type: Array, default: () => [] },
     caregivers: { type: Array, default: () => [] },
+    language: { type: String, default: 'pl' },
     codeBits: { type: Number, required: true },
     addresBits: { type: Number, required: true },
     oddDelay: { type: Number, required: true },
@@ -316,23 +307,47 @@ export default {
     'resetValues',
     'defaultSettings',
     'open-command-list',
+    'open-lab-dialog',
     'update:autocompleteEnabled',
     'update:decSigned',
     'update:autoResetOnAsmCompile',
     'color-change',
+    'update:language',
   ],
   computed: {
+    themeOptions() {
+      return [
+        { label: this.$t('settings.theme.light'), value: true },
+        { label: this.$t('settings.theme.dark'), value: false },
+      ];
+    },
+    languageOptions() {
+      return [
+        { label: this.$t('settings.language.pl'), value: 'pl' },
+        { label: this.$t('settings.language.en'), value: 'en' },
+      ];
+    },
+    numberFormatOptions() {
+      return [
+        { label: this.$t('settings.numberFormat.options.dec'), value: 'dec' },
+        { label: this.$t('settings.numberFormat.options.hex'), value: 'hex' },
+        { label: this.$t('settings.numberFormat.options.bin'), value: 'bin' },
+      ];
+    },
+    decDisplayOptions() {
+      return [
+        { label: this.$t('settings.decSigned.options.unsigned'), value: false },
+        { label: this.$t('settings.decSigned.options.signed'), value: true },
+      ];
+    },
     extrasLabels() {
       return {
-        xRegister: 'Rejestr X',
-        yRegister: 'Rejestr Y',
-        dl: 'DL',
-        jamlExtras: 'Dodatki JAML',
-        busConnectors: 'Łączniki magistrali',
-        showInvisibleRegisters: 'Pokaż niewidoczne rejestry magistral',
-        interrupts: 'Przerwania',
-        stack: 'Obsługa stosu',
-        io: 'Urządzenia wejścia/wyjścia',
+        xRegister: this.$t('settings.extras.labels.xRegister'),
+        yRegister: this.$t('settings.extras.labels.yRegister'),
+        dl: this.$t('settings.extras.labels.dl'),
+        jamlExtras: this.$t('settings.extras.labels.jamlExtras'),
+        busConnectors: this.$t('settings.extras.labels.busConnectors'),
+        showInvisibleRegisters: this.$t('settings.extras.labels.showInvisibleRegisters'),
       };
     },
     booleanKeys() {
@@ -342,30 +357,30 @@ export default {
       return [
         {
           key: 'io',
-          label: this.extrasLabels.io,
+          label: this.$t('settings.extras.groups.io.title'),
           children: [
-            { key: 'rbRegister', label: 'Rejestr RB' },
-            { key: 'gRegister', label: 'Rejestr G' },
+            { key: 'rbRegister', label: this.$t('settings.extras.groups.io.rbRegister') },
+            { key: 'gRegister', label: this.$t('settings.extras.groups.io.gRegister') },
           ],
         },
         {
           key: 'stack',
-          label: this.extrasLabels.stack,
+          label: this.$t('settings.extras.groups.stack.title'),
           children: [
-            { key: 'wsRegister', label: 'Rejestr WS' },
-            { key: 'wylsSignal', label: 'Sygnał wyls' },
+            { key: 'wsRegister', label: this.$t('settings.extras.groups.stack.wsRegister') },
+            { key: 'wylsSignal', label: this.$t('settings.extras.groups.stack.wylsSignal') },
           ],
         },
         {
           key: 'interrupts',
-          label: this.extrasLabels.interrupts,
+          label: this.$t('settings.extras.groups.interrupts.title'),
           children: [
-            { key: 'rzRegister', label: 'Rejestr RZ' },
-            { key: 'rpRegister', label: 'Rejestr RP' },
-            { key: 'rmRegister', label: 'Rejestr RM' },
-            { key: 'apRegister', label: 'Rejestr AP' },
-            { key: 'rintSignal', label: 'Sygnał rint' },
-            { key: 'eniSignal', label: 'Sygnał eni' },
+            { key: 'rzRegister', label: this.$t('settings.extras.groups.interrupts.rzRegister') },
+            { key: 'rpRegister', label: this.$t('settings.extras.groups.interrupts.rpRegister') },
+            { key: 'rmRegister', label: this.$t('settings.extras.groups.interrupts.rmRegister') },
+            { key: 'apRegister', label: this.$t('settings.extras.groups.interrupts.apRegister') },
+            { key: 'rintSignal', label: this.$t('settings.extras.groups.interrupts.rintSignal') },
+            { key: 'eniSignal', label: this.$t('settings.extras.groups.interrupts.eniSignal') },
           ],
         },
       ];
@@ -377,17 +392,17 @@ export default {
 
       const colorMap = {
         signal_line: {
-          title: 'Kolor linii sygnałowych',
+          title: this.$t('settings.colorPicker.signalLine'),
           color: this.signalLineColor,
           brightness: this.signalLineBrightness,
         },
         display: {
-          title: 'Kolor wyświetlacza',
+          title: this.$t('settings.colorPicker.display'),
           color: this.displayColor,
           brightness: this.displayBrightness,
         },
         bus: {
-          title: 'Kolor magistrali',
+          title: this.$t('settings.colorPicker.bus'),
           color: this.busColor,
           brightness: this.busBrightness,
         },

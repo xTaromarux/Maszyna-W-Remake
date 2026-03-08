@@ -53,14 +53,14 @@ function emit(messageId, payload) {
 }
 
 async function doChatCall(payload, controller) {
-  const { query, history, sessionId } = payload;
+  const { query, history, apiKey, sessionId } = payload;
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
     },
-    body: JSON.stringify({ query, history }),
+    body: JSON.stringify({ query, api_key: apiKey, history }),
     signal: controller.signal,
   });
 
@@ -80,10 +80,14 @@ async function doChatCall(payload, controller) {
 }
 
 async function handleStartMessage(msg) {
-  const { messageId, query, history, sessionId } = msg;
+  const { messageId, query, history, apiKey, sessionId } = msg;
   if (!messageId || typeof messageId !== 'string') return;
   if (typeof query !== 'string' || !Array.isArray(history)) {
     emit(messageId, { error: 'Invalid payload (query/history).', done: true });
+    return;
+  }
+  if (typeof apiKey !== 'string' || apiKey.trim() === '') {
+    emit(messageId, { errorKey: 'aiChat.apiKey.missingError', done: true });
     return;
   }
 
@@ -101,7 +105,7 @@ async function handleStartMessage(msg) {
   try {
     let full = null;
     try {
-      full = await doChatCall({ query, history, sessionId }, controller);
+      full = await doChatCall({ query, history, apiKey, sessionId }, controller);
     } catch (firstErr) {
       if (controller.signal.aborted) throw firstErr;
 
@@ -111,7 +115,7 @@ async function handleStartMessage(msg) {
       if (controller.signal.aborted) throw firstErr;
       await sleep(1500);
 
-      full = await doChatCall({ query, history, sessionId }, controller);
+      full = await doChatCall({ query, history, apiKey, sessionId }, controller);
     }
 
     if (controller.signal.aborted || state.cancelled) {

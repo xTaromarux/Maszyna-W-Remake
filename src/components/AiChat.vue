@@ -1,11 +1,20 @@
-﻿<template>
+<template>
   <div v-if="props.visible" class="chatOverlay" @click.self="startClose">
     <div id="aiChat" class="chatPanel" @click.stop :class="{ show: props.visible }" :style="{ width: panelWidth + 'px' }">
       <div class="resizer" @mousedown="startResize"></div>
 
       <header class="chatHeader">
-        <h1>{{ resolvedTitle }}</h1>
+        <div class="chatHeaderTitle">
+          <h1>{{ resolvedTitle }}</h1>
+          <span class="apiKeyChip" :class="{ apiKeyChipReady: hasApiKey }">
+            {{ hasApiKey ? $t('aiChat.apiKey.savedBadge') : $t('aiChat.apiKey.requiredBadge') }}
+          </span>
+        </div>
+
         <div class="headerBtns">
+          <button class="apiKeyBtn" type="button" @click="openApiKeyModal" :aria-label="$t('aiChat.apiKey.buttonAria')">
+            {{ hasApiKey ? $t('aiChat.apiKey.changeShort') : $t('aiChat.apiKey.addShort') }}
+          </button>
           <button class="resetBtn" @click="resetConversation" :aria-label="$t('aiChat.resetAria')">
             <AiChatTrashIcon width="22" height="22" class="trashIcon" />
           </button>
@@ -13,81 +22,133 @@
         </div>
       </header>
 
-      <div id="conversation" ref="conversationEl">
-        <div v-if="apiState === ApiState.CHECKING || apiState === ApiState.WAKING" class="healthBanner">
-          <span v-if="apiState === ApiState.CHECKING">{{ $t('aiChat.checking') }}</span>
-          <span v-else>{{ $t('aiChat.waking') }}</span>
-          <span class="dots"><span></span><span></span><span></span></span>
-        </div>
-
-        <div v-if="shouldShowSuggestions" class="suggestionPanel">
-          <div class="suggestionHeader">
-            <span class="suggestionTitle">{{ $t('aiChat.suggestions.title') }}</span>
-            <button class="suggestionClose" type="button" @click="dismissSuggestions" :aria-label="$t('aiChat.suggestions.closeAria')">
-              &times;
-            </button>
+      <div class="chatBody" :class="{ chatBodyLocked: showApiKeyGate }">
+        <div id="conversation" ref="conversationEl">
+          <div v-if="apiState === ApiState.CHECKING || apiState === ApiState.WAKING" class="healthBanner">
+            <span v-if="apiState === ApiState.CHECKING">{{ $t('aiChat.checking') }}</span>
+            <span v-else>{{ $t('aiChat.waking') }}</span>
+            <span class="dots"><span></span><span></span><span></span></span>
           </div>
-          <div class="suggestionGrid">
-            <button v-for="item in suggestions" :key="item.id" class="suggestionTile" type="button" @click="applySuggestion(item.text)">
-              <span class="suggestionText">{{ item.text }}</span>
-            </button>
-          </div>
-        </div>
 
-        <transition-group name="messageEnter" tag="div" class="conversationBox">
-          <div
-            v-for="msg in messages"
-            :key="msg.id"
-            class="messageBubble"
-            :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'assistant' }"
-          >
-            <div class="iconWrapper">
-              {{ msg.sender === 'assistant' ? 'đź¤–' : '' }}
+          <div v-if="shouldShowSuggestions" class="suggestionPanel">
+            <div class="suggestionHeader">
+              <span class="suggestionTitle">{{ $t('aiChat.suggestions.title') }}</span>
+              <button class="suggestionClose" type="button" @click="dismissSuggestions" :aria-label="$t('aiChat.suggestions.closeAria')">
+                &times;
+              </button>
             </div>
-            <div class="messageContent">
-              <div class="messageHeader">
-                <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
-                <span
-                  class="timestamp"
-                  :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
-                >
-                  {{ formatTime(msg.timestamp) }}
-                </span>
-                <button
-                  v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
-                  class="cancelBtn"
-                  type="button"
-                  @click="cancelResponse"
-                  :disabled="isCancelling"
-                  :aria-label="$t('aiChat.cancel')"
-                >
-                  &times;
+            <div class="suggestionGrid">
+              <button v-for="item in suggestions" :key="item.id" class="suggestionTile" type="button" @click="applySuggestion(item.text)">
+                <span class="suggestionText">{{ item.text }}</span>
+              </button>
+            </div>
+          </div>
+
+          <transition-group name="messageEnter" tag="div" class="conversationBox">
+            <div
+              v-for="msg in messages"
+              :key="msg.id"
+              class="messageBubble"
+              :class="{ messageUser: msg.sender === 'user', messageAi: msg.sender === 'assistant' }"
+            >
+              <div class="iconWrapper">
+                {{ msg.sender === 'assistant' ? 'AI' : '' }}
+              </div>
+              <div class="messageContent">
+                <div class="messageHeader">
+                  <span class="senderName">{{ msg.sender === 'assistant' ? $t('aiChat.senderAi') : $t('aiChat.senderUser') }}</span>
+                  <span
+                    class="timestamp"
+                    :class="{ timestampAssistant: msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId }"
+                  >
+                    {{ formatTime(msg.timestamp) }}
+                  </span>
+                  <button
+                    v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId"
+                    class="cancelBtn"
+                    type="button"
+                    @click="cancelResponse"
+                    :disabled="isCancelling"
+                    :aria-label="$t('aiChat.cancel')"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <div class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
+                  <template v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId && !msg.text">
+                    <span class="typing"><span></span><span></span><span></span></span>
+                  </template>
+                  <template v-else-if="msg.sender === 'assistant'">
+                    <div class="messageHtml" v-html="renderMessage(msg.text)" @click="onMessageHtmlClick"></div>
+                  </template>
+                  <template v-else>
+                    {{ msg.text }}
+                  </template>
+                </div>
+              </div>
+            </div>
+          </transition-group>
+        </div>
+
+        <div class="inputArea">
+          <p class="inputInstruction">{{ resolvedInstruction }}</p>
+          <p v-if="rateLimitMessage" class="inputError">{{ rateLimitMessage }}</p>
+          <p v-else-if="generalError" class="inputError">{{ generalError }}</p>
+          <form @submit.prevent="sendUserMessage">
+            <input
+              ref="textInput"
+              v-model="text"
+              :placeholder="resolvedPlaceholder"
+              type="text"
+              :disabled="inputDisabled"
+              :aria-disabled="inputDisabled"
+            />
+            <button class="execution-btn execution-btn--run" type="submit" :disabled="sendDisabled">{{ $t('aiChat.send') }}</button>
+          </form>
+        </div>
+
+        <transition name="apiGateFade">
+          <div v-if="showApiKeyGate" class="apiKeyGate" @click.self="closeApiKeyModal">
+            <form class="apiKeyCard" @submit.prevent="saveApiKey">
+              <p class="apiKeyEyebrow">{{ $t('aiChat.apiKey.eyebrow') }}</p>
+              <h2>{{ hasApiKey ? $t('aiChat.apiKey.editTitle') : $t('aiChat.apiKey.title') }}</h2>
+              <p class="apiKeyDescription">
+                {{ hasApiKey ? $t('aiChat.apiKey.editDescription') : $t('aiChat.apiKey.description') }}
+              </p>
+
+              <label class="apiKeyLabel" for="ai-chat-api-key">{{ $t('aiChat.apiKey.label') }}</label>
+              <div class="apiKeyField">
+                <input
+                  id="ai-chat-api-key"
+                  ref="apiKeyInput"
+                  v-model="apiKeyDraft"
+                  :type="showApiKeyValue ? 'text' : 'password'"
+                  :placeholder="$t('aiChat.apiKey.placeholder')"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button class="apiKeyToggle" type="button" @click="showApiKeyValue = !showApiKeyValue">
+                  {{ showApiKeyValue ? $t('aiChat.apiKey.hide') : $t('aiChat.apiKey.show') }}
                 </button>
               </div>
-              <div class="messageText" :class="{ messageTextAssistant: msg.sender === 'assistant' }">
-                <template v-if="msg.sender === 'assistant' && aiTyping && msg.id === currentAiMessageId && !msg.text">
-                  <span class="typing"><span></span><span></span><span></span></span>
-                </template>
-                <template v-else-if="msg.sender === 'assistant'">
-                  <div class="messageHtml" v-html="renderMessage(msg.text)" @click="onMessageHtmlClick"></div>
-                </template>
-                <template v-else>
-                  {{ msg.text }}
-                </template>
-              </div>
-            </div>
-          </div>
-        </transition-group>
-      </div>
 
-      <div class="inputArea">
-        <p class="inputInstruction">{{ resolvedInstruction }}</p>
-        <p v-if="rateLimitMessage" class="inputError">{{ rateLimitMessage }}</p>
-        <p v-else-if="generalError" class="inputError">{{ generalError }}</p>
-        <form @submit.prevent="sendUserMessage">
-          <input ref="textInput" v-model="text" :placeholder="resolvedPlaceholder" type="text" :disabled="isBusy" />
-          <button class="execution-btn execution-btn--run" type="submit" :disabled="isBusy">{{ $t('aiChat.send') }}</button>
-        </form>
+              <p class="apiKeyHint">{{ $t('aiChat.apiKey.hint') }}</p>
+              <p v-if="apiKeyError" class="apiKeyError">{{ apiKeyError }}</p>
+
+              <div class="apiKeyActions">
+                <button class="execution-btn execution-btn--run apiKeyPrimary" type="submit">
+                  {{ $t('aiChat.apiKey.save') }}
+                </button>
+                <button v-if="hasApiKey" class="apiKeySecondary" type="button" @click="closeApiKeyModal">
+                  {{ $t('actions.cancel') }}
+                </button>
+                <button v-if="hasApiKey" class="apiKeySecondary apiKeyDanger" type="button" @click="clearApiKey">
+                  {{ $t('aiChat.apiKey.clear') }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
@@ -98,15 +159,16 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n';
 import AiChatTrashIcon from '@/components/AiChatTrashIcon.vue';
 import {
+  API_KEY_STORAGE_KEY,
   ApiState,
+  HISTORY_LIMIT,
+  RATE_LIMIT,
+  SAVE_DEBOUNCE_MS,
+  SESSION_KEY,
   STORAGE_KEY,
   STORAGE_VERSION,
   STORAGE_VERSION_KEY,
   WIDTH_KEY,
-  SESSION_KEY,
-  HISTORY_LIMIT,
-  SAVE_DEBOUNCE_MS,
-  RATE_LIMIT,
 } from '@/models/AiChat';
 
 const props = defineProps({
@@ -120,10 +182,16 @@ const emit = defineEmits(['close']);
 
 const messages = ref([]);
 const text = ref('');
+const apiKey = ref('');
+const apiKeyDraft = ref('');
+const apiKeyError = ref('');
+const showApiKeyModal = ref(false);
+const showApiKeyValue = ref(false);
 const aiTyping = ref(false);
 const isCancelling = ref(false);
 const conversationEl = ref(null);
 const textInput = ref(null);
+const apiKeyInput = ref(null);
 const apiState = ref(ApiState.IDLE);
 const currentAiMessageId = ref(null);
 const panelWidth = ref(650);
@@ -134,12 +202,16 @@ const sessionId = ref('');
 const showSuggestions = ref(true);
 
 const API_URL = import.meta.env.VITE_API_URL || '';
-const HEALTH_URL = API_URL ? API_URL.replace(/\/api\/chat\/?$/, '/health') : '';
+const HEALTH_URL = API_URL ? API_URL.replace(/chat\/?$/, 'health') : '';
 const { t } = useI18n();
 
+const hasApiKey = computed(() => apiKey.value.trim().length > 0);
+const showApiKeyGate = computed(() => !hasApiKey.value || showApiKeyModal.value);
 const isBusy = computed(
   () => aiTyping.value || isCancelling.value || apiState.value === ApiState.CHECKING || apiState.value === ApiState.WAKING
 );
+const inputDisabled = computed(() => isBusy.value || showApiKeyGate.value || !hasApiKey.value);
+const sendDisabled = computed(() => inputDisabled.value || !text.value.trim());
 const suggestions = computed(() => [
   { id: 'what-is-w', text: t('aiChat.suggestions.items.whatIsW') },
   { id: 'add-two', text: t('aiChat.suggestions.items.addTwoNumbers') },
@@ -168,6 +240,86 @@ function startClose() {
   emit('close');
 }
 
+function focusPrimaryInput(selectKey = false) {
+  nextTick(() => {
+    if (!props.visible) return;
+
+    if (showApiKeyGate.value) {
+      apiKeyInput.value?.focus();
+      if (selectKey) {
+        apiKeyInput.value?.select?.();
+      }
+      return;
+    }
+
+    textInput.value?.focus();
+  });
+}
+
+function restoreApiKey() {
+  try {
+    const saved = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+    apiKey.value = saved.trim();
+    apiKeyDraft.value = apiKey.value;
+  } catch {
+    apiKey.value = '';
+    apiKeyDraft.value = '';
+  }
+}
+
+function persistApiKey(value) {
+  try {
+    if (value) localStorage.setItem(API_KEY_STORAGE_KEY, value);
+    else localStorage.removeItem(API_KEY_STORAGE_KEY);
+  } catch {}
+}
+
+function openApiKeyModal() {
+  showApiKeyModal.value = true;
+  apiKeyDraft.value = apiKey.value;
+  apiKeyError.value = '';
+  showApiKeyValue.value = false;
+  focusPrimaryInput(true);
+}
+
+function closeApiKeyModal() {
+  if (!hasApiKey.value) return;
+  showApiKeyModal.value = false;
+  apiKeyDraft.value = apiKey.value;
+  apiKeyError.value = '';
+  showApiKeyValue.value = false;
+  focusPrimaryInput();
+}
+
+function saveApiKey() {
+  const normalized = apiKeyDraft.value.trim();
+  if (!normalized) {
+    apiKeyError.value = t('aiChat.apiKey.missingError');
+    focusPrimaryInput(true);
+    return;
+  }
+
+  apiKey.value = normalized;
+  apiKeyDraft.value = normalized;
+  apiKeyError.value = '';
+  generalError.value = '';
+  showApiKeyModal.value = false;
+  showApiKeyValue.value = false;
+  persistApiKey(normalized);
+  focusPrimaryInput();
+}
+
+function clearApiKey() {
+  apiKey.value = '';
+  apiKeyDraft.value = '';
+  apiKeyError.value = '';
+  generalError.value = '';
+  showApiKeyModal.value = false;
+  showApiKeyValue.value = false;
+  persistApiKey('');
+  focusPrimaryInput();
+}
+
 function dismissSuggestions() {
   showSuggestions.value = false;
 }
@@ -175,15 +327,15 @@ function dismissSuggestions() {
 function applySuggestion(value) {
   if (!value) return;
   text.value = value;
-  nextTick(() => {
-    textInput.value?.focus();
-  });
+  if (!hasApiKey.value) {
+    openApiKeyModal();
+    return;
+  }
+  focusPrimaryInput();
 }
 
 function generateId(prefix = 'msg') {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
   return `${prefix}-${Math.random().toString(36).slice(2)}${Date.now()}`;
 }
 
@@ -208,14 +360,9 @@ function stopMessageAnimation(messageId) {
 }
 
 function stopAllAnimations() {
-  const ids = Array.from(animationStates.keys());
-  ids.forEach((id) => stopMessageAnimation(id));
+  Array.from(animationStates.keys()).forEach((id) => stopMessageAnimation(id));
 }
 
-/**
- * Visual-only typewriter effect for assistant replies. We may replace this with real
- * streaming in the future, at which point chunking/scheduling would move back to the worker.
- */
 function playMessageAnimation(message, fullText) {
   stopMessageAnimation(message.id);
 
@@ -239,9 +386,7 @@ function playMessageAnimation(message, fullText) {
       finish: () => {
         if (finished) return;
         finished = true;
-        if (state.timer !== null) {
-          clearInterval(state.timer);
-        }
+        if (state.timer !== null) clearInterval(state.timer);
         animationStates.delete(message.id);
         resolve();
       },
@@ -254,9 +399,7 @@ function playMessageAnimation(message, fullText) {
       }
       message.text += chunks[index];
       index += 1;
-      if (index >= chunks.length) {
-        state.finish();
-      }
+      if (index >= chunks.length) state.finish();
     };
 
     animationStates.set(message.id, state);
@@ -265,9 +408,7 @@ function playMessageAnimation(message, fullText) {
     if (!finished) {
       state.timer = setInterval(() => {
         applyChunk();
-        if (finished) {
-          clearInterval(state.timer);
-        }
+        if (finished) clearInterval(state.timer);
       }, TYPEWRITER_DELAY_MS);
     }
   });
@@ -283,6 +424,7 @@ function scheduleSave() {
         localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION));
         return;
       }
+
       const trimmed = messages.value.slice(-HISTORY_LIMIT);
       const payload = { version: STORAGE_VERSION, messages: trimmed };
       localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION));
@@ -330,9 +472,7 @@ function loadPersistedMessages() {
     if (!raw) return;
 
     let parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      parsed = { messages: parsed };
-    }
+    if (Array.isArray(parsed)) parsed = { messages: parsed };
     if (!parsed || !Array.isArray(parsed.messages)) return;
 
     messages.value = parsed.messages.slice(-HISTORY_LIMIT).map((msg, index) => ({
@@ -394,13 +534,12 @@ async function ensureModelAwake() {
     }
   } catch (err) {
     if (token === healthToken) {
+      console.log('Health check failed', err);
       apiState.value = ApiState.ERROR;
     }
     throw err;
   } finally {
-    if (token === healthToken && apiState.value !== ApiState.ERROR) {
-      apiState.value = ApiState.IDLE;
-    }
+    if (token === healthToken && apiState.value !== ApiState.ERROR) apiState.value = ApiState.IDLE;
   }
 }
 
@@ -447,26 +586,27 @@ function handleWorkerMessage(event) {
       }
       if (cancelled) {
         const index = messages.value.findIndex((item) => item.id === messageId);
-        if (index !== -1) {
-          messages.value.splice(index, 1);
-        }
+        if (index !== -1) messages.value.splice(index, 1);
       }
       scheduleSave();
       scheduleScroll('smooth');
     };
 
     const pending = animationPromises.get(messageId);
-    if (pending) {
-      pending.finally(finalize);
-    } else {
-      finalize();
-    }
+    if (pending) pending.finally(finalize);
+    else finalize();
   }
 }
 
 async function sendUserMessage() {
   const userQuery = text.value.trim();
   if (!userQuery || isBusy.value) return;
+
+  if (!hasApiKey.value) {
+    apiKeyError.value = t('aiChat.apiKey.missingError');
+    openApiKeyModal();
+    return;
+  }
 
   const now = Date.now();
   requestTimestamps.value = requestTimestamps.value.filter((ts) => now - ts < RATE_LIMIT.windowMs);
@@ -498,9 +638,7 @@ async function sendUserMessage() {
     aiTyping.value = false;
     isCancelling.value = false;
     setTimeout(() => {
-      if (apiState.value === ApiState.ERROR) {
-        apiState.value = ApiState.IDLE;
-      }
+      if (apiState.value === ApiState.ERROR) apiState.value = ApiState.IDLE;
     }, 1500);
     return;
   }
@@ -519,12 +657,12 @@ async function sendUserMessage() {
   scheduleSave();
   scheduleScroll('smooth');
 
-  const history = buildHistory(assistantMessageId);
   ensureWorker().postMessage({
     type: 'start',
     messageId: assistantMessageId,
     query: userQuery,
-    history,
+    apiKey: apiKey.value.trim(),
+    history: buildHistory(assistantMessageId),
     sessionId: sessionId.value,
   });
 }
@@ -534,14 +672,10 @@ function cancelResponse() {
   isCancelling.value = true;
 
   stopMessageAnimation(currentAiMessageId.value);
-  if (worker) {
-    worker.postMessage({ type: 'cancel', messageId: currentAiMessageId.value });
-  }
+  if (worker) worker.postMessage({ type: 'cancel', messageId: currentAiMessageId.value });
 
   const idx = messages.value.findIndex((item) => item.id === currentAiMessageId.value);
-  if (idx !== -1) {
-    messages.value.splice(idx, 1);
-  }
+  if (idx !== -1) messages.value.splice(idx, 1);
 
   currentAiMessageId.value = null;
   aiTyping.value = false;
@@ -550,13 +684,11 @@ function cancelResponse() {
 }
 
 function resetConversation() {
-  if (currentAiMessageId.value && worker) {
-    worker.postMessage({ type: 'cancel', messageId: currentAiMessageId.value });
-  }
+  if (currentAiMessageId.value && worker) worker.postMessage({ type: 'cancel', messageId: currentAiMessageId.value });
+
   currentAiMessageId.value = null;
   aiTyping.value = false;
   isCancelling.value = false;
-
   stopAllAnimations();
 
   messages.value = [];
@@ -573,7 +705,6 @@ function resetConversation() {
 }
 
 const formatTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
 const escapeHtml = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
@@ -592,7 +723,9 @@ function renderMessage(textValue) {
   out = out.replace(/\r?\n/g, '<br>');
 
   blocks.forEach((block, index) => {
-    const langLabel = block.lang ? `<span class="code-lang">${block.lang}</span>` : `<span class="code-lang no-lang">${t('aiChat.codeLabel')}</span>`;
+    const langLabel = block.lang
+      ? `<span class="code-lang">${block.lang}</span>`
+      : `<span class="code-lang no-lang">${t('aiChat.codeLabel')}</span>`;
     const toolbar = `<div class="code-toolbar-outside">${langLabel}<button type="button" class="copy-btn" aria-label="${t('aiChat.copyCodeAria')}">${t('aiChat.copyCode')}</button></div>`;
     const group = `<div class="code-group">${toolbar}<pre class="code-block"><code>${block.code}</code></pre></div>`;
     out = out.replace(`%%CODEBLOCK_${index}%%`, group);
@@ -612,7 +745,7 @@ function onMessageHtmlClick(event) {
 
   const onCopied = () => {
     const original = btn.textContent;
-    btn.textContent = 'Skopiowano!';
+    btn.textContent = t('aiChat.copyCodeDone');
     btn.disabled = true;
     btn.classList.add('copied');
 
@@ -624,10 +757,7 @@ function onMessageHtmlClick(event) {
   };
 
   if (navigator.clipboard?.writeText) {
-    navigator.clipboard
-      .writeText(codeText)
-      .then(onCopied)
-      .catch(() => fallbackCopy(codeText, onCopied));
+    navigator.clipboard.writeText(codeText).then(onCopied).catch(() => fallbackCopy(codeText, onCopied));
   } else {
     fallbackCopy(codeText, onCopied);
   }
@@ -650,15 +780,21 @@ watch(
   () => props.visible,
   (visible) => {
     if (visible) {
-      nextTick(() => {
-        textInput.value?.focus();
-        scheduleScroll('auto');
-      });
+      focusPrimaryInput(!hasApiKey.value);
+      scheduleScroll('auto');
     } else {
       isCancelling.value = false;
+      showApiKeyModal.value = false;
+      showApiKeyValue.value = false;
+      apiKeyError.value = '';
+      apiKeyDraft.value = apiKey.value;
     }
   }
 );
+
+watch(showApiKeyGate, (locked) => {
+  if (props.visible && locked) focusPrimaryInput(true);
+});
 
 watch(
   () => messages.value.length,
@@ -680,8 +816,7 @@ function startResize(e) {
 function onMouseMove(e) {
   if (!isResizing) return;
   const delta = startX - e.clientX;
-  const nextWidth = Math.min(Math.max(startWidth + delta, MIN_WIDTH), MAX_WIDTH);
-  panelWidth.value = nextWidth;
+  panelWidth.value = Math.min(Math.max(startWidth + delta, MIN_WIDTH), MAX_WIDTH);
   scheduleWidthPersist();
 }
 
@@ -696,13 +831,13 @@ function stopResize() {
 onMounted(() => {
   ensureWorker();
   restorePanelWidth();
+  restoreApiKey();
   loadPersistedMessages();
   ensureSession();
+
   if (props.visible) {
-    nextTick(() => {
-      textInput.value?.focus();
-      scheduleScroll('auto');
-    });
+    focusPrimaryInput(!hasApiKey.value);
+    scheduleScroll('auto');
   }
 });
 
@@ -719,196 +854,3 @@ onBeforeUnmount(() => {
   }
 });
 </script>
-
-<style scoped>
-.inputError {
-  margin: 0.3rem 0;
-  color: #ef4444;
-  font-size: 0.85rem;
-}
-
-.messageHtml :deep(.code-group) {
-  margin: 0.6rem 0;
-}
-
-.messageHtml :deep(.code-toolbar-outside) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0 0 0.35rem;
-  background: transparent;
-}
-
-.messageHtml :deep(.code-lang) {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6b7280;
-}
-.messageHtml :deep(.code-lang.no-lang) {
-  opacity: 0.6;
-}
-
-.messageHtml :deep(.copy-btn) {
-  appearance: none;
-  border: 3px solid #003c7d;
-  background: var(--panelBackgroundColor, #ffffff);
-  color: var(--fontColor, black);
-  font-size: 0.8rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  outline: none;
-  cursor: pointer;
-}
-.messageHtml :deep(.copy-btn:hover) {
-  background: #f3f4f6;
-}
-.messageHtml :deep(.copy-btn.copied) {
-  background: #d1fae5;
-  border-color: #10b981;
-  color: #065f46;
-}
-
-.messageHtml :deep(.code-block) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  background: #0f172a;
-  color: #e5e7eb;
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  overflow: auto;
-  line-height: 1.45;
-  border: 1px solid #1f2937;
-}
-
-.messageHtml :deep(.inline-code) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-  background: var(--panelBackgroundColor, #ffffff);
-  border: 1px solid #e1e4e8;
-  padding: 0.15rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.95em;
-}
-
-.messageText :deep(pre),
-.messageText :deep(code),
-.messageText :deep(.code-toolbar-outside) {
-  margin-top: 0.2rem;
-  margin-bottom: 0.2rem;
-}
-
-.healthBanner {
-  margin: 0.4rem 0 0.6rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px dashed var(--signal-active, #0ea5e9);
-  background: color-mix(in srgb, var(--panelBackgroundColor, #fff) 85%, #0ea5e9);
-  border-radius: 8px;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.healthBanner .dots {
-  display: inline-flex;
-  gap: 0.2rem;
-}
-.healthBanner .dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #0e7490;
-  opacity: 0.3;
-  animation: blink 1.4s infinite;
-}
-.healthBanner .dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.healthBanner .dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes blink {
-  0%,
-  80%,
-  100% {
-    opacity: 0.2;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-
-.suggestionPanel {
-  margin: 0.4rem 0 0.8rem;
-  padding: 0.75rem;
-  border-radius: 10px;
-  border: 3px solid var(--panelOutlineColor, #003c7d);
-  background: var(--panelBackgroundColor, #ffffff);
-  color: var(--fontColor, #0f172a);
-}
-
-.suggestionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.6rem;
-}
-
-.suggestionTitle {
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.suggestionClose {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--fontColor, #0f172a);
-  font-size: 1.2rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 0.25rem;
-}
-
-.suggestionGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.5rem;
-}
-
-.suggestionTile {
-  text-align: left;
-  border: 2px solid #003c7d;
-  border-radius: 8px;
-  padding: 0.55rem 0.6rem;
-  background: #f8fafc;
-  color: inherit;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.suggestionTile:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
-  border-color: #0ea5e9;
-}
-
-.suggestionText {
-  font-size: 0.9rem;
-  line-height: 1.3;
-}
-
-body.darkMode .suggestionPanel {
-  background: var(--panelBackgroundColor, #0f172a);
-}
-
-body.darkMode .suggestionTile {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: #1d4ed8;
-}
-</style>
-

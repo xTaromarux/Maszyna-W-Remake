@@ -133,6 +133,14 @@
               </div>
 
               <p class="apiKeyHint">{{ $t('aiChat.apiKey.hint') }}</p>
+              <div class="apiKeyNotice">
+                <p class="apiKeyNoticeTitle">{{ $t('aiChat.apiKey.noticeTitle') }}</p>
+                <ul class="apiKeyNoticeList">
+                  <li>{{ $t('aiChat.apiKey.noticeRateLimits') }}</li>
+                  <li>{{ $t('aiChat.apiKey.noticeStorage') }}</li>
+                  <li>{{ $t('aiChat.apiKey.noticeShare') }}</li>
+                </ul>
+              </div>
               <p v-if="apiKeyError" class="apiKeyError">{{ apiKeyError }}</p>
 
               <div class="apiKeyActions">

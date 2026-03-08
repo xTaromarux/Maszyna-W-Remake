@@ -698,6 +698,34 @@
   color: color-mix(in srgb, var(--fontColor, #111) 72%, transparent);
 }
 
+.apiKeyNotice {
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 55%, transparent);
+  background: color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 88%, var(--backgroundColor, #ffffff));
+}
+
+.apiKeyNoticeTitle {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primaryColor, #003c7d);
+}
+
+.apiKeyNoticeList {
+  margin: 0;
+  padding-left: 1rem;
+  color: color-mix(in srgb, var(--fontColor, #111) 78%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.apiKeyNoticeList li + li {
+  margin-top: 0.35rem;
+}
+
 .apiKeyActions {
   display: flex;
   flex-wrap: wrap;
@@ -836,6 +864,10 @@ body.darkMode .apiKeyField {
 
 body.darkMode .apiKeyHint {
   background: color-mix(in srgb, var(--panelBackgroundColor, #2a2c33) 90%, #101828);
+}
+
+body.darkMode .apiKeyNotice {
+  background: color-mix(in srgb, var(--panelBackgroundColor, #2a2c33) 92%, #101828);
 }
 
 body.darkMode .apiKeyDanger:hover {

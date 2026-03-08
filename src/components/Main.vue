@@ -161,7 +161,7 @@
       :title="$t('consoleDock.openConsole')"
     />
 
-    <div v-if="disappearBlour" @click="closePopups" :class="{ show: anyPopupOpen, hide: !anyPopupOpen }" id="popupsBackdrop" />
+    <div v-if="disappearBlour" @click="closePopups" :class="{ show: globalBackdropOpen, hide: !globalBackdropOpen }" id="popupsBackdrop" />
 
     <SettingsOverlay
       :settings-open="settingsOpen"
@@ -278,6 +278,10 @@ export default {
   computed: {
     anyPopupOpen() {
       return this.commandListOpen || this.aiChatOpen || this.settingsOpen;
+    },
+
+    globalBackdropOpen() {
+      return this.commandListOpen || this.settingsOpen;
     },
 
     localizedLabCatalog() {
@@ -1344,10 +1348,10 @@ export default {
         this.blurHideTimer = null;
       }
 
-      if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
+      if (!this.globalBackdropOpen) {
         this.blurHideTimer = setTimeout(() => {
           this.blurHideTimer = null;
-          if (!this.settingsOpen && !this.commandListOpen && !this.aiChatOpen) {
+          if (!this.globalBackdropOpen) {
             this.disappearBlour = false;
           }
         }, 1000);
@@ -2229,7 +2233,7 @@ export default {
       this.sendPartialData('i', newVal);
     },
 
-    anyPopupOpen: {
+    globalBackdropOpen: {
       handler(val) {
         if (val) {
           if (this.blurHideTimer) {

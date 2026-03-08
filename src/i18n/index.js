@@ -176,9 +176,30 @@ const messages = {
       "rateLimitExceeded": "Przekroczono limit zapytan.",
       "connectFailed": "Nie udalo sie polaczyc z modelem. {message}",
       "fetchFailed": "Nie udalo sie pobrac odpowiedzi od AI. {message}",
+      "apiKey": {
+        "buttonAria": "Edytuj klucz API",
+        "addShort": "Dodaj klucz",
+        "changeShort": "Zmien klucz",
+        "requiredBadge": "Klucz wymagany",
+        "savedBadge": "Klucz gotowy",
+        "eyebrow": "Dostep do modelu",
+        "title": "Podaj swoj Gemini API key",
+        "editTitle": "Zmien Gemini API key",
+        "description": "Bez klucza API czat nie moze wysylac pytan do modelu. Klucz zapisujemy tylko lokalnie w tej przegladarce.",
+        "editDescription": "Mozesz podmienic zapisany klucz API bez utraty historii rozmowy.",
+        "label": "Gemini API key",
+        "placeholder": "Wklej swoj klucz API",
+        "hint": "Klucz bedzie dolaczany do kazdego requestu POST /chat jako pole api_key.",
+        "show": "Pokaz",
+        "hide": "Ukryj",
+        "save": "Zapisz klucz",
+        "clear": "Usun klucz",
+        "missingError": "Najpierw podaj Gemini API key."
+      },
       "codeLabel": "kod",
       "copyCodeAria": "Skopiuj kod",
-      "copyCode": "Kopiuj"
+      "copyCode": "Kopiuj",
+      "copyCodeDone": "Skopiowano"
     },
     "ioPanel": {
       "title": "Urządzenie zewnętrzne",
@@ -710,9 +731,30 @@ const messages = {
       "rateLimitExceeded": "Request limit exceeded.",
       "connectFailed": "Could not connect to the model. {message}",
       "fetchFailed": "Could not fetch a response from AI. {message}",
+      "apiKey": {
+        "buttonAria": "Edit API key",
+        "addShort": "Add key",
+        "changeShort": "Change key",
+        "requiredBadge": "Key required",
+        "savedBadge": "Key ready",
+        "eyebrow": "Model access",
+        "title": "Enter your Gemini API key",
+        "editTitle": "Update Gemini API key",
+        "description": "The chat cannot send requests to the model until you provide an API key. The key is stored only in this browser.",
+        "editDescription": "You can replace the saved API key without losing the current conversation history.",
+        "label": "Gemini API key",
+        "placeholder": "Paste your API key",
+        "hint": "The key will be included in every POST /chat request as api_key.",
+        "show": "Show",
+        "hide": "Hide",
+        "save": "Save key",
+        "clear": "Remove key",
+        "missingError": "Enter your Gemini API key first."
+      },
       "codeLabel": "code",
       "copyCodeAria": "Copy code",
-      "copyCode": "Copy"
+      "copyCode": "Copy",
+      "copyCodeDone": "Copied"
     },
     "ioPanel": {
       "title": "External device",

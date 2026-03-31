@@ -35,6 +35,7 @@ function normalizeUpstream(rawUrl, spaceSlug) {
 }
 
 const UPSTREAM = normalizeUpstream(RAW_URL, HF_SPACE)
+const UPSTREAM_HEALTH = UPSTREAM ? UPSTREAM.replace(/\/chat\/?$/, '/health') : ''
 
 app.use(express.json({ limit: BODY_LIMIT }))
 
@@ -77,6 +78,7 @@ app.get('/health', async (req, res) => {
   const info = {
     ok: true,
     upstream: UPSTREAM,
+    upstream_health: UPSTREAM_HEALTH,
     upstream_ok: null,
     woke: false,
     status: null,
@@ -89,15 +91,25 @@ app.get('/health', async (req, res) => {
   }
 
   try {
-    // „Lekkie” POST, takie samo body jak /api/chat; to też „budzi” Space (cold start)
-    const r = await fetchWithTimeout(UPSTREAM, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: wake ? '' : '[health-check]', history: [] })
-    }, wake ? 25000 : 10000) // przy wake daj trochę więcej czasu
+    let r = null
+    let usedFallback = false
+
+    if (UPSTREAM_HEALTH && UPSTREAM_HEALTH !== UPSTREAM) {
+      r = await fetchWithTimeout(UPSTREAM_HEALTH, { method: 'GET' }, wake ? 25000 : 10000).catch(() => null)
+    }
+
+    if (!r || r.status === 404 || r.status === 405) {
+      usedFallback = true
+      // Starsze upstreamy nie mają /health, więc zostaje lekki POST na /chat.
+      r = await fetchWithTimeout(UPSTREAM, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: wake ? '' : '[health-check]', api_key: 'health-check', history: [] })
+      }, wake ? 25000 : 10000)
+    }
 
     info.upstream_ok = r.ok
-    info.status = `HTTP_${r.status}`
+    info.status = `${usedFallback ? 'CHAT_' : 'HTTP_'}${r.status}`
     info.woke = wake && r.ok
     const ct = r.headers.get('content-type') || ''
     if (ct.includes('application/json')) {
@@ -127,8 +139,11 @@ app.post('/api/chat', async (req, res) => {
     const r = await fetch(UPSTREAM, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // Space FastAPI oczekuje { query: string, history: [...] }
-      body: JSON.stringify({ query: req.body?.query || '', history: req.body?.history || [] }),
+      body: JSON.stringify({
+        query: req.body?.query || '',
+        api_key: req.body?.api_key || '',
+        history: req.body?.history || [],
+      }),
       signal: controller.signal
     }).catch(e => { throw new Error('Upstream fetch failed: ' + e.message) })
 

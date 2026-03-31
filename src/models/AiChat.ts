@@ -36,6 +36,7 @@ export interface RateLimit {
 export const STORAGE_VERSION = 1;
 export const STORAGE_KEY = 'aiChat.messages';
 export const STORAGE_VERSION_KEY = 'aiChat.version';
+export const API_KEY_STORAGE_KEY = 'aiChat.apiKey';
 export const WIDTH_KEY = 'aiChat.panelWidth';
 export const SESSION_KEY = 'aiChat.sessionId';
 

@@ -1,0 +1,15 @@
+import SignalButton from './SignalButton';
+import RegisterComponent from './RegisterComponent';
+
+export default function RegisterISection({ I, signals, numberFormat, onUpdateI, onUpdateNumberFormat, onClickItem }) {
+  return <div id="iRegister">
+    <SignalButton id="wyad" signal={signals.wyad} label="wyad" divClassNames="long pathUpOnRight" spanClassNames="lineRightOnBottom" onClick={() => onClickItem?.('wyad')} />
+    <RegisterComponent label="I" model={I} onUpdateModel={onUpdateI} numberFormat={numberFormat} onUpdateNumberFormat={onUpdateNumberFormat} />
+    <div className="signals">
+      <SignalButton id="wei" signal={signals.wei} label="wei" divClassNames="impulse pathUpOnLeft" spanClassNames="arrowLeftOnBottom" onClick={() => onClickItem?.('wei')} />
+      <div className="stopConteiner">
+        <SignalButton id="stop" signal={signals.stop} label="stop" spanClassNames="lineLeftOnBottom additionalInterruptsSignal" onClick={() => onClickItem?.('stop')} />
+      </div>
+    </div>
+  </div>;
+}

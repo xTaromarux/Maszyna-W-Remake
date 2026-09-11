@@ -1,0 +1,17 @@
+
+.spinner[data-editor-execution-controls] {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+  animation: sp-data-editor-execution-controls 0.6s linear infinite;
+  vertical-align: -0.15em;
+}
+@keyframes sp-data-editor-execution-controls {
+to {
+    transform: rotate(360deg);
+}
+}

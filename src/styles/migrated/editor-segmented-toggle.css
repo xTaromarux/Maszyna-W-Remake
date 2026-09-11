@@ -1,0 +1,53 @@
+
+.segmented[data-editor-segmented-toggle] {
+  --count: 2;
+  --idx: 0;
+  --radius: 0.25rem;
+  --dur: 260ms;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+.track[data-editor-segmented-toggle] {
+  position: relative;
+  display: grid;
+  margin-bottom: 10px;
+  grid-template-columns: repeat(var(--count), 1fr);
+  background: #003c7d;
+  padding: 6px;
+  border-radius: var(--radius);
+  user-select: none;
+}
+.thumb[data-editor-segmented-toggle] {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / var(--count));
+  transform: translateX(calc(var(--idx) * 100%));
+  border-radius: 0.1rem;
+  background: var(--buttonBackgroundColor);
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  transition: transform var(--dur) var(--ease);
+  will-change: transform;
+  z-index: 0;
+  pointer-events: none;
+}
+.seg-btn[data-editor-segmented-toggle] {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 0.1rem;
+  cursor: pointer;
+  color: #f3e9ff;
+  outline: none;
+}
+.seg-btn[aria-selected="true"][data-editor-segmented-toggle] { color: var(--fontColorSelectedItem);
+}
+.toggleButtonProgram[data-editor-segmented-toggle] {
+  width: 100%;
+}

@@ -1,0 +1,66 @@
+.register-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.register-container .inputWrapper {
+  position: relative;
+}
+
+.register-container .format-selector {
+  position: relative;
+  margin-left: 4px;
+}
+
+.register-container .format-button {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.register-container .format-button:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+}
+
+.register-container .format-button svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--fontColor);
+}
+
+.register-container .format-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--backgroundColor);
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  padding: 4px;
+  z-index: 1000;
+  min-width: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.register-container .format-menu div {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.register-container .format-menu div:hover {
+  background-color: var(--buttonHoverColor);
+}
+
+.register-container .format-menu div.active {
+  background-color: var(--signal-active);
+  color: white;
+}

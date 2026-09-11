@@ -1,162 +1,192 @@
-import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import rateLimit from 'express-rate-limit'
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const app = express()
-
-const PORT = process.env.PORT || 8787
-const RAW_URL = process.env.HF_TARGET_URL || ''       // np. https://huggingface.co/spaces/marcsixtysix/rag_chat_
-const HF_SPACE = process.env.HF_SPACE || ''           // alternatywnie: marcsixtysix/rag_chat_
-const ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
-const BODY_LIMIT = (Number(process.env.BODY_LIMIT_MB) || 2) + 'mb'
-
-function normalizeUpstream(rawUrl, spaceSlug) {
-  let url = rawUrl?.trim() || ''
-  // Jeśli podano slug "owner/space" — zbuduj URL *.hf.space/chat
+export function normalizeUpstream(rawUrl, spaceSlug) {
+  let url = rawUrl?.trim() || '';
   if (!url && spaceSlug) {
-    const [owner, space] = spaceSlug.split('/')
-    const sub = `${owner}-${space}`.replace(/_/g, '-')
-    return `https://${sub}.hf.space/chat`
+    const [owner, space] = spaceSlug.split('/');
+    if (!owner || !space) throw new Error('HF_SPACE must use owner/space format');
+    url = `https://${`${owner}-${space}`.replace(/_/g, '-')}.hf.space/chat`;
   }
-  // Jeśli ktoś podał huggingface.co/spaces/owner/space[/coś] => przerób na *.hf.space/chat
-  const m = url.match(/^https?:\/\/huggingface\.co\/spaces\/([^/]+)\/([^/]+)(?:\/.*)?$/i)
-  if (m) {
-    const owner = m[1]
-    const space = m[2]
-    const sub = `${owner}-${space}`.replace(/_/g, '-')
-    url = `https://${sub}.hf.space/chat`
-  }
-  // Dołóż /chat, jeśli brakuje
-  if (url && !/\/chat\/?$/.test(url)) {
-    url = url.replace(/\/+$/,'') + '/chat'
-  }
-  return url
+  const match = url.match(/^https?:\/\/huggingface\.co\/spaces\/([^/]+)\/([^/]+)(?:\/.*)?$/i);
+  if (match) url = `https://${`${match[1]}-${match[2]}`.replace(/_/g, '-')}.hf.space/chat`;
+  if (url && !/\/chat\/?$/.test(url)) url = url.replace(/\/+$/, '') + '/chat';
+  if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('HF_TARGET_URL must use HTTP or HTTPS');
+  return url;
 }
 
-const UPSTREAM = normalizeUpstream(RAW_URL, HF_SPACE)
-const UPSTREAM_HEALTH = UPSTREAM ? UPSTREAM.replace(/\/chat\/?$/, '/health') : ''
+function validChatBody(body) {
+  return (
+    body &&
+    typeof body === 'object' &&
+    !Array.isArray(body) &&
+    typeof body.query === 'string' &&
+    body.query.trim().length > 0 &&
+    body.query.length <= 32000 &&
+    typeof body.api_key === 'string' &&
+    body.api_key.trim().length > 0 &&
+    body.api_key.length <= 4096 &&
+    Array.isArray(body.history) &&
+    body.history.length <= 40 &&
+    body.history.every(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        ['user', 'assistant'].includes(item.role) &&
+        typeof item.message === 'string' &&
+        item.message.length <= 64000
+    )
+  );
+}
 
-app.use(express.json({ limit: BODY_LIMIT }))
-
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true)
-    if (ORIGINS.includes(origin)) return cb(null, true)
-    cb(new Error('Not allowed by CORS: ' + origin))
-  },
-  methods: ['GET', 'POST', 'OPTIONS'],                    // ⟵ dopuszczamy też GET (dla /health)
-  allowedHeaders: ['Content-Type', 'X-Session-Id', 'Authorization'],
-  credentials: false
-}))
-
-const limiter = rateLimit({
-  windowMs: 60_000,
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false
-})
-app.use('/api/chat', limiter)
-
-app.options('/api/chat', (req, res) => res.sendStatus(204))
-
-// Prosty helper do fetch z timeoutem
-async function fetchWithTimeout(url, opts = {}, timeoutMs = 15000) {
-  const controller = new AbortController()
-  const t = setTimeout(() => controller.abort(), timeoutMs)
+// Keep the timeout alive until the complete response body has been consumed.
+async function fetchTextWithTimeout(fetchImpl, url, options, timeoutMs, parentSignal) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  parentSignal?.addEventListener('abort', abort, { once: true });
+  if (parentSignal?.aborted) controller.abort();
+  const timeout = setTimeout(abort, timeoutMs);
   try {
-    const r = await fetch(url, { ...opts, signal: controller.signal })
-    return r
+    const response = await fetchImpl(url, { ...options, signal: controller.signal });
+    const text = await response.text();
+    return { response, text };
   } finally {
-    clearTimeout(t)
+    clearTimeout(timeout);
+    parentSignal?.removeEventListener('abort', abort);
   }
 }
 
-// Health: sprawdź i opcjonalnie „obudź” upstream
-app.get('/health', async (req, res) => {
-  const wake = String(req.query.wake || '0') === '1'
-  const info = {
-    ok: true,
-    upstream: UPSTREAM,
-    upstream_health: UPSTREAM_HEALTH,
-    upstream_ok: null,
-    woke: false,
-    status: null,
-  }
+export function createProxyApp({
+  targetUrl = process.env.HF_TARGET_URL || '',
+  space = process.env.HF_SPACE || '',
+  allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  bodyLimitMb = Number(process.env.BODY_LIMIT_MB) || 2,
+  fetchImpl = fetch,
+  chatTimeoutMs = 60000,
+  healthTimeoutMs = 10000,
+  wakeTimeoutMs = 25000,
+} = {}) {
+  const app = express();
+  const upstream = normalizeUpstream(targetUrl, space);
+  const upstreamHealth = upstream ? upstream.replace(/\/chat\/?$/, '/health') : '';
+  app.disable('x-powered-by');
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        const error = new Error('Origin is not allowed');
+        error.status = 403;
+        callback(error);
+      },
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'X-Session-Id', 'Authorization'],
+      credentials: false,
+    })
+  );
+  app.use(express.json({ limit: `${Math.min(16, Math.max(1, bodyLimitMb))}mb` }));
+  const limiter = () => rateLimit({ windowMs: 60000, max: 60, standardHeaders: true, legacyHeaders: false });
+  app.use('/api/chat', limiter());
+  app.use('/health', limiter());
+  app.options('/api/chat', (_request, response) => response.sendStatus(204));
 
-  if (!UPSTREAM) {
-    info.upstream_ok = false
-    info.status = 'NO_UPSTREAM_SET'
-    return res.json(info)
-  }
-
-  try {
-    let r = null
-    let usedFallback = false
-
-    if (UPSTREAM_HEALTH && UPSTREAM_HEALTH !== UPSTREAM) {
-      r = await fetchWithTimeout(UPSTREAM_HEALTH, { method: 'GET' }, wake ? 25000 : 10000).catch(() => null)
+  app.get('/health', async (request, response) => {
+    const wake = String(request.query.wake || '0') === '1';
+    const info = { ok: true, upstream, upstream_health: upstreamHealth, upstream_ok: null, woke: false, status: null };
+    if (!upstream) return response.json({ ...info, upstream_ok: false, status: 'NO_UPSTREAM_SET' });
+    const controller = new AbortController();
+    const abort = () => {
+      if (!response.writableEnded) controller.abort();
+    };
+    response.once('close', abort);
+    try {
+      let result = null;
+      let usedFallback = false;
+      const timeout = wake ? wakeTimeoutMs : healthTimeoutMs;
+      if (upstreamHealth !== upstream)
+        result = await fetchTextWithTimeout(fetchImpl, upstreamHealth, { method: 'GET' }, timeout, controller.signal).catch(() => null);
+      if (controller.signal.aborted) return;
+      if (!result || [404, 405].includes(result.response.status)) {
+        usedFallback = true;
+        result = await fetchTextWithTimeout(
+          fetchImpl,
+          upstream,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: wake ? '' : '[health-check]', api_key: 'health-check', history: [] }),
+          },
+          timeout,
+          controller.signal
+        );
+      }
+      info.upstream_ok = result.response.ok;
+      info.status = `${usedFallback ? 'CHAT_' : 'HTTP_'}${result.response.status}`;
+      info.woke = wake && result.response.ok;
+    } catch {
+      info.upstream_ok = false;
+      info.status = 'FETCH_ERROR';
+    } finally {
+      response.removeListener('close', abort);
     }
+    if (!response.destroyed) response.json(info);
+  });
 
-    if (!r || r.status === 404 || r.status === 405) {
-      usedFallback = true
-      // Starsze upstreamy nie mają /health, więc zostaje lekki POST na /chat.
-      r = await fetchWithTimeout(UPSTREAM, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: wake ? '' : '[health-check]', api_key: 'health-check', history: [] })
-      }, wake ? 25000 : 10000)
+  app.post('/api/chat', async (request, response) => {
+    if (!validChatBody(request.body)) return response.status(400).json({ error: 'INVALID_CHAT_PAYLOAD' });
+    if (!upstream) return response.status(503).json({ error: 'UPSTREAM_URL_NOT_SET', hint: 'Set HF_TARGET_URL or HF_SPACE' });
+    const controller = new AbortController();
+    const abort = () => {
+      if (!response.writableEnded) controller.abort();
+    };
+    response.once('close', abort);
+    try {
+      const { response: result, text } = await fetchTextWithTimeout(
+        fetchImpl,
+        upstream,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: request.body.query, api_key: request.body.api_key, history: request.body.history }),
+        },
+        chatTimeoutMs,
+        controller.signal
+      );
+      if (response.destroyed) return;
+      if (!result.ok) {
+        const retryAfter = result.headers.get('retry-after');
+        if (retryAfter) response.set('Retry-After', retryAfter);
+        return response.status(result.status).json({ error: 'UPSTREAM_REQUEST_FAILED', status: result.status });
+      }
+      response
+        .status(result.status)
+        .type(result.headers.get('content-type') || 'application/json')
+        .send(text);
+    } catch {
+      if (!response.destroyed) response.status(502).json({ error: 'Bad gateway' });
+    } finally {
+      response.removeListener('close', abort);
     }
+  });
 
-    info.upstream_ok = r.ok
-    info.status = `${usedFallback ? 'CHAT_' : 'HTTP_'}${r.status}`
-    info.woke = wake && r.ok
-    const ct = r.headers.get('content-type') || ''
-    if (ct.includes('application/json')) {
-      // przeczytaj, ale nie zwracaj odpowiedzi – tylko diagnostyka
-      await r.json().catch(() => {})
-    } else {
-      await r.text().catch(() => {})
-    }
-  } catch (e) {
-    info.upstream_ok = false
-    info.status = 'FETCH_ERROR'
-    info.detail = String(e.message || e)
-  }
+  app.use((error, _request, response, _next) => {
+    const status = error.status === 403 ? 403 : error.type === 'entity.too.large' ? 413 : 400;
+    response
+      .status(status)
+      .json({ error: status === 403 ? 'ORIGIN_NOT_ALLOWED' : status === 413 ? 'PAYLOAD_TOO_LARGE' : 'INVALID_REQUEST' });
+  });
+  return app;
+}
 
-  res.json(info)
-})
-
-app.post('/api/chat', async (req, res) => {
-  try {
-    if (!UPSTREAM) {
-      return res.status(500).json({ error: 'UPSTREAM_URL_NOT_SET', hint: 'Ustaw HF_TARGET_URL lub HF_SPACE' })
-    }
-
-    const controller = new AbortController()
-    const t = setTimeout(() => controller.abort(), 60_000)
-
-    const r = await fetch(UPSTREAM, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: req.body?.query || '',
-        api_key: req.body?.api_key || '',
-        history: req.body?.history || [],
-      }),
-      signal: controller.signal
-    }).catch(e => { throw new Error('Upstream fetch failed: ' + e.message) })
-
-    clearTimeout(t)
-    const ct = r.headers.get('content-type') || 'application/json'
-    const text = await r.text()
-    res.status(r.status).type(ct).send(text)
-  } catch (e) {
-    res.status(502).json({ error: 'Bad gateway', detail: String(e) })
-  }
-})
-
-app.listen(PORT, () => {
-  console.log(`HF proxy listening on :${PORT}`)
-  console.log(`Upstream: ${UPSTREAM || '(not set)'}`)
-})
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  const port = Number(process.env.PORT) || 8787;
+  createProxyApp().listen(port, () => {
+    console.log(`HF proxy listening on :${port}`);
+  });
+}

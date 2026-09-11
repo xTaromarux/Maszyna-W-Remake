@@ -1,0 +1,231 @@
+
+.modal-overlay[data-editor-command-list] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+}
+#commandList[data-editor-command-list] {
+  z-index: 100;
+  display: grid;
+  grid-template-areas:
+    'header header'
+    'list right-panel';
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 250px 1fr;
+  gap: 1rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  background-color: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  border-radius: var(--default-border-radius, 0.25rem);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  overflow: hidden;
+  resize: both;
+  width: 800px;
+  max-width: 90vw;
+  height: 90vh;
+}
+@media (max-width: 675px) {
+#commandList[data-editor-command-list] {
+    grid-template-areas:
+      'header header'
+      'right-panel right-panel'
+      'list list';
+    grid-template-rows: auto auto auto;
+    grid-template-columns: autos;
+}
+}
+body.darkMode #commandList[data-editor-command-list] {
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.8);
+}
+.header[data-editor-command-list] {
+  grid-area: header;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 0 0 1rem 0;
+  border-bottom: 1px solid var(--panelOutlineColor, black);
+}
+.header h1[data-editor-command-list] {
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--fontColor, black);
+}
+.closeButton[data-editor-command-list] {
+  position: absolute;
+  right: 0;
+  top: 0%;
+}
+#commandListTable[data-editor-command-list] {
+  grid-area: list;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+#commandListTable > span[data-editor-command-list] {
+  color: var(--fontColor, black);
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+body.darkMode #commandListTable > button[data-editor-command-list]:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+body.darkMode #commandListTable > button.selected[data-editor-command-list] {
+  box-shadow: 0 2px 8px rgba(74, 158, 255, 0.4);
+}
+.right-panel[data-editor-command-list] {
+  grid-area: right-panel;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-right: 0.5rem;
+  min-width: 0;
+}
+#commandDetails[data-editor-command-list] {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
+}
+#commandDetails > .buttons[data-editor-command-list] {
+  display: none;
+}
+#commandDetails .roskazCode[data-editor-command-list] {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  flex-grow: 1;
+}
+#commandDetails .roskazCode textarea[data-editor-command-list] {
+  margin: 5px;
+  width: 100%;
+  flex-grow: 1;
+  min-height: 150px;
+  resize: none;
+  padding: 0.75rem;
+  background-color: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+#commandDetails .roskazCode textarea[data-editor-command-list]:focus {
+  outline: none;
+  border-color: #003c7d;
+  box-shadow: 0 0 0 2px #003c7d;
+}
+body.darkMode #commandDetails .roskazCode textarea[data-editor-command-list]:focus {
+  box-shadow: 0 0 0 2px #003c7d;
+}
+#commandDetails .roskazCode textarea[data-editor-command-list]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--buttonBackgroundColor, #f5f5f5);
+}
+body.darkMode #commandDetails .roskazCode textarea[data-editor-command-list]:disabled {
+  opacity: 0.5;
+}
+.actionButtons[data-editor-command-list] {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.top-actions[data-editor-command-list] {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+@media (max-width: 675px) {
+.top-actions[data-editor-command-list] {
+    justify-content: center;
+    gap: 0.5rem;
+}
+}
+.top-actions > button[data-editor-command-list] {
+  height: 20px;
+}
+.top-actions > button[data-editor-command-list]:first-child:hover {
+  background: #ff4444;
+  color: white;
+  border-color: #ff4444;
+}
+.commandInputSection[data-editor-command-list] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.unifiedCommandInput[data-editor-command-list] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-grow: 1;
+}
+.editingButtons[data-editor-command-list] {
+  display: flex;
+  gap: 0.5rem;
+}
+.commandInput[data-editor-command-list] {
+  flex: 1;
+  margin-left: 5px;
+  padding: 1rem;
+  border: 1px solid var(--panelOutlineColor, black);
+  border-radius: 4px;
+  background-color: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+@media (max-width: 675px) {
+.commandInputSection[data-editor-command-list] {
+    gap: 1rem;
+    justify-content: end;
+    flex-wrap: wrap;
+}
+}
+.commandInput[data-editor-command-list]:focus {
+  outline: none;
+  border-color: #003c7d;
+  box-shadow: 0 0 0 2px #003c7d;
+}
+body.darkMode .commandInput[data-editor-command-list]:focus {
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
+}
+.fileActions[data-editor-command-list] {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.actionButtons button svg[data-editor-command-list] {
+  width: 20px;
+  height: 20px;
+}
+.actionButtons button[data-editor-command-list]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--buttonBackgroundColor, white) !important;
+  color: #999 !important;
+  border-color: #ddd !important;
+  transform: none;
+  box-shadow: none;
+}
+body.darkMode .commandInputSection button[data-editor-command-list]:hover,
+body.darkMode .fileActions button[data-editor-command-list]:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}

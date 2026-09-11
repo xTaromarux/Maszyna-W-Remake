@@ -31,3 +31,10 @@ coverage
 
 # Local Netlify folder
 .netlify
+
+# Next.js
+.next/
+out/
+.playwright-mcp/
+test-results/
+playwright-report/

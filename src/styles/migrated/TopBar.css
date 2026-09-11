@@ -1,0 +1,75 @@
+
+:where([data-component="TopBar"]) .flexRow {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+:where([data-component="TopBar"]) .wsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6e6;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    opacity 0.2s ease;
+  opacity: 0.95;
+  margin-right: 0.25rem;
+}
+:where([data-component="TopBar"]) .wsBadge:hover {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+:where([data-component="TopBar"]) .wsBadge .dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: currentColor;
+  position: relative;
+}
+
+:where([data-component="TopBar"]) .wsBadge .dot.spin::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 1s linear infinite;
+  opacity: 0.7;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:where([data-component="TopBar"]) .ws--ok {
+  background: rgba(46, 204, 113, 0.14);
+  color: #2ecc71;
+  border-color: rgba(46, 204, 113, 0.35);
+}
+:where([data-component="TopBar"]) .ws--pending {
+  background: rgba(255, 191, 0, 0.14);
+  color: #ffbf00;
+  border-color: rgba(255, 191, 0, 0.35);
+}
+:where([data-component="TopBar"]) .ws--err {
+  background: rgba(255, 99, 99, 0.12);
+  color: #ff5c5c;
+  border-color: rgba(255, 99, 99, 0.3);
+}
+:where([data-component="TopBar"]) .ws--off {
+  background: rgba(128, 128, 128, 0.1);
+  color: #bdbdbd;
+  border-color: rgba(189, 189, 189, 0.28);
+}

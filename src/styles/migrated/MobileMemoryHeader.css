@@ -1,0 +1,17 @@
+.mobile-memory-header .busLabel {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  position: relative;
+  gap: 5px;
+}
+
+.mobile-memory-header .busLabelUp {
+  padding-top: 4px;
+  align-items: start;
+}
+
+.mobile-memory-header .busLabelDown {
+  padding-bottom: 4px;
+  align-items: end;
+}

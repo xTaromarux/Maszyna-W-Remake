@@ -1,0 +1,7 @@
+* { box-sizing: border-box; }
+body { margin: 0; }
+#app { font-family: Avenir, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2rem; padding: 0; }
+.console-icon { color: #ddd; transition: color .3s ease; }
+.console-icon.error-state { color: #ff4444; animation: pulse-error 1s infinite; }
+@keyframes pulse-error { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+.app-loading { min-height: 60vh; display: grid; place-items: center; }

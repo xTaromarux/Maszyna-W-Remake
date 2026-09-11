@@ -1,0 +1,145 @@
+
+:where([data-component="ColorPickerPopup"]).color-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+:where([data-component="ColorPickerPopup"]) .color-popup {
+  background: var(--panelBackgroundColor);
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: popupSlideIn 0.3s ease-out;
+}
+
+@keyframes popupSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+:where([data-component="ColorPickerPopup"]) .color-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--panelOutlineColor);
+  background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
+}
+
+:where([data-component="ColorPickerPopup"]) .color-popup-header h3 {
+  margin: 0;
+  color: var(--fontColor);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+:where([data-component="ColorPickerPopup"]) .close-btn {
+  background: none;
+  border: none;
+  color: var(--fontColor);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+:where([data-component="ColorPickerPopup"]) .close-btn:hover {
+  background: var(--buttonHoverColor);
+}
+
+:where([data-component="ColorPickerPopup"]) .color-popup-content {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+:where([data-component="ColorPickerPopup"]) .color-preview {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+}
+
+:where([data-component="ColorPickerPopup"]) .preview-box {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--default-border-radius);
+  border: 2px solid var(--panelOutlineColor);
+  flex-shrink: 0;
+}
+
+:where([data-component="ColorPickerPopup"]) .color-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: var(--fontColor);
+  font-size: 0.9rem;
+}
+
+:where([data-component="ColorPickerPopup"]) .color-popup-footer {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid var(--panelOutlineColor);
+  background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
+}
+
+:where([data-component="ColorPickerPopup"]) .cancel-btn,
+:where([data-component="ColorPickerPopup"]) .apply-btn {
+  flex: 1;
+  padding: 10px 20px;
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+:where([data-component="ColorPickerPopup"]) .cancel-btn {
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+}
+
+:where([data-component="ColorPickerPopup"]) .cancel-btn:hover {
+  background: var(--buttonHoverColor);
+}
+
+:where([data-component="ColorPickerPopup"]) .apply-btn {
+  background: #003c7d;
+  color: white;
+  border-color: #003c7d;
+}
+
+:where([data-component="ColorPickerPopup"]) .apply-btn:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}

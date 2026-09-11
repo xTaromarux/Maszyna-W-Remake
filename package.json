@@ -1,48 +1,54 @@
 {
-  "name": "w",
-  "version": "0.0.0",
+  "name": "maszyna-w",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
     "serve:ws": "node server.cjs",
     "dev:ws": "concurrently -k \"npm:serve:ws\" \"npm:dev\"",
-    "dev": "vite",
-    "dev:esp": "vite --mode esp",
-    "build": "npm run build:parsers && vite build",
-    "build:esp": "npm run build:parsers && vite build --mode esp",
+    "dev": "next dev --webpack",
+    "dev:esp": "node scripts/next.mjs esp dev --webpack",
+    "build": "npm run build:parsers && next build --webpack",
+    "build:esp": "npm run build:parsers && node scripts/next.mjs esp build --webpack",
     "build:parsers": "npm run build:maszynaW && npm run build:macroW",
     "build:maszynaW": "lezer-generator src/codemirror-langs/maszynaW.grammar -o src/codemirror-langs/maszynaW.js",
     "build:macroW": "lezer-generator src/codemirror-langs/macroW.grammar -o src/codemirror-langs/macroW.js",
-    "preview": "vite preview"
+    "preview": "next start",
+    "build:static": "npm run build:parsers && node scripts/next.mjs static build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "preview:static": "node scripts/serve-static.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",
     "@codemirror/commands": "^6.3.3",
     "@codemirror/lang-javascript": "^6.2.1",
     "@codemirror/language": "^6.10.0",
-    "@codemirror/lint": "^6.5.0",
     "@codemirror/search": "^6.5.5",
     "@codemirror/state": "^6.4.0",
-    "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.23.0",
-    "@lezer/generator": "^1.7.0",
     "@lezer/highlight": "^1.2.0",
     "@lezer/lr": "^1.4.0",
-    "codemirror": "^6.0.1",
-    "netlify": "^21.5.0",
-    "vue": "^3.5.13",
-    "vue-codemirror": "^6.1.1",
-    "vue-i18n": "^11.2.8",
+    "next": "16.3.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
     "@lezer/generator": "^1.7.0",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "concurrently": "^9.1.2",
     "prettier": "^3.5.3",
     "sass": "^1.87.0",
-    "typescript": "^5.8.3",
-    "vite": "^6.0.5",
-    "vite-plugin-vue-devtools": "^7.6.8"
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

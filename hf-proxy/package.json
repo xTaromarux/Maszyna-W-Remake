@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -12,5 +14,8 @@
   },
   "scripts": {
     "start": "node server.js"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }

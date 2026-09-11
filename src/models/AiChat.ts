@@ -16,9 +16,14 @@ export interface ChatMessage {
 
 export interface StreamChunk {
   messageId: string;
+  text?: string;
   chunk?: string;
   done?: boolean;
   error?: string;
+  errorKey?: string;
+  errorDetail?: string;
+  cancelled?: boolean;
+  streaming?: boolean;
 }
 
 export interface HealthResponse {
@@ -46,5 +51,8 @@ export const SAVE_DEBOUNCE_MS = 350;
 export const RATE_LIMIT: RateLimit = {
   maxRequests: 20,
   windowMs: 60_000,
-  message: 'Limit 20 zapytan na minute. Sprobuj ponownie pozniej.',
 };
+
+// Endpoint configuration is passed explicitly to the browser worker.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/chat';
+export const HEALTH_URL = process.env.NEXT_PUBLIC_HEALTH_URL || API_URL.replace(/\/(?:api\/)?chat\/?$/, '/health');

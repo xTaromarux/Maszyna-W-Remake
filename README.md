@@ -1,63 +1,102 @@
-# w
+﻿# Maszyna W — Next.js
 
-This template should help get you started developing with Vue 3 in Vite.
+Interaktywny symulator Maszyny W przepisany z Vue 3/Vite na React 19 i Next.js 16 (App Router). Zachowuje schemat rejestrów i magistral, ręczne sterowanie sygnałami, assembler WLAN, edytory CodeMirror, breakpointy, laboratoria, konsolę, ustawienia PL/EN, czat oraz komunikację z ESP32.
 
-## Recommended IDE Setup
+## Uruchomienie
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Wymagany Node.js >=20.9 (weryfikacja na Node 24) i npm.
 
 ```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+npm ci
 npm run dev
 ```
 
-### Compile and Minify for Production
+Otwórz http://localhost:3000. Wersja produkcyjna:
 
 ```sh
 npm run build
+npm start
 ```
 
+Build regeneruje oba parsery Lezer. Skrypty używają webpacka; kompilowanie osobnego Web Workera czatu jest sprawdzane również w eksporcie statycznym.
 
-## Platform Selection: Web / ESP32
+## Konfiguracja
 
-This project supports conditional behavior depending on the target platform (e.g., web browser or ESP32 hardware).  
-You can configure it using the `VITE_APP_PLATFORM` environment variable.
+Zmienne dla przeglądarki mają prefiks `NEXT_PUBLIC_` i są utrwalane podczas budowania. Dawne `VITE_APP_PLATFORM` i `VITE_API_URL` zastąpiono odpowiednio `NEXT_PUBLIC_APP_PLATFORM` i `NEXT_PUBLIC_API_URL`. Wzór znajduje się w `.env.example`; lokalne nadpisania można umieścić w `.env.local`.
 
-### Available options:
-- `web` – for standard browser-based usage
-- `esp` – for deployment targeting ESP32
+| Zmienna | Znaczenie |
+| --- | --- |
+| `NEXT_PUBLIC_APP_PLATFORM` | `web` lub `esp`; skrypty `*:esp` ustawiają `esp` automatycznie. |
+| `NEXT_PUBLIC_API_URL` | Adres czatu; domyślnie `/api/chat`. Dla statycznego hostingu podaj pełny adres API. |
+| `NEXT_PUBLIC_HEALTH_URL` | Adres kontroli dostępności; domyślnie `/health` na tym samym serwerze co API. |
+| `NEXT_PUBLIC_WS_URL` | Adres WebSocket; domyślnie `ws://localhost:8080`. Dla HTTPS użyj dostępnego `wss://`. |
+| `API_PROXY_TARGET` | Opcjonalny adres serwera API, np. `http://127.0.0.1:8787`. Next przekazuje `/api/*` i `/health`. |
+| `API_PROXY_STRIP_PREFIX` | `1` dla starszego serwera obsługującego `/chat`, domyślnie `0` dla dołączonego `/api/chat`. |
 
-### How to use:
+Klucza użytkownika nie umieszczaj w `NEXT_PUBLIC_*`. Czat przyjmuje go w interfejsie; zgodnie z dotychczasowym działaniem zapisuje lokalnie i przesyła do skonfigurowanego API. Istniejące lokalne ustawienia pod kluczem `W` są odczytywane, ale zapisywane są tylko preferencje, bez rejestrów, pamięci, timerów i logów. Uszkodzone dane nie blokują startu strony.
 
-1. Create one of the following `.env` files in the project root:
-
-**`.env`**
-```env
-VITE_APP_PLATFORM=web
-```
-
-**`.env.esp`**
-```env
-VITE_APP_PLATFORM=esp
-```
-
-2. Then build or run with the selected mode:
+## Wersja statyczna i ESP32
 
 ```sh
-npm run build                # for web version
-npm run build:esp            # for ESP32 version
-
-npm run dev                  # for development targeting browser
-npm run dev:esp              # for development targeting ESP32
+npm run build:static
+npm run preview:static
 ```
+
+Eksport trafia do `out/`, podgląd działa na http://127.0.0.1:3001. Ten katalog jest publikowany przez `netlify.toml`. Nie wymaga serwera Next.js. Wszystkie buildy używają roboczego katalogu `.next/`; po eksporcie przed `npm start` ponownie wykonaj `npm run build`. Na czas budowania zatrzymaj serwer uruchomiony z tego samego katalogu.
+
+```sh
+npm run dev:esp
+npm run build:esp
+```
+
+Wariant ESP ukrywa czat i dodatki programowe, udostępnia wskaźnik połączenia oraz sterowanie kolorami LED. Także generuje `out/`. Konfiguracja przeglądarkowa jest wbudowana w pliki; po zmianie adresu ESP/API trzeba ponowić build. `.env.esp` zawiera ustawienie platformy dla czytelności; skrypt ustawia platformę bezpośrednio, a pozostałe zmienne Next odczytuje ze standardowych `.env`/`.env.local`.
+
+Statyczny hosting nie wykonuje przekierowań API z `next.config.mjs`. API musi działać pod pełnym adresem z odpowiednim CORS albo host musi zapewnić własny reverse proxy. Eksport wymaga serwowania wszystkich plików `out/`, w tym `/_next/static/`; fizyczne wgranie do ESP32 i pojemność jego pamięci pozostają zależne od sprzętu.
+
+## Serwery pomocnicze
+
+Relay WebSocket:
+
+```sh
+npm run serve:ws
+npm run dev:ws
+```
+
+Protokół i konfigurację sieci opisuje [WEBSOCKET_PROTOCOL.md](WEBSOCKET_PROTOCOL.md).
+
+Opcjonalny proxy czatu ma własny manifest i lockfile:
+
+```sh
+npm --prefix hf-proxy ci
+npm --prefix hf-proxy start
+```
+
+Konfiguracja proxy: `HF_TARGET_URL` lub `HF_SPACE`, opcjonalnie `ALLOWED_ORIGINS`, `PORT` (domyślnie 8787) i `TIMEOUT_MS`. Dla lokalnego frontendu dopisz jego adres do `ALLOWED_ORIGINS` i ustaw `API_PROXY_TARGET`. Samo uruchomienie strony nie wymaga tego proxy. Szczegóły protokołu czatu i testów opisuje [docs/migration-chat.md](docs/migration-chat.md).
+
+## Weryfikacja
+
+```sh
+npm --prefix hf-proxy ci
+npm test
+npm run typecheck
+npm run build
+npx playwright install chromium
+npm run test:e2e
+npm run build:esp
+npm audit
+npm --prefix hf-proxy audit
+```
+
+Testy jednostkowe obejmują assembler, silnik, renderowanie rejestrów, worker czatu i proxy z lokalnym zastępczym API. Testy E2E uruchamiają gotowy build na porcie 3000 lub używają istniejącego serwera. Można wskazać inny adres przez `E2E_BASE_URL` i lokalną przeglądarkę przez `PLAYWRIGHT_CHANNEL=chrome`. Nie wymagają prawdziwego klucza AI ani sprzętu ESP32.
+
+## Struktura
+
+- `src/app/` — App Router, metadane, ekran błędu i klient symulatora.
+- `src/components/` — komponenty React i dotychczasowe podziały funkcjonalne.
+- `src/state/` — niezależny model maszyny, operacje, selektory i subskrypcja przez `useSyncExternalStore`.
+- `src/WLAN/`, `src/codemirror-langs/` — assembler, gramatyki i obsługa języków.
+- `src/i18n/` — pełne słowniki PL/EN i tłumaczenia bez Vue.
+- `src/styles/` — zachowany SCSS oraz izolowane style komponentów przeniesione z SFC.
+- `tests/` — testy regresji i `tests/e2e/`.
+
+Pełna inwentaryzacja komponentów, decyzje dla każdej zależności i ograniczenia weryfikacji: [docs/MIGRATION_AUDIT.md](docs/MIGRATION_AUDIT.md).

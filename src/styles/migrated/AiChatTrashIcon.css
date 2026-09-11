@@ -1,0 +1,5 @@
+
+:where([data-component="AiChatTrashIcon"]).aiChatTrashIcon {
+  width: var(--icon-width, 20px) !important;
+  height: var(--icon-height, 20px) !important;
+}

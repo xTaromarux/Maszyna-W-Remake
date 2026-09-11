@@ -1,0 +1,204 @@
+
+.console-dock[data-editor-console-dock] {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr; /* left rail + console */
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+  font-family: inherit;
+
+  /* Smooth transitions for collapsing/expanding */
+  transition:
+    height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    min-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease,
+    gap 0.3s ease,
+    padding 0.3s ease;
+
+  overflow: hidden;
+  min-height: 14rem;
+  height: auto;
+}
+.controls-rail[data-editor-console-dock] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid var(--panelOutlineColor, #2a3441);
+  border-radius: 8px;
+  background: var(--panelBackgroundColor, #1e1f24);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+.controls-rail[data-editor-console-dock]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accentColor, #00aaff), transparent);
+  opacity: 0.35;
+  border-radius: 8px 8px 0 0;
+}
+.rail-btn[data-editor-console-dock] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  border-radius: 6px;
+  border: 1px solid var(--panelOutlineColor, #2a3441);
+  background: var(--buttonBackgroundColor, #373a41);
+  color: var(--buttonTextColor, #d5d6db);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+  position: relative;
+  font-size: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.rail-btn[data-editor-console-dock]:hover {
+  background: var(--buttonHoverColor, #676b75);
+  border-color: var(--accentColor, #00aaff);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+.rail-btn[data-editor-console-dock]:active {
+  transform: translateY(0);
+  background: var(--buttonActiveColor, #181a1f);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+.rail-btn[data-editor-console-dock]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--panelOutlineColor, #3a3d45);
+  color: var(--buttonTextColor, #d5d6db);
+  background: var(--buttonBackgroundColor, #373a41);
+}
+.rail-btn[data-editor-console-dock]:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--buttonBackgroundColor, #373a41);
+  border-color: var(--panelOutlineColor, #3a3d45);
+}
+.rail-btn.active[data-editor-console-dock] {
+  background: var(--primaryColor, #003c7d);
+  border-color: var(--primaryColor, #003c7d);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  color: #ffffff;
+}
+.divider[data-editor-console-dock] {
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--panelOutlineColor, #3a3d45), transparent);
+  margin: 0.25rem 0;
+}
+.console-wrap[data-editor-console-dock] {
+  min-height: 14rem;
+  border-radius: 8px;
+}
+
+/* Enhanced spinner animation */
+.spinning[data-editor-console-dock] {
+  background: var(--buttonHoverColor, #676b75) !important;
+  border-color: var(--accentColor, #00aaff) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+.spinning svg[data-editor-console-dock] {
+  animation: spin-data-editor-console-dock 0.8s linear infinite;
+  filter: drop-shadow(0 0 2px var(--accentColor, #00aaff));
+}
+@keyframes spin-data-editor-console-dock {
+to {
+    transform: rotate(360deg);
+}
+}
+
+/* Enhanced hover effects */
+.rail-btn:not(:disabled):hover svg[data-editor-console-dock] {
+  filter: drop-shadow(0 0 1px currentColor);
+}
+
+/* Collapsed state for the entire console dock */
+.console-dock.console-collapsed[data-editor-console-dock] {
+  height: 0;
+  min-height: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0;
+  border: none;
+  gap: 0;
+
+  /* Faster collapse transition */
+  transition:
+    height 0.3s cubic-bezier(0.4, 0, 0.6, 1),
+    min-height 0.3s cubic-bezier(0.4, 0, 0.6, 1),
+    max-height 0.3s cubic-bezier(0.4, 0, 0.6, 1),
+    opacity 0.2s ease,
+    gap 0.2s ease,
+    padding 0.2s ease;
+}
+.console-dock.console-collapsed[data-editor-console-dock]:hover {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+/* Console Dock indicator styles */
+.console-dock-indicator[data-editor-console-dock] {
+  grid-area: c;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--panelOutlineColor, #3a3d45), transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    height 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+  position: relative;
+  justify-self: stretch;
+  align-self: end;
+}
+.console-dock-indicator[data-editor-console-dock]:hover {
+  height: 6px;
+  background: linear-gradient(90deg, transparent, var(--accentColor, #00aaff), transparent);
+  box-shadow:
+    0 0 12px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  transition:
+    height 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.console-dock-indicator.has-errors[data-editor-console-dock] {
+  background: linear-gradient(90deg, transparent, #ff4444, transparent);
+  animation: pulse-indicator-data-editor-console-dock 1s infinite;
+}
+.console-dock-indicator.has-errors[data-editor-console-dock]:hover {
+  background: linear-gradient(90deg, transparent, #ff6666, transparent);
+}
+@keyframes pulse-indicator-data-editor-console-dock {
+0%,
+  100% {
+    opacity: 1;
+}
+50% {
+    opacity: 0.6;
+}
+}

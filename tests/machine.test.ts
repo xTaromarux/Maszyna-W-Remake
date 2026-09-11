@@ -1,0 +1,193 @@
+import assert from 'node:assert/strict';
+import test, { type TestContext } from 'node:test';
+import { createMachineStore } from '../src/state/createMachineStore.js';
+
+function fixture(context: TestContext, start = false) {
+  const saved = new Map<string, string>();
+  Object.assign(globalThis, {
+    window: Object.assign(new EventTarget(), { innerWidth: 1440 }),
+    document: {
+      title: 'Maszyna W',
+      documentElement: { lang: 'pl' },
+      body: { classList: { toggle() {} } },
+    },
+    localStorage: {
+      getItem: (key: string) => saved.get(key) ?? null,
+      setItem: (key: string, value: string) => saved.set(key, value),
+    },
+  });
+  const store = createMachineStore();
+  context.after(() => store.dispose());
+  if (start) store.start();
+  return { store, machine: store.machine as any, saved };
+}
+
+const delay = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+async function waitForStop(machine: any) {
+  const deadline = Date.now() + 1500;
+  while (machine.isRunning && Date.now() < deadline) await delay(5);
+  assert.equal(machine.isRunning, false, 'execution should terminate');
+}
+
+test('manual signals preserve memory, bus and arithmetic execution order', (context) => {
+  const { machine } = fixture(context);
+  machine.ACC = 7;
+  machine.mem[0] = 5;
+  machine.nextLine = new Set(['czyt', 'wys', 'weja', 'dod', 'weak']);
+  machine.executeLine();
+  assert.equal(machine.S, 5);
+  assert.equal(machine.BusS, 5);
+  assert.equal(machine.JAML, 12);
+  assert.equal(machine.ACC, 12);
+  assert.equal(machine.nextLine.size, 0);
+  assert.equal(machine.signals.weak, true);
+});
+
+test('plain microcode advances beyond its first phase and finishes in timed mode', async (context) => {
+  const { machine } = fixture(context);
+  machine.manualMode = false;
+  machine.oddDelay = 1;
+  machine.code = 'iak; iak; iak;';
+  machine.compileCode();
+  assert.equal(machine.ACC, 1);
+  assert.equal(machine.activeLine, 1);
+  machine.runCode();
+  await waitForStop(machine);
+  assert.equal(machine.ACC, 3);
+  assert.equal(machine.codeCompiled, false);
+});
+
+test('fast execution pauses at a breakpoint and resumes the pending phase once', async (context) => {
+  const { machine } = fixture(context);
+  machine.handleProgramSectionCompile({ text: 'iak;\niak;\niak;', program: [{ phases: [{ iak: true, srcLine: 0 }, { iak: true, srcLine: 1 }, { iak: true, srcLine: 2 }] }] });
+  machine.breakpoints.add(1);
+  await machine.runToEndFast();
+  assert.equal(machine.ACC, 1);
+  assert.equal(machine.codeCompiled, true);
+  assert.equal(machine.activePhaseIndex, 1);
+  assert.equal(machine.isRunning, false);
+  assert.equal(document.title, 'Maszyna W');
+  await machine.runToEndFast();
+  assert.equal(machine.ACC, 3);
+  assert.equal(machine.codeCompiled, false);
+});
+
+test('stopping an async fast chunk cannot cancel a newly started timed run', async (context) => {
+  const { machine } = fixture(context);
+  machine.oddDelay = 100;
+  machine.handleProgramSectionCompile({ text: 'iak wel;', program: [{ phases: [{ iak: true, wel: true, srcLine: 0 }] }] });
+  const fastRun = machine.runToEndFast();
+  assert.equal(machine.isFastRunning, true);
+  machine.stopRun();
+  const stoppedValue = machine.ACC;
+  machine.runCode();
+  await fastRun;
+  assert.equal(machine.isRunning, true);
+  assert.equal(machine.isFastRunning, false);
+  assert.equal(machine.ACC, stoppedValue);
+  machine.stopRun();
+});
+
+test('STOP terminates plain fast microcode without executing following phases', async (context) => {
+  const { machine } = fixture(context);
+  machine.handleProgramSectionCompile('iak\nstop\niak');
+  await machine.runToEndFast();
+  assert.equal(machine.ACC, 1);
+  assert.equal(machine.codeCompiled, false);
+  assert.equal(machine.isRunning, false);
+  assert.equal(machine.activeTimeouts.length, 0);
+});
+
+test('reset cancels an active runner and clears interrupt inputs', async (context) => {
+  const { machine } = fixture(context);
+  machine.oddDelay = 1;
+  machine.handleProgramSectionCompile('iak\niak\niak');
+  machine.RZ = 3;
+  machine.RZInputs = [1, 1, 0, 0];
+  machine.runCode();
+  machine.resetValues();
+  await delay(10);
+  assert.equal(machine.ACC, 0);
+  assert.equal(machine.isRunning, false);
+  assert.deepEqual([...machine.RZInputs], [0, 0, 0, 0]);
+});
+
+test('IRQ operations use framework-independent translations and no timers in fast mode', (context) => {
+  const { machine } = fixture(context);
+  machine.BusS = 11;
+  machine.werm();
+  assert.equal(machine.RM, 11);
+  assert.ok(machine.logs.length > 0);
+  machine.clearActiveTimeouts();
+  machine.isFastRunning = true;
+  machine.BusS = 7;
+  machine.werz();
+  machine.werp();
+  machine.BusA = 2;
+  machine.ustrm();
+  assert.equal(machine.RZ, 7);
+  assert.equal(machine.RP, 7);
+  assert.equal(machine.RM, 15);
+  assert.equal(machine.activeTimeouts.length, 0);
+});
+
+test('React store batches nested arrays and sets while persisting settings only', async (context) => {
+  const { store, machine, saved } = fixture(context, true);
+  await Promise.resolve();
+  let revisions = 0;
+  const unsubscribe = store.subscribe(() => revisions++);
+  machine.mem[0] = 17;
+  machine.breakpoints.add(4);
+  machine.extras.io.rbRegister = true;
+  machine.numberFormat = 'hex';
+  await Promise.resolve();
+  unsubscribe();
+  assert.equal(revisions, 1);
+  assert.equal(machine.mem[0], 17);
+  assert.equal(machine.breakpoints.has(4), true);
+  assert.ok(Object.values(machine.registerFormats).every((format) => format === 'hex'));
+  const persisted = JSON.parse(saved.get('W')!);
+  assert.equal(persisted.extras.io.rbRegister, true);
+  assert.equal(persisted.numberFormat, 'hex');
+  assert.equal(Object.hasOwn(persisted, 'mem'), false);
+  assert.equal(Object.hasOwn(persisted, 'logs'), false);
+});
+
+test('conditional branch identity survives observable store updates', async (context) => {
+  const { machine } = fixture(context, true);
+  machine.handleProgramSectionCompile({ text: 'IF Z\niak\niak', program: [{ phases: [{ conditional: true, flag: 'Z', srcLine: 0, truePhases: [{ iak: true, srcLine: 1 }, { iak: true, srcLine: 2 }], falsePhases: [{ dak: true, srcLine: 3 }] }] }] });
+  machine.executeLine();
+  assert.equal(machine.ACC, 1);
+  await Promise.resolve();
+  machine.executeLine();
+  assert.equal(machine.ACC, 2, 'the second true phase must run even after Z becomes false');
+  assert.equal(machine.codeCompiled, false);
+});
+
+test('stale WebSocket events do not overwrite the replacement connection', (context) => {
+  class Socket extends EventTarget {
+    static OPEN = 1;
+    readyState = 0;
+    binaryType = '';
+    sent: string[] = [];
+    constructor(public url: string) { super(); }
+    send(value: string) { this.sent.push(value); }
+    close() { this.readyState = 3; }
+  }
+  const previousSocket = globalThis.WebSocket;
+  (globalThis as any).WebSocket = Socket;
+  context.after(() => { globalThis.WebSocket = previousSocket; });
+  const { machine } = fixture(context);
+  machine.initWebsocket();
+  const oldSocket = machine.ws as Socket;
+  oldSocket.readyState = Socket.OPEN;
+  oldSocket.dispatchEvent(new Event('open'));
+  machine.initWebsocket();
+  const newSocket = machine.ws as Socket;
+  newSocket.readyState = Socket.OPEN;
+  newSocket.dispatchEvent(new Event('open'));
+  oldSocket.dispatchEvent(new Event('close'));
+  assert.equal(machine.wsStatus, 'connected');
+  assert.equal(machine.ws, newSocket);
+  assert.notEqual(machine.wsPingTimer, null);
+});

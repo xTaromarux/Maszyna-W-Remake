@@ -1,0 +1,45 @@
+
+#program[data-editor-macro-program-section] {
+  grid-area: p;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: stretch;
+  align-items: stretch;
+  min-height: 40rem;
+  max-height: 40rem;
+}
+@media (min-width: 1380px) {
+#program[data-editor-macro-program-section] {
+    width: 20rem;
+}
+}
+@media (min-width: 1255px) and (max-width: 1380px) {
+#program[data-editor-macro-program-section] {
+    width: 12rem;
+}
+}
+@media (min-width: 1165px) and (max-width: 1255px) {
+#program[data-editor-macro-program-section] {
+    width: 8rem;
+}
+}
+@media (min-width: 675px) and (max-width: 1195px) {
+#program[data-editor-macro-program-section] {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+}
+@media (max-width: 675px) {
+#program[data-editor-macro-program-section] {
+    margin: 20px 0;
+}
+}
+.flexRow[data-editor-macro-program-section] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}

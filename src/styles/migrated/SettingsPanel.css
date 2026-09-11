@@ -1,0 +1,500 @@
+
+:where([data-component="SettingsPanel"])#settings {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 400px;
+  max-width: 90vw;
+  z-index: 101;
+  background-color: var(--panelBackgroundColor);
+  border-left: 1px solid var(--panelOutlineColor);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+:where([data-component="SettingsPanel"])#settings.slide-in {
+  transform: translateX(0);
+}
+
+:where([data-component="SettingsPanel"])#settings.slide-out {
+  transform: translateX(100%);
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+:where([data-component="SettingsPanel"]) .settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #003c7d;
+  color: #fff;
+}
+
+:where([data-component="SettingsPanel"]) .settingsGroup {
+  text-align: start;
+}
+
+:where([data-component="SettingsPanel"]) .settingsGroup.open .chevron {
+  transform: rotate(90deg);
+}
+
+:where([data-component="SettingsPanel"]) .settingsGroupHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+:where([data-component="SettingsPanel"]) .settingsGroupHeader .chevron {
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--fontColor);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.22s ease;
+  margin-right: 2px;
+}
+
+:where([data-component="SettingsPanel"]) .settingsGroupHeader .group-title {
+  color: var(--fontColor);
+  font-weight: 600;
+}
+
+:where([data-component="SettingsPanel"]) .collapse-enter-active,
+:where([data-component="SettingsPanel"]) .collapse-leave-active {
+  transition: height 0.25s ease;
+}
+
+:where([data-component="SettingsPanel"]) .collapsible {
+  overflow: hidden;
+}
+
+:where([data-component="SettingsPanel"]) .settingsHeader h1 {
+  font-size: 1.25rem;
+  color: #fff;
+  margin: 0;
+}
+
+:where([data-component="SettingsPanel"]) .switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 34px;
+}
+
+:where([data-component="SettingsPanel"]) .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+:where([data-component="SettingsPanel"]) .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--backgroundColorItem);
+  transition: 0.4s;
+}
+
+:where([data-component="SettingsPanel"]) .slider:before {
+  content: '';
+  position: absolute;
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background: var(--backgroundColorPartOfItem);
+  transition: 0.4s;
+}
+
+:where([data-component="SettingsPanel"]) input:checked + .slider {
+  background: #003c7d;
+}
+
+:where([data-component="SettingsPanel"]) input:focus + .slider {
+  box-shadow: 0 0 1px #003c7d;
+}
+
+:where([data-component="SettingsPanel"]) input:checked + .slider:before {
+  transform: translateX(36px);
+}
+
+:where([data-component="SettingsPanel"]) .slider.round {
+  border-radius: 0.25rem;
+}
+
+:where([data-component="SettingsPanel"]) .slider.round:before {
+  border-radius: 0.25rem;
+}
+
+:where([data-component="SettingsPanel"]) .button-column {
+  gap: 0.75rem;
+}
+
+:where([data-component="SettingsPanel"]) .compact-button {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:where([data-component="SettingsPanel"]) .compact-button span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:where([data-component="SettingsPanel"]) .module-toggle-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+:where([data-component="SettingsPanel"]) .module-label {
+  color: var(--fontColor);
+}
+
+:where([data-component="SettingsPanel"]) .number-format-toggle {
+  width: 100%;
+}
+
+:where([data-component="SettingsPanel"]) .multiToggleButton {
+  display: flex;
+  border-radius: var(--default-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--panelOutlineColor);
+}
+
+:where([data-component="SettingsPanel"]) .multiToggleButton span {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  transition: 0.2s;
+  font-size: 0.9rem;
+}
+
+:where([data-component="SettingsPanel"]) .multiToggleButton span:hover {
+  background: var(--buttonHoverColor);
+}
+
+:where([data-component="SettingsPanel"]) .format-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  min-width: 180px;
+}
+
+:where([data-component="SettingsPanel"]) .format-toggle span {
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor, black);
+}
+
+:where([data-component="SettingsPanel"]) .format-toggle.active-dec span:nth-child(1),
+:where([data-component="SettingsPanel"]) .format-toggle.active-hex span:nth-child(2),
+:where([data-component="SettingsPanel"]) .format-toggle.active-bin span:nth-child(3) {
+  background: var(--signal-active);
+  color: #fff;
+}
+
+:where([data-component="SettingsPanel"]) .format-toggle.active-dec span:nth-child(1):hover,
+:where([data-component="SettingsPanel"]) .format-toggle.active-hex span:nth-child(2):hover,
+:where([data-component="SettingsPanel"]) .format-toggle.active-bin span:nth-child(3):hover {
+  background: var(--signal-active);
+}
+
+:where([data-component="SettingsPanel"]) .toggleButtonDiv {
+  display: flex;
+  border-radius: var(--default-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--panelOutlineColor);
+}
+
+:where([data-component="SettingsPanel"]) .toggleButtonDiv span {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  transition: 0.2s;
+  font-size: 0.9rem;
+}
+
+:where([data-component="SettingsPanel"]) .toggleButtonDiv span:hover {
+  background: var(--buttonHoverColor);
+}
+
+:where([data-component="SettingsPanel"]) .toggleButtonDiv.active span:first-child {
+  background: var(--signal-active);
+  color: #fff;
+}
+
+:where([data-component="SettingsPanel"]) .toggleButtonDiv:not(.active) span:last-child {
+  background: var(--signal-active);
+  color: #fff;
+}
+
+:where([data-component="SettingsPanel"]) .SvgAndTextButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 0.9rem;
+  flex: 1;
+  justify-content: center;
+}
+
+:where([data-component="SettingsPanel"]) .SvgAndTextButton:hover {
+  background: var(--buttonHoverColor);
+  transform: translateY(-1px);
+}
+
+:where([data-component="SettingsPanel"]) .SvgAndTextButton:active {
+  background: var(--buttonActiveColor);
+  transform: translateY(0);
+}
+
+:where([data-component="SettingsPanel"])#settings .flexColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 20px;
+}
+
+:where([data-component="SettingsPanel"])#settings input[type='number'] {
+  padding: 0.5rem;
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+  background: var(--backgroundColor);
+  color: var(--fontColor);
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+:where([data-component="SettingsPanel"])#settings input[type='number']:focus {
+  border-color: var(--signal-active);
+  outline: none;
+}
+
+:where([data-component="SettingsPanel"])#settings label {
+  font-weight: 500;
+  color: var(--fontColor);
+  margin-bottom: 0.25rem;
+  text-align: left !important;
+}
+
+:where([data-component="SettingsPanel"])#settings p {
+  font-size: 0.85rem;
+  color: var(--fontColor);
+  opacity: 0.7;
+  margin: 0.25rem 0 0 0;
+  line-height: 1.4;
+}
+
+/* Sekcja kolorów */
+:where([data-component="SettingsPanel"]) .color-section {
+  margin: 20px 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--panelOutlineColor);
+}
+
+:where([data-component="SettingsPanel"]) .color-section-title {
+  color: var(--fontColor);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+:where([data-component="SettingsPanel"]) .color-buttons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+:where([data-component="SettingsPanel"]) .color-selection-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--panelOutlineColor);
+  border-radius: var(--default-border-radius);
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:where([data-component="SettingsPanel"]) .color-selection-btn:hover {
+  background: var(--buttonHoverColor);
+  border-color: #003c7d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 60, 125, 0.15);
+}
+
+:where([data-component="SettingsPanel"]) .color-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+:where([data-component="SettingsPanel"]) .color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--panelOutlineColor);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+:where([data-component="SettingsPanel"]) .send-colors-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: #003c7d;
+  color: white;
+  border: 1px solid #003c7d;
+  border-radius: var(--default-border-radius);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+:where([data-component="SettingsPanel"]) .send-colors-btn:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+}
+
+:where([data-component="SettingsPanel"]) .send-colors-btn:disabled {
+  background: var(--buttonBackgroundColor);
+  color: var(--fontColor);
+  border-color: var(--panelOutlineColor);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+:where([data-component="SettingsPanel"]) .color-picker-group {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
+  border-radius: var(--default-border-radius);
+  border: 1px solid var(--panelOutlineColor);
+}
+
+:where([data-component="SettingsPanel"]) .color-picker-label {
+  color: var(--fontColor);
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0 0 15px 0;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* Custom scrollbar styles for settings content */
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar {
+  width: 12px;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-track {
+  background: var(--panelBackgroundColor);
+  border-radius: 6px;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-thumb {
+  background: #003c7d;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-thumb:active {
+  background: #002a5c;
+}
+
+/* Scrollbar corner */
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-corner {
+  background: var(--panelBackgroundColor);
+}
+
+/* Scrollbar buttons (arrows) */
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-button {
+  display: block;
+  height: 12px;
+  width: 12px;
+  background: #003c7d;
+  border-radius: 0;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-button:hover {
+  background: #0056b3;
+}
+
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-button:active {
+  background: #002a5c;
+}
+
+/* Up arrow */
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 14l5-5 5 5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Down arrow */
+:where([data-component="SettingsPanel"]) .settingsContent::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
+}
+
+/* Firefox scrollbar */
+:where([data-component="SettingsPanel"]) .settingsContent {
+  scrollbar-width: auto;
+  scrollbar-color: #003c7d var(--panelBackgroundColor);
+}

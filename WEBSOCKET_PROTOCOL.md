@@ -1,267 +1,157 @@
-# WebSocket Protocol - Maszyna W
+# WebSocket Protocol — Maszyna W
 
-## Przegląd
-Protokół komunikacji między interfejsem webowym a ESP32 przez WebSocket.
+## Uruchamianie z Next.js
 
-**Server:** `ws://localhost:8080` (lub IP ESP32)
+Lokalny serwer `server.cjs` przekazuje komunikaty między przeglądarkami i urządzeniami ESP32. Domyślnie nasłuchuje tylko na `ws://127.0.0.1:8080`.
 
----
+W pierwszym terminalu:
 
-## Formaty wiadomości
-
-Wszystkie wiadomości są w formacie JSON.
-
-### 1. **Signal Toggle** (Przełączanie sygnałów)
-
-#### Web → ESP32 (wysyłanie stanu sygnału)
-```json
-{
-  "type": "signal-toggle",
-  "signal": "nazwa_sygnału",
-  "state": true/false
-}
+```powershell
+npm run serve:ws
 ```
 
-**Przykład:**
-```json
-{
-  "type": "signal-toggle",
-  "signal": "czyt",
-  "state": true
-}
+W drugim terminalu uruchom interfejs Next.js z obsługą ESP:
+
+```powershell
+$env:NEXT_PUBLIC_WS_URL = 'ws://127.0.0.1:8080'
+npm run dev:esp
 ```
 
-#### ESP32 → Web (naciśnięcie przycisku)
-```json
-{
-  "type": "button_press",
-  "buttonName": "nazwa_sygnału"
-}
+Tryb `npm run dev` domyślnie działa jako symulator webowy bez automatycznego łączenia z WebSocket. Aby użyć wspólnego polecenia `npm run dev:ws`, ustaw wcześniej `NEXT_PUBLIC_APP_PLATFORM=esp`.
+
+| Zmienna | Domyślna wartość | Zastosowanie |
+| --- | --- | --- |
+| `WS_HOST` | `127.0.0.1` | Adres nasłuchiwania serwera Node.js. |
+| `WS_PORT` | `8080` | Port serwera Node.js; `0` wybiera wolny port do testów. |
+| `NEXT_PUBLIC_WS_URL` | `ws://localhost:8080` | Adres połączenia klienta Next.js. |
+| `NEXT_PUBLIC_APP_PLATFORM` | `web` | Ustaw `esp`, aby interfejs łączył się z urządzeniem lub lokalnym serwerem. |
+
+`WS_HOST` i `WS_PORT` są zmiennymi procesu serwera; `server.cjs` nie ładuje plików `.env`. Zmienne `NEXT_PUBLIC_*` można ustawić w środowisku lub w `.env.local`. Next.js zapisuje je w kodzie klienta podczas kompilacji, więc po zmianie adresu trzeba ponownie uruchomić tryb developerski lub wykonać build.
+
+### Połączenie ESP32 przez sieć lokalną
+
+Aby urządzenie w tej samej sieci mogło połączyć się z komputerem, jawnie włącz nasłuchiwanie LAN:
+
+```powershell
+$env:WS_HOST = '0.0.0.0'
+$env:WS_PORT = '8080'
+npm run serve:ws
 ```
 
-**Przykład:**
+ESP32 i zdalna przeglądarka łączą się z adresem komputera, np. `ws://192.168.1.20:8080`; `0.0.0.0` jest adresem nasłuchiwania, nie adresem klienta. Dla przeglądarki ustaw odpowiednio `NEXT_PUBLIC_WS_URL`. Jeśli firmware ESP32 sam udostępnia serwer WebSocket, wpisz adres urządzenia i pomiń lokalny przekaźnik. Strona działająca przez HTTPS wymaga połączenia `wss://`, np. przez terminujący TLS reverse proxy.
+
+## Zasady przekazywania
+
+Wiadomości aplikacji to obiekty JSON przesyłane jako tekstowe ramki WebSocket. Serwer przekazuje `signal-toggle`, `reg-update`, `mem-update`, `color-update` i `button_press` wszystkim pozostałym połączonym klientom. Nadawca nie otrzymuje własnej wiadomości. Treść pakietu pozostaje bez zmian.
+
+Serwer odpowiada na `ping` bezpośrednio do nadawcy. Nie przekazuje `ping` ani `pong` innym klientom. Niepoprawny JSON, tablice, wartości proste i nieznane typy wiadomości są ignorowane bez zamykania połączenia.
+
+Interfejs przeglądarkowy obsługuje przychodzące `signal-toggle` i `button_press` oraz ignoruje otrzymane `pong`. Rejestry, pamięć i kolory wysyła do urządzenia. Samo podłączenie dwóch przeglądarek nie synchronizuje wartości ich rejestrów ani pamięci.
+
+## 1. Przełączanie sygnału
+
+Przeglądarka wysyła stan sygnału:
+
 ```json
-{
-  "type": "button_press",
-  "buttonName": "czyt"
-}
+{ "type": "signal-toggle", "signal": "czyt", "state": true }
 ```
 
-**Obsługa po stronie ESP32:**
-1. Gdy przyjdzie `signal-toggle`, zaświeć/zgaś odpowiedni LED
-2. Gdy użytkownik naciśnie przycisk, wyślij `button_press`
-3. ESP32 automatycznie dostanie z powrotem `signal-toggle` z aktualnym stanem
+`state` jest wartością logiczną. ESP32 aktualizuje odpowiednią diodę, a pozostałe przeglądarki aktualizują stan sygnału i listę sygnałów następnego kroku.
 
----
+Urządzenie wysyła naciśnięcie przycisku:
 
-### 2. **Memory Update** (Aktualizacja pamięci)
+```json
+{ "type": "button_press", "buttonName": "czyt" }
+```
+
+Przekaźnik dostarcza je do przeglądarki, która przełącza sygnał i wysyła `signal-toggle` z jego nowym stanem. ESP32 może wtedy zaktualizować diodę. Przy wielu aktywnych interfejsach każde z nich obsługuje przycisk osobno; serwer nie wybiera głównego symulatora.
+
+## 2. Aktualizacja rejestru
+
+```json
+{ "type": "reg-update", "field": "acc", "value": 42 }
+```
+
+| Pole | Znaczenie |
+| --- | --- |
+| `acc` | Akumulator AK |
+| `a` | Rejestr adresowy A |
+| `s` | Rejestr słowa S |
+| `c` | Licznik programu L |
+| `i` | Rejestr rozkazów I |
+
+Obserwacja stanu maszyny wysyła tym samym typem również zmiany sygnałów: `field` zawiera wtedy nazwę sygnału, np. `busS`, a `value` jest wartością logiczną. Firmware powinien odróżniać te pola od pól rejestrów.
+
+## 3. Aktualizacja pamięci
 
 ```json
 {
   "type": "mem-update",
   "data": {
     "addrs": [0, 1, 2, 3],
-    "args": ["ADR", "ADR", "ADR", "ADR"],
+    "args": [1, 2, 4, 8],
     "vals": [1, 2, 4, 8]
   }
 }
 ```
 
----
+Interfejs wysyła pierwsze cztery komórki pamięci. `addrs` zawiera indeksy, `args` — liczbowe argumenty wyodrębnione z wartości komórek, a `vals` — całe słowa. Po połączeniu klient wysyła pełniejszy pakiet tego samego typu; `data` zawiera dodatkowo `acc`, `a`, `s`, `c` i `i`.
 
-### 3. **Register Update** (Aktualizacja rejestru)
-
-```json
-{
-  "type": "reg-update",
-  "field": "acc",
-  "value": 42
-}
-```
-
-**Pola:**
-- `acc` - Akumulator
-- `a` - Rejestr A
-- `s` - Rejestr S
-- `c` - Program Counter (Licznik)
-- `i` - Rejestr rozkazów
-
----
-
-### 4. **Color Update** (Sterowanie LED RGB)
+## 4. Kolor diod RGB
 
 ```json
 {
   "type": "color-update",
   "data": {
-    "colorType": "active",
+    "colorType": "signal_line",
     "hex": "#FF5733",
     "r": 255,
     "g": 87,
     "b": 51,
-    "brightness": 200,
+    "brightness": 255,
     "timestamp": 1701876543210
   }
 }
 ```
 
-**Uwaga:** Po wysłaniu `color-update`, serwer automatycznie wysyła też `mem-update` z pełnymi danymi, aby ESP32 od razu zaktualizował wyświetlacze z nowymi kolorami LED.
+`colorType` przyjmuje w bieżącym interfejsie `signal_line`, `display` lub `bus`. Kanały RGB przekazywane przez interfejs uwzględniają wybraną jasność, a `brightness` jest liczbą w skali 0–255. Po `color-update` **klient webowy** wysyła także `mem-update` z pełnymi danymi rejestrów i czterech komórek. Serwer przekazuje oba pakiety; nie generuje drugiego pakietu samodzielnie.
 
----
+## 5. Ping/Pong
 
-### 5. **Ping/Pong** (Keep-alive)
+Interfejs wysyła co 10 sekund:
 
-#### Web → ESP32
 ```json
-{
-  "type": "ping",
-  "t": 1701876543210
-}
+{ "type": "ping", "t": 1701876543210 }
 ```
 
-#### ESP32 → Web
+Lokalny serwer odpowiada do tego klienta, zachowując `t`:
+
 ```json
-{
-  "type": "pong",
-  "t": 1701876543210
-}
+{ "type": "pong", "t": 1701876543210 }
 ```
 
----
+Przy bezpośrednim połączeniu do serwera na ESP32 taką odpowiedź realizuje firmware. To komunikaty JSON aplikacji, niezależne od kontrolnych ramek ping/pong protokołu WebSocket. Interfejs obecnie nie oblicza opóźnienia i nie rozłącza klienta z powodu braku odpowiedzi JSON.
 
-## Przepływ sygnałów
+## Dostępne sygnały
 
-### Scenariusz 1: Użytkownik klika w interfejsie web
+- Licznik i rejestr I: `il`, `wyl`, `wel`, `wyad`, `wei`; opcjonalnie `dl`.
+- Pamięć: `wea`, `wes`, `wys`, `czyt`, `pisz`.
+- ALU i transfer: `przep`, `dod`, `ode`, `weja`, `weak`, `wyak`; opcjonalnie `iak`, `dak`, `mno`, `dziel`, `shr`, `shl`, `neg`, `lub`, `i`.
+- Łączniki magistral: `as`, `sa`.
+- Rejestry X/Y: `wyx`, `wex`, `wyy`, `wey`.
+- Stos: `wyws`, `wews`, `iws`, `dws`, `wyls`.
+- Wejście/wyjście: `wyg`, `werb`, `wyrb`, `start`.
+- Przerwania: `werz`, `wyrz`, `werp`, `wyrp`, `werm`, `wyrm`, `weap`, `wyap`, `ustrm`, `czrm`, `rint`, `eni`.
+- Zatrzymanie: `stop`.
 
-1. Web: `handleSignalToggle()` → zmienia `signals[name]` i `nextLine`
-2. Web → Server: wysyła `signal-toggle` z aktualnym stanem
-3. Server → ESP32: przekazuje `signal-toggle` 
-4. **ESP32: Zaświeca/gasi LED odpowiadający sygnałowi**
+Dostępność sygnałów w interfejsie zależy od ustawień dodatków maszyny.
 
-### Scenariusz 2: Użytkownik naciska przycisk na ESP32
+## Diagnostyka i testy
 
-1. **ESP32 → Server:** wysyła `button_press` z nazwą sygnału
-2. Server → Web: przekazuje `button_press`
-3. Web: `handleRemoteToggleESPWebSocket()` → przełącza sygnał lokalnie
-4. Web → Server: wysyła `signal-toggle` z nowym stanem
-5. Server → ESP32: przekazuje `signal-toggle`
-6. **ESP32: Zaświeca/gasi LED (synchronizacja)**
+Wskaźnik w górnym pasku pokazuje `connecting`, `connected`, `disconnected` lub `error`. Konsola symulatora zapisuje połączenia, błędy i komunikaty sygnałów. Serwer wypisuje rzeczywisty adres dopiero po rozpoczęciu nasłuchiwania.
 
-### Scenariusz 3: Wiele klientów (Multi-Web + ESP32)
-
-1. Klient A: zmienia sygnał
-2. Server → Wszyscy inni klienci: `signal-toggle`
-3. Wszyscy klienci: aktualizują swój stan (w tym ESP32 LED)
-
-### Scenariusz 4: Zmiana koloru LED
-
-1. Web: Użytkownik zmienia kolor LED w ustawieniach
-2. Web → Server: wysyła `color-update` z nowym kolorem
-3. Server → ESP32: przekazuje `color-update`
-4. **Web → Server:** automatycznie wysyła `mem-update` z pełnymi danymi
-5. **Server → ESP32:** przekazuje `mem-update`
-6. **ESP32: Aktualizuje kolor LED i od razu wyświetla wartości rejestrów z nowym kolorem**
-
----
-
-## Implementacja ESP32
-
-### Wymagane akcje:
-
-```cpp
-// Pseudo-kod dla ESP32
-
-void onWebSocketMessage(String message) {
-  JsonDocument doc;
-  deserializeJson(doc, message);
-  
-  String type = doc["type"];
-  
-  if (type == "signal-toggle") {
-    String signal = doc["signal"];
-    bool state = doc["state"];
-    
-    // Zaświeć/zgaś odpowiedni LED
-    setSignalLED(signal, state);
-    
-  } else if (type == "reg-update") {
-    String field = doc["field"];
-    int value = doc["value"];
-    
-    // Wyświetl wartość rejestru na wyświetlaczu
-    updateRegisterDisplay(field, value);
-    
-  } else if (type == "mem-update") {
-    // Zaktualizuj wyświetlacze pamięci i rejestrów
-    updateMemoryDisplay(doc["data"]);
-    
-  } else if (type == "color-update") {
-    // Ustaw nowy kolor dla LED RGB
-    setRGBColor(doc["data"]);
-    // Uwaga: Zaraz po tym przyjdzie mem-update z aktualnymi wartościami
-    // więc LED od razu pokażą wartości z nowym kolorem
-    
-  } else if (type == "ping") {
-    // Odpowiedz pongiem
-    sendPong();
-  }
-}
-
-void onButtonPress(String buttonName) {
-  // Wyślij informację o naciśnięciu przycisku
-  JsonDocument doc;
-  doc["type"] = "button_press";
-  doc["buttonName"] = buttonName;
-  
-  String json;
-  serializeJson(doc, json);
-  webSocket.sendTXT(json);
-  
-  // Uwaga: Nie zmieniaj stanu LED tutaj!
-  // LED zmieni stan gdy przyjdzie signal-toggle z serwera
-}
+```powershell
+npm test
 ```
 
----
-
-## Lista sygnałów
-
-### Sygnały podstawowe (zawsze dostępne):
-- `il`, `wyl`, `wel`, `dl` - Licznik programu
-- `wyad`, `wei` - Rejestr rozkazów
-- `wea`, `wes`, `wys` - Rejestry pamięci
-- `czyt`, `pisz` - Operacje pamięci
-- `przep`, `dod`, `ode` - ALU podstawowe
-- `weja`, `weak`, `wyak` - Transfer danych
-- `stop`, `start` - Sterowanie
-
-### Sygnały opcjonalne (w zależności od konfiguracji):
-- `as`, `sa` - Połączenia magistral (busConnectors)
-- `wyx`, `wex` - Rejestr X (xRegister)
-- `wyy`, `wey` - Rejestr Y (yRegister)
-- `mno`, `dziel`, `shr`, `shl`, `neg`, `lub`, `i` - ALU rozszerzone (jamlExtras)
-- `wyws`, `iws`, `dws`, `wyls` - Stos (stack)
-- `wyg`, `werb`, `wyrb` - IO (io)
-- `werz`, `wyrz`, `werp`, `wyrp`, `werm`, `wyrm`, `weap`, `wyap`, `ustrm`, `czrm` - Przerwania (interrupts)
-- `rint`, `eni` - Sygnały przerwań dodatkowe (interrupts)
-
----
-
-## Debugging
-
-W konsoli JavaScript pojawią się logi:
-- `[WS] Wysłano sygnał nazwa: ON/OFF` - Web wysyła stan
-- `[ESP32] Przycisk nazwa: ON/OFF` - ESP32 nacisnął przycisk
-- `[WS] Odebrano sygnał nazwa: ON/OFF` - Web otrzymał stan od innego klienta
-
----
-
-## Status połączenia
-
-Stan połączenia WebSocket dostępny w `wsStatus`:
-- `"connecting"` - Łączenie
-- `"connected"` - Połączono
-- `"disconnected"` - Rozłączono
-- `"error"` - Błąd
-
-Widoczny w interfejsie TopBar jako wskaźnik koloru.
+`tests/websocket.test.ts` tworzy lokalny serwer na losowym porcie i dwa klienty. Sprawdza przekazywanie pakietów, brak echa, JSON ping/pong oraz obsługę błędnych wiadomości. Testy nie łączą się z urządzeniem ani z siecią zewnętrzną.

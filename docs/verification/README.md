@@ -5,10 +5,18 @@
 - `simulator.spec.ts` na eksporcie statycznym: 7/7.
 - `npm run typecheck`: poprawny.
 - `npm run build`, `npm run build:static`, `npm run build:esp`: poprawne.
-- `npm audit` aplikacji i `hf-proxy`: zero znanych podatności. Surowe wyniki w plikach `npm-audit-*.json`.
-- Pełne drzewa zainstalowanych zależności: `dependencies-web.json`, `dependencies-proxy.json`.
+- `npm audit` aplikacji i `hf-proxy`: zero znanych podatności w dniu weryfikacji.
 
-`baseline-*.png` przedstawiają oryginalną stronę Vue, `next-*.png` wersję React/Next. Zrzuty settings/program pokazują stan w danym momencie testu; zawartość logów i włączone opcje nie muszą być identyczne.
+Surowe raporty JSON oraz zrzuty `baseline-*.png` i `next-*.png` są lokalnymi artefaktami ignorowanymi przez Git. Repozytorium przechowuje to podsumowanie i kod testów. Zrzuty pokazują stan w danym momencie testu; zawartość logów i włączone opcje nie muszą być identyczne.
+
+Aktualne raporty można wygenerować ponownie z katalogu głównego:
+
+```sh
+npm audit --json > docs/verification/npm-audit-web.json
+npm --prefix hf-proxy audit --json > docs/verification/npm-audit-proxy.json
+npm ls --all --json > docs/verification/dependencies-web.json
+npm --prefix hf-proxy ls --all --json > docs/verification/dependencies-proxy.json
+```
 
 Scenariusz referencyjny `DOD 0`: w obu wersjach po kompilacji i wykonaniu akumulator ma wartość 16, licznik 1. Sprawdzono też mobilną pamięć przy 390 × 844, język i motyw, katalog laboratoriów, własne rozkazy oraz breakpointy.
 

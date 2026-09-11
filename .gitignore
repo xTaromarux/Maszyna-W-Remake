@@ -1,5 +1,35 @@
-# Logs
-logs
+# Dependencies and build outputs
+node_modules/
+.next/
+/out/
+/dist/
+/dist-ssr/
+
+# Local environment (keep shareable templates)
+.env*
+!.env.example
+!.env.*.example
+
+# Generated Next.js types and local assistant scaffolding
+/next-env.d.ts
+/AGENTS.md
+/CLAUDE.md
+*.tsbuildinfo
+
+# Test reports, browser artifacts and generated migration evidence
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+.playwright-mcp/
+/cypress/videos/
+/cypress/screenshots/
+/docs/verification/*
+!/docs/verification/README.md
+
+# Logs and caches
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,15 +37,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-.DS_Store
-dist
-dist-ssr
-coverage
+.cache/
+.turbo/
+.eslintcache
 *.local
 
-/cypress/videos/
-/cypress/screenshots/
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
 
 # Editor directories and files
 .vscode/*
@@ -27,14 +57,9 @@ coverage
 *.sln
 *.sw?
 
-*.tsbuildinfo
+# Local deployment metadata
+.netlify/
+.vercel/
 
-# Local Netlify folder
-.netlify
-
-# Next.js
-.next/
-out/
-.playwright-mcp/
-test-results/
-playwright-report/
+# Local scratch file
+/kod

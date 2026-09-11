@@ -204,9 +204,9 @@ Eksperymentalne `stickyCompletion.ts` nie było aktywne przed migracją: import 
 
 Aktywnym punktem wejścia stylów zarówno przed migracją, jak i po niej pozostaje `src/styles/main.scss`. Zachowano zmienne motywu, reset, typografię, układ, style maszyny, przycisków, konsoli, czatu i ustawień. Lokalne style komponentów SFC wyodrębniono do `src/styles/migrated/`, importowanego przez `index.css`. Odpowiednie atrybuty `data-*` utrzymują ograniczenie zasięgu selektorów i nie wymagają Vue w czasie działania.
 
-`src/assets/style/base.css`, `settings.css`, `style.css` i `vars.css` nie były importowane przez aktywny punkt wejścia oryginalnej strony. Są starszym zestawem arkuszy, a nie brakującymi zależnościami nowego układu. Zapisany w nieużywanym `style.css` import Google Fonts nie był częścią aktywnego ładowania strony.
+`src/assets/style/base.css`, `settings.css`, `style.css` i `vars.css` nie były importowane przez aktywny punkt wejścia oryginalnej strony. Ten starszy zestaw arkuszy usunięto podczas porządkowania repozytorium. Zapisany w nieużywanym `style.css` import Google Fonts nie był częścią aktywnego ładowania strony.
 
-Metadane Next.js zachowują ikony i manifest z `public/`: favicon PNG/SVG/ICO, Apple Touch Icon i `site.webmanifest` wraz z ikonami aplikacji. Komponenty ikon SVG zostały przepisane do JSX z zachowaniem wektorowych kształtów. Starsze kopie obrazów w `src/assets/img/` oraz `src/assets/svg/logo-ps-white.svg` nie miały aktywnych importów w pierwotnym interfejsie. Nie zastąpiono istniejących ikon obrazami generowanymi ani zewnętrzną biblioteką.
+Metadane Next.js zachowują ikony i manifest z `public/`: favicon PNG/SVG/ICO, Apple Touch Icon i `site.webmanifest` wraz z ikonami aplikacji. Komponenty ikon SVG zostały przepisane do JSX z zachowaniem wektorowych kształtów. Starsze kopie obrazów w `src/assets/img/` oraz `src/assets/svg/logo-ps-white.svg` nie miały aktywnych importów w pierwotnym interfejsie i zostały usunięte podczas porządkowania. Nie zastąpiono istniejących ikon obrazami generowanymi ani zewnętrzną biblioteką.
 
 ## Środowiska, hosting i integracje
 
@@ -250,7 +250,7 @@ Końcowy `npm run test:e2e` przeszedł 12 scenariuszy w Chrome: ręczne sygnały
 
 W przeglądarce sprawdzono eksport ESP: ukrywanie czatu, ustawienia LED, ponowne otwarcie koloru z zachowaniem jasności, połączenie z lokalnym relayem i odebranie pakietów `color-update`/`mem-update` przez drugiego klienta. Windows blokował port 8080, dlatego w tym teście użyto portu 8085 i tymczasowego przekierowania adresu WebSocket w przeglądarce. Nie był to test fizycznego ESP32.
 
-Zrzuty strony przed migracją i po niej, pełne grafy zależności oraz końcowe wyniki `npm audit` zapisano w [verification/](verification/). Obydwa audyty z 11.09.2026 wskazują zero znanych podatności. Porównano widok desktopowy; zgodność zrzutu nie zastępuje testów interakcji.
+Zrzuty strony przed migracją i po niej, pełne grafy zależności oraz wyniki `npm audit` są lokalnymi artefaktami w `verification/`, ignorowanymi przez Git. Wersjonowane [podsumowanie weryfikacji](verification/README.md) zawiera wyniki i polecenia odtworzenia raportów. Obydwa audyty z 11.09.2026 wskazują zero znanych podatności. Porównano widok desktopowy; zgodność zrzutu nie zastępuje testów interakcji.
 
 Polecenia odtwarzające sprawdzenia, uruchamiane w katalogu projektu:
 

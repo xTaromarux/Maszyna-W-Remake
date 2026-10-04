@@ -22,6 +22,12 @@ const DATA_MIN = -128;
 const DATA_MAX = 255;
 const JUMP_MNEMONICS = new Set(['SOB', 'SOM', 'SOZ']);
 
+type AddressedProgramNodes = {
+  labels: Map<string, IRLabel>;
+  labelList: IRLabel[];
+  rawNodes: RawNode[];
+};
+
 function parseNumberLiteral(text: string): number {
   const neg = text.startsWith('-');
   const raw = neg ? text.slice(1) : text;
@@ -288,9 +294,8 @@ export class Parser {
     return found.address;
   }
 
-  parseProgram(): ProgramIR {
-    const rawLines = this.parseRawLines();
-
+  /** Assigns addresses and registers labels before resolving forward references. */
+  private collectAddressedNodes(rawLines: RawLine[]): AddressedProgramNodes {
     const labels = new Map<string, IRLabel>();
     const labelList: IRLabel[] = [];
     const rawNodes: RawNode[] = [];
@@ -432,6 +437,11 @@ export class Parser {
       }
     }
 
+    return { labels, labelList, rawNodes };
+  }
+
+  /** Resolves operands only after address collection and its diagnostics have completed. */
+  private resolveProgramNodes({ labels, labelList, rawNodes }: AddressedProgramNodes): ProgramIR {
     const instructions: IRInstruction[] = [];
     const memoryDecls: IRMemoryDecl[] = [];
     const directives: IRDirective[] = [];
@@ -563,6 +573,13 @@ export class Parser {
       directives,
       initAssignments,
     };
+  }
+
+  parseProgram(): ProgramIR {
+    const rawLines = this.parseRawLines();
+    const addressedNodes = this.collectAddressedNodes(rawLines);
+
+    return this.resolveProgramNodes(addressedNodes);
   }
 }
 

@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const SunIcon = (props: IconProps) => {
   return (
     <svg
       {...props}
@@ -20,4 +21,6 @@ export default function Icon(props: IconProps) {
       />
     </svg>
   );
-}
+};
+
+export default SunIcon;

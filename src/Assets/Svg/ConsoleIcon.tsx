@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function ConsoleIcon({ hasError = false, className = '', ...props }: IconProps) {
+
+const ConsoleIcon = ({ hasError = false, className = '', ...props }: IconProps) => {
   return (
     <svg
       width="24"
@@ -18,4 +19,6 @@ export default function ConsoleIcon({ hasError = false, className = '', ...props
       <path d="m6 12 2 2-2 2m4-2h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
+};
+
+export default ConsoleIcon;

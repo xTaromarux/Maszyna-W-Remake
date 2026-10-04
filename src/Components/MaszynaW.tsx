@@ -3,7 +3,6 @@
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { NumberFormat } from '@/Types/Common';
 import type { MaszynaWProps } from '@/Types/Components';
-import type { RegisterFormatField } from '@/Types/Simulator';
 import APRegisterSection from './Registers/ApRegisterSection';
 import BusSignal from './BusSignal';
 import CalcSection from './CalcSection';
@@ -13,14 +12,15 @@ import MemorySection from './MemorySection';
 import RBRegisterSection from './Registers/RbRegisterSection';
 import RegisterISection from './Registers/RegisterISection';
 import RMRegisterSection from './Registers/RmRegisterSection';
-import RPRegisterSection from './Registers/RpRegisterSection';
-import RZRegisterSection from './Registers/RzRegisterSection';
 import SignalButton from './SignalButton';
 import WSRegisterSection from './Registers/WsRegisterSection';
 import XRegisterSection from './Registers/XRegisterSection';
 import YRegisterSection from './Registers/YRegisterSection';
+import { createRegisterBindings } from './MaszynaW/Helpers/RegisterBindings';
+import InterruptLayer from './MaszynaW/Ui/InterruptLayer';
+import MobileAluSignals from './MaszynaW/Ui/MobileAluSignals';
 
-export default function MaszynaW(props: MaszynaWProps) {
+const MaszynaW = (props: MaszynaWProps) => {
   const {
     manualMode,
     signals,
@@ -53,15 +53,8 @@ export default function MaszynaW(props: MaszynaWProps) {
     onUpdateNumberFormat,
   } = props;
   const isMobile = useWindowWidth() <= 768;
-  const hasAnyInterrupts = Object.values(extras.interrupts || {}).some(Boolean);
-  const registerProps = (name: RegisterFormatField) => ({
-    signals,
-    formatNumber,
-    numberFormat: registerFormats[name],
-    onUpdateNumberFormat: (value: NumberFormat) => onUpdateNumberFormat?.({ field: name, value }),
-    onClickItem,
-    [`onUpdate${name}`]: name === 'L' ? props.onUpdateProgramCounter : props[`onUpdate${name}`],
-  });
+  const registers = createRegisterBindings(props);
+
   const calcProps = {
     signals,
     extras,
@@ -88,52 +81,22 @@ export default function MaszynaW(props: MaszynaWProps) {
     busName: name,
     mobileView: isMobile,
     showInvisibleRegisters: extras.showInvisibleRegisters,
-    ...registerProps(`Bus${name}`),
+    formatNumber,
   });
   const ioRegisters = (
     <>
-      <RBRegisterSection visible={extras.io?.rbRegister} RB={RB} {...registerProps('RB')} />
-      <GRegisterSection visible={extras.io?.gRegister} G={G} {...registerProps('G')} />
+      <RBRegisterSection visible={extras.io?.rbRegister} RB={RB} {...registers.RB} />
+      <GRegisterSection visible={extras.io?.gRegister} G={G} {...registers.G} />
     </>
   );
 
   return (
     <div id="W" className={manualMode ? 'manualMode' : ''}>
-      {hasAnyInterrupts && (
-        <div className="layer">
-          <RZRegisterSection visible={extras.interrupts?.rzRegister} RZ={RZ} {...registerProps('RZ')} />
-          <RPRegisterSection visible={extras.interrupts?.rpRegister} RP={RP} {...registerProps('RP')} />
-          <div className="additionalInterruptsSignalsConteiner">
-            {extras.interrupts?.rintSignal && (
-              <SignalButton
-                id="rint"
-                signal={signals.rint}
-                label="rint"
-                spanClassNames="arrowLeftOnBottom additionalInterruptsSignal"
-                onClick={() => onClickItem?.('rint')}
-              />
-            )}
-            {extras.interrupts?.eniSignal && (
-              <SignalButton
-                id="eni"
-                signal={signals.eni}
-                label="eni"
-                spanClassNames="arrowLeftOnBottom additionalInterruptsSignal"
-                onClick={() => onClickItem?.('eni')}
-              />
-            )}
-          </div>
-        </div>
-      )}
+      <InterruptLayer extras={extras} signals={signals} RZ={RZ} RP={RP} onClickItem={onClickItem} registers={registers} />
       <div className="layer">
-        <CounterComponent
-          programCounter={programCounter}
-          extras={extras}
-          onUpdateProgramCounter={props.onUpdateProgramCounter}
-          {...registerProps('L')}
-        />
-        <RMRegisterSection visible={extras.interrupts?.rmRegister} RM={RM} {...registerProps('RM')} />
-        <APRegisterSection visible={extras.interrupts?.apRegister} AP={AP} {...registerProps('AP')} />
+        <CounterComponent programCounter={programCounter} extras={extras} {...registers.L} />
+        <RMRegisterSection visible={extras.interrupts?.rmRegister} RM={RM} {...registers.RM} />
+        <APRegisterSection visible={extras.interrupts?.apRegister} AP={AP} {...registers.AP} />
       </div>
       <div className="wylsBusConteiner">
         {extras.stack?.wylsSignal && (
@@ -157,7 +120,7 @@ export default function MaszynaW(props: MaszynaWProps) {
           </div>
         )}
         <div className="layer">
-          <RegisterISection I={I} {...registerProps('I')} />
+          <RegisterISection I={I} {...registers.I} />
           {!isMobile && <CalcSection {...calcProps} />}
           {extras.busConnectors && (
             <>
@@ -198,30 +161,9 @@ export default function MaszynaW(props: MaszynaWProps) {
       </div>
       <BusSignal {...busProps('S', BusS)} />
       <div id="layer3" className="layer layerCenter">
-        <XRegisterSection visible={extras.xRegister} X={X} {...registerProps('X')} />
-        {isMobile && (
-          <>
-            <SignalButton
-              id="weja"
-              signal={signals.weja}
-              label="weja"
-              style={{ height: '91%', minHeight: 40 }}
-              divClassNames="pathDownOnRight"
-              spanClassNames="arrowRightOnBottom"
-              onClick={() => onClickItem?.('weja')}
-            />
-            <SignalButton
-              id="wyak"
-              signal={signals.wyak}
-              label="wyak"
-              style={{ height: '91%', minHeight: 40 }}
-              divClassNames="pathUpOnLeft"
-              spanClassNames="arrowLeftOnBottom"
-              onClick={() => onClickItem?.('wyak')}
-            />
-          </>
-        )}
-        <YRegisterSection visible={extras.yRegister} Y={Y} {...registerProps('Y')} />
+        <XRegisterSection visible={extras.xRegister} X={X} {...registers.X} />
+        {isMobile && <MobileAluSignals signals={signals} onClickItem={onClickItem} />}
+        <YRegisterSection visible={extras.yRegister} Y={Y} {...registers.Y} />
         {!isMobile && ioRegisters}
       </div>
       {isMobile && (
@@ -232,10 +174,12 @@ export default function MaszynaW(props: MaszynaWProps) {
           <div className="layer">{ioRegisters}</div>
           {extras.stack?.wsRegister && <BusSignal {...busProps('S', BusS)} />}
           <div className="layer">
-            <WSRegisterSection WS={WS} BusS={BusS} visible={extras.stack?.wsRegister} extras={extras} {...registerProps('WS')} />
+            <WSRegisterSection WS={WS} BusS={BusS} visible={extras.stack?.wsRegister} extras={extras} {...registers.WS} />
           </div>
         </>
       )}
     </div>
   );
-}
+};
+
+export default MaszynaW;

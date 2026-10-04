@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const RunIcon = (props: IconProps) => {
   return (
     <svg
       {...props}
@@ -14,4 +15,6 @@ export default function Icon(props: IconProps) {
       <polygon points="5,3 19,12 5,21" />
     </svg>
   );
-}
+};
+
+export default RunIcon;

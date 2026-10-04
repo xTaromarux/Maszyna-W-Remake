@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const EditIcon = (props: IconProps) => {
   return (
     <svg
       {...props}
@@ -15,4 +16,6 @@ export default function Icon(props: IconProps) {
       <path d="m15 5 4 4" />
     </svg>
   );
-}
+};
+
+export default EditIcon;

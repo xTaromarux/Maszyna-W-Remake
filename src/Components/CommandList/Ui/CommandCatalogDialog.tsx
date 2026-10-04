@@ -1,3 +1,4 @@
+import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import { useI18n } from '@/I18n/Index';
 import { collectCommandAliases } from '@/Shared/Utils/CommandMnemonics';
 import type { CommandListProps } from '@/Types/Components';
@@ -12,6 +13,7 @@ interface CommandCatalogDialogProps extends Omit<CommandListProps, 'commandList'
 
 export const CommandCatalogDialog = ({ catalog, files, className = '', onClose, ...rest }: CommandCatalogDialogProps) => {
   const { t, locale } = useI18n();
+  const dialog = useModalFocus(true, onClose);
   const { localList, selectedCommand, listRef, maxCommands, selectCommand } = catalog;
 
   return (
@@ -23,12 +25,26 @@ export const CommandCatalogDialog = ({ catalog, files, className = '', onClose, 
         if (event.target === event.currentTarget) onClose?.();
       }}
     >
-      <div data-editor-command-list="" id="commandList" role="dialog" aria-modal="true" aria-labelledby="command-list-title">
+      <div
+        ref={dialog}
+        tabIndex={-1}
+        data-editor-command-list=""
+        id="commandList"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="command-list-title"
+      >
         <div data-editor-command-list="" className="header">
           <h1 data-editor-command-list="" id="command-list-title">
             {t('commandList.title')}
           </h1>
-          <button data-editor-command-list="" className="closeBtn closeButton" onClick={onClose} aria-label={t('commandList.closeAria')}>
+          <button
+            type="button"
+            data-editor-command-list=""
+            className="closeBtn closeButton"
+            onClick={onClose}
+            aria-label={t('commandList.closeAria')}
+          >
             &times;
           </button>
         </div>
@@ -38,6 +54,7 @@ export const CommandCatalogDialog = ({ catalog, files, className = '', onClose, 
           </span>
           {localList.map((command, index) => (
             <button
+              type="button"
               data-editor-command-list=""
               key={index}
               onClick={() => selectCommand(index)}

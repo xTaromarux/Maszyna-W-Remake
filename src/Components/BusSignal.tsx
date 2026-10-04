@@ -1,18 +1,28 @@
 import type { BusSignalProps } from '@/Types/Components';
 import BusLabel from './BusLabel';
 
-export default function BusSignal({
+const BusSignal = ({
   signalStatus,
   mobileView = false,
   busValue,
   showInvisibleRegisters = false,
   busName,
   formatNumber,
-}: BusSignalProps) {
+}: BusSignalProps) => {
+  const className = `bus signal${signalStatus ? ' active' : ''}`;
+
   return (
-    <div className={`bus signal${signalStatus ? ' active' : ''}`}>
+    <div className={className}>
       <div className="line" />
-      <BusLabel {...{ busName, busValue, showInvisibleRegisters, mobileView, formatNumber }} />
+      <BusLabel
+        busName={busName}
+        busValue={busValue}
+        showInvisibleRegisters={showInvisibleRegisters}
+        mobileView={mobileView}
+        formatNumber={formatNumber}
+      />
     </div>
   );
-}
+};
+
+export default BusSignal;

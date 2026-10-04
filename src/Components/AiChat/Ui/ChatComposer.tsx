@@ -1,13 +1,15 @@
 import { useI18n } from '@/I18n/Index';
 import type { RefObject } from 'react';
 import type { ChatSession } from '../Hooks/UseChatSession';
+
 type Props = Pick<ChatSession, 'state' | 'patch' | 'inputDisabled' | 'sendUserMessage'> & {
   inputRef: RefObject<HTMLInputElement | null>;
   instruction: string;
   placeholder: string;
   inert: boolean;
 };
-export default function ChatComposer({ state, patch, inputDisabled, sendUserMessage, inputRef, instruction, placeholder, inert }: Props) {
+
+const ChatComposer = ({ state, patch, inputDisabled, sendUserMessage, inputRef, instruction, placeholder, inert }: Props) => {
   const { t } = useI18n();
   return (
     <div className="inputArea" inert={inert}>
@@ -30,4 +32,6 @@ export default function ChatComposer({ state, patch, inputDisabled, sendUserMess
       </form>
     </div>
   );
-}
+};
+
+export default ChatComposer;

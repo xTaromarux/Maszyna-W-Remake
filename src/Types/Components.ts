@@ -185,8 +185,8 @@ export interface CodeMirrorEditorProps extends DivProps {
   modelValue?: string;
   onUpdateModelValue?: Update<string>;
   onChange?: Update<string>;
-  language?: string;
-  theme?: string;
+  language?: 'macroW' | 'maszynaW' | 'javascript';
+  theme?: 'macroTheme' | 'mwTheme';
   readOnly?: boolean;
   programCompiled?: boolean;
   disable?: boolean;
@@ -195,7 +195,6 @@ export interface CodeMirrorEditorProps extends DivProps {
   autocompleteEnabled?: boolean;
   commandList?: RuntimeCommand[];
   maxHeight?: string;
-  devStickyCompletion?: boolean;
   className?: string;
   style?: CSSProperties;
 }

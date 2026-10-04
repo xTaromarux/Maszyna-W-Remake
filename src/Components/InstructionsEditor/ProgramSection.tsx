@@ -1,6 +1,6 @@
 'use client';
 
-import CodeMirrorEditor from '@/Components/CodeMirrorEditor';
+import CodeMirrorEditor from '@/Components/CodeMirrorEditor/CodeMirrorEditor';
 import type { ProgramSectionProps } from '@/Types/Components';
 import { useProgramCompilation } from './Hooks/UseProgramCompilation';
 import ProgramActions from './Ui/ProgramActions';

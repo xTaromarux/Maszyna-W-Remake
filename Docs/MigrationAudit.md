@@ -151,7 +151,7 @@ Pierwotne repozytorium zawierało **57 plików `.vue`**. Dla **55** istnieją ko
 | `src/components/BusLabel.vue`                                  | `src/Components/BusLabel.tsx`                                                                 |
 | `src/components/BusSignal.vue`                                 | `src/Components/BusSignal.tsx`                                                                |
 | `src/components/CalcSection.vue`                               | `src/Components/CalcSection.tsx`                                                              |
-| `src/components/CodeMirrorEditor.vue`                          | `src/Components/CodeMirrorEditor.tsx`                                                         |
+| `src/components/CodeMirrorEditor.vue`                          | `src/Components/CodeMirrorEditor/CodeMirrorEditor.tsx`                                        |
 | `src/components/CommandList.vue`                               | `src/Components/CommandList.tsx`                                                              |
 | `src/components/Console/Console.vue`                           | `src/Components/Console/Console.tsx`                                                          |
 | `src/components/Console/ConsoleDock.vue`                       | `src/Components/Console/ConsoleDock.tsx`                                                      |

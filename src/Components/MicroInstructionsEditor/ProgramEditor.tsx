@@ -1,6 +1,6 @@
 'use client';
 
-import CodeMirrorEditor from '@/Components/CodeMirrorEditor';
+import CodeMirrorEditor from '@/Components/CodeMirrorEditor/CodeMirrorEditor';
 import SegmentedToggle from '@/Components/SegmentedToggle';
 import { useI18n } from '@/I18n/Index';
 import type { ProgramEditorProps } from '@/Types/Components';

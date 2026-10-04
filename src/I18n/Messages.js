@@ -133,6 +133,7 @@ export const messages = {
         remove: 'Usun breakpoint',
       },
     },
+    editor: { expand: 'Rozwiń edytor', collapse: 'Zwiń edytor' },
     execution: {
       compileTitle: 'Skompiluj program',
       compile: 'Kompiluj',
@@ -695,6 +696,7 @@ export const messages = {
         remove: 'Remove breakpoint',
       },
     },
+    editor: { expand: 'Expand editor', collapse: 'Exit expanded editor' },
     execution: {
       compileTitle: 'Compile program',
       compile: 'Compile',

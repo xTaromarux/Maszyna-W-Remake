@@ -1,7 +1,9 @@
 'use client';
 
 import type { SignalButtonProps } from '@/Types/Components';
-export default function SignalButton({
+import type { KeyboardEvent } from 'react';
+
+const SignalButton = ({
   id,
   signal,
   label,
@@ -10,25 +12,34 @@ export default function SignalButton({
   className = '',
   onClick,
   style,
-}: SignalButtonProps) {
+}: SignalButtonProps) => {
+  const classes = ['signal', 'impulse', divClassNames, className, signal ? 'active' : ''].filter(Boolean).join(' ');
+
+  // Keep the diagram wrapper while providing the keyboard activation of a button.
+  const activateFromKeyboard = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    event.preventDefault();
+    onClick?.(event);
+  };
+
   return (
     <div
       id={id}
-      className={['signal', 'impulse', divClassNames, className, signal ? 'active' : ''].filter(Boolean).join(' ')}
+      className={classes}
       style={style}
       role="button"
       tabIndex={0}
       aria-label={label}
       aria-pressed={Boolean(signal)}
       onClick={onClick}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onClick?.(event);
-        }
-      }}
+      onKeyDown={activateFromKeyboard}
     >
       <span className={spanClassNames}>{label}</span>
     </div>
   );
-}
+};
+
+export default SignalButton;

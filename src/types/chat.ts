@@ -46,11 +46,9 @@ export interface ChatState {
   apiKeyError: string;
   showApiKeyModal: boolean;
   showApiKeyValue: boolean;
-  aiTyping: boolean;
-  isCancelling: boolean;
+
   apiState: ApiState;
   currentAiMessageId: string | null;
-  panelWidth: number;
   rateLimitMessage: string;
   generalError: string;
   showSuggestions: boolean;
@@ -59,11 +57,10 @@ export interface ChatState {
 export type ChatStateUpdate = Partial<ChatState> | ((state: ChatState) => Partial<ChatState>);
 export interface ChatRuntime {
   worker: Worker | null;
-  timers: Map<string, ReturnType<typeof setInterval>>;
+  animation: { messageId: string; timer: ReturnType<typeof setInterval> } | null;
   sessionId: string;
   requests: number[];
   healthController: AbortController | null;
   requestToken: number;
   alive: boolean;
-  resize: { move: (event: PointerEvent) => void; stop: () => void; previousCursor: string } | null;
 }

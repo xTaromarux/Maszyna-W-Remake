@@ -10,6 +10,6 @@ This is the single location for application interfaces, type aliases and enums. 
 - `assemblerIR.ts`, `model.ts`, `registry.ts`, `instructions.ts`, `parser.ts`, `commandAdapter.ts`, `microGenerator.ts`, `asmPipeline.ts`: compiler and runtime contracts.
 - `diagnostics.ts`, `errors.ts`, `editor.ts`, `mnemonics.ts`: error details, editor completions and command aliases.
 
-The migration was checked against commit `b60e154`, including `src/models/AiChat.ts`, the assembler types, the editor contracts and the Vue components' props. React-specific state and callback contracts describe the current implementation. Conditional microcode retains source-line and branch metadata without `any` casts.
+The migration was checked against commit `b60e154`, including the chat configuration (now `src/components/AIChat/chatConfig.ts`), the assembler types, the editor contracts and the Vue components' props. React-specific state and callback contracts describe the current implementation. Conditional microcode retains source-line and branch metadata without `any` casts.
 
 `npm run typecheck` checks all `.ts` and `.tsx` application files with `strict: true`. Generated Lezer parsers and existing JavaScript language/data modules remain importable through `allowJs`; React components and shared utilities use `.tsx` and `.ts` respectively. TypeScript errors also fail the production build.

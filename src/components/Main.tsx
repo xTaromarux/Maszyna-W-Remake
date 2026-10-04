@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n';
 import { createMachineStore } from '@/state/createMachineStore';
 import { MachineContext } from '@/state/MachineContext';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import AiChat from './AiChat';
+import AiChat from './AIChat/AiChat';
 import CommandList from './CommandList';
 import ConsoleDock from './Console/ConsoleDock';
 import ProgramSection from './InstructionsEditor/ProgramSection';

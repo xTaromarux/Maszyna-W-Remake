@@ -3,7 +3,7 @@
 import ConsoleIcon from '@/assets/svg/ConsoleIcon';
 import KogWheelIcon from '@/assets/svg/KogWheelIcon';
 import PolslLogoLongWhite from '@/assets/svg/polslLogoLongWhite';
-import AiChatIcon from '@/components/AiChatIcon';
+import AiChatIcon from '@/components/AIChat/UI/AiChatIcon';
 import { useI18n } from '@/i18n';
 import type { TopBarProps } from '@/types/components';
 

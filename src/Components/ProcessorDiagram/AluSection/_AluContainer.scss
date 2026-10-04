@@ -1,0 +1,9 @@
+.calcConteiner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.calcConteinerAdditionalSpace {
+  justify-content: space-between !important;
+}

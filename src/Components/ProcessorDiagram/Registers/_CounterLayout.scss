@@ -1,0 +1,10 @@
+#counter {
+  display: grid;
+  grid-template-areas:
+    'il c c dl'
+    'cont cont wyl .';
+  grid-template-rows: auto 3rem;
+  grid-template-columns: auto 1fr 1fr auto;
+  justify-content: stretch;
+  align-items: stretch;
+}

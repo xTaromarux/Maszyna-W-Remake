@@ -2,24 +2,25 @@
 
 import { useI18n } from '@/I18n/Index';
 import type { LabCatalogDialogProps } from '@/Types/Components';
-import { useEffect, useRef } from 'react';
+import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
+import LabDetails from './LabCatalogDialog/Ui/LabDetails';
 
-export default function LabCatalogDialog({
+const LabCatalogDialog = ({
   visible = false,
   labs = [],
   selectedLabId = '',
   onClose,
   onSelectLab,
   onLoadLab,
-}: LabCatalogDialogProps) {
+}: LabCatalogDialogProps) => {
   const { t } = useI18n();
-  const dialog = useRef<HTMLDivElement | null>(null);
+  const dialog = useModalFocus<HTMLElement>(visible, onClose);
   const selectedLab = labs.find((lab) => lab.id === selectedLabId) || labs[0];
-  useEffect(() => {
-    if (!visible) return;
-    const previous = document.activeElement;
-    dialog.current?.focus();
-    return () => {
+  if (!visible) {
+    return null;
+  }
+
+  return () => {
       if (previous instanceof HTMLElement) previous.focus();
     };
   }, [visible]);
@@ -29,7 +30,9 @@ export default function LabCatalogDialog({
       data-component="LabCatalogDialog"
       className="labDialogBackdrop"
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose?.();
+        if (event.target === event.currentTarget) {
+          onClose?.();
+        }
       }}
     >
       <section
@@ -39,12 +42,6 @@ export default function LabCatalogDialog({
         role="dialog"
         aria-modal="true"
         aria-label={t('labs.dialog.aria')}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.stopPropagation();
-            onClose?.();
-          }
-        }}
       >
         <header className="labDialogHeader">
           <h2>{t('labs.dialog.title')}</h2>
@@ -65,26 +62,7 @@ export default function LabCatalogDialog({
               </button>
             ))}
           </aside>
-          {selectedLab && (
-            <article className="labDetails">
-              <h3>{selectedLab.title}</h3>
-              <p>{selectedLab.description}</p>
-              <h4>{t('labs.dialog.outcomesTitle')}</h4>
-              <ul className="labOutcomeList">
-                {selectedLab.outcomes.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <h4>{t('labs.dialog.pythonOverview')}</h4>
-              <pre className="pythonPreview">
-                <code>{selectedLab.pythonOverview}</code>
-              </pre>
-              <h4>{t('labs.dialog.asmMapping')}</h4>
-              <pre className="asmPreview">
-                <code>{selectedLab.asmStub}</code>
-              </pre>
-            </article>
-          )}
+          {selectedLab && <LabDetails lab={selectedLab} />}
         </div>
         <footer className="labDialogFooter">
           <button
@@ -99,4 +77,6 @@ export default function LabCatalogDialog({
       </section>
     </div>
   );
-}
+};
+
+export default LabCatalogDialog;

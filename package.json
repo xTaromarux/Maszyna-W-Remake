@@ -20,10 +20,11 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit && npm run typecheck:workers",
     "test": "tsx --test Tests/*.test.ts",
     "test:e2e": "playwright test",
-    "preview:static": "node Scripts/ServeStatic.mjs"
+    "preview:static": "node Scripts/ServeStatic.mjs",
+    "typecheck:workers": "tsc --project src/Workers/tsconfig.json"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.12.0",

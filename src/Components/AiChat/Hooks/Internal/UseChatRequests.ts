@@ -1,6 +1,7 @@
 import { useI18n } from '@/I18n/Index';
 import { getErrorMessage } from '@/Shared/Utils/Errors';
 import { ApiState } from '@/Types/Chat';
+import type { ChatWorkerRequest } from '@/Types/ChatWorker';
 import type { FormEvent } from 'react';
 import { useEffect } from 'react';
 import { API_URL, HEALTH_URL } from '../../ChatConfig';
@@ -49,7 +50,7 @@ export const useChatRequests = (
       return;
     }
 
-    runtime.current.worker?.postMessage({ type: 'cancel', messageId: id });
+    runtime.current.worker?.postMessage({ type: 'cancel', messageId: id } satisfies ChatWorkerRequest);
     finalizeMessage(id, true);
   };
 
@@ -60,7 +61,7 @@ export const useChatRequests = (
     const pendingMessageId = latest.current.currentAiMessageId;
 
     if (pendingMessageId) {
-      runtime.current.worker?.postMessage({ type: 'cancel', messageId: pendingMessageId });
+      runtime.current.worker?.postMessage({ type: 'cancel', messageId: pendingMessageId } satisfies ChatWorkerRequest);
     }
 
     stopAnimation();
@@ -193,7 +194,7 @@ export const useChatRequests = (
         sessionId: runtime.current.sessionId,
         apiUrl: API_URL,
         healthUrl: HEALTH_URL,
-      });
+      } satisfies ChatWorkerRequest);
     } catch (error) {
       if (!isActiveRequest(requestToken)) {
         return;

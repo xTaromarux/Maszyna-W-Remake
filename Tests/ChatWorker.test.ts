@@ -2,8 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import ts from 'typescript';
 
-const source = readFileSync(new URL('../src/Workers/ChatWorker.js', import.meta.url), 'utf8');
+const workerSource = readFileSync(new URL('../src/Workers/ChatWorker.ts', import.meta.url), 'utf8');
+const source = ts.transpileModule(workerSource, {
+  compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
+}).outputText;
 type WorkerMessage = {
   messageId?: string;
   text?: string;
@@ -22,6 +26,7 @@ function workerHarness(fetchImpl: typeof fetch) {
     resolveDone = resolve;
   });
   const context = vm.createContext({
+    exports: {},
     fetch: fetchImpl,
     AbortController,
     TextDecoder,
@@ -37,7 +42,7 @@ function workerHarness(fetchImpl: typeof fetch) {
       },
     },
   });
-  vm.runInContext(source, context, { filename: 'chat.worker.js' });
+  vm.runInContext(source, context, { filename: 'ChatWorker.ts' });
   return {
     messages,
     done,

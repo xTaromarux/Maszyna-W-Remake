@@ -1,6 +1,6 @@
 import type { BusLabelProps } from '@/Components/ProcessorDiagram/Types';
-const BusLabel = ({ busName, busValue, showInvisibleRegisters = false, mobileView = false, formatNumber }: BusLabelProps) => {
-  if (mobileView) {
+const BusLabel = ({ busName, busValue, showInvisibleRegisters = false, hideLabel = false, formatNumber }: BusLabelProps) => {
+  if (hideLabel) {
     return null;
   }
 

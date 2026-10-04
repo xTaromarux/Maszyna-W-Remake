@@ -26,7 +26,7 @@ export interface BusLabelProps {
   busName: string;
   busValue: number;
   showInvisibleRegisters?: boolean;
-  mobileView?: boolean;
+  hideLabel?: boolean;
   formatNumber: FormatNumber;
 }
 

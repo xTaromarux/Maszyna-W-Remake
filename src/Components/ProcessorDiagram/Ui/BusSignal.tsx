@@ -18,7 +18,7 @@ const BusSignal = ({
         busName={busName}
         busValue={busValue}
         showInvisibleRegisters={showInvisibleRegisters}
-        mobileView={mobileView}
+        hideLabel={mobileView}
         formatNumber={formatNumber}
       />
     </div>

@@ -15,7 +15,7 @@ const MobileMemoryHeader = ({
   onClickItem,
 }: MobileMemoryHeaderProps) => {
   const { t } = useI18n();
-  // BusLabel's mobileView flag hides the label, so the mobile header inverts it.
+  // Labels in this header are visible only in the mobile layout.
   const hideBusLabels = !mobileView;
 
   return (
@@ -36,7 +36,7 @@ const MobileMemoryHeader = ({
           busName="A"
           busValue={busAValue}
           showInvisibleRegisters={showInvisibleRegisters}
-          mobileView={hideBusLabels}
+          hideLabel={hideBusLabels}
           formatNumber={formatNumber}
         />
       </div>
@@ -85,7 +85,7 @@ const MobileMemoryHeader = ({
           busName="S"
           busValue={busSValue}
           showInvisibleRegisters={showInvisibleRegisters}
-          mobileView={hideBusLabels}
+          hideLabel={hideBusLabels}
           formatNumber={formatNumber}
         />
       </div>

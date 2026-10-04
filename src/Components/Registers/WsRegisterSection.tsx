@@ -6,7 +6,7 @@ import BusLabel from '../BusLabel';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function WSRegisterSection({
+const WSRegisterSection = ({
   visible,
   signals,
   WS,
@@ -17,9 +17,12 @@ export default function WSRegisterSection({
   onUpdateWS,
   onUpdateNumberFormat,
   onClickItem,
-}: WSRegisterSectionProps) {
+}: WSRegisterSectionProps) => {
   const isMobile = useWindowWidth() <= 768;
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="wsRegister">
       <SignalButton id="iws" signal={signals.iws} onClick={() => onClickItem?.('iws')} label="iws" spanClassNames="arrowRightOnBottom" />
@@ -54,4 +57,6 @@ export default function WSRegisterSection({
       )}
     </div>
   );
-}
+};
+
+export default WSRegisterSection;

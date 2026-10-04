@@ -20,7 +20,6 @@ test('the complete machine diagram renders on the server without browser globals
       ...machine,
       extras,
       wordBits: machine.codeBits + machine.addresBits,
-      rzInputs: machine.RZInputs,
     })
   );
   for (const id of [
@@ -42,7 +41,7 @@ test('the complete machine diagram renders on the server without browser globals
   ]) {
     assert.ok(markup.includes(`id="${id}"`), `${id} should be available in the full diagram`);
   }
-  assert.ok(markup.includes('role="button"'));
+  assert.ok(markup.includes('class="format-button"'));
   assert.ok(markup.includes('aria-pressed="false"'));
 });
 

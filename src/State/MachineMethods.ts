@@ -1291,7 +1291,6 @@ export const machineMethods: Omit<MachineActions, keyof MicroActions> & ThisType
     this.Y = 0;
     this.RM = 0;
     this.RZ = 0;
-    this.RZInputs = [0, 0, 0, 0];
     this.AP = 0;
     this.RP = 0;
     this.WS = 0;

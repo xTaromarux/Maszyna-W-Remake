@@ -5,7 +5,7 @@ import type { RBRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function RBRegisterSection({
+const RBRegisterSection = ({
   visible,
   RB,
   signals,
@@ -13,9 +13,12 @@ export default function RBRegisterSection({
   onUpdateRB,
   onUpdateNumberFormat,
   onClickItem,
-}: RBRegisterSectionProps) {
+}: RBRegisterSectionProps) => {
   const isMobile = useWindowWidth() <= 768;
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="rbRegister">
       <SignalButton
@@ -43,4 +46,6 @@ export default function RBRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default RBRegisterSection;

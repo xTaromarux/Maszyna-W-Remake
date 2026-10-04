@@ -2,16 +2,11 @@ import type { YRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function YRegisterSection({
-  visible,
-  Y,
-  signals,
-  numberFormat,
-  onUpdateY,
-  onUpdateNumberFormat,
-  onClickItem,
-}: YRegisterSectionProps) {
-  if (!visible) return null;
+const YRegisterSection = ({ visible, Y, signals, numberFormat, onUpdateY, onUpdateNumberFormat, onClickItem }: YRegisterSectionProps) => {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="yRegister">
       <SignalButton
@@ -39,4 +34,6 @@ export default function YRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default YRegisterSection;

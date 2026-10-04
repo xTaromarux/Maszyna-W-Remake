@@ -4,6 +4,7 @@ import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import { toUnsigned } from '@/Shared/Utils/Numbers';
 import type { CalcSectionProps } from '@/Types/Components';
 import RegisterComponent from './Registers/RegisterComponent';
+import AluBlock from './Registers/Ui/AluBlock';
 import SignalButton from './SignalButton';
 import WSRegisterSection from './Registers/WsRegisterSection';
 
@@ -11,7 +12,6 @@ export default function CalcSection({
   extras,
   signals,
   ACC,
-  JAML,
   WS,
   decSigned = false,
   wordBits = 8,
@@ -20,7 +20,6 @@ export default function CalcSection({
   formatNumber,
   onClickItem,
   onUpdateACC,
-  onUpdateJAML,
   onUpdateWS,
   onUpdateAccFormat,
   onUpdateNumberFormat,
@@ -88,14 +87,7 @@ export default function CalcSection({
             />
           ))}
         </div>
-        <RegisterComponent
-          id="jaml"
-          label="JAL"
-          model={JAML}
-          onUpdateModel={onUpdateJAML}
-          isEnableEditValue={false}
-          showFormatSelector={false}
-        />
+        <AluBlock />
         {!isMobile && (
           <>
             <SignalButton

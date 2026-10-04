@@ -2,7 +2,7 @@ import type { RMRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function RMRegisterSection({
+const RMRegisterSection = ({
   visible,
   RM,
   signals,
@@ -10,8 +10,11 @@ export default function RMRegisterSection({
   onUpdateRM,
   onUpdateNumberFormat,
   onClickItem,
-}: RMRegisterSectionProps) {
-  if (!visible) return null;
+}: RMRegisterSectionProps) => {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="rmRegister">
       <SignalButton
@@ -39,4 +42,6 @@ export default function RMRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default RMRegisterSection;

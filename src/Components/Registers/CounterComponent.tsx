@@ -2,7 +2,7 @@ import type { CounterComponentProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function CounterComponent({
+const CounterComponent = ({
   signals,
   programCounter,
   extras,
@@ -10,7 +10,7 @@ export default function CounterComponent({
   onClickItem,
   onUpdateProgramCounter,
   onUpdateNumberFormat,
-}: CounterComponentProps) {
+}: CounterComponentProps) => {
   return (
     <div id="counter">
       <SignalButton id="il" signal={signals.il} onClick={() => onClickItem?.('il')} label="il" spanClassNames="arrowRightOnBottom" />
@@ -47,4 +47,6 @@ export default function CounterComponent({
       </div>
     </div>
   );
-}
+};
+
+export default CounterComponent;

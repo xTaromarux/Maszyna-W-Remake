@@ -31,7 +31,6 @@ export function initialMachineState(this: Machine): MachineState {
     JAML: 0,
     mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
     programCounter: 0,
-    RZInputs: [0, 0, 0, 0],
 
     X: 0,
     Y: 0,

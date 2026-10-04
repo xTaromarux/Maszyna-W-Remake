@@ -2,7 +2,7 @@ import type { APRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function APRegisterSection({
+const APRegisterSection = ({
   visible,
   AP,
   signals,
@@ -10,8 +10,11 @@ export default function APRegisterSection({
   onUpdateAP,
   onUpdateNumberFormat,
   onClickItem,
-}: APRegisterSectionProps) {
-  if (!visible) return null;
+}: APRegisterSectionProps) => {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="apRegister">
       <SignalButton
@@ -31,4 +34,6 @@ export default function APRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default APRegisterSection;

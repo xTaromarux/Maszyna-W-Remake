@@ -109,12 +109,10 @@ export default function Main() {
           extras={m.extras}
           BusA={m.BusA}
           BusS={m.BusS}
-          rzInputs={m.RZInputs}
           wordBits={m.codeBits + m.addresBits}
           decToCommand={m.decToCommand}
           decToArgument={m.decToArgument}
           onClickItem={m.handleSignalToggle}
-          onUpdateRzInputs={update('RZInputs')}
           onUpdateNumberFormat={({ field, value }) => {
             m.registerFormats[field] = value;
           }}

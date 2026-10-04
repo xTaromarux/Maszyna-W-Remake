@@ -160,7 +160,6 @@ export interface MachineState extends MachineRegisters {
   addresBits: number;
   codeBits: number;
   mem: number[];
-  RZInputs: number[];
   DEV_READY: number;
   DEV_IN: number;
   DEV_OUT: number;

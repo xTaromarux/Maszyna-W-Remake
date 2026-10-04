@@ -5,17 +5,12 @@ import type { GRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function GRegisterSection({
-  visible,
-  G,
-  signals,
-  numberFormat,
-  onUpdateG,
-  onUpdateNumberFormat,
-  onClickItem,
-}: GRegisterSectionProps) {
+const GRegisterSection = ({ visible, G, signals, numberFormat, onUpdateG, onUpdateNumberFormat, onClickItem }: GRegisterSectionProps) => {
   const isMobile = useWindowWidth() <= 768;
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="gRegister">
       <SignalButton
@@ -43,4 +38,6 @@ export default function GRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default GRegisterSection;

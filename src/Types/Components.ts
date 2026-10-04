@@ -86,13 +86,11 @@ export interface MaszynaWProps extends MachineRegisters, RegisterUpdates {
   extras: Extras;
   wordBits?: number;
   decSigned?: boolean;
-  rzInputs?: number[];
   formatNumber: FormatNumber;
   decToCommand: (value: number) => RuntimeCommand | undefined;
   decToArgument: (value: number) => number;
   onClickItem?: Update<string>;
   onUpdateMem?: Update<number[]>;
-  onUpdateRzInputs?: Update<number[]>;
   onUpdateNumberFormat?: Update<{ field: RegisterFormatField; value: NumberFormat }>;
 }
 export type SvgChildrenProps = ChildrenProps & Pick<IconProps, 'fill' | 'stroke'>;
@@ -392,7 +390,6 @@ export interface RegisterComponentProps {
   signedDec?: boolean;
   wordBits?: number;
   showFormatSelector?: boolean;
-  isEnableEditValue?: boolean;
   onUpdateModel?: Update<number>;
   onUpdateNumberFormat?: Update<NumberFormat>;
 }
@@ -427,10 +424,8 @@ export interface RPRegisterSectionProps {
 export interface RZRegisterSectionProps {
   visible?: boolean;
   RZ?: number;
-  rzInputs?: number[];
   numberFormat?: NumberFormat;
   onUpdateRZ?: Update<number>;
-  onUpdateRzInputs?: Update<number[]>;
   onUpdateNumberFormat?: Update<NumberFormat>;
 }
 

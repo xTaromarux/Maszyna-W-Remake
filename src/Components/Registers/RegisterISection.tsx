@@ -2,14 +2,7 @@ import type { RegisterISectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function RegisterISection({
-  I,
-  signals,
-  numberFormat,
-  onUpdateI,
-  onUpdateNumberFormat,
-  onClickItem,
-}: RegisterISectionProps) {
+const RegisterISection = ({ I, signals, numberFormat, onUpdateI, onUpdateNumberFormat, onClickItem }: RegisterISectionProps) => {
   return (
     <div id="iRegister">
       <SignalButton
@@ -48,4 +41,6 @@ export default function RegisterISection({
       </div>
     </div>
   );
-}
+};
+
+export default RegisterISection;

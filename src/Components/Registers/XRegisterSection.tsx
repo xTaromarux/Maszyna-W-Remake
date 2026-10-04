@@ -2,16 +2,11 @@ import type { XRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';
 
-export default function XRegisterSection({
-  visible,
-  X,
-  signals,
-  numberFormat,
-  onUpdateX,
-  onUpdateNumberFormat,
-  onClickItem,
-}: XRegisterSectionProps) {
-  if (!visible) return null;
+const XRegisterSection = ({ visible, X, signals, numberFormat, onUpdateX, onUpdateNumberFormat, onClickItem }: XRegisterSectionProps) => {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div id="xRegister">
       <SignalButton
@@ -39,4 +34,6 @@ export default function XRegisterSection({
       />
     </div>
   );
-}
+};
+
+export default XRegisterSection;

@@ -48,7 +48,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.register-container .format-menu div {
+.register-container .format-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
   padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
@@ -56,11 +62,11 @@
   text-align: center;
 }
 
-.register-container .format-menu div:hover {
+.register-container .format-menu button:hover {
   background-color: var(--buttonHoverColor);
 }
 
-.register-container .format-menu div.active {
+.register-container .format-menu button.active {
   background-color: var(--signal-active);
   color: white;
 }

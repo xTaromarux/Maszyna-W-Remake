@@ -436,13 +436,12 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   machine.oddDelay = 1;
   machine.handleProgramSectionCompile('iak\niak\niak');
   machine.RZ = 3;
-  machine.RZInputs = [1, 1, 0, 0];
   machine.runCode();
   machine.resetValues();
   await delay(10);
   assert.equal(machine.ACC, 0);
   assert.equal(machine.isRunning, false);
-  assert.deepEqual([...machine.RZInputs], [0, 0, 0, 0]);
+  assert.equal(machine.RZ, 0);
 });
 
 test('IRQ operations use framework-independent translations and no timers in fast mode', (context) => {

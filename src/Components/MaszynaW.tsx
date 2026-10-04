@@ -45,7 +45,6 @@ export default function MaszynaW(props: MaszynaWProps) {
     RZ,
     RP,
     WS,
-    rzInputs,
     wordBits = 8,
     decSigned = false,
     decToCommand,
@@ -102,13 +101,7 @@ export default function MaszynaW(props: MaszynaWProps) {
     <div id="W" className={manualMode ? 'manualMode' : ''}>
       {hasAnyInterrupts && (
         <div className="layer">
-          <RZRegisterSection
-            visible={extras.interrupts?.rzRegister}
-            RZ={RZ}
-            rzInputs={rzInputs}
-            onUpdateRzInputs={props.onUpdateRzInputs}
-            {...registerProps('RZ')}
-          />
+          <RZRegisterSection visible={extras.interrupts?.rzRegister} RZ={RZ} {...registerProps('RZ')} />
           <RPRegisterSection visible={extras.interrupts?.rpRegister} RP={RP} {...registerProps('RP')} />
           <div className="additionalInterruptsSignalsConteiner">
             {extras.interrupts?.rintSignal && (

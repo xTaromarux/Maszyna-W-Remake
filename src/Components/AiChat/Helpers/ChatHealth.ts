@@ -1,6 +1,6 @@
 import type { HealthResponse } from '@/Types/Chat';
 
-async function requestHealth(url: string, action: 'check' | 'wake', signal: AbortSignal): Promise<HealthResponse> {
+const requestHealth = async (url: string, action: 'check' | 'wake', signal: AbortSignal): Promise<HealthResponse> => {
   signal.throwIfAborted();
 
   const querySeparator = url.includes('?') ? '&' : '?';
@@ -11,7 +11,7 @@ async function requestHealth(url: string, action: 'check' | 'wake', signal: Abor
     throw new Error(`HTTP ${response.status}`);
   }
 
-  let body;
+  let body: unknown;
 
   try {
     body = await response.json();
@@ -29,10 +29,10 @@ async function requestHealth(url: string, action: 'check' | 'wake', signal: Abor
   }
 
   return body as HealthResponse;
-}
+};
 
 /** Keep all checks and body reads within the caller's abort deadline. */
-export async function checkChatHealth(url: string, signal: AbortSignal, onWaking: () => void): Promise<void> {
+export const checkChatHealth = async (url: string, signal: AbortSignal, onWaking: () => void): Promise<void> => {
   const initialHealth = await requestHealth(url, 'check', signal);
   const needsWakeUp = initialHealth.upstream_ok === false;
 
@@ -49,4 +49,4 @@ export async function checkChatHealth(url: string, signal: AbortSignal, onWaking
   if (healthAfterWakeUp.upstream_ok === false) {
     throw new Error('Model is not ready');
   }
-}
+};

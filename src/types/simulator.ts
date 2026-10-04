@@ -149,7 +149,8 @@ export interface MachineState extends MachineRegisters {
   wsPingTimer: Timer | null;
   decSigned: boolean;
   _condState: ConditionalExecution | null;
-  _pendingMemoryClear: number | null;
+  _pendingStackWrite: { address: number; type: StackKind } | null;
+  _pendingStackRead: number | null;
   autocompleteEnabled: boolean;
   autoResetOnAsmCompile: boolean;
   isMobile: boolean;
@@ -164,6 +165,7 @@ export interface MachineState extends MachineRegisters {
   DEV_IN: number;
   DEV_OUT: number;
   DEV_BUSY: boolean;
+  deviceOperationTimer: Timer | null;
   runLoopTimer: Timer | null;
   isRunning: boolean;
   stack: StackEntry[];
@@ -225,7 +227,6 @@ export interface MachineActions {
   toWord(v: number): number;
   wordMask(): number;
   addrMask(): number;
-  updateAP(): void;
   stackPush(type: StackKind, value: number): void;
   stackPop(expectedType: StackKind): number;
   handleProgramSectionCompile(payload: string | CompiledPayload): void;
@@ -280,9 +281,8 @@ export interface MachineActions {
 }
 
 export interface MicroActions {
-  detectAndHandleStackOperations(): void;
   executeSignalsFromNextLine(): void;
-  _instant(fn: () => void): boolean;
+  cancelDeviceOperation(): void;
   il(): void;
   dl(): void;
   wyl(): void;

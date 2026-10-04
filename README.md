@@ -4,7 +4,7 @@ Interaktywny symulator Maszyny W przepisany z Vue 3/Vite na React 19 i Next.js 1
 
 ## Uruchomienie
 
-Wymagany Node.js >=20.9 (weryfikacja na Node 24) i npm.
+Wymagany Node.js 20.19+, 22.13+ lub 24+ (weryfikacja na Node 24) i npm. Wymaganie uwzględnia ESLint 10.
 
 ```sh
 npm ci
@@ -81,6 +81,7 @@ Rejestr instrukcji `I` przechowuje pełne słowo (kod rozkazu i argument); sygna
 npm --prefix hf-proxy ci
 npm test
 npm run typecheck
+npm run lint
 npm run build
 npx playwright install chromium
 npm run test:e2e
@@ -88,6 +89,8 @@ npm run build:esp
 npm audit
 npm --prefix hf-proxy audit
 ```
+
+ESLint dla JavaScript i TypeScript jest skonfigurowany w `eslint.config.mjs`. Operatory bitowe są dozwolone (`no-bitwise: off`), ponieważ symulują działanie procesora. `npm run lint:fix` stosuje dostępne automatyczne poprawki; formatowanie pozostaje zadaniem Prettier.
 
 Testy jednostkowe obejmują assembler, silnik, renderowanie rejestrów, worker czatu i proxy z lokalnym zastępczym API. Testy E2E uruchamiają gotowy build na porcie 3000 lub używają istniejącego serwera. Można wskazać inny adres przez `E2E_BASE_URL` i lokalną przeglądarkę przez `PLAYWRIGHT_CHANNEL=chrome`. Nie wymagają prawdziwego klucza AI ani sprzętu ESP32. `typecheck` najpierw generuje lokalne typy Next.js; `next-env.d.ts` i katalog `.next/` nie są wersjonowane.
 

@@ -5,6 +5,7 @@ import { clamp } from '../shared/utils/numbers';
 import { getStorageItem, setStorageItem } from '../shared/utils/storage';
 import { initialMachineState } from './initialMachineState';
 import { machineMethods } from './machineMethods';
+import { createMicroInstructionActions } from './microInstructions/microInstructionActions';
 import { machineSelectors } from './machineSelectors';
 
 export const persistedSettings = [
@@ -38,7 +39,6 @@ export function createMachineStore(): MachineStore {
     rawValues = new WeakMap<object, object>();
   // Populated synchronously below before the store is exposed.
   const target = {} as Machine;
-  let machine: Machine;
   const publish = () => {
     if (scheduled) return;
     scheduled = true;
@@ -127,7 +127,7 @@ export function createMachineStore(): MachineStore {
     byPath.set(key, proxy);
     return proxy;
   }
-  machine = new Proxy(target, {
+  const machine: Machine = new Proxy(target, {
     get(object, key) {
       return observable(Reflect.get(object, key, machine), String(key));
     },
@@ -146,6 +146,7 @@ export function createMachineStore(): MachineStore {
     },
   });
   for (const [name, method] of Object.entries(machineMethods)) Reflect.set(target, name, method.bind(machine));
+  Object.assign(target, createMicroInstructionActions(machine));
   target.t = translate;
   Object.assign(target, initialMachineState.call(machine));
   for (const [name, selector] of Object.entries(machineSelectors))

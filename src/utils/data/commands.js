@@ -76,7 +76,7 @@ export const commandList = [
     mnemonics: { en: 'PWR' },
     args: 0,
     description: { pl: 'rozkaz pwr', en: 'PWR instruction' },
-    lines: `czyt wys wei il;\nwyws wea;\nczyt wys sa wel iws;`,
+    lines: `czyt wys wei il;\nwyws wea;\nczyt wys sa wea wel iws;`,
   },
 
   {

@@ -2,7 +2,7 @@ import type { DiagnosticOptions, DiagnosticToken } from '@/types/diagnostics';
 import { ErrorLevel } from '@/types/errors';
 import { BaseAppError } from '../errors';
 import { translate as t } from '../i18n';
-import { clamp } from '../shared/utils/numbers'; /* eslint-disable prefer-arrow/prefer-arrow-functions */
+import { clamp } from '../shared/utils/numbers';
 import type { DiagnosticData, DiagnosticLocation, Severity } from '../types/diagnostics';
 
 export function makeCodeFrame(

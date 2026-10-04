@@ -1,5 +1,4 @@
 import type { CommandArity } from '@/types/registry';
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { collectCommandAliases, normalizeMnemonicToken } from '../shared/utils/commandMnemonics';
 import type { InstructionRegistry, NormalizedRuntimeCommand, RuntimeCommand, RuntimeCommandKind } from '../types/registry';
 import { WlanError } from './error';

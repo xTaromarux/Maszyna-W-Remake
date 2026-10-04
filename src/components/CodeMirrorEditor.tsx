@@ -95,7 +95,7 @@ export default function CodeMirrorEditor({
   autocompleteEnabled = true,
   commandList = EMPTY_COMMANDS,
   maxHeight = '32rem',
-  devStickyCompletion,
+  devStickyCompletion: _devStickyCompletion,
   className = '',
   style,
   ...rest

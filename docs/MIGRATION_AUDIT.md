@@ -35,6 +35,14 @@ flowchart TD
 
 `src/components/InstructionsEditor/` rozdziela widok (`ProgramSection`), przyciski (`UI/ProgramActions`), stan i obsługę kompilacji (`hooks/useProgramCompilation`) oraz przygotowanie wyniku (`helpers/prepareProgramCompilation`). Cały wynik jest sprawdzany przed resetem rejestrów i zapisem do pamięci. Błąd kompilacji zachowuje stan maszyny i odblokowany edytor. Adresy instrukcji oraz danych muszą mieścić się w pamięci określonej przez liczbę bitów adresowych. Wspólny `CodeMirrorEditor` pozostaje poza zakresem tego refaktoru.
 
+## Refaktor mikrooperacji (4 października 2026)
+
+`src/state/microInstructions/` rozdziela transfery rejestrów, ALU, pamięć, stos, urządzenia, operacje rejestrów przerwań i prezentację sygnałów. `createMicroInstructionActions` dostosowuje funkcje przyjmujące stan maszyny do interfejsu magazynu. Każda mikrooperacja zmienia stan tylko raz; szybkie wykonanie pomija podświetlenie, a ukończenie pracy urządzenia ma osobny timer. Kolejność sygnałów pozostaje jawna i zgodna z dotychczasowym wykonaniem.
+
+Mnożenie zachowuje najmłodsze bity przy słowach do 30 bitów. Dzielenie i przesunięcia używają całego słowa JAML zgodnie z `Opis_Maszyny_W.docx`; przesunięcie co najmniej o szerokość słowa daje zero. Stos śledzi zakończone zapisy i odczyty pamięci między fazami oraz nie nadpisuje AP (adresu obsługi przerwania według `Lab4-przerwania.pdf`). Domyślny PWR przygotowuje A przez `wea`, a wykonanie strukturalne respektuje STOP zapisany w metadanych kompilatora. Testy obejmują zagnieżdżone podprogramy, oba tryby wykonania, reset śledzenia stosu i anulowanie urządzenia.
+
+Pełny protokół przerwań pozostaje poza zakresem tego refaktoru: dotychczasowe połączenie RM z magistralą S oraz obsługa `eni/rint/RP` wymagają osobnego porównania z dokumentacją maszyny.
+
 ## Wszystkie pierwotne zależności bezpośrednie
 
 „Wersja obecna” oznacza wersję rozwiązaną w pliku blokady, a nie tylko zakres dopuszczony w manifeście. Kolumna decyzji dotyczy deklaracji bezpośredniej; usunięta deklaracja nie zawsze oznacza zniknięcie pakietu z całego grafu.
@@ -80,7 +88,7 @@ flowchart TD
 | `tsx`              | `4.23.13`        | Uruchamianie testów TypeScript przez wbudowany runner `node:test`.                            |
 | `@playwright/test` | `1.63.0`         | Powtarzalne testy przeglądarkowe interakcji symulatora, także przy rozmiarze ekranu telefonu. |
 
-Wymaganie głównego projektu zapisano jako Node `>=20.9.0`. Badanie wykonywano na Node `24.14.1`. `hf-proxy` jest osobnym pakietem z własnym plikiem blokady; jego deklaracja Node `>=18` pozostała odrębna.
+Pierwotne wymaganie głównego projektu wynosiło Node `>=20.9.0`. Po dodaniu ESLint 10 projekt wymaga Node `^20.19.0 || ^22.13.0 || >=24`. Badanie wykonywano na Node `24.14.1`. `hf-proxy` jest osobnym pakietem z własnym plikiem blokady; jego deklaracja Node `>=18` pozostała odrębna.
 
 ## Graf zależności przechodnich i audyt npm
 
@@ -267,6 +275,7 @@ npm ci
 npm ci --prefix hf-proxy
 npm run build:parsers
 npm run typecheck
+npm run lint
 npm test
 npm run build
 npm start

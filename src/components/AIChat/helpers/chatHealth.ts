@@ -1,4 +1,3 @@
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import type { HealthResponse } from '@/types/chat';
 
 async function requestHealth(url: string, action: 'check' | 'wake', signal: AbortSignal): Promise<HealthResponse> {

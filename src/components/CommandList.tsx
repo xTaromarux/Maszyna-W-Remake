@@ -249,7 +249,7 @@ export default function CommandList({
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.lst,.json';
-    input.onchange = async (event) => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
       try {

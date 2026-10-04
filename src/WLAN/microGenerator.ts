@@ -1,6 +1,5 @@
 import type { ConditionalLines, ConditionalBuild } from '@/types/microGenerator';
 import { normalizeMnemonicToken } from '@/shared/utils/commandMnemonics';
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { translate as t } from '../i18n';
 import type { IRInstruction, ProgramIR } from '../types/assemblerIR';
 import type { Signal, SignalSet, ConditionalPhase as TemplateConditionalPhase, Phase as TemplatePhase } from '../types/instructions';

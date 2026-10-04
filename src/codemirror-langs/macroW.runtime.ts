@@ -1,6 +1,5 @@
 import type { MacroCompletionOption } from '@/types/editor';
 import type { MacroCompletionItem } from '../types/editor';
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { autocompletion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
 import { EditorState, RangeSetBuilder, StateField } from '@codemirror/state';

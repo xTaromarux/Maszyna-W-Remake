@@ -18,7 +18,8 @@ export function initialMachineState(this: Machine): MachineState {
     wsPingTimer: null,
     decSigned: false,
     _condState: null,
-    _pendingMemoryClear: null,
+    _pendingStackWrite: null,
+    _pendingStackRead: null,
     autocompleteEnabled: true,
     autoResetOnAsmCompile: true,
     isMobile: typeof window !== 'undefined' && window.innerWidth <= 768,
@@ -51,6 +52,7 @@ export function initialMachineState(this: Machine): MachineState {
     DEV_IN: 0,
     DEV_OUT: 0,
     DEV_BUSY: false,
+    deviceOperationTimer: null,
 
     runLoopTimer: null,
     isRunning: false,

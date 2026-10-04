@@ -1,5 +1,4 @@
 import type { AsmPipelineResult } from '../types/asmPipeline';
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import type { MicroProgramEntry } from '../types/model';
 import type { RuntimeCommand } from '../types/registry';
 import { generateMicroProgram, injectCJumpMeta } from './microGenerator';

@@ -1,4 +1,3 @@
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { translate as t } from '../i18n';
 import type { Token, TokenType } from '../types/model';
 import { errorAt } from './error';

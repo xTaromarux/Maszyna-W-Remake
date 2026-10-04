@@ -1,7 +1,5 @@
 import type { ConditionalChunk } from '@/types/commandAdapter';
 import type { RuntimeCommand } from '@/types/registry';
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Built } from '../types/commandAdapter';
 import type { ConditionalPhase, Signal, SignalSet, Phase as TemplatePhase } from '../types/instructions';
 

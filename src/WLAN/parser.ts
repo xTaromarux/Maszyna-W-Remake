@@ -1,7 +1,4 @@
 import type { ParseOptions, RawLine, RawNode, UnresolvedOperand } from '../types/parser';
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/member-ordering */
-/* eslint-disable prefer-arrow/prefer-arrow-functions */
 import { translate as t } from '../i18n';
 import type {
   IRDirective,

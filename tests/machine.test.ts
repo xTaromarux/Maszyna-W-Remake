@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test, { type TestContext } from 'node:test';
 import { createMachineStore } from '../src/state/createMachineStore';
+import { prepareProgramCompilation } from '../src/components/InstructionsEditor/helpers/prepareProgramCompilation';
 
 function fixture(context: TestContext, start = false) {
   const saved = new Map<string, string>();
@@ -23,6 +24,292 @@ function fixture(context: TestContext, start = false) {
 }
 
 const delay = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const loadProgram = (machine: any, source: string) => {
+  const result = prepareProgramCompilation(source, {
+    commandList: machine.commandList,
+    codeBits: machine.codeBits,
+    addresBits: machine.addresBits,
+  });
+
+  machine.applyInitMemory(result.memoryAssignments);
+  machine.handleProgramSectionCompile(result.code);
+};
+
+test('multiplication preserves low bits of 30-bit words in both execution modes', (context) => {
+  const { machine } = fixture(context);
+  machine.codeBits = 16;
+  machine.addresBits = 14;
+
+  for (const fast of [false, true]) {
+    machine.isFastRunning = fast;
+    machine.ACC = 2 ** 29 + 1;
+    machine.JAML = 2 ** 29 + 1;
+    machine.mno();
+    assert.equal(machine.JAML, 1);
+
+    machine.ACC = 2 ** 30 - 1;
+    machine.JAML = 2 ** 30 - 1;
+    machine.mno();
+    assert.equal(machine.JAML, 1);
+  }
+});
+
+test('division uses the full word and retains the zero-divisor policy in both modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.isFastRunning = fast;
+    machine.ACC = 512;
+    machine.JAML = 256;
+    machine.dziel();
+    assert.equal(machine.JAML, 2);
+
+    machine.JAML = 0;
+    machine.dziel();
+    assert.equal(machine.JAML, 0);
+  }
+});
+
+test('logical shifts use the full count and clear words at or above their width', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.isFastRunning = fast;
+    machine.ACC = 512;
+    machine.JAML = 8;
+    machine.shr();
+    assert.equal(machine.ACC, 2);
+
+    machine.ACC = 1;
+    machine.shl();
+    assert.equal(machine.ACC, 256);
+
+    for (const count of [10, 32, 1023]) {
+      for (const signal of ['shr', 'shl']) {
+        machine.ACC = 1023;
+        machine.JAML = count;
+        machine[signal]();
+        assert.equal(machine.ACC, 0);
+      }
+    }
+  }
+});
+
+test('nested subroutine calls track committed stack writes without modifying AP', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    loadProgram(machine, 'SDP outer\nSTP\nouter: SDP inner\nPWR\ninner: PWR');
+    machine.AP = 9;
+    machine.isFastRunning = fast;
+    let maximumDepth = 0;
+    let phasesRemaining = 100;
+
+    while (machine.codeCompiled && phasesRemaining > 0) {
+      machine.executeLine();
+      maximumDepth = Math.max(maximumDepth, machine.stack.length);
+      assert.equal(machine.AP, 9);
+      phasesRemaining--;
+    }
+
+    assert.equal(machine.codeCompiled, false);
+    assert.equal(maximumDepth, 2);
+    assert.deepEqual([...machine.stack], []);
+    assert.equal(machine.WS, 0);
+    assert.equal(machine.mem[15], 0);
+    assert.equal(machine.mem[14], 0);
+    assert.equal(machine.programCounter, 2);
+    assert.equal(
+      machine.logs.some((log: any) => log.class === 'error' || log.class === 'warning'),
+      false
+    );
+  }
+});
+
+test('data push metadata appears only after memory write and pop restores memory contents', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    machine.ACC = 7;
+
+    for (const phase of ['dws', 'wyws wea wyak wes']) {
+      machine.nextLine = new Set(phase.split(' '));
+      machine.executeSignalsFromNextLine();
+      assert.equal(machine.stack.length, 0);
+    }
+
+    machine.nextLine = new Set(['pisz', 'wyl', 'wea']);
+    machine.executeSignalsFromNextLine();
+    assert.deepEqual([...machine.stack], [{ type: 'Data', value: 7 }]);
+    assert.equal(machine.mem[15], 7);
+
+    // Pop uses the actual memory value, even if the metadata snapshot is stale.
+    machine.mem[15] = 11;
+    machine.nextLine = new Set(['wyws', 'wea', 'iws']);
+    machine.executeSignalsFromNextLine();
+    machine.nextLine = new Set(['czyt', 'wys', 'weja', 'przep', 'weak', 'wyl', 'wea']);
+    machine.executeSignalsFromNextLine();
+
+    assert.equal(machine.ACC, 11);
+    assert.equal(machine.stack.length, 0);
+    assert.equal(machine.WS, 0);
+    assert.equal(machine.mem[15], 0);
+  }
+});
+
+test('device completion survives subsequent phases and signal clearing', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  const { machine } = fixture(context);
+  machine.oddDelay = 10;
+  machine.DEV_IN = 65;
+  machine.start();
+  assert.equal(machine.DEV_BUSY, true);
+  const deviceTimer = machine.deviceOperationTimer;
+
+  machine.nextLine = new Set(['iak']);
+  machine.executeSignalsFromNextLine();
+  assert.equal(machine.DEV_BUSY, true);
+  assert.equal(machine.deviceOperationTimer, deviceTimer);
+  machine.start();
+  assert.equal(machine.deviceOperationTimer, deviceTimer);
+
+  context.mock.timers.tick(20);
+  assert.equal(machine.DEV_BUSY, false);
+  assert.equal(machine.deviceOperationTimer, null);
+  assert.equal(machine.DEV_READY, 0);
+  assert.equal(machine.G, 0);
+
+  machine.wyrb();
+  assert.equal(machine.BusS, 65);
+  assert.equal(machine.DEV_IN, 0);
+  assert.equal(machine.DEV_READY, 1);
+});
+
+test('stop cancels device completion and fast device operations create no timers', (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  const { machine } = fixture(context);
+  machine.oddDelay = 10;
+  machine.start();
+  machine.stopRun();
+  assert.equal(machine.DEV_BUSY, false);
+  assert.equal(machine.deviceOperationTimer, null);
+  machine.DEV_IN = 65;
+  context.mock.timers.tick(100);
+  assert.equal(machine.DEV_READY, 1, 'cancelled completion must not observe later input');
+
+  machine.isFastRunning = true;
+  machine.start();
+  assert.equal(machine.DEV_BUSY, false);
+  assert.equal(machine.DEV_READY, 0);
+  assert.equal(machine.deviceOperationTimer, null);
+  assert.equal(machine.activeTimeouts.length, 0);
+});
+
+test('pausing preserves stack preparation but replacing a program discards it', (context) => {
+  const { machine } = fixture(context);
+  machine.ACC = 7;
+  machine.nextLine = new Set(['dws']);
+  machine.executeSignalsFromNextLine();
+  machine.nextLine = new Set(['wyws', 'wea', 'wyak', 'wes']);
+  machine.executeSignalsFromNextLine();
+  machine.stopRun();
+  assert.deepEqual(machine._pendingStackWrite, { address: 15, type: 'Data' });
+
+  machine.nextLine = new Set(['pisz']);
+  machine.executeSignalsFromNextLine();
+  assert.equal(machine.stack.length, 1);
+
+  machine.nextLine = new Set(['iws']);
+  machine.executeSignalsFromNextLine();
+  assert.equal(machine._pendingStackRead, 15);
+
+  machine.handleProgramSectionCompile('czyt wys weja weak');
+  machine.executeLine();
+  assert.equal(machine.mem[15], 7);
+  assert.equal(machine.stack.length, 1);
+  assert.equal(machine._pendingStackRead, null);
+
+  machine.nextLine = new Set(['wyws', 'wea', 'wyak', 'wes']);
+  machine.executeSignalsFromNextLine();
+  assert.notEqual(machine._pendingStackWrite, null);
+  machine.handleProgramSectionCompile('pisz');
+  machine.executeLine();
+  assert.equal(machine.stack.length, 1);
+  assert.equal(machine._pendingStackWrite, null);
+});
+
+test('stack metadata follows the actual memory write when a phase also reads memory', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    machine.ACC = 7;
+    machine.nextLine = new Set(['dws']);
+    machine.executeSignalsFromNextLine();
+    machine.nextLine = new Set(['wyws', 'wea', 'wyak', 'wes']);
+    machine.executeSignalsFromNextLine();
+
+    machine.mem[15] = 11;
+    machine.nextLine = new Set(['czyt', 'pisz']);
+    machine.executeSignalsFromNextLine();
+
+    assert.equal(machine.mem[15], 11);
+    assert.deepEqual([...machine.stack], [{ type: 'Data', value: 11 }]);
+  }
+});
+
+test('memory, bus, ALU and device phases produce the same state in both execution modes', (context) => {
+  const { machine } = fixture(context);
+  const snapshots: unknown[] = [];
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    machine.ACC = 7;
+    machine.mem[0] = 5;
+    machine.DEV_IN = 65;
+    machine.DEV_READY = 0;
+
+    for (const phase of ['czyt wys weja dod weak', 'wyak wes pisz', 'wyrb weja przep weak', 'wyak wes', 'pisz']) {
+      machine.nextLine = new Set(phase.split(' '));
+      machine.executeSignalsFromNextLine();
+    }
+
+    snapshots.push({
+      accumulator: machine.ACC,
+      alu: machine.JAML,
+      storage: machine.S,
+      bus: machine.BusS,
+      memory: [...machine.mem],
+      input: machine.DEV_IN,
+      ready: machine.DEV_READY,
+      deviceRegister: machine.RB,
+    });
+  }
+
+  assert.deepEqual(snapshots[0], snapshots[1]);
+  assert.equal(machine.ACC, 65);
+  assert.equal(machine.mem[0], 65);
+});
+
+test('assembler STOP terminates before following instructions in both modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    loadProgram(machine, 'STP\nDOD value\nvalue: RST 7');
+    machine.isFastRunning = fast;
+    machine.executeLine();
+    assert.equal(machine.codeCompiled, false);
+    assert.equal(machine.ACC, 0);
+    assert.equal(machine.programCounter, 1);
+  }
+});
 
 test('log IDs remain stable when repeated messages coalesce and distinct entries share a timestamp', (context) => {
   const { machine } = fixture(context);

@@ -2,15 +2,13 @@ import { getErrorMessage } from '@/shared/utils/errors';
 import { generateId } from '@/shared/utils/identifiers';
 import { ErrorLevel } from '@/types/errors';
 import type { MicroProgramEntry, Phase } from '@/types/model';
-import type { ExtrasPatch, LogEntry, LogError, Machine, MachineActions } from '@/types/simulator';
-import { mainMicroInstructionExecutionMethods } from '../components/microInstructions/microInstructionExecutionMethods';
+import type { ExtrasPatch, LogEntry, LogError, Machine, MachineActions, MicroActions } from '@/types/simulator';
 import { setLocale } from '../i18n/index';
 import { sleep } from '../shared/utils/async';
 import { clamp, formatRadix, toSigned } from '../shared/utils/numbers';
 
 // Domain operations preserved from the original simulator, independent of the UI framework.
-export const machineMethods: MachineActions & ThisType<Machine> = {
-  ...mainMicroInstructionExecutionMethods,
+export const machineMethods: Omit<MachineActions, keyof MicroActions> & ThisType<Machine> = {
   showToast(message, options = {}) {
     if (!message) return;
     const { type = 'warning', duration = 2400 } = options || {};
@@ -137,32 +135,15 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
     return (1 << this.addresBits) - 1;
   },
 
-  updateAP() {
-    const addressEntries = this.stack.filter((item) => item.type === 'Address');
-    if (addressEntries.length > 0) {
-      this.AP = addressEntries[addressEntries.length - 1].value;
-    } else {
-      this.AP = 0;
-    }
-  },
-
   stackPush(type, value) {
-    // type: 'Data' | 'Address' zastanawiam się czy rozdzielać to programowo w taki sposób czy to jest bardziej problem programisty implementującego assembler...
-    // w razie W będzie łatwe do zmiany
     const entry = { type, value: value & this.wordMask() };
     this.stack.push(entry);
-    console.log('Stack PUSH:', entry, 'New stack:', this.stack);
 
-    if (type === 'Address') {
-      this.updateAP();
-      this.addLog(this.t('logs.stackPushAp', { type, value, ap: this.AP, ws: this.WS, size: this.stack.length }), 'stack');
-    } else {
-      this.addLog(this.t('logs.stackPush', { type, value, ws: this.WS, size: this.stack.length }), 'stack');
-    }
+    // AP is the interrupt-handler address, independent of return addresses stored on the stack.
+    this.addLog(this.t('logs.stackPush', { type, value: entry.value, ws: this.WS, size: this.stack.length }), 'stack');
   },
 
   stackPop(expectedType) {
-    // expectedType: 'Data' | 'Address' | null
     if (this.stack.length === 0) {
       this.addLog(this.t('logs.stackPopEmpty'), 'error');
       return 0;
@@ -174,21 +155,15 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
       this.addLog(this.t('logs.stackPopExpected', { expected: expectedType, actual: entry.type }), 'warning');
     }
 
-    if (entry.type === 'Address') {
-      this.updateAP();
-      this.addLog(
-        this.t('logs.stackPopAp', { type: entry.type, value: entry.value, ap: this.AP, ws: this.WS, size: this.stack.length }),
-        'stack'
-      );
-    } else {
-      this.addLog(this.t('logs.stackPop', { type: entry.type, value: entry.value, ws: this.WS, size: this.stack.length }), 'stack');
-    }
+    this.addLog(this.t('logs.stackPop', { type: entry.type, value: entry.value, ws: this.WS, size: this.stack.length }), 'stack');
 
     return entry.value;
   },
 
   handleProgramSectionCompile(payload) {
     this._stopRun();
+    this._pendingStackWrite = null;
+    this._pendingStackRead = null;
     // Accept both legacy string and structured payload from ProgramSection
     if (typeof payload === 'string') {
       this.code = payload;
@@ -266,7 +241,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
         this.sendFullDataToESP();
 
         // prosty ping, by utrzymać i weryfikować połączenie
-        this.wsPingTimer && clearInterval(this.wsPingTimer ?? undefined);
+        clearInterval(this.wsPingTimer ?? undefined);
         this.wsPingTimer = setInterval(() => {
           if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({ type: 'ping', t: Date.now() }));
@@ -278,7 +253,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
         if (this.ws !== socket) return;
         this.wsStatus = 'disconnected';
         this.addLog(this.t('logs.wsDisconnected'), 'system');
-        this.wsPingTimer && clearInterval(this.wsPingTimer ?? undefined);
+        clearInterval(this.wsPingTimer ?? undefined);
         this.wsPingTimer = null;
       });
 
@@ -732,6 +707,9 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
       this._stepGuard = 0;
       this.nextLine.clear();
 
+      this._pendingStackWrite = null;
+      this._pendingStackRead = null;
+
       this.executeLine();
       this.addLog(this.t('logs.asmCompiled'), 'compiler');
     } catch (e) {
@@ -741,6 +719,8 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
 
   uncompileCode() {
     this._stopRun();
+    this._pendingStackWrite = null;
+    this._pendingStackRead = null;
     this.codeCompiled = false;
     this.nextLine.clear();
     this.activeInstrIndex = -1;
@@ -840,6 +820,13 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
       this.activePhaseIndex += 1;
       const instruction = this.compiledProgram[this.activeInstrIndex];
       if (this.activePhaseIndex >= (instruction?.phases?.length || 0)) {
+        // Legacy assembler templates keep STOP after the instruction's phases in metadata.
+        if (instruction?.meta?.postAsm?.includes('stop')) {
+          this.uncompileCode();
+          this.addLog(this.t('logs.stopInstr'), 'compiler');
+          return;
+        }
+
         this.activeInstrIndex += 1;
         this.activePhaseIndex = 0;
       }
@@ -898,6 +885,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
 
       if (!currentPhase) {
         moveToNextPhase();
+        if (!this.codeCompiled) return;
         if (this.activeInstrIndex >= this.compiledProgram.length) {
           finishStructuredProgram();
           return;
@@ -936,6 +924,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
         if (!branchPhase) {
           this._condState = null;
           moveToNextPhase();
+          if (!this.codeCompiled) return;
           if (this.activeInstrIndex >= this.compiledProgram.length) {
             finishStructuredProgram();
             return;
@@ -992,6 +981,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
       }
 
       moveToNextPhase();
+      if (!this.codeCompiled) return;
       if (this.activeInstrIndex >= this.compiledProgram.length) {
         finishStructuredProgram();
         return;
@@ -1193,6 +1183,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
     this._headless = false;
     this.suppressBroadcast = false;
     this.clearActiveTimeouts();
+    this.cancelDeviceOperation();
     if (this._busHoldTimers?.A) {
       clearTimeout(this._busHoldTimers.A);
       this._busHoldTimers.A = null;
@@ -1312,6 +1303,8 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
 
     // Reset stack
     this.stack = [];
+    this._pendingStackWrite = null;
+    this._pendingStackRead = null;
 
     // Reset memory to all zeros
     if (resetMemory) {
@@ -1419,11 +1412,6 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
       clearTimeout(timeoutId);
     });
     this.activeTimeouts = [];
-    if (this.DEV_BUSY) {
-      this.DEV_BUSY = false;
-      this.G = this.DEV_READY ? 1 : 0;
-    }
-
     // Immediately turn off all signals
     for (const key in this.signals) {
       this.signals[key] = false;

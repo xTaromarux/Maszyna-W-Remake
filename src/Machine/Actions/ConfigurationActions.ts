@@ -23,9 +23,15 @@ export const configurationActions: Actions & ThisType<Machine> = {
     const addrMax = (1 << this.addresBits) - 1;
     const irqMax = 0x0f;
 
-    if (['RM', 'RZ', 'RP'].includes(type)) return irqMax;
-    if (['programCounter', 'L', 'A', 'AP', 'WS', 'BusA'].includes(type)) return addrMax;
-    if (['I', 'S', 'ACC', 'AK', 'JAML', 'JAL', 'X', 'Y', 'RB', 'G', 'BusS', 'memory'].includes(type)) return wordMax;
+    if (['RM', 'RZ', 'RP'].includes(type)) {
+      return irqMax;
+    }
+    if (['programCounter', 'L', 'A', 'AP', 'WS', 'BusA'].includes(type)) {
+      return addrMax;
+    }
+    if (['I', 'S', 'ACC', 'AK', 'JAML', 'JAL', 'X', 'Y', 'RB', 'G', 'BusS', 'memory'].includes(type)) {
+      return wordMax;
+    }
 
     return wordMax;
   },

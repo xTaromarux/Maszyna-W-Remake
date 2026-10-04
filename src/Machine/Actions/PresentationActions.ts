@@ -26,7 +26,9 @@ type Actions = Pick<
 /** Existing presentation operations, bound to the machine by the store. */
 export const presentationActions: Actions & ThisType<Machine> = {
   showToast(message, options = {}) {
-    if (!message) return;
+    if (!message) {
+      return;
+    }
     const { type = 'warning', duration = 2400 } = options || {};
     this.toast.message = message;
     this.toast.type = type;
@@ -167,7 +169,9 @@ export const presentationActions: Actions & ThisType<Machine> = {
   },
 
   selectLab(labId) {
-    if (typeof labId !== 'string' || !labId) return;
+    if (typeof labId !== 'string' || !labId) {
+      return;
+    }
     this.selectedLabId = labId;
   },
 
@@ -183,7 +187,9 @@ export const presentationActions: Actions & ThisType<Machine> = {
       this.hasConsoleErrors = false;
 
       requestAnimationFrame(() => {
-        if (window.innerWidth <= 1080) document.querySelector('.console-dock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (window.innerWidth <= 1080) {
+          document.querySelector('.console-dock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       });
     }
   },

@@ -33,9 +33,14 @@ type Actions = Pick<
 /** Existing execution operations, bound to the machine by the store. */
 export const executionActions: Actions & ThisType<Machine> = {
   toggleBreakpoint(lineIdx) {
-    if (typeof lineIdx !== 'number') return;
-    if (this.breakpoints.has(lineIdx)) this.breakpoints.delete(lineIdx);
-    else this.breakpoints.add(lineIdx);
+    if (typeof lineIdx !== 'number') {
+      return;
+    }
+    if (this.breakpoints.has(lineIdx)) {
+      this.breakpoints.delete(lineIdx);
+    } else {
+      this.breakpoints.add(lineIdx);
+    }
     this.addLog(this.t(`logs.breakpoint.${this.breakpoints.has(lineIdx) ? 'added' : 'removed'}`, { line: lineIdx }), 'system');
   },
 
@@ -48,7 +53,9 @@ export const executionActions: Actions & ThisType<Machine> = {
     const key = which === 'A' ? 'busA' : 'busS';
     this.signals[key] = true;
     const slot = which === 'A' ? 'A' : 'S';
-    if (this._busHoldTimers[slot]) clearTimeout(this._busHoldTimers[slot] ?? undefined);
+    if (this._busHoldTimers[slot]) {
+      clearTimeout(this._busHoldTimers[slot] ?? undefined);
+    }
     this._busHoldTimers[slot] = setTimeout(() => {
       this.signals[key] = false;
       this._busHoldTimers[slot] = null;
@@ -136,7 +143,9 @@ export const executionActions: Actions & ThisType<Machine> = {
   },
 
   handleAsmAutoReset() {
-    if (!this.autoResetOnAsmCompile) return;
+    if (!this.autoResetOnAsmCompile) {
+      return;
+    }
     this.resetValues({
       resetLogs: false,
       logMessage: this.t('logs.asmAutoReset'),
@@ -148,7 +157,9 @@ export const executionActions: Actions & ThisType<Machine> = {
     const size = 1 << this.addresBits;
     const nextMem = new Array(size).fill(0);
 
-    for (let i = 0; i < Math.min(this.mem.length, size); i++) nextMem[i] = this.mem[i];
+    for (let i = 0; i < Math.min(this.mem.length, size); i++) {
+      nextMem[i] = this.mem[i];
+    }
     const mask = this.wordMask();
     for (const { addr, val } of assignments) {
       if (addr >= 0 && addr < size) {
@@ -176,7 +187,9 @@ export const executionActions: Actions & ThisType<Machine> = {
     for (const group of groups) {
       if (group.includes(signalName)) {
         for (const other of group) {
-          if (other === signalName) continue;
+          if (other === signalName) {
+            continue;
+          }
           if (this.signals[other]) {
             return this.t('signals.conflict', { signal: signalName, other });
           }
@@ -186,7 +199,9 @@ export const executionActions: Actions & ThisType<Machine> = {
 
     if (jalOperations.includes(signalName)) {
       for (const other of jalOperations) {
-        if (other === signalName) continue;
+        if (other === signalName) {
+          continue;
+        }
         if (this.signals[other]) {
           return this.t('signals.conflictJaml', { signal: signalName, other });
         }
@@ -197,7 +212,9 @@ export const executionActions: Actions & ThisType<Machine> = {
   },
 
   handleSignalToggle(signalName) {
-    if (!this.manualMode) return;
+    if (!this.manualMode) {
+      return;
+    }
 
     const willBeOn = !this.signals[signalName];
 
@@ -235,7 +252,9 @@ export const executionActions: Actions & ThisType<Machine> = {
 
   loadSelectedLab() {
     const selected = this.selectedLab;
-    if (!selected) return;
+    if (!selected) {
+      return;
+    }
 
     if (this.manualMode) {
       this.manualModeUncheck();
@@ -350,11 +369,15 @@ export const executionActions: Actions & ThisType<Machine> = {
     }
 
     this.executeSignalsFromNextLine();
-    if (!this._headless) this._refreshHighlight();
+    if (!this._headless) {
+      this._refreshHighlight();
+    }
   },
 
   _refreshHighlight() {
-    if (!this.codeCompiled) return;
+    if (!this.codeCompiled) {
+      return;
+    }
     // Plain microcode uses activeLine as its execution cursor. Rebuilding it
     // from the structured-program indices would rewind every step to zero.
     if (!this.compiledProgram?.length) {
@@ -401,9 +424,13 @@ export const executionActions: Actions & ThisType<Machine> = {
     const instrIdx = Math.max(0, this.activeInstrIndex);
     for (let i = 0; i < instrIdx; i++) {
       const phs = this.compiledProgram[i]?.phases || [];
-      for (const p of phs) line += p && p.conditional === true ? 3 : 1;
+      for (const p of phs) {
+        line += p && p.conditional === true ? 3 : 1;
+      }
       const extra = this.compiledProgram[i]?.meta?.postAsm;
-      if (Array.isArray(extra)) line += extra.length;
+      if (Array.isArray(extra)) {
+        line += extra.length;
+      }
     }
     const currPh = this.compiledProgram[instrIdx]?.phases || [];
     for (let k = 0; k < Math.max(0, this.activePhaseIndex); k++) {
@@ -417,7 +444,9 @@ export const executionActions: Actions & ThisType<Machine> = {
   },
 
   getResolvedPhase(phase) {
-    if (!phase) return {};
+    if (!phase) {
+      return {};
+    }
     if (phase.conditional === true) {
       const flag = phase.flag;
       const cond = this.evaluateFlag(flag);
@@ -428,7 +457,9 @@ export const executionActions: Actions & ThisType<Machine> = {
   },
 
   evaluateFlag(flag) {
-    if (!flag) return false;
+    if (!flag) {
+      return false;
+    }
     const f = String(flag).toUpperCase();
     const acc8 = this.ACC & this.wordMask();
     const SIGN = 1 << (this.codeBits + this.addresBits - 1);

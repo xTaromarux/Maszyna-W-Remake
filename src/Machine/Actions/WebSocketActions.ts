@@ -48,7 +48,9 @@ export const webSocketActions: Actions & ThisType<Machine> = {
       this.ws.binaryType = 'arraybuffer';
 
       this.ws.addEventListener('open', () => {
-        if (this.ws !== socket) return;
+        if (this.ws !== socket) {
+          return;
+        }
         this.wsStatus = 'connected';
         this.addLog(this.t('logs.wsConnected'), 'system');
         this.sendFullDataToESP();
@@ -63,7 +65,9 @@ export const webSocketActions: Actions & ThisType<Machine> = {
       });
 
       this.ws.addEventListener('close', () => {
-        if (this.ws !== socket) return;
+        if (this.ws !== socket) {
+          return;
+        }
         this.wsStatus = 'disconnected';
         this.addLog(this.t('logs.wsDisconnected'), 'system');
         clearInterval(this.wsPingTimer ?? undefined);
@@ -71,18 +75,28 @@ export const webSocketActions: Actions & ThisType<Machine> = {
       });
 
       this.ws.addEventListener('error', (err) => {
-        if (this.ws !== socket) return;
+        if (this.ws !== socket) {
+          return;
+        }
         this.wsStatus = 'error';
         this.addLog(this.t('logs.wsError'), 'error', { message: String(err) });
       });
 
       this.ws.addEventListener('message', async ({ data }) => {
-        if (this.ws !== socket) return;
+        if (this.ws !== socket) {
+          return;
+        }
         let text;
-        if (data instanceof Blob) text = await data.text();
-        else if (data instanceof ArrayBuffer) text = new TextDecoder().decode(data);
-        else text = data;
-        if (this.ws !== socket) return;
+        if (data instanceof Blob) {
+          text = await data.text();
+        } else if (data instanceof ArrayBuffer) {
+          text = new TextDecoder().decode(data);
+        } else {
+          text = data;
+        }
+        if (this.ws !== socket) {
+          return;
+        }
 
         let msg;
         try {
@@ -91,7 +105,9 @@ export const webSocketActions: Actions & ThisType<Machine> = {
           return;
         }
 
-        if (msg.type === 'pong') return;
+        if (msg.type === 'pong') {
+          return;
+        }
 
         // ESP32 sygnały z przycisków
         if (msg.type === 'button_press') {

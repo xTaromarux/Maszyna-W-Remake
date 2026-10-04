@@ -35,11 +35,15 @@ export const createMachineStore = (): MachineStore => {
   // Populated synchronously below before the store is exposed.
   const target = {} as Machine;
   const publish = () => {
-    if (scheduled) return;
+    if (scheduled) {
+      return;
+    }
     scheduled = true;
     queueMicrotask(() => {
       scheduled = false;
-      if (!active) return;
+      if (!active) {
+        return;
+      }
       if (settingsDirty && !restoring) {
         settingsDirty = false;
         machine.saveToLS();
@@ -109,34 +113,50 @@ export const createMachineStore = (): MachineStore => {
   };
 
   const observable = (value: unknown, root: string, path: string[] = []): unknown => {
-    if (!value || typeof value !== 'object') return value;
-    if (rawValues.has(value)) return value;
+    if (!value || typeof value !== 'object') {
+      return value;
+    }
+    if (rawValues.has(value)) {
+      return value;
+    }
     const plain = Object.getPrototypeOf(value) === Object.prototype || Array.isArray(value);
-    if (!plain && !(value instanceof Set)) return value;
+    if (!plain && !(value instanceof Set)) {
+      return value;
+    }
     let byPath = proxies.get(value);
-    if (!byPath) proxies.set(value, (byPath = new Map()));
+    if (!byPath) {
+      byPath = new Map();
+      proxies.set(value, byPath);
+    }
     const key = `${root}:${path.join('.')}`;
-    if (byPath.has(key)) return byPath.get(key);
+    if (byPath.has(key)) {
+      return byPath.get(key);
+    }
     const proxy = new Proxy(value, {
       get(object, key) {
         if (object instanceof Set) {
-          if (key === 'add' || key === 'delete' || key === 'clear')
+          if (key === 'add' || key === 'delete' || key === 'clear') {
             return (...args: unknown[]) => {
-              const size = object.size,
-                had = object.has(args[0]);
+              const size = object.size;
+              const had = object.has(args[0]);
               const result: unknown = Reflect.apply(Reflect.get(object, key), object, args);
-              if (size !== object.size || (key === 'add' && !had)) changed(root, path, object);
+              if (size !== object.size || (key === 'add' && !had)) {
+                changed(root, path, object);
+              }
               return key === 'add' ? proxy : result;
             };
+          }
           const member = Reflect.get(object, key, object);
           return typeof member === 'function' ? member.bind(object) : member;
         }
         return observable(Reflect.get(object, key), root, [...path, String(key)]);
       },
       set(object, key, next) {
-        const old: unknown = Reflect.get(object, key),
-          raw = (next && typeof next === 'object' ? rawValues.get(next) : undefined) || next;
-        if (Object.is(old, raw)) return true;
+        const old: unknown = Reflect.get(object, key);
+        const raw = (next && typeof next === 'object' ? rawValues.get(next) : undefined) || next;
+        if (Object.is(old, raw)) {
+          return true;
+        }
         Reflect.set(object, key, raw);
         changed(root, [...path, String(key)], raw, old);
         return true;
@@ -158,23 +178,30 @@ export const createMachineStore = (): MachineStore => {
     set(object, key, value) {
       if (key === 'addresBits' || key === 'codeBits') {
         const other = key === 'addresBits' ? 'codeBits' : 'addresBits';
-        if (!Number.isFinite(Number(value))) return true;
+        if (!Number.isFinite(Number(value))) {
+          return true;
+        }
         value = clamp(Math.trunc(Number(value)), 1, Math.min(16, 30 - (object[other] || 1)));
       }
-      const old: unknown = Reflect.get(object, key),
-        raw = (value && typeof value === 'object' ? rawValues.get(value) : undefined) || value;
-      if (Object.is(old, raw)) return true;
+      const old: unknown = Reflect.get(object, key);
+      const raw = (value && typeof value === 'object' ? rawValues.get(value) : undefined) || value;
+      if (Object.is(old, raw)) {
+        return true;
+      }
       Reflect.set(object, key, raw);
       changed(String(key), [], raw, old);
       return true;
     },
   });
-  for (const [name, method] of Object.entries(machineMethods)) Reflect.set(target, name, method.bind(machine));
+  for (const [name, method] of Object.entries(machineMethods)) {
+    Reflect.set(target, name, method.bind(machine));
+  }
   Object.assign(target, createMicroInstructionActions(machine));
   target.t = translate;
   Object.assign(target, initialMachineState.call(machine));
-  for (const [name, selector] of Object.entries(machineSelectors))
+  for (const [name, selector] of Object.entries(machineSelectors)) {
     Object.defineProperty(target, name, { get: () => selector.call(machine) });
+  }
   const applyTheme = () => {
     document.body.classList.toggle('lightMode', machine.lightMode);
     document.body.classList.toggle('darkMode', !machine.lightMode);
@@ -238,7 +265,9 @@ export const createMachineStore = (): MachineStore => {
       applyTheme();
       machine.syncDocumentLanguage();
       onResize();
-      if (machine.platform === 'esp') machine.initWebsocket();
+      if (machine.platform === 'esp') {
+        machine.initWebsocket();
+      }
       window.addEventListener('keydown', machine.handleKeyPress);
       window.addEventListener('resize', onResize);
       window.addEventListener('pagehide', machine.saveToLS);

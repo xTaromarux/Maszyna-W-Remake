@@ -12,7 +12,9 @@ export const runControlActions: Actions & ThisType<Machine> = {
   },
 
   runCode() {
-    if (this.isRunning || !this.codeCompiled) return;
+    if (this.isRunning || !this.codeCompiled) {
+      return;
+    }
     this._stopRun();
     this.manualMode = false;
     this._skipNextBreakpoint = true;
@@ -27,12 +29,20 @@ export const runControlActions: Actions & ThisType<Machine> = {
     }
 
     const tick = () => {
-      if (generation !== this._runGeneration) return;
-      if (!this.codeCompiled || !this.isRunning) return this._stopRun();
+      if (generation !== this._runGeneration) {
+        return;
+      }
+      if (!this.codeCompiled || !this.isRunning) {
+        return this._stopRun();
+      }
       this.executeLine();
       stepsLeft--;
-      if (generation !== this._runGeneration) return;
-      if (!this.codeCompiled || !this.isRunning) return this._stopRun();
+      if (generation !== this._runGeneration) {
+        return;
+      }
+      if (!this.codeCompiled || !this.isRunning) {
+        return this._stopRun();
+      }
       if (stepsLeft <= 0) {
         this.addLog(this.t('logs.runStepLimit'), 'system');
         return this._stopRun();
@@ -52,7 +62,9 @@ export const runControlActions: Actions & ThisType<Machine> = {
     this.isFastRunning = false;
     this.fastProgress = 0;
     if (this._runningDocumentTitle != null) {
-      if (typeof document !== 'undefined') document.title = this._runningDocumentTitle;
+      if (typeof document !== 'undefined') {
+        document.title = this._runningDocumentTitle;
+      }
       this._runningDocumentTitle = null;
     }
 
@@ -76,7 +88,9 @@ export const runControlActions: Actions & ThisType<Machine> = {
   },
 
   async runToEndFast() {
-    if (!this.codeCompiled || this.isFastRunning) return;
+    if (!this.codeCompiled || this.isFastRunning) {
+      return;
+    }
 
     this._stopRun();
 
@@ -127,7 +141,9 @@ export const runControlActions: Actions & ThisType<Machine> = {
             this.executeLine();
           }
         }
-        if (!isCurrentRun() || !this.codeCompiled) break;
+        if (!isCurrentRun() || !this.codeCompiled) {
+          break;
+        }
 
         // progres bez malowania UI (tylko liczba)
         if (hasStructured) {
@@ -141,15 +157,25 @@ export const runControlActions: Actions & ThisType<Machine> = {
         // daj event loopowi odetchnąć
         await sleep(0);
 
-        if (!this.codeCompiled || !isCurrentRun()) break;
-        if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) break;
-        if (!hasStructured && this.activeLine >= this.compiledCode.length) break;
+        if (!this.codeCompiled || !isCurrentRun()) {
+          break;
+        }
+        if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) {
+          break;
+        }
+        if (!hasStructured && this.activeLine >= this.compiledCode.length) {
+          break;
+        }
       }
 
-      if (safety <= 0 && isCurrentRun()) this.addLog(this.t('logs.runFastLimit'), 'system');
+      if (safety <= 0 && isCurrentRun()) {
+        this.addLog(this.t('logs.runFastLimit'), 'system');
+      }
     } finally {
       // A cancelled async chunk must never stop a subsequently started run.
-      if (generation === this._runGeneration) this._stopRun();
+      if (generation === this._runGeneration) {
+        this._stopRun();
+      }
     }
   },
 

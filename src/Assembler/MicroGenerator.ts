@@ -1,5 +1,4 @@
 import { buildConditionalForInstr } from './ConditionalTemplate';
-export { buildConditionalForInstr } from './ConditionalTemplate';
 import { normalizeMnemonicToken } from '@/Assembler/CommandMnemonics';
 import { translate as t } from '../I18n/Translator';
 import type { IRInstruction, ProgramIR } from './Types/AssemblerIr';
@@ -10,27 +9,35 @@ import type { RuntimeCommand } from './Types/Registry';
 import { buildFromCommandList } from './CommandAdapter';
 import { AssemblerError } from './Errors/AssemblerError';
 
-function normalizeConditionalFlag(flag: string): string {
+export { buildConditionalForInstr } from './ConditionalTemplate';
+
+const normalizeConditionalFlag = (flag: string): string => {
   return flag === 'M' ? 'N' : flag;
-}
+};
 
-function isTemplateConditionalPhase(phase: TemplatePhase): phase is TemplateConditionalPhase {
+const isTemplateConditionalPhase = (phase: TemplatePhase): phase is TemplateConditionalPhase => {
   return !Array.isArray(phase) && (phase as TemplateConditionalPhase).conditional === true;
-}
+};
 
-function toMicroPhaseFromSignals(signals: Signal[]): MicroPhase {
+const toMicroPhaseFromSignals = (signals: Signal[]): MicroPhase => {
   const microPhase: MicroPhase = {};
-  for (const signalName of signals) microPhase[signalName] = true;
+  for (const signalName of signals) {
+    microPhase[signalName] = true;
+  }
   return microPhase;
-}
+};
 
-function toMicroPhaseFromSignalSet(signalSet: SignalSet): MicroPhase {
+const toMicroPhaseFromSignalSet = (signalSet: SignalSet): MicroPhase => {
   const microPhase: MicroPhase = {};
-  for (const signalName in signalSet) if (signalSet[signalName as Signal]) microPhase[signalName as Signal] = true;
+  for (const signalName in signalSet) {
+    if (signalSet[signalName as Signal]) {
+      microPhase[signalName as Signal] = true;
+    }
+  }
   return microPhase;
-}
+};
 
-function toRuntimeTemplatePhase(phase: TemplatePhase): RuntimePhase {
+const toRuntimeTemplatePhase = (phase: TemplatePhase): RuntimePhase => {
   if (Array.isArray(phase)) {
     return toMicroPhaseFromSignals(phase);
   }
@@ -43,69 +50,81 @@ function toRuntimeTemplatePhase(phase: TemplatePhase): RuntimePhase {
       falsePhases: phase.falsePhases.map(toMicroPhaseFromSignalSet),
     };
 
-    if (phase.__labels) runtimeConditionalPhase.__labels = phase.__labels;
-    if (phase.__prefix) runtimeConditionalPhase.__prefix = phase.__prefix;
+    if (phase.__labels) {
+      runtimeConditionalPhase.__labels = phase.__labels;
+    }
+    if (phase.__prefix) {
+      runtimeConditionalPhase.__prefix = phase.__prefix;
+    }
 
     return runtimeConditionalPhase;
   }
 
   return toMicroPhaseFromSignalSet(phase as SignalSet);
-}
+};
 
-function buildAddressToPcMap(instructions: ProgramIR['instructions']): Map<number, number> {
+const buildAddressToPcMap = (instructions: ProgramIR['instructions']): Map<number, number> => {
   const addressToPc = new Map<number, number>();
   instructions.forEach((instruction, programCounter) => {
     addressToPc.set(instruction.address, programCounter);
   });
   return addressToPc;
-}
+};
 
-function formatAsmLine(instruction: IRInstruction): string {
+const formatAsmLine = (instruction: IRInstruction): string => {
   const mnemonic = (instruction.name || '').toUpperCase();
   const operands = instruction.operands?.map((operand) => operand.value).join(', ');
   return operands ? `${mnemonic} ${operands}` : mnemonic;
-}
+};
 
-function getRawTemplateLines(templates: Record<string, TemplatePhase[]>, key: string): string[] | undefined {
+const getRawTemplateLines = (templates: Record<string, TemplatePhase[]>, key: string): string[] | undefined => {
   return (templates as Record<string, unknown>)[`__raw__${key}`] as string[] | undefined;
-}
+};
 
-function resolveFallbackLines(
+const resolveFallbackLines = (
   templates: Record<string, TemplatePhase[]>,
   executableCommands: RuntimeCommand[],
   key: string
-): string[] | undefined {
+): string[] | undefined => {
   const rawTemplateLines = getRawTemplateLines(templates, key);
-  if (rawTemplateLines?.length) return rawTemplateLines;
+  if (rawTemplateLines?.length) {
+    return rawTemplateLines;
+  }
 
   const command = executableCommands.find((candidate) => normalizeMnemonicToken(candidate.name, 'lower') === key);
-  if (!command?.lines) return undefined;
+  if (!command?.lines) {
+    return undefined;
+  }
 
   return command.lines
     .split('\n')
     .map((line) => line.replace(/;\s*$/g, '').trim())
     .filter(Boolean);
-}
+};
 
-function prependPrefixSignals(runtimePhases: RuntimePhase[], prefixOps?: MicroOperationToken[]): void {
-  if (!prefixOps?.length) return;
+const prependPrefixSignals = (runtimePhases: RuntimePhase[], prefixOps?: MicroOperationToken[]): void => {
+  if (!prefixOps?.length) {
+    return;
+  }
 
   const prefixSignalSet: SignalSet = {};
   for (const op of prefixOps) {
     const signalName = op.op?.toLowerCase();
-    if (signalName) prefixSignalSet[signalName as Signal] = true;
+    if (signalName) {
+      prefixSignalSet[signalName as Signal] = true;
+    }
   }
 
   if (Object.keys(prefixSignalSet).length) {
     runtimePhases.unshift(toMicroPhaseFromSignalSet(prefixSignalSet));
   }
-}
+};
 
-function applySobJumpMetadata(
+const applySobJumpMetadata = (
   metadata: NonNullable<MicroProgramEntry['meta']>,
   instruction: IRInstruction,
   addressToPc: Map<number, number>
-): void {
+): void => {
   const targetAddress = instruction.operands?.[0]?.value;
   if (typeof targetAddress !== 'number') {
     throw new AssemblerError(t('wlan.microGenerator.sobNoAddress'), { code: 'GEN_SOB_NO_ADDR' });
@@ -120,9 +139,9 @@ function applySobJumpMetadata(
 
   metadata.kind = 'JUMP';
   metadata.trueTarget = targetPc;
-}
+};
 
-export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[]): MicroProgramEntry[] {
+export const generateMicroProgram = (ir: ProgramIR, commandList: RuntimeCommand[]): MicroProgramEntry[] => {
   const executableCommands = (commandList || []).filter((command) => (command.kind || 'exec') === 'exec');
 
   if (!Array.isArray(executableCommands) || executableCommands.length === 0) {
@@ -174,7 +193,9 @@ export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[
     }
 
     const extraPostAsm = postAsm[mnemonicKey];
-    if (extraPostAsm?.length) metadata.postAsm = extraPostAsm.slice();
+    if (extraPostAsm?.length) {
+      metadata.postAsm = extraPostAsm.slice();
+    }
 
     microProgram.push({
       pc: programCounter,
@@ -185,9 +206,9 @@ export function generateMicroProgram(ir: ProgramIR, commandList: RuntimeCommand[
   }
 
   return microProgram;
-}
+};
 
-export function injectCJumpMeta(program: MicroProgramEntry[]): MicroProgramEntry[] {
+export const injectCJumpMeta = (program: MicroProgramEntry[]): MicroProgramEntry[] => {
   for (let programCounter = 0; programCounter < program.length; programCounter++) {
     const entry = program[programCounter];
 
@@ -214,9 +235,11 @@ export function injectCJumpMeta(program: MicroProgramEntry[]): MicroProgramEntry
         joinTarget,
       };
 
-      if (!Array.isArray(entry.phases)) entry.phases = [];
+      if (!Array.isArray(entry.phases)) {
+        entry.phases = [];
+      }
     }
   }
 
   return program;
-}
+};

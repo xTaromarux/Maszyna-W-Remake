@@ -28,27 +28,27 @@ type AddressedProgramNodes = {
   rawNodes: RawNode[];
 };
 
-function parseNumberLiteral(text: string): number {
-  const neg = text.startsWith('-');
-  const raw = neg ? text.slice(1) : text;
+const parseNumberLiteral = (text: string): number => {
+  const isNegative = text.startsWith('-');
+  const raw = isNegative ? text.slice(1) : text;
 
-  let val: number;
+  let value: number;
   if (/^0[xX]/.test(raw)) {
-    val = parseInt(raw.slice(2), 16);
+    value = parseInt(raw.slice(2), 16);
   } else if (/^0[bB]/.test(raw)) {
-    val = parseInt(raw.slice(2), 2);
+    value = parseInt(raw.slice(2), 2);
   } else {
-    val = parseInt(raw, 10);
+    value = parseInt(raw, 10);
   }
 
-  return neg ? -val : val;
-}
+  return isNegative ? -value : value;
+};
 
-function normalizeSymbol(name: string): string {
+const normalizeSymbol = (name: string): string => {
   return String(name).trim().replace(/^@/, '').toLowerCase();
-}
+};
 
-function ensureAddressRange(source: string, token: Token, value: number, context: string): void {
+const ensureAddressRange = (source: string, token: Token, value: number, context: string): void => {
   if (value < ADDRESS_MIN || value > ADDRESS_MAX) {
     throw errorFromToken(
       source,
@@ -58,9 +58,9 @@ function ensureAddressRange(source: string, token: Token, value: number, context
       t('wlan.parser.addressRangeHint', { min: ADDRESS_MIN, max: ADDRESS_MAX })
     );
   }
-}
+};
 
-function ensureDataRange(source: string, token: Token, value: number, context: string): void {
+const ensureDataRange = (source: string, token: Token, value: number, context: string): void => {
   if (value < DATA_MIN || value > DATA_MAX) {
     throw errorFromToken(
       source,
@@ -70,11 +70,13 @@ function ensureDataRange(source: string, token: Token, value: number, context: s
       t('wlan.parser.dataRangeHint', { min: DATA_MIN, max: DATA_MAX })
     );
   }
-}
+};
 
-function validateArity(source: string, token: Token, cmd: NormalizedRuntimeCommand, count: number): void {
+const validateArity = (source: string, token: Token, cmd: NormalizedRuntimeCommand, count: number): void => {
   const { argsMin, argsMax } = cmd;
-  if (count >= argsMin && count <= argsMax) return;
+  if (count >= argsMin && count <= argsMax) {
+    return;
+  }
 
   if (argsMin === argsMax) {
     throw errorFromToken(
@@ -93,7 +95,7 @@ function validateArity(source: string, token: Token, cmd: NormalizedRuntimeComma
     'PARSE_BAD_ARITY',
     t('wlan.parser.arityHint', { name: cmd.name })
   );
-}
+};
 
 export class Parser {
   private tokens: Token[];
@@ -196,7 +198,9 @@ export class Parser {
 
     while (!this.isAtEnd()) {
       this.skipNewlines();
-      if (this.isAtEnd()) break;
+      if (this.isAtEnd()) {
+        break;
+      }
 
       const first = this.peek()!;
       const raw: RawLine = {
@@ -244,7 +248,9 @@ export class Parser {
         raw.operands.push(this.parseOperand());
 
         const next = this.peek();
-        if (this.isLineTerminator(next)) break;
+        if (this.isLineTerminator(next)) {
+          break;
+        }
 
         if (next?.type === TokenType.COMMA) {
           this.consume();
@@ -277,7 +283,9 @@ export class Parser {
   }
 
   private resolveOperandValue(op: UnresolvedOperand, labels: Map<string, IRLabel>): number {
-    if (op.kind === 'Immediate') return op.value;
+    if (op.kind === 'Immediate') {
+      return op.value;
+    }
 
     const key = normalizeSymbol(op.name);
     const found = labels.get(key);
@@ -324,7 +332,9 @@ export class Parser {
         labelList.push(label);
       }
 
-      if (!line.mnemonicTok) continue;
+      if (!line.mnemonicTok) {
+        continue;
+      }
 
       const mnemonic = line.mnemonicTok.text.toUpperCase();
       const cmd = this.registry.get(mnemonic);
@@ -583,6 +593,6 @@ export class Parser {
   }
 }
 
-export function parse(source: string, options: ParseOptions): ProgramIR {
+export const parse = (source: string, options: ParseOptions): ProgramIR => {
   return new Parser(source, options).parseProgram();
-}
+};

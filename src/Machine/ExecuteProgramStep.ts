@@ -20,7 +20,9 @@ const shouldPauseOn = (machine: Machine, line: number | undefined) => {
 /** Executes one structured phase, retaining its branch cursor and breakpoint semantics. */
 export const executeStructuredStep = (machine: Machine) => {
   const setHighlight = (node?: RuntimePhase | MicroProgramEntry) => {
-    if (machine._headless) return;
+    if (machine._headless) {
+      return;
+    }
     if (node && typeof node.srcLine === 'number' && typeof node.srcLine === 'number' && Number.isFinite(node.srcLine)) {
       machine.activeLine = node.srcLine;
       return;
@@ -29,8 +31,12 @@ export const executeStructuredStep = (machine: Machine) => {
   };
 
   const stopAtBreakpoint = (line: number | undefined) => {
-    if (!shouldPauseOn(machine, line)) return false;
-    if (typeof line === 'number' && Number.isFinite(line)) machine.activeLine = line;
+    if (!shouldPauseOn(machine, line)) {
+      return false;
+    }
+    if (typeof line === 'number' && Number.isFinite(line)) {
+      machine.activeLine = line;
+    }
     machine.addLog(machine.t('logs.breakpointPause', { line }), 'system');
     machine._stopRun();
     return true;
@@ -109,7 +115,9 @@ export const executeStructuredStep = (machine: Machine) => {
 
   if (!currentPhase) {
     moveToNextPhase();
-    if (!machine.codeCompiled) return;
+    if (!machine.codeCompiled) {
+      return;
+    }
     if (machine.activeInstrIndex >= machine.compiledProgram.length) {
       finishStructuredProgram();
       return;
@@ -139,7 +147,9 @@ export const executeStructuredStep = (machine: Machine) => {
       };
 
       const ifLine = typeof currentPhase.srcLine === 'number' && Number.isFinite(currentPhase.srcLine) ? currentPhase.srcLine : undefined;
-      if (stopAtBreakpoint(ifLine)) return;
+      if (stopAtBreakpoint(ifLine)) {
+        return;
+      }
     }
 
     const state = machine._condState;
@@ -147,7 +157,9 @@ export const executeStructuredStep = (machine: Machine) => {
     if (!branchPhase) {
       machine._condState = null;
       moveToNextPhase();
-      if (!machine.codeCompiled) return;
+      if (!machine.codeCompiled) {
+        return;
+      }
       if (machine.activeInstrIndex >= machine.compiledProgram.length) {
         finishStructuredProgram();
         return;
@@ -175,7 +187,9 @@ export const executeStructuredStep = (machine: Machine) => {
     return;
   }
 
-  if (stopAtBreakpoint(sourceLine)) return;
+  if (stopAtBreakpoint(sourceLine)) {
+    return;
+  }
 
   setHighlight(phaseToExecute);
   executeMicroPhase(phaseToExecute);
@@ -195,14 +209,18 @@ export const executeStructuredStep = (machine: Machine) => {
           : undefined;
       const nextLine =
         typeof nextBranchPhase?.srcLine === 'number' && Number.isFinite(nextBranchPhase?.srcLine) ? nextBranchPhase.srcLine : fallbackLine;
-      if (!machine._headless && typeof nextLine === 'number' && Number.isFinite(nextLine)) machine.activeLine = nextLine;
+      if (!machine._headless && typeof nextLine === 'number' && Number.isFinite(nextLine)) {
+        machine.activeLine = nextLine;
+      }
       return;
     }
     machine._condState = null;
   }
 
   moveToNextPhase();
-  if (!machine.codeCompiled) return;
+  if (!machine.codeCompiled) {
+    return;
+  }
   if (machine.activeInstrIndex >= machine.compiledProgram.length) {
     finishStructuredProgram();
     return;
@@ -216,7 +234,9 @@ export const executeStructuredStep = (machine: Machine) => {
 
 /** Executes one plain microcode line, retaining its active-line cursor and highlight timing. */
 export const executePlainStep = (machine: Machine) => {
-  if (machine.activeLine < 0) machine.activeLine = 0;
+  if (machine.activeLine < 0) {
+    machine.activeLine = 0;
+  }
   if (machine.activeLine >= machine.compiledCode.length) {
     machine.uncompileCode();
     machine.addLog(machine.t('logs.codeFinished'), 'compiler');
@@ -228,14 +248,18 @@ export const executePlainStep = (machine: Machine) => {
     machine.addLog(machine.t('logs.breakpointPause', { line: nextSrc }), 'system');
     machine._stopRun();
     machine.activeLine = nextSrc;
-    if (!machine._headless) machine._refreshHighlight();
+    if (!machine._headless) {
+      machine._refreshHighlight();
+    }
     return;
   }
 
   machine._refreshHighlight();
   const commands = machine.compiledCode[machine.activeLine].split(' ').filter(Boolean);
   machine.nextLine.clear();
-  for (const c of commands) machine.nextLine.add(c);
+  for (const c of commands) {
+    machine.nextLine.add(c);
+  }
   machine.executeSignalsFromNextLine();
   machine.activeLine++;
 

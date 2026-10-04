@@ -1,4 +1,4 @@
-import { useI18n } from '@/I18n/Index';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { ChangeEvent, MouseEvent, RefObject } from 'react';
 import type { ChatSession } from '../Hooks/UseChatSession';
 

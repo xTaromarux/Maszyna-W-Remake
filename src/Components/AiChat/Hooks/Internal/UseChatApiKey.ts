@@ -1,7 +1,7 @@
-import { useI18n } from '@/I18n/Index';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { FormEvent } from 'react';
 import { useEffect } from 'react';
-import { persistApiKey } from '../../Helpers/ChatStorage';
+import { persistApiKey } from '../../Storage/ChatStorage';
 import type { ChatSessionStore } from './UseChatState';
 
 /** Manages API-key editing, validation, storage, and the key dialog's visibility. */

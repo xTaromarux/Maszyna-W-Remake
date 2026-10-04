@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { restoreApiKey, restoreMessages, persistMessages, restorePanelWidth } from '../src/Components/AiChat/Helpers/ChatStorage';
+import { restoreApiKey, restoreMessages, persistMessages, restorePanelWidth } from '../src/Components/AiChat/Storage/ChatStorage';
 import { API_KEY_STORAGE_KEY, STORAGE_KEY, WIDTH_KEY } from '../src/Components/AiChat/ChatConfig';
 
 test('damaged history does not prevent API key and panel preferences from restoring', (context) => {

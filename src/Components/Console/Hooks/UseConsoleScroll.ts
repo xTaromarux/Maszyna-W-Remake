@@ -1,4 +1,4 @@
-import type { LogEntry } from '@/Types/Simulator';
+import type { LogEntry } from '@/Machine/Types/Machine';
 import type { UIEvent } from 'react';
 import { useEffect, useRef } from 'react';
 

@@ -1,5 +1,5 @@
-import { createMachineStore } from '@/State/CreateMachineStore';
-import type { MachineServices } from '@/Types/Simulator';
+import { createMachineStore } from '@/Machine/CreateMachineStore';
+import type { MachineServices } from '@/Machine/Types/Machine';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 /** Owns one simulator store, subscribes React to changes, and releases runtime resources on unmount. */

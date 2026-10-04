@@ -1,4 +1,4 @@
-import type { NumberFormat, RadixFormat } from '@/Types/Common';
+import type { NumberFormat, RadixFormat } from '@/Shared/Types/Numbers';
 /** Clamp a number without coercion or changing NaN handling. */
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { CodeBlockProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { CodeBlockProps } from '@/Components/AiChat/Types/Props';
 import { useEffect, useState } from 'react';
 import { copyToClipboard } from '../Helpers/Clipboard';
 

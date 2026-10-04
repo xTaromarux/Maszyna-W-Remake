@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { checkChatHealth } from '../src/Components/AiChat/Helpers/ChatHealth';
+import { checkChatHealth } from '../src/Components/AiChat/Api/ChatHealth';
 
 test('cold model readiness is checked again after wake', async (context) => {
   const requests: string[] = [];

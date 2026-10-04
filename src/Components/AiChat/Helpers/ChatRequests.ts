@@ -1,5 +1,5 @@
-import { ApiState } from '@/Types/Chat';
-import type { ChatMessage } from '@/Types/Chat';
+import { ApiState } from '@/Components/AiChat/Types/Chat';
+import type { ChatMessage } from '@/Components/AiChat/Types/Chat';
 import { generateId } from '@/Shared/Utils/Identifiers';
 import { HISTORY_LIMIT, RATE_LIMIT } from '../ChatConfig';
 

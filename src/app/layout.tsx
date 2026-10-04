@@ -1,6 +1,6 @@
 import '@/Styles/Main.scss';
-import '@/Styles/Migrated/Index.css';
-import type { ChildrenProps } from '@/Types/Common';
+import '@/Styles/Components.css';
+import type { ChildrenProps } from '@/Shared/Types/React';
 
 export const metadata = {
   title: 'Maszyna W v.0.2.1',

@@ -1,4 +1,4 @@
-import type { NumberFormat } from '@/Types/Common';
+import type { NumberFormat } from '@/Shared/Types/Numbers';
 export function parseRegisterInput(raw: unknown, numberFormat: NumberFormat = 'dec'): bigint | null {
   const text = String(raw ?? '').trim();
   if (text === '' || text === '-') return null;

@@ -1,4 +1,4 @@
-import type { TextContentProps } from '@/Types/Components';
+import type { TextContentProps } from '@/Components/AiChat/Types/Props';
 import { Fragment } from 'react';
 import CodeBlock from './CodeBlock';
 

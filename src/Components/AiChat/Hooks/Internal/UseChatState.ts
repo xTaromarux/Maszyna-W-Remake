@@ -1,5 +1,5 @@
-import type { ChatRuntime, ChatState, ChatStateUpdate } from '@/Types/Chat';
-import { ApiState } from '@/Types/Chat';
+import type { ChatRuntime, ChatState, ChatStateUpdate } from '@/Components/AiChat/Types/Chat';
+import { ApiState } from '@/Components/AiChat/Types/Chat';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Owns session state, its synchronous snapshot, and the lifetime of worker, requests and animation. */

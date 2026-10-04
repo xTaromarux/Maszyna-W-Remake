@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { findDuplicateNames, parseCommandCatalog } from '../src/Components/CommandList/Helpers/CommandCatalog';
+import { findDuplicateNames, parseCommandCatalog } from '../src/Components/CommandCatalog/Helpers/CommandCatalog';
 
 test('catalog import keeps executable metadata and normalizes legacy entries', () => {
   const commands = parseCommandCatalog(

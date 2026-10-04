@@ -1,28 +1,28 @@
-@use 'Abstracts/Variables' as variables;
-@use 'Abstracts/Mixins' as mixins;
+@use './Abstracts/Variables' as variables;
+@use './Abstracts/Mixins' as mixins;
 
-@use 'Base/Reset';
-@use 'Base/Typography';
+@use './Base/Reset';
+@use './Base/Typography';
 
-@use 'Utilities/Helpers';
+@use './Utilities/Helpers';
 
-@use 'Layout/Topbar';
-@use 'Layout/Grid';
-@use 'Layout/Popups';
-@use 'Layout/Toggle';
+@use '../Components/Main/Ui/TopBar';
+@use './Layout/Grid';
+@use './Layout/Popups';
+@use '../Shared/Ui/SegmentedToggle/SegmentedToggle';
 
-@use 'Components/AiChat';
-@use 'Components/Alert';
-@use 'Components/Bus';
-@use 'Components/Buttons';
-@use 'Components/Calc';
-@use 'Components/Console';
-@use 'Components/Counter';
-@use 'Components/ExecutionControls';
-@use 'Components/Inputs';
-@use 'Components/Memory';
-@use 'Components/Settings';
-@use 'Components/Signals';
-@use 'Components/Switch';
-@use 'Components/Ui';
-@use 'Components/Arrows';
+@use '../Components/AiChat/AiChat';
+@use './Common/Alert';
+@use '../Components/ProcessorDiagram/Styles/Buses';
+@use './Common/Buttons';
+@use '../Components/ProcessorDiagram/AluSection/Alu';
+@use '../Components/Console/Console';
+@use '../Components/ProcessorDiagram/Registers/Counter';
+@use '../Components/MicrocodeEditor/Styles/ExecutionControls';
+@use './Common/Inputs';
+@use '../Components/ProcessorDiagram/MemorySection/Memory';
+@use '../Components/Settings/Settings';
+@use '../Components/ProcessorDiagram/Styles/Signals';
+@use '../Components/Settings/SettingsPanel/SettingsSwitch';
+@use './Common/Ui';
+@use '../Components/ProcessorDiagram/Styles/Arrows';

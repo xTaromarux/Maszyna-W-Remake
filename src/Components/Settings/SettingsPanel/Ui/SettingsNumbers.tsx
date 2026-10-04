@@ -1,6 +1,6 @@
-import { useI18n } from '@/I18n/Index';
-import type { SettingsPanelProps } from '@/Types/Components';
-import type { Update } from '@/Types/Common';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { SettingsPanelProps } from '@/Components/Settings/Types';
+import type { Update } from '@/Shared/Types/Common';
 
 type SettingsNumbersProps = Pick<
   SettingsPanelProps,

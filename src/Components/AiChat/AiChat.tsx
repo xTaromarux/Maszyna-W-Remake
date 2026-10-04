@@ -1,8 +1,8 @@
 'use client';
 
-import { useI18n } from '@/I18n/Index';
-import { ApiState } from '@/Types/Chat';
-import type { AiChatProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import { ApiState } from '@/Components/AiChat/Types/Chat';
+import type { AiChatProps } from '@/Components/AiChat/Types/Props';
 import type { FormEvent, KeyboardEvent, MouseEvent } from 'react';
 import AiChatTrashIcon from './Ui/AiChatTrashIcon';
 import ApiKeyDialog from './Ui/ApiKeyDialog';

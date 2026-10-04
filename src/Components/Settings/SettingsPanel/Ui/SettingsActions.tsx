@@ -1,7 +1,7 @@
-import CommandListIcon from '@/Assets/Svg/CommandListIcon';
-import RefreshIcon from '@/Assets/Svg/RefreshIcon';
-import { useI18n } from '@/I18n/Index';
-import type { SettingsPanelProps } from '@/Types/Components';
+import CommandListIcon from '@/Shared/Ui/Icons/CommandListIcon';
+import RefreshIcon from '@/Shared/Ui/Icons/RefreshIcon';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { SettingsPanelProps } from '@/Components/Settings/Types';
 type SettingsActionsProps = Pick<SettingsPanelProps, 'onOpenLabDialog' | 'onResetValues' | 'onDefaultSettings' | 'onOpenCommandList'>;
 const SettingsActions = (props: SettingsActionsProps) => {
   const { t } = useI18n();

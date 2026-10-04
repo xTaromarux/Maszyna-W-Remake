@@ -3,8 +3,8 @@ import { test } from 'node:test';
 import { EditorState, EditorSelection } from '@codemirror/state';
 import { history, undo } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
-import { toggleLineComments } from '../src/Components/CodeMirrorEditor/Editor/ToggleLineComments';
-import { synchronizeEditorDocument } from '../src/Components/CodeMirrorEditor/Editor/SynchronizeEditorDocument';
+import { toggleLineComments } from '../src/Editor/CodeMirrorEditor/Configuration/ToggleLineComments';
+import { synchronizeEditorDocument } from '../src/Editor/CodeMirrorEditor/Configuration/SynchronizeEditorDocument';
 
 const editorHarness = (state: EditorState) => {
   const view = {

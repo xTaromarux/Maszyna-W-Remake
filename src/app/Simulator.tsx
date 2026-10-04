@@ -1,6 +1,6 @@
 'use client';
 
-import { useI18n } from '@/I18n/Index';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 import dynamic from 'next/dynamic';
 
 const SimulatorLoading = () => {
@@ -12,7 +12,7 @@ const SimulatorLoading = () => {
   );
 };
 
-const Main = dynamic(() => import('@/Components/Main'), {
+const Main = dynamic(() => import('@/Components/Main/Main'), {
   ssr: false,
   loading: SimulatorLoading,
 });

@@ -1,9 +1,9 @@
-﻿import { useI18n } from '@/I18n/Index';
+﻿import { useI18n } from '@/I18n/Hooks/UseI18n';
 import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import { colorDataFromHSV, hexToRgb, rgbToHex, rgbToHsv } from '@/Shared/Utils/Colors';
-import type { ColorPickerContentProps } from '@/Types/Components';
+import type { ColorPickerContentProps } from '@/Components/Settings/ColorPicker/Types';
 import { useState } from 'react';
-import ColorPicker from '../../ColorPicker';
+import ColorPicker from '../../ColorPicker/ColorPicker';
 
 const ColorPickerContent = ({ title, color, brightness, colorData, onClose, onApply }: ColorPickerContentProps) => {
   const { t } = useI18n();

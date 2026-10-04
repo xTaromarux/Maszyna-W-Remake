@@ -1,7 +1,7 @@
-import { ErrorLevelColor } from '@/Errors/Index';
-import { useI18n } from '@/I18n/Index';
-import { ErrorLevel } from '@/Types/Errors';
-import type { LogEntry } from '@/Types/Simulator';
+import { ErrorLevelColor } from '@/Shared/Errors/BaseAppError';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import { ErrorLevel } from '@/Shared/Errors/Types';
+import type { LogEntry } from '@/Machine/Types/Machine';
 import { useState } from 'react';
 import { formatTimestamp, getLogLevel, hasErrorDetails } from '../Helpers/LogPresentation';
 import ConsoleEntryDetails from './ConsoleEntryDetails';

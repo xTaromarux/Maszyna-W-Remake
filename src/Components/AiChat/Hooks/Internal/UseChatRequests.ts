@@ -1,12 +1,12 @@
-import { useI18n } from '@/I18n/Index';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 import { getErrorMessage } from '@/Shared/Utils/Errors';
-import { ApiState } from '@/Types/Chat';
-import type { ChatWorkerRequest } from '@/Types/ChatWorker';
+import { ApiState } from '@/Components/AiChat/Types/Chat';
+import type { ChatWorkerRequest } from '@/Components/AiChat/Types/WorkerProtocol';
 import type { FormEvent } from 'react';
 import { useEffect } from 'react';
 import { API_URL, HEALTH_URL } from '../../ChatConfig';
-import { checkChatHealth } from '../../Helpers/ChatHealth';
-import { persistMessages } from '../../Helpers/ChatStorage';
+import { checkChatHealth } from '../../Api/ChatHealth';
+import { persistMessages } from '../../Storage/ChatStorage';
 import { buildRequestHistory, createChatMessage, isCheckingModel, reserveRequestSlot } from '../../Helpers/ChatRequests';
 import type { ChatSessionStore } from './UseChatState';
 import type { ChatReplies } from './UseChatReplies';

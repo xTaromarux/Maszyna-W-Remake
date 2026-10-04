@@ -1,4 +1,4 @@
-import type { SwitchProps } from '@/Types/Components';
+import type { SwitchProps } from '@/Components/Settings/Types';
 
 const SettingsSwitch = ({ label, checked, onChange }: SwitchProps) => {
   return (

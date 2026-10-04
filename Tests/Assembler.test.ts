@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { compileAsmToMicroProgram } from '../src/Wlan/AsmPipeline';
-import { WlanError } from '../src/Wlan/Error';
-import { commandList } from '../src/Shared/Utils/Data/Commands.js';
-import type { RuntimeCommand } from '../src/Types/Registry';
+import { compileAsmToMicroProgram } from '../src/Assembler/AsmPipeline';
+import { AssemblerError } from '../src/Assembler/Errors/AssemblerError';
+import { commandList } from '../src/Assembler/Data/Commands.js';
+import type { RuntimeCommand } from '../src/Assembler/Types/Registry';
 
 const compile = (source: string, commands: RuntimeCommand[] = commandList) => compileAsmToMicroProgram(source, commands);
 const assignments = (result: ReturnType<typeof compile>) => result.initAssignments.map(({ addr, val }) => ({ addr, val }));
@@ -99,13 +99,13 @@ test('data and address values outside assembler bounds report structured diagnos
   for (const source of ['RST -129', 'RST 256', 'DATA 1, 256']) {
     assert.throws(
       () => compile(source),
-      (error: unknown) => error instanceof WlanError && error.code === 'PARSE_DATA_RANGE'
+      (error: unknown) => error instanceof AssemblerError && error.code === 'PARSE_DATA_RANGE'
     );
   }
   for (const source of ['ORG -1', 'ORG 65536', 'DOD -1', 'DOD 65536']) {
     assert.throws(
       () => compile(source),
-      (error: unknown) => error instanceof WlanError && error.code === 'PARSE_ADDRESS_RANGE'
+      (error: unknown) => error instanceof AssemblerError && error.code === 'PARSE_ADDRESS_RANGE'
     );
   }
 });
@@ -125,7 +125,7 @@ test('custom commands and localized aliases use the supplied instruction catalog
   assert.equal(result.microAsmText, 'wyak weja dod weak;');
   assert.throws(
     () => compile('DOUBLE'),
-    (error: unknown) => error instanceof WlanError && error.code === 'PARSE_UNKNOWN_MNEMONIC'
+    (error: unknown) => error instanceof AssemblerError && error.code === 'PARSE_UNKNOWN_MNEMONIC'
   );
 });
 
@@ -139,7 +139,7 @@ test('missing operands preserve diagnostic code, source coordinates and context'
   assert.throws(
     () => compile('STP\nDOD'),
     (error: unknown) => {
-      assert.ok(error instanceof WlanError);
+      assert.ok(error instanceof AssemblerError);
       assert.equal(error.code, 'PARSE_BAD_ARITY');
       assert.deepEqual(error.loc, { line: 2, col: 1, length: 3 });
       assert.ok(error.hint);
@@ -163,7 +163,7 @@ test('invalid source rejects unknown tokens, unknown mnemonics and malformed ope
   for (const [source, code] of cases) {
     assert.throws(
       () => compile(source),
-      (error: unknown) => error instanceof WlanError && error.code === code,
+      (error: unknown) => error instanceof AssemblerError && error.code === code,
       source
     );
   }
@@ -178,6 +178,6 @@ test('CRLF, comments and Unicode labels preserve resolved instruction values', (
 test('duplicate command definitions fail before assembling a program', () => {
   assert.throws(
     () => compile('STP', [...commandList, { ...commandList[0], name: 'stp' }]),
-    (error: unknown) => error instanceof WlanError && error.code === 'REG_DUPLICATE'
+    (error: unknown) => error instanceof AssemblerError && error.code === 'REG_DUPLICATE'
   );
 });

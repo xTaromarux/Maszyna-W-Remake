@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { ChatMessage } from '@/Types/Chat';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ChatMessage } from '@/Components/AiChat/Types/Chat';
 import type { ChatSession } from '../Hooks/UseChatSession';
 import MessageContent from './MessageContent';
 

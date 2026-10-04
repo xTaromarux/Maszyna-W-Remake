@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { prepareProgramCompilation } from '../src/Components/InstructionsEditor/Helpers/PrepareProgramCompilation';
-import { commandList } from '../src/Shared/Utils/Data/Commands.js';
-import { WlanError } from '../src/Wlan/Error';
+import { prepareProgramCompilation } from '../src/Components/AssemblyEditor/Compilation/PrepareProgramCompilation';
+import { commandList } from '../src/Assembler/Data/Commands.js';
+import { AssemblerError } from '../src/Assembler/Errors/AssemblerError';
 
 const options = { commandList, codeBits: 4, addresBits: 4 };
 
@@ -24,7 +24,7 @@ test('compilation rejects instruction and data writes beyond configured memory',
     assert.throws(
       () => prepareProgramCompilation(source, options),
       (error: unknown) => {
-        assert.ok(error instanceof WlanError);
+        assert.ok(error instanceof AssemblerError);
         assert.equal(error.code, 'COMPILE_MEMORY_ADDRESS_RANGE');
         assert.equal(error.loc?.line, 2);
         return true;

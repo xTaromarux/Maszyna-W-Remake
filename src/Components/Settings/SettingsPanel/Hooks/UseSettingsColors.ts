@@ -1,5 +1,7 @@
-import type { ColorSelection, ColorTarget, SavedColor } from '@/Types/Colors';
-import type { PendingColor, SettingsPanelProps } from '@/Types/Components';
+import type { ColorSelection } from '@/Shared/Types/Colors';
+import type { ColorTarget } from '@/Machine/Types/EspColors';
+import type { SavedColor, PendingColor, SettingsPanelProps } from '@/Components/Settings/Types';
+
 import { useState } from 'react';
 
 const INITIAL_COLORS: Record<ColorTarget, SavedColor> = {

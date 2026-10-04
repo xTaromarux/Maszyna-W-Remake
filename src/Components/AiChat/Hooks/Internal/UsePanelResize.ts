@@ -2,7 +2,7 @@ import { clamp } from '@/Shared/Utils/Numbers';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEFAULT_PANEL_WIDTH, MAX_WIDTH, MIN_WIDTH } from '../../ChatConfig';
-import { persistPanelWidth, restorePanelWidth } from '../../Helpers/ChatStorage';
+import { persistPanelWidth, restorePanelWidth } from '../../Storage/ChatStorage';
 
 interface ResizeGesture {
   pointerId: number;

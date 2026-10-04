@@ -1,4 +1,4 @@
-import type { ColorData, HSV, RGB } from '@/Types/Colors';
+import type { ColorData, HSV, RGB } from '@/Shared/Types/Colors';
 export function hsvToRgb(h: number, s: number, v: number): RGB {
   const c = v * s,
     x = c * (1 - Math.abs(((h / 60) % 2) - 1)),

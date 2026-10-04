@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import ProcessorDiagram from '../src/Components/ProcessorDiagram';
-import RegisterComponent from '../src/Components/Registers/RegisterComponent';
+import ProcessorDiagram from '../src/Components/ProcessorDiagram/ProcessorDiagram';
+import RegisterComponent from '../src/Components/ProcessorDiagram/Registers/RegisterComponent';
 import { parseRegisterInput } from '../src/Shared/Utils/RegisterInput';
-import { createMachineStore } from '../src/State/CreateMachineStore';
+import { createMachineStore } from '../src/Machine/CreateMachineStore';
 
 test('the complete machine diagram renders on the server without browser globals', () => {
   assert.equal(typeof window, 'undefined');

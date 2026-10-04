@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-const workerPath = fileURLToPath(new URL('../src/Workers/Chat/ChatWorker.ts', import.meta.url));
+const workerPath = fileURLToPath(new URL('../src/Components/AiChat/Worker/ChatWorker.ts', import.meta.url));
 
 type WorkerMessage = {
   messageId?: string;

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { SAVE_DEBOUNCE_MS } from '../../ChatConfig';
-import { persistMessages, restoreApiKey, restoreMessages, restoreSessionId } from '../../Helpers/ChatStorage';
+import { persistMessages, restoreApiKey, restoreMessages, restoreSessionId } from '../../Storage/ChatStorage';
 import type { ChatSessionStore } from './UseChatState';
 
 /** Restores saved keys, history and session ID, and persists history changes and the final snapshot. */

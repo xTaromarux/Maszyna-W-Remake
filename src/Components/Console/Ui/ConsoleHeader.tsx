@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { ConsoleProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ConsoleProps } from '@/Components/Console/Types';
 import ConsoleIcon from './ConsoleIcon';
 
 type Props = Pick<ConsoleProps, 'onClose' | 'onClear'> & {

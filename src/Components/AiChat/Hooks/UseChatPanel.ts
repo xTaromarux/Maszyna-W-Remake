@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@/Types/Chat';
+import type { ChatMessage } from '@/Components/AiChat/Types/Chat';
 import { useEffect, useRef } from 'react';
 import { useDialogFocus } from './Internal/UseDialogFocus';
 import { usePanelResize } from './Internal/UsePanelResize';

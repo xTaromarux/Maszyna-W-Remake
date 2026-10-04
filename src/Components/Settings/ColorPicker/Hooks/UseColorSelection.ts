@@ -1,6 +1,6 @@
 import { colorDataFromHSV, hexToRgb, rgbToHsv } from '@/Shared/Utils/Colors';
 import { clamp01 } from '@/Shared/Utils/Numbers';
-import type { ColorPickerProps } from '@/Types/Components';
+import type { ColorPickerProps } from '@/Components/Settings/ColorPicker/Types';
 import { useEffect, useRef, useState } from 'react';
 
 const parseColor = (color: string) => {

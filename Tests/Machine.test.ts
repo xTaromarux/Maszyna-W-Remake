@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test, { type TestContext } from 'node:test';
-import { createMachineStore } from '../src/State/CreateMachineStore';
-import { prepareProgramCompilation } from '../src/Components/InstructionsEditor/Helpers/PrepareProgramCompilation';
+import { createMachineStore } from '../src/Machine/CreateMachineStore';
+import { prepareProgramCompilation } from '../src/Components/AssemblyEditor/Compilation/PrepareProgramCompilation';
 
 function fixture(context: TestContext, start = false) {
   const saved = new Map<string, string>();

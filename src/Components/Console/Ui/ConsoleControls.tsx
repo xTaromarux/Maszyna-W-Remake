@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { ConsoleControlsProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ConsoleControlsProps } from '@/Components/Console/Types';
 import ConsoleIcon from './ConsoleIcon';
 
 const ConsoleControls = ({ execution, breakpoints }: ConsoleControlsProps) => {

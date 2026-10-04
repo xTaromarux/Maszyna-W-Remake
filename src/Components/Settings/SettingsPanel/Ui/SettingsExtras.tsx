@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { SettingsPanelProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { SettingsPanelProps } from '@/Components/Settings/Types';
 import { useState } from 'react';
 import SettingsSwitch from './SettingsSwitch';
 

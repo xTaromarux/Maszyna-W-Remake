@@ -1,5 +1,5 @@
-import { useI18n } from '@/I18n/Index';
-import type { LogError } from '@/Types/Simulator';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { LogError } from '@/Machine/Types/Machine';
 
 type Props = { error: LogError };
 

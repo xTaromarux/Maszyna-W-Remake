@@ -1,8 +1,8 @@
-import type { ProcessorDiagramProps } from '@/Types/Components';
-import RPRegisterSection from '../../Registers/RpRegisterSection';
-import RZRegisterSection from '../../Registers/RzRegisterSection';
-import SignalButton from '../../SignalButton';
-import type { RegisterBindings } from '../Helpers/RegisterBindings';
+import type { ProcessorDiagramProps } from '@/Components/ProcessorDiagram/Types';
+import RPRegisterSection from '../Registers/RpRegisterSection';
+import RZRegisterSection from '../Registers/RzRegisterSection';
+import SignalButton from './SignalButton';
+import type { RegisterBindings } from '../Bindings/RegisterBindings';
 
 type InterruptLayerProps = Pick<ProcessorDiagramProps, 'extras' | 'signals' | 'RZ' | 'RP' | 'onClickItem'> & {
   registers: Pick<RegisterBindings, 'RZ' | 'RP'>;

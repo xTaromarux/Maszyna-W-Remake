@@ -1,7 +1,7 @@
 'use client';
 
-import { useI18n } from '@/I18n/Index';
-import type { ErrorPageProps } from '@/Types/Common';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ErrorPageProps } from '@/Shared/Types/React';
 
 const ErrorPage = ({ retry }: ErrorPageProps) => {
   const { t } = useI18n();

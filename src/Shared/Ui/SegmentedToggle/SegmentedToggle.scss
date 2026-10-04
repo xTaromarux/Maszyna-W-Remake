@@ -1,0 +1,56 @@
+@use '../../../Styles/Abstracts/_Mixins.scss' as mixins;
+
+.toggleButtonDiv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: stretch;
+  align-items: stretch;
+  background-color: var(--buttonBackgroundColor, white);
+  border-radius: 2rem;
+  position: relative;
+}
+.toggleButtonDiv > span {
+  z-index: 3;
+  @include mixins.flex-row(0);
+  justify-content: center;
+  align-items: center;
+  min-width: 7rem;
+  overflow: clip;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  user-select: none;
+  transition: 0.25s;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+/* Default state - all spans use normal text color */
+.toggleButtonDiv > span {
+  color: var(--buttonTextColor, black);
+}
+
+/* Active state - the span under the blue ball gets white text */
+.toggleButtonDiv.active > span:first-child {
+  color: #eee;
+}
+
+.toggleButtonDiv:not(.active) > span:last-child {
+  color: #eee;
+}
+
+.toggleButtonDiv::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #0066cc;
+  border-radius: 2rem;
+  transition: 0.25s ease-in-out;
+}
+
+.toggleButtonDiv.active::after {
+  left: 50%;
+}

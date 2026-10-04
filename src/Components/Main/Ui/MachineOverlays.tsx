@@ -1,10 +1,10 @@
-import { useI18n } from '@/I18n/Index';
-import type { ExtrasPatch, Machine } from '@/Types/Simulator';
-import type { UpdateMachineField } from '../Helpers/MachineBindings';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ExtrasPatch, Machine } from '@/Machine/Types/Machine';
+import type { UpdateMachineField } from '../Bindings/MachineBindings';
 import AiChat from '../../AiChat/AiChat';
-import CommandList from '../../CommandList';
-import LabCatalogDialog from '../../Settings/LabCatalogDialog';
-import SettingsOverlay from '../../Settings/SettingsOverlay';
+import CommandCatalog from '../../CommandCatalog/CommandCatalog';
+import LabCatalogDialog from '../../Labs/LabCatalogDialog';
+import SettingsOverlay from '../../Settings/SettingsOverlay/SettingsOverlay';
 
 interface MachineOverlaysProps {
   machine: Machine;
@@ -73,7 +73,7 @@ export const MachineOverlays = ({ machine, update }: MachineOverlaysProps) => {
         onSelectLab={machine.selectLab}
         onLoadLab={machine.loadSelectedLab}
       />
-      <CommandList
+      <CommandCatalog
         visible={machine.commandListOpen}
         commandList={machine.commandList}
         codeBits={machine.codeBits}

@@ -1,6 +1,6 @@
-import { useI18n } from '@/I18n/Index';
-import type { ColorTarget } from '@/Types/Colors';
-import ColorPickerPopup from '../../ColorPickerPopup';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ColorTarget } from '@/Machine/Types/EspColors';
+import ColorPickerPopup from '../../ColorPickerPopup/ColorPickerPopup';
 import type { useSettingsColors } from '../Hooks/UseSettingsColors';
 
 const COLOR_TITLES = { signal_line: 'signalLine', display: 'display', bus: 'bus' };

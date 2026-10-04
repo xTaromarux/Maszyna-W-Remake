@@ -97,13 +97,13 @@ Testy jednostkowe obejmują assembler, silnik, renderowanie rejestrów, worker c
 ## Struktura
 
 - `src/app/` — App Router, metadane, ekran błędu i klient symulatora.
-- `src/Components/` — komponenty React i dotychczasowe podziały funkcjonalne.
-- [`src/Types/`](./src/Types/Readme.md) ? wsp?lne typy aplikacji; komponenty `.tsx` i narz?dzia `.ts` sprawdzane z `strict: true`.
-- `src/State/` — niezależny model maszyny, operacje, selektory i subskrypcja przez `useSyncExternalStore`.
-- [`src/Shared/Utils/`](./src/Shared/Utils/Readme.md) — wspólne funkcje liczbowe, kolory, aliasy rozkazów, storage, klonowanie i opóźnienia, bez zależności od React.
-- `src/Wlan/`, `src/CodeMirrorLangs/` — assembler, gramatyki i obsługa języków.
-- `src/I18n/` — pełne słowniki PL/EN i tłumaczenia bez Vue.
-- `src/Styles/` — zachowany SCSS oraz izolowane style komponentów przeniesione z SFC.
+- `src/Components/` — obszary interfejsu z lokalnymi typami, hookami, UI i stylami.
+- `src/Machine/` — stan maszyny, operacje, selektory, dane laboratoriów i subskrypcja przez `useSyncExternalStore`.
+- `src/Assembler/` — kompilator, rejestr instrukcji, aliasy rozkazów i kontrakty mikroprogramu.
+- `src/Editor/` — CodeMirror, konfiguracja edytora, gramatyki i generowane parsery.
+- `src/Shared/` — wspólne UI, hooki, błędy, [typy](./src/Shared/Types/Readme.md) i [narzędzia](./src/Shared/Utils/Readme.md).
+- `src/I18n/` — słowniki PL/EN, tłumaczenia i hook subskrybujący zmiany języka.
+- `src/Styles/` — globalne podstawy i agregatory zachowujące kolejność stylów komponentów.
 - `Tests/` — testy regresji i `Tests/E2e/`.
 
 Pełna inwentaryzacja komponentów, decyzje dla każdej zależności i ograniczenia weryfikacji: [Docs/MigrationAudit.md](./Docs/MigrationAudit.md).

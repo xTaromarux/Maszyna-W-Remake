@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clamp, clamp01, positiveModulo, toSigned, toUnsigned, formatRadix, formatNumberInput } from '../src/Shared/Utils/Numbers';
 import { hsvToRgb, rgbToHsv, hexToRgb, rgbToHex, colorDataFromHSV } from '../src/Shared/Utils/Colors';
-import { collectCommandAliases, normalizeLocaleChain, normalizeMnemonicToken } from '../src/Shared/Utils/CommandMnemonics';
+import { collectCommandAliases, normalizeLocaleChain, normalizeMnemonicToken } from '../src/Assembler/CommandMnemonics';
 import { getStorageItem, setStorageItem } from '../src/Shared/Utils/Storage';
 import { cloneJson } from '../src/Shared/Utils/Json';
 import { generateId } from '../src/Shared/Utils/Identifiers';

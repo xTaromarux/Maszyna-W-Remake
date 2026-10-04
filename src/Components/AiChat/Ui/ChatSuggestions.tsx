@@ -1,4 +1,4 @@
-import { useI18n } from '@/I18n/Index';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 interface Props {
   onDismiss: () => void;
   onSelect: (text: string) => void;

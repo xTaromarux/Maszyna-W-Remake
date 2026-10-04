@@ -1,7 +1,8 @@
-import SegmentedToggle from '@/Components/SegmentedToggle';
-import { useI18n } from '@/I18n/Index';
-import type { Update } from '@/Types/Common';
-import type { SettingsPanelProps, ToggleOption, ToggleValue } from '@/Types/Components';
+import SegmentedToggle from '@/Shared/Ui/SegmentedToggle/SegmentedToggle';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { Update } from '@/Shared/Types/Common';
+import type { SettingsPanelProps } from '@/Components/Settings/Types';
+import type { ToggleOption, ToggleValue } from '@/Shared/Ui/SegmentedToggle/Types';
 import type { ReactNode } from 'react';
 
 type AppearanceProps = Pick<

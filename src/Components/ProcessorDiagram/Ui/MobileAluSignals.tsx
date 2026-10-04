@@ -1,5 +1,5 @@
-import type { ProcessorDiagramProps } from '@/Types/Components';
-import SignalButton from '../../SignalButton';
+import type { ProcessorDiagramProps } from '@/Components/ProcessorDiagram/Types';
+import SignalButton from './SignalButton';
 
 type MobileAluSignalsProps = Pick<ProcessorDiagramProps, 'signals' | 'onClickItem'>;
 

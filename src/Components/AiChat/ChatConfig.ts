@@ -1,4 +1,4 @@
-import type { RateLimit } from '@/Types/Chat';
+import type { RateLimit } from '@/Components/AiChat/Types/Chat';
 
 export const STORAGE_VERSION = 1;
 export const STORAGE_KEY = 'aiChat.messages';

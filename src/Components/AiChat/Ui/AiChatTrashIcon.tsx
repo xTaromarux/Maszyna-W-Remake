@@ -1,4 +1,4 @@
-import type { IconProps } from '@/Types/Common';
+import type { IconProps } from '@/Shared/Types/React';
 
 const AiChatTrashIcon = ({ width = 20, height = 20, fill = 'currentColor', className = '', style, ...rest }: IconProps) => {
   return (

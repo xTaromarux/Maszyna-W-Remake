@@ -1,5 +1,5 @@
-import { ErrorLevel } from '@/Types/Errors';
-import type { LogEntry } from '@/Types/Simulator';
+import { ErrorLevel } from '@/Shared/Errors/Types';
+import type { LogEntry } from '@/Machine/Types/Machine';
 
 const padDatePart = (number: number) => String(number).padStart(2, '0');
 

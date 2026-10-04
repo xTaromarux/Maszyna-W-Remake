@@ -1,5 +1,6 @@
-import { useI18n } from '@/I18n/Index';
-import type { ChatState, StreamChunk } from '@/Types/Chat';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ChatState } from '@/Components/AiChat/Types/Chat';
+import type { StreamChunk } from '@/Components/AiChat/Types/WorkerProtocol';
 import { useRef } from 'react';
 import type { ChatSessionStore } from './UseChatState';
 
@@ -104,7 +105,7 @@ export const useChatReplies = ({ latest, runtime, patch, stopAnimation }: ChatSe
 
   const ensureWorker = () => {
     if (!runtime.current.worker) {
-      const worker = new Worker(new URL('../../../../Workers/Chat/ChatWorker.ts', import.meta.url), { type: 'module' });
+      const worker = new Worker(new URL('../../Worker/ChatWorker.ts', import.meta.url), { type: 'module' });
 
       worker.addEventListener('message', receiveWorkerMessage);
       worker.addEventListener('error', (event) => {

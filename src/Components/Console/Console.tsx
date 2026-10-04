@@ -1,6 +1,6 @@
 'use client';
 
-import type { ConsoleProps } from '@/Types/Components';
+import type { ConsoleProps } from '@/Components/Console/Types';
 import { useConsoleScroll } from './Hooks/UseConsoleScroll';
 import ConsoleEntry from './Ui/ConsoleEntry';
 import ConsoleHeader from './Ui/ConsoleHeader';

@@ -1,4 +1,4 @@
-import type { SvgChildrenProps } from '@/Types/Components';
+import type { SvgChildrenProps } from '@/Shared/Types/React';
 
 type Props = SvgChildrenProps & {
   size?: number;

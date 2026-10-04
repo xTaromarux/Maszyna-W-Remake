@@ -1,7 +1,7 @@
 'use client';
 
-import { useI18n } from '@/I18n/Index';
-import type { ConsoleDockProps } from '@/Types/Components';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
+import type { ConsoleDockProps } from '@/Components/Console/Types';
 import Console from './Console';
 import ConsoleControls from './Ui/ConsoleControls';
 

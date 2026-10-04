@@ -1,31 +1,110 @@
 import type { ColorData, HSV, RGB } from '@/Shared/Types/Colors';
-export function hsvToRgb(h: number, s: number, v: number): RGB {
-  const c = v * s,
-    x = c * (1 - Math.abs(((h / 60) % 2) - 1)),
-    m = v - c;
-  const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
-}
-export function rgbToHsv(r: number, g: number, b: number): HSV {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b),
-    d = max - min;
-  let h = d === 0 ? 0 : max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
-  if (h < 0) h += 360;
-  return { h, s: max === 0 ? 0 : d / max, v: max };
-}
-export function rgbToHex({ r, g, b }: RGB): string {
-  return `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
-}
-export function hexToRgb(hex: string | null | undefined): RGB | null {
-  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
-  return match ? { r: parseInt(match[1], 16), g: parseInt(match[2], 16), b: parseInt(match[3], 16) } : null;
-}
-export function colorDataFromHSV(hsv: HSV, brightness: number): ColorData {
+
+const HEX_COLOR_PATTERN = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+
+export const hsvToRgb = (hue: number, saturation: number, value: number): RGB => {
+  const chroma = value * saturation;
+  const intermediateComponent = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const matchOffset = value - chroma;
+
+  let red: number;
+  let green: number;
+  let blue: number;
+
+  if (hue < 60) {
+    red = chroma;
+    green = intermediateComponent;
+    blue = 0;
+  } else if (hue < 120) {
+    red = intermediateComponent;
+    green = chroma;
+    blue = 0;
+  } else if (hue < 180) {
+    red = 0;
+    green = chroma;
+    blue = intermediateComponent;
+  } else if (hue < 240) {
+    red = 0;
+    green = intermediateComponent;
+    blue = chroma;
+  } else if (hue < 300) {
+    red = intermediateComponent;
+    green = 0;
+    blue = chroma;
+  } else {
+    red = chroma;
+    green = 0;
+    blue = intermediateComponent;
+  }
+
+  return {
+    r: Math.round((red + matchOffset) * 255),
+    g: Math.round((green + matchOffset) * 255),
+    b: Math.round((blue + matchOffset) * 255),
+  };
+};
+
+export const rgbToHsv = (r: number, g: number, b: number): HSV => {
+  const red = r / 255;
+  const green = g / 255;
+  const blue = b / 255;
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const chroma = maximum - minimum;
+
+  let hue: number;
+  if (chroma === 0) {
+    hue = 0;
+  } else if (maximum === red) {
+    hue = 60 * (((green - blue) / chroma) % 6);
+  } else if (maximum === green) {
+    hue = 60 * ((blue - red) / chroma + 2);
+  } else {
+    hue = 60 * ((red - green) / chroma + 4);
+  }
+
+  if (hue < 0) {
+    hue += 360;
+  }
+
+  return {
+    h: hue,
+    s: maximum === 0 ? 0 : chroma / maximum,
+    v: maximum,
+  };
+};
+
+export const rgbToHex = ({ r, g, b }: RGB): string =>
+  `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
+
+export const hexToRgb = (hex: string | null | undefined): RGB | null => {
+  const match = HEX_COLOR_PATTERN.exec(hex || '');
+  if (!match) {
+    return null;
+  }
+
+  return {
+    r: parseInt(match[1], 16),
+    g: parseInt(match[2], 16),
+    b: parseInt(match[3], 16),
+  };
+};
+
+export const colorDataFromHSV = (hsv: HSV, brightness: number): ColorData => {
   const baseRgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
-  const rgb: RGB = { r: Math.round(baseRgb.r * brightness), g: Math.round(baseRgb.g * brightness), b: Math.round(baseRgb.b * brightness) };
-  return { hex: rgbToHex(rgb), rgb, hsv: { ...hsv }, brightness, rgbScaled: rgb, pwm: rgb, baseRgb };
-}
+  const rgb: RGB = {
+    r: Math.round(baseRgb.r * brightness),
+    g: Math.round(baseRgb.g * brightness),
+    b: Math.round(baseRgb.b * brightness),
+  };
+
+  return {
+    hex: rgbToHex(rgb),
+    rgb,
+    hsv: { ...hsv },
+    brightness,
+    rgbScaled: rgb,
+    pwm: rgb,
+    baseRgb,
+  };
+};

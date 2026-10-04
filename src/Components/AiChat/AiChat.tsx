@@ -3,6 +3,7 @@
 import { useI18n } from '@/I18n/Index';
 import { ApiState } from '@/Types/Chat';
 import type { AiChatProps } from '@/Types/Components';
+import type { FormEvent, KeyboardEvent, MouseEvent } from 'react';
 import AiChatTrashIcon from './Ui/AiChatTrashIcon';
 import ApiKeyDialog from './Ui/ApiKeyDialog';
 import ChatComposer from './Ui/ChatComposer';
@@ -11,7 +12,7 @@ import ChatSuggestions from './Ui/ChatSuggestions';
 import { useChatSession } from './Hooks/UseChatSession';
 import { useChatPanel } from './Hooks/UseChatPanel';
 
-export default function AiChat({ visible = false, title = '', placeholder = '', instruction = '', onClose }: AiChatProps) {
+const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '', onClose }: AiChatProps) => {
   const { t } = useI18n();
   const session = useChatSession(visible);
   const {
@@ -29,14 +30,48 @@ export default function AiChat({ visible = false, title = '', placeholder = '', 
     sendUserMessage,
   } = session;
   const panel = useChatPanel(visible, showApiKeyGate, state.messages);
-  if (!visible) return null;
+
+  const closeOverlay = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
+  };
+
+  const handleEscape = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Escape') {
+      return;
+    }
+
+    event.stopPropagation();
+    if (state.showApiKeyModal && hasApiKey) {
+      closeApiKeyModal();
+    } else {
+      onClose?.();
+    }
+  };
+
+  const dismissSuggestions = () => patch({ showSuggestions: false });
+
+  const selectSuggestion = (text: string) => {
+    patch({ text });
+    if (!hasApiKey) {
+      openApiKeyModal();
+    } else {
+      panel.focusPrimary();
+    }
+  };
+
+  const saveKeyAndFocus = (event: FormEvent<HTMLFormElement>) => {
+    saveApiKey(event);
+    panel.focusPrimary();
+  };
+
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <div
-      className="chatOverlay"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose?.();
-      }}
-    >
+    <div className="chatOverlay" onClick={closeOverlay}>
       <div
         ref={panel.dialog}
         tabIndex={-1}
@@ -47,13 +82,7 @@ export default function AiChat({ visible = false, title = '', placeholder = '', 
         aria-label={title || t('aiChat.title')}
         style={{ width: panel.panelWidth }}
         onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.stopPropagation();
-            if (state.showApiKeyModal && hasApiKey) closeApiKeyModal();
-            else onClose?.();
-          }
-        }}
+        onKeyDown={handleEscape}
       >
         <div className="resizer" {...panel.resizeHandleProps} />
         <header className="chatHeader">
@@ -88,14 +117,7 @@ export default function AiChat({ visible = false, title = '', placeholder = '', 
               </div>
             )}
             {state.showSuggestions && !state.messages.length && (
-              <ChatSuggestions
-                onDismiss={() => patch({ showSuggestions: false })}
-                onSelect={(text) => {
-                  patch({ text });
-                  if (!hasApiKey) openApiKeyModal();
-                  else panel.focusPrimary();
-                }}
-              />
+              <ChatSuggestions onDismiss={dismissSuggestions} onSelect={selectSuggestion} />
             )}
             <ChatConversation state={state} cancelResponse={cancelResponse} />
           </div>
@@ -115,10 +137,7 @@ export default function AiChat({ visible = false, title = '', placeholder = '', 
               patch={patch}
               hasApiKey={hasApiKey}
               closeApiKeyModal={closeApiKeyModal}
-              saveApiKey={(event) => {
-                saveApiKey(event);
-                panel.focusPrimary();
-              }}
+              saveApiKey={saveKeyAndFocus}
               clearApiKey={clearApiKey}
               inputRef={panel.apiKeyInput}
             />
@@ -127,4 +146,6 @@ export default function AiChat({ visible = false, title = '', placeholder = '', 
       </div>
     </div>
   );
-}
+};
+
+export default AiChat;

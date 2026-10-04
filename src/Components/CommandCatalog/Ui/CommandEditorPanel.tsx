@@ -2,6 +2,8 @@ import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { CommandCatalog } from '../Hooks/UseCommandCatalog';
 import type { useCommandCatalogFiles } from '../Hooks/UseCommandCatalogFiles';
 import { ActionIcon } from './ActionIcon';
+import { CommandCodeActions, CommandCodeEditor } from './CommandCodeEditor';
+import { CommandNameEditor } from './CommandNameEditor';
 
 interface CommandEditorPanelProps {
   catalog: Pick<
@@ -57,125 +59,34 @@ export const CommandEditorPanel = ({ catalog, files }: CommandEditorPanelProps) 
 
   return (
     <div data-editor-command-list="" className="right-panel">
-      {(selected || isCreatingNew) && (
-        <div data-editor-command-list="" id="commandDetails">
-          <div data-editor-command-list="" className="roskazCode">
-            {selected ? (
-              <textarea
-                data-editor-command-list=""
-                value={editCommandEnabled ? editCommandField : selected.lines || ''}
-                onChange={(event) => setEditCommandField(event.target.value)}
-                disabled={!editCommandEnabled}
-                aria-label={t('commandList.codePlaceholder')}
-              />
-            ) : (
-              <textarea
-                data-editor-command-list=""
-                value={newCommandLines}
-                onChange={(event) => setNewCommandLines(event.target.value)}
-                placeholder={t('commandList.codePlaceholder')}
-              />
-            )}
-          </div>
-        </div>
-      )}
+      <CommandCodeEditor
+        selected={selected}
+        isCreatingNew={isCreatingNew}
+        editCommandEnabled={editCommandEnabled}
+        editCommandField={editCommandField}
+        newCommandLines={newCommandLines}
+        setEditCommandField={setEditCommandField}
+        setNewCommandLines={setNewCommandLines}
+      />
       <div data-editor-command-list="" className="actionButtons">
-        {selected && (
-          <div data-editor-command-list="" className="top-actions">
-            <button
-              data-editor-command-list=""
-              onClick={deleteCommand}
-              title={t('commandList.deleteTitle')}
-              className="execution-btn execution-btn--run"
-            >
-              <ActionIcon name="trash" />
-              <span data-editor-command-list="">{t('commandList.delete')}</span>
-            </button>
-            <button
-              data-editor-command-list=""
-              onClick={startCodeEdit}
-              disabled={!selected || editCommandEnabled}
-              title={t('commandList.editTitle')}
-              className="execution-btn execution-btn--run"
-            >
-              <span data-editor-command-list="">{t('commandList.edit')}</span>
-            </button>
-            <button
-              data-editor-command-list=""
-              onClick={saveCommand}
-              disabled={!editCommandEnabled}
-              title={t('commandList.saveTitle')}
-              className="execution-btn execution-btn--run"
-            >
-              <span data-editor-command-list="">{t('commandList.save')}</span>
-            </button>
-          </div>
-        )}
-        <div data-editor-command-list="" className="commandInputSection">
-          <div data-editor-command-list="" className="unifiedCommandInput">
-            <input
-              data-editor-command-list=""
-              type="text"
-              value={commandInputValue}
-              onChange={(event) => changeInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (!isEditingName) return;
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  confirmNameEdit();
-                } else if (event.key === 'Escape') {
-                  event.preventDefault();
-                  cancelNameEdit();
-                }
-              }}
-              placeholder={placeholder}
-              className="commandInput"
-            />
-          </div>
-          {isEditingName ? (
-            <div data-editor-command-list="" className="editingButtons">
-              <button
-                data-editor-command-list=""
-                onClick={confirmNameEdit}
-                title={t('commandList.confirmTitle')}
-                className="execution-btn execution-btn--run"
-              >
-                <ActionIcon name="confirm" />
-                <span data-editor-command-list="">{t('commandList.confirm')}</span>
-              </button>
-              <button
-                data-editor-command-list=""
-                onClick={cancelNameEdit}
-                title={t('commandList.cancelTitle')}
-                className="execution-btn execution-btn--run"
-              >
-                <ActionIcon name="cancel" />
-                <span data-editor-command-list="">{t('commandList.cancel')}</span>
-              </button>
-            </div>
-          ) : matchingCommand ? (
-            <button
-              data-editor-command-list=""
-              onClick={startNameEdit}
-              title={t('commandList.editNameTitle')}
-              className="execution-btn execution-btn--run"
-            >
-              <ActionIcon name="edit" />
-              <span data-editor-command-list="">{t('commandList.edit')}</span>
-            </button>
-          ) : (
-            <button
-              data-editor-command-list=""
-              onClick={addCommand}
-              disabled={!commandInputValue.trim()}
-              title={t('commandList.addTitle')}
-              className="execution-btn execution-btn--run"
-            >
-              <ActionIcon name="add" />
-              <span data-editor-command-list="">{t('commandList.add')}</span>
-            </button>
-          )}
-        </div>
+        <CommandCodeActions
+          selected={selected}
+          editCommandEnabled={editCommandEnabled}
+          deleteCommand={deleteCommand}
+          startCodeEdit={startCodeEdit}
+          saveCommand={saveCommand}
+        />
+        <CommandNameEditor
+          commandInputValue={commandInputValue}
+          isEditingName={isEditingName}
+          hasMatchingCommand={Boolean(matchingCommand)}
+          placeholder={placeholder}
+          changeInput={changeInput}
+          confirmNameEdit={confirmNameEdit}
+          cancelNameEdit={cancelNameEdit}
+          startNameEdit={startNameEdit}
+          addCommand={addCommand}
+        />
         <div data-editor-command-list="" className="fileActions">
           <button
             data-editor-command-list=""

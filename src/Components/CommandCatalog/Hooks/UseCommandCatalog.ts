@@ -5,6 +5,7 @@ import type { CommandCatalogProps } from '@/Components/CommandCatalog/Types';
 import type { RuntimeCommand } from '@/Assembler/Types/Registry';
 import { useEffect, useRef, useState } from 'react';
 import { findDuplicateNames } from '../Helpers/CommandCatalog';
+import { useCommandDraft } from './Internal/UseCommandDraft';
 
 /** Keeps catalog edits and selection in sync, retaining commands hidden by a smaller opcode width. */
 export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateCommandList }: CommandCatalogProps) => {
@@ -12,13 +13,19 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
   const [localList, setLocalList] = useState(() => cloneJson(commandList));
   const fullListRef = useRef(cloneJson(commandList));
   const [selectedCommand, setSelectedCommand] = useState(commandList.length ? 0 : null);
-  const [editCommandEnabled, setEditCommandEnabled] = useState(false);
-  const [editCommandField, setEditCommandField] = useState('');
-  const [commandInputValue, setCommandInputValue] = useState('');
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editingCommandOriginalName, setEditingCommandOriginalName] = useState('');
-  const [newCommandLines, setNewCommandLines] = useState('');
+  const draft = useCommandDraft();
+  const {
+    editCommandEnabled,
+    editCommandField,
+    commandInputValue,
+    isCreatingNew,
+    isEditingName,
+    editingCommandOriginalName,
+    newCommandLines,
+    cancelNameEdit,
+    setEditCommandField,
+    setNewCommandLines,
+  } = draft;
   const listRef = useRef<HTMLDivElement | null>(null);
   const previousBits = useRef(codeBits);
   const lastEmitted = useRef<string | null>(null);
@@ -49,8 +56,7 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     fullListRef.current = cloneJson(next);
     setLocalList(next);
     setSelectedCommand((current) => (next.length ? Math.min(current ?? 0, next.length - 1) : null));
-    setEditCommandEnabled(false);
-    setIsEditingName(false);
+    draft.resetExistingEdits();
   }, [incomingJson]);
 
   useEffect(() => {
@@ -61,34 +67,30 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     const next = cloneJson(fullListRef.current.slice(0, maxCommands));
     setLocalList(next);
     setSelectedCommand((current) => (next.length ? Math.min(current ?? 0, next.length - 1) : null));
-    setEditCommandEnabled(false);
+    draft.stopCodeEdit();
     emitUpdate(next);
   }, [codeBits]);
 
   const selectCommand = (index: number) => {
     setSelectedCommand(index);
-    setCommandInputValue(localList[index]?.name || '');
-    setIsCreatingNew(false);
-    setEditCommandEnabled(false);
-    setIsEditingName(false);
+    draft.selectExistingDraft(localList[index]?.name || '');
   };
 
   const changeInput = (value: string) => {
-    setCommandInputValue(value);
+    draft.updateCommandInput(value);
     if (isEditingName) {
       return;
     }
     const index = localList.findIndex(
       (command) => normalizeMnemonicToken(command.name, 'lower') === normalizeMnemonicToken(value, 'lower')
     );
-    setEditCommandEnabled(false);
+    draft.stopCodeEdit();
     if (value.trim() && index >= 0) {
       setSelectedCommand(index);
-      setIsCreatingNew(false);
+      draft.resolveInputMatch(value, true);
     } else {
       setSelectedCommand(null);
-      setIsCreatingNew(!!value.trim());
-      if (!isCreatingNew) setNewCommandLines('');
+      draft.resolveInputMatch(value, false);
     }
   };
 
@@ -101,7 +103,7 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
       command.name === selected.name ? { ...command, lines: editCommandField } : command
     );
     setLocalList(next);
-    setEditCommandEnabled(false);
+    draft.stopCodeEdit();
     emitUpdate(next);
   };
 
@@ -114,24 +116,15 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     const nextIndex = next.length ? Math.min(selectedCommand ?? 0, next.length - 1) : null;
     setLocalList(next);
     setSelectedCommand(nextIndex);
-    setCommandInputValue(nextIndex == null ? '' : next[nextIndex].name);
-    setIsCreatingNew(false);
-    setEditCommandEnabled(false);
-    setIsEditingName(false);
+    draft.selectExistingDraft(nextIndex == null ? '' : next[nextIndex].name);
     emitUpdate(next);
-  };
-
-  const cancelNameEdit = () => {
-    setCommandInputValue(editingCommandOriginalName);
-    setIsEditingName(false);
-    setEditingCommandOriginalName('');
   };
 
   const confirmNameEdit = () => {
     const nextName = commandInputValue.trim();
     if (!nextName) {
       alert(t('commandList.errors.emptyName'));
-      setCommandInputValue(editingCommandOriginalName);
+      draft.restoreNameDraft();
       return;
     }
     const originalKey = normalizeMnemonicToken(editingCommandOriginalName, 'lower');
@@ -149,7 +142,7 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
       )
     ) {
       alert(t('commandList.errors.duplicate', { name: nextName }));
-      setCommandInputValue(editingCommandOriginalName);
+      draft.restoreNameDraft();
       return;
     }
     const rename = (command: RuntimeCommand) =>
@@ -157,10 +150,9 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     const next = localList.map(rename);
     fullListRef.current = fullListRef.current.map(rename);
     setLocalList(next);
-    setCommandInputValue(nextName);
+    draft.updateCommandInput(nextName);
     setSelectedCommand(index);
-    setIsEditingName(false);
-    setEditingCommandOriginalName('');
+    draft.finishNameEdit();
     emitUpdate(next);
   };
 
@@ -189,9 +181,7 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     fullListRef.current = [...fullListRef.current, cloneJson(command)];
     setLocalList(next);
     setSelectedCommand(next.length - 1);
-    setCommandInputValue(name);
-    setIsCreatingNew(false);
-    setNewCommandLines('');
+    draft.finishNewCommand(name);
     emitUpdate(next);
     requestAnimationFrame(() =>
       listRef.current?.querySelectorAll('button')[next.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -211,26 +201,21 @@ export const useCommandCatalog = ({ commandList = [], codeBits = 6, onUpdateComm
     fullListRef.current = normalized;
     setLocalList(next);
     setSelectedCommand(next.length ? 0 : null);
-    setCommandInputValue(next[0]?.name || '');
-    setEditCommandEnabled(false);
-    setIsEditingName(false);
-    setIsCreatingNew(false);
+    draft.resetImportedDraft(next[0]?.name || '');
   };
 
   const startCodeEdit = () => {
     if (!selected) {
       return;
     }
-    setEditCommandField(selected.lines || '');
-    setEditCommandEnabled(true);
+    draft.startCodeEdit(selected.lines || '');
   };
 
   const startNameEdit = () => {
     if (!matchingCommand) {
       return;
     }
-    setIsEditingName(true);
-    setEditingCommandOriginalName(matchingCommand.name);
+    draft.startNameEdit(matchingCommand.name);
   };
 
   const placeholder = isEditingName

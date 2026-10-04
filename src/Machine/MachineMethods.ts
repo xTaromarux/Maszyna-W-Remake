@@ -1,3 +1,4 @@
+import { runControlActions } from './Actions/RunControlActions';
 import type { Machine, MachineActions, MicroActions } from './Types/Machine';
 import { executionActions } from './Actions/ExecutionActions';
 import { webSocketActions } from './Actions/WebSocketActions';
@@ -56,10 +57,10 @@ export const machineMethods: Omit<MachineActions, keyof MicroActions> & ThisType
   _refreshHighlight: executionActions._refreshHighlight,
   getResolvedPhase: executionActions.getResolvedPhase,
   evaluateFlag: executionActions.evaluateFlag,
-  stopRun: executionActions.stopRun,
-  runCode: executionActions.runCode,
-  _stopRun: executionActions._stopRun,
-  runToEndFast: executionActions.runToEndFast,
+  stopRun: runControlActions.stopRun,
+  runCode: runControlActions.runCode,
+  _stopRun: runControlActions._stopRun,
+  runToEndFast: runControlActions.runToEndFast,
   resetValues: executionActions.resetValues,
   restoreDefaults: configurationActions.restoreDefaults,
   openCommandList: presentationActions.openCommandList,
@@ -67,6 +68,6 @@ export const machineMethods: Omit<MachineActions, keyof MicroActions> & ThisType
   closeConsole: presentationActions.closeConsole,
   clearConsole: presentationActions.clearConsole,
   handleKeyPress: presentationActions.handleKeyPress,
-  clearActiveTimeouts: executionActions.clearActiveTimeouts,
+  clearActiveTimeouts: runControlActions.clearActiveTimeouts,
   testEnhancedConsole: presentationActions.testEnhancedConsole,
 };

@@ -1,8 +1,7 @@
 import { getErrorMessage } from '@/Shared/Utils/Errors';
-import type { MicroProgramEntry, Phase } from '@/Assembler/Types/Model';
 import type { Machine, MachineActions } from '@/Machine/Types/Machine';
-import { sleep } from '../../Shared/Utils/Async';
 import { clamp } from '../../Shared/Utils/Numbers';
+import { executePlainStep, executeStructuredStep } from '../ExecuteProgramStep';
 
 type Actions = Pick<
   MachineActions,
@@ -28,12 +27,7 @@ type Actions = Pick<
   | '_refreshHighlight'
   | 'getResolvedPhase'
   | 'evaluateFlag'
-  | 'stopRun'
-  | 'runCode'
-  | '_stopRun'
-  | 'runToEndFast'
   | 'resetValues'
-  | 'clearActiveTimeouts'
 >;
 
 /** Existing execution operations, bound to the machine by the store. */
@@ -344,257 +338,19 @@ export const executionActions: Actions & ThisType<Machine> = {
     this.addLog(this.t('logs.separator'), 'interrupt');
   },
 
-  // REFACTOR
   executeLine() {
-    const setHighlight = (node?: Phase | MicroProgramEntry) => {
-      if (this._headless) return;
-      if (node && typeof node.srcLine === 'number' && typeof node.srcLine === 'number' && Number.isFinite(node.srcLine)) {
-        this.activeLine = node.srcLine;
-        return;
-      }
-      this._refreshHighlight();
-    };
-
-    const shouldPauseOn = (line: number | undefined) => {
-      if (this._skipNextBreakpoint) {
-        this._skipNextBreakpoint = false;
-        return false;
-      }
-      return (
-        this.isRunning &&
-        this.breakpointsEnabled &&
-        typeof line === 'number' &&
-        Number.isFinite(line) &&
-        this.breakpoints &&
-        typeof this.breakpoints.has === 'function' &&
-        this.breakpoints.has(line)
-      );
-    };
-
-    const stopAtBreakpoint = (line: number | undefined) => {
-      if (!shouldPauseOn(line)) return false;
-      if (typeof line === 'number' && Number.isFinite(line)) this.activeLine = line;
-      this.addLog(this.t('logs.breakpointPause', { line }), 'system');
-      this._stopRun();
-      return true;
-    };
-
-    const finishStructuredProgram = () => {
-      this.uncompileCode();
-      this.addLog(this.t('logs.codeFinished'), 'compiler');
-    };
-
-    const moveToNextPhase = () => {
-      this.activePhaseIndex += 1;
-      const instruction = this.compiledProgram[this.activeInstrIndex];
-      if (this.activePhaseIndex >= (instruction?.phases?.length || 0)) {
-        // Legacy assembler templates keep STOP after the instruction's phases in metadata.
-        if (instruction?.meta?.postAsm?.includes('stop')) {
-          this.uncompileCode();
-          this.addLog(this.t('logs.stopInstr'), 'compiler');
-          return;
-        }
-
-        this.activeInstrIndex += 1;
-        this.activePhaseIndex = 0;
-      }
-    };
-
-    const jumpToProgramCounter = () => {
-      const target = this.programCounter;
-      if (target >= 0 && target < this.compiledProgram.length) {
-        this.activeInstrIndex = target;
-        this.activePhaseIndex = 0;
-        this._condState = null;
-        const nextInstruction = this.compiledProgram[this.activeInstrIndex];
-        const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
-        setHighlight(nextPhase ?? nextInstruction);
-        return true;
-      }
-
-      this.addLog(this.t('logs.jumpOob', { target }), 'error');
-      this.uncompileCode();
-      return false;
-    };
-
-    const executeMicroPhase = (phase: Phase) => {
-      const signals = new Set(Object.keys(phase || {}).filter((key) => Reflect.get(phase, key) === true));
-      this.nextLine = signals;
-      this.executeSignalsFromNextLine();
-    };
-
     if (this.codeCompiled && Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0) {
-      if (this.activeInstrIndex < 0) {
-        this.activeInstrIndex = 0;
-        this.activePhaseIndex = 0;
-        this._stepGuard = 0;
-        this._condState = null;
-      }
-
-      if (this.activePhaseIndex === 0 && this.extras?.interrupts?.eniSignal && this.rint) {
-        this.handleInterrupt();
-        return;
-      }
-
-      this._stepGuard = (this._stepGuard || 0) + 1;
-      if (this._stepGuard > 100000) {
-        this.addLog(this.t('logs.loopGuard'), 'system');
-        this.uncompileCode();
-        return;
-      }
-
-      if (this.activeInstrIndex >= this.compiledProgram.length) {
-        finishStructuredProgram();
-        return;
-      }
-
-      const instruction = this.compiledProgram[this.activeInstrIndex];
-      const currentPhase = instruction?.phases?.[this.activePhaseIndex];
-
-      if (!currentPhase) {
-        moveToNextPhase();
-        if (!this.codeCompiled) return;
-        if (this.activeInstrIndex >= this.compiledProgram.length) {
-          finishStructuredProgram();
-          return;
-        }
-        const nextInstruction = this.compiledProgram[this.activeInstrIndex];
-        const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
-        setHighlight(nextPhase ?? nextInstruction);
-        return;
-      }
-
-      let phaseToExecute = currentPhase;
-      let sourceLine =
-        typeof phaseToExecute?.srcLine === 'number' && Number.isFinite(phaseToExecute?.srcLine) ? phaseToExecute.srcLine : undefined;
-      let executingConditionalBranch = false;
-
-      if (currentPhase.conditional === true) {
-        executingConditionalBranch = true;
-
-        if (!this._condState || this._condState.phaseRef !== currentPhase) {
-          const cond = this.evaluateFlag(currentPhase.flag);
-          const list = (cond ? currentPhase.truePhases : currentPhase.falsePhases) || [];
-          this._condState = {
-            list,
-            idx: 0,
-            pick: cond ? 'T' : 'F',
-            phaseRef: currentPhase,
-          };
-
-          const ifLine =
-            typeof currentPhase.srcLine === 'number' && Number.isFinite(currentPhase.srcLine) ? currentPhase.srcLine : undefined;
-          if (stopAtBreakpoint(ifLine)) return;
-        }
-
-        const state = this._condState;
-        const branchPhase = state?.list?.[state.idx];
-        if (!branchPhase) {
-          this._condState = null;
-          moveToNextPhase();
-          if (!this.codeCompiled) return;
-          if (this.activeInstrIndex >= this.compiledProgram.length) {
-            finishStructuredProgram();
-            return;
-          }
-          const nextInstruction = this.compiledProgram[this.activeInstrIndex];
-          const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
-          setHighlight(nextPhase ?? nextInstruction);
-          return;
-        }
-
-        phaseToExecute = branchPhase;
-        const fallbackLine =
-          typeof state?.phaseRef?.srcLine === 'number' && Number.isFinite(state?.phaseRef?.srcLine)
-            ? state.phaseRef.srcLine + (state.pick === 'T' ? 1 : 2)
-            : undefined;
-        sourceLine = typeof branchPhase?.srcLine === 'number' && Number.isFinite(branchPhase?.srcLine) ? branchPhase.srcLine : fallbackLine;
-      } else {
-        this._condState = null;
-      }
-
-      if (phaseToExecute.conditional !== true && phaseToExecute.stop === true) {
-        setHighlight(phaseToExecute);
-        this.uncompileCode();
-        this.addLog(this.t('logs.stopInstr'), 'compiler');
-        return;
-      }
-
-      if (stopAtBreakpoint(sourceLine)) return;
-
-      setHighlight(phaseToExecute);
-      executeMicroPhase(phaseToExecute);
-
-      if (phaseToExecute.conditional !== true && phaseToExecute.wel === true) {
-        jumpToProgramCounter();
-        return;
-      }
-
-      if (executingConditionalBranch && this._condState) {
-        this._condState.idx += 1;
-        if (this._condState.idx < this._condState.list.length) {
-          const nextBranchPhase = this._condState.list[this._condState.idx];
-          const fallbackLine =
-            typeof this._condState.phaseRef?.srcLine === 'number' && Number.isFinite(this._condState.phaseRef?.srcLine)
-              ? this._condState.phaseRef.srcLine + (this._condState.pick === 'T' ? 1 : 2)
-              : undefined;
-          const nextLine =
-            typeof nextBranchPhase?.srcLine === 'number' && Number.isFinite(nextBranchPhase?.srcLine)
-              ? nextBranchPhase.srcLine
-              : fallbackLine;
-          if (!this._headless && typeof nextLine === 'number' && Number.isFinite(nextLine)) this.activeLine = nextLine;
-          return;
-        }
-        this._condState = null;
-      }
-
-      moveToNextPhase();
-      if (!this.codeCompiled) return;
-      if (this.activeInstrIndex >= this.compiledProgram.length) {
-        finishStructuredProgram();
-        return;
-      }
-
-      const nextInstruction = this.compiledProgram[this.activeInstrIndex];
-      const nextPhase = nextInstruction?.phases?.[this.activePhaseIndex];
-      setHighlight(nextPhase ?? nextInstruction);
+      executeStructuredStep(this);
       return;
     }
 
     if (!this.manualMode) {
-      if (this.activeLine < 0) this.activeLine = 0;
-      if (this.activeLine >= this.compiledCode.length) {
-        this.uncompileCode();
-        this.addLog(this.t('logs.codeFinished'), 'compiler');
-        return;
-      }
-
-      const nextSrc = this.activeLine;
-      if (shouldPauseOn(nextSrc)) {
-        this.addLog(this.t('logs.breakpointPause', { line: nextSrc }), 'system');
-        this._stopRun();
-        this.activeLine = nextSrc;
-        if (!this._headless) this._refreshHighlight();
-        return;
-      }
-
-      this._refreshHighlight();
-      const commands = this.compiledCode[this.activeLine].split(' ').filter(Boolean);
-      this.nextLine.clear();
-      for (const c of commands) this.nextLine.add(c);
-      this.executeSignalsFromNextLine();
-      this.activeLine++;
-
-      if (this.activeLine >= this.compiledCode.length) {
-        this.uncompileCode();
-        this.addLog(this.t('logs.codeFinished'), 'compiler');
-      } else if (!this._headless) {
-        this._refreshHighlight();
-      }
-    } else {
-      this.executeSignalsFromNextLine();
-      if (!this._headless) this._refreshHighlight();
+      executePlainStep(this);
+      return;
     }
+
+    this.executeSignalsFromNextLine();
+    if (!this._headless) this._refreshHighlight();
   },
 
   _refreshHighlight() {
@@ -697,153 +453,6 @@ export const executionActions: Actions & ThisType<Machine> = {
     }
   },
 
-  stopRun() {
-    this._stopRun();
-    this.addLog(this.t('logs.stoppedByUser'), 'system');
-  },
-
-  runCode() {
-    if (this.isRunning || !this.codeCompiled) return;
-    this._stopRun();
-    this.manualMode = false;
-    this._skipNextBreakpoint = true;
-    this.isRunning = true;
-    const generation = this._runGeneration;
-    let stepsLeft = 100000;
-    const tickMs = Math.max(1, this.oddDelay);
-
-    if (this.compiledProgram && this.compiledProgram.length > 0 && this.activeInstrIndex < 0) {
-      this.activeInstrIndex = 0;
-      this.activePhaseIndex = 0;
-    }
-
-    const tick = () => {
-      if (generation !== this._runGeneration) return;
-      if (!this.codeCompiled || !this.isRunning) return this._stopRun();
-      this.executeLine();
-      stepsLeft--;
-      if (generation !== this._runGeneration) return;
-      if (!this.codeCompiled || !this.isRunning) return this._stopRun();
-      if (stepsLeft <= 0) {
-        this.addLog(this.t('logs.runStepLimit'), 'system');
-        return this._stopRun();
-      }
-      this.runLoopTimer = setTimeout(tick, tickMs);
-    };
-    this.runLoopTimer = setTimeout(tick, tickMs);
-  },
-
-  _stopRun() {
-    this._runGeneration = (this._runGeneration || 0) + 1;
-    if (this.runLoopTimer) {
-      clearTimeout(this.runLoopTimer ?? undefined);
-      this.runLoopTimer = null;
-    }
-    this.isRunning = false;
-    this.isFastRunning = false;
-    this.fastProgress = 0;
-    if (this._runningDocumentTitle != null) {
-      if (typeof document !== 'undefined') document.title = this._runningDocumentTitle;
-      this._runningDocumentTitle = null;
-    }
-
-    this._skipNextBreakpoint = false; // ← reset
-
-    this._headless = false;
-    this.suppressBroadcast = false;
-    this.clearActiveTimeouts();
-    this.cancelDeviceOperation();
-    if (this._busHoldTimers?.A) {
-      clearTimeout(this._busHoldTimers.A);
-      this._busHoldTimers.A = null;
-    }
-    if (this._busHoldTimers?.S) {
-      clearTimeout(this._busHoldTimers.S);
-      this._busHoldTimers.S = null;
-    }
-    this.signals.busA = false;
-    this.signals.busS = false;
-    this.nextLine.clear();
-  },
-
-  async runToEndFast() {
-    if (!this.codeCompiled || this.isFastRunning) return;
-
-    this._stopRun();
-
-    this.manualMode = false;
-    this.clearActiveTimeouts();
-
-    this._headless = true;
-    this.suppressBroadcast = true;
-
-    this.isRunning = true;
-    this.isFastRunning = true;
-    this.fastProgress = 0;
-    this._skipNextBreakpoint = true;
-    const generation = this._runGeneration;
-    if (typeof document !== 'undefined') {
-      this._runningDocumentTitle = document.title;
-      document.title = '▶️ Running…';
-    }
-    const isCurrentRun = () => generation === this._runGeneration && this.isRunning && this.isFastRunning;
-
-    try {
-      const hasStructured = Array.isArray(this.compiledProgram) && this.compiledProgram.length > 0;
-      const totalInstr = hasStructured ? this.compiledProgram.length : this.compiledCode?.length || 0;
-
-      if (hasStructured && this.activeInstrIndex < 0) {
-        this.activeInstrIndex = 0;
-        this.activePhaseIndex = 0;
-      } else if (!hasStructured) {
-        this.activeLine = Math.max(this.activeLine, 0);
-      }
-
-      let safety = 200_000;
-      const CHUNK = 1200;
-
-      while (this.codeCompiled && safety > 0 && isCurrentRun()) {
-        for (let i = 0; i < CHUNK && safety > 0 && this.codeCompiled && isCurrentRun(); i++, safety--) {
-          if (hasStructured) {
-            if (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length) {
-              this.uncompileCode();
-              break;
-            }
-            this.executeLine(/* headless → patrz niżej */);
-          } else {
-            if (this.activeLine >= this.compiledCode.length) {
-              this.uncompileCode();
-              break;
-            }
-            this.executeLine();
-          }
-        }
-        if (!isCurrentRun() || !this.codeCompiled) break;
-
-        // progres bez malowania UI (tylko liczba)
-        if (hasStructured) {
-          const cur = clamp(this.activeInstrIndex, 0, totalInstr);
-          this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
-        } else {
-          const cur = clamp(this.activeLine, 0, totalInstr);
-          this.fastProgress = totalInstr ? Math.floor((cur / totalInstr) * 100) : 0;
-        }
-
-        // daj event loopowi odetchnąć
-        await sleep(0);
-
-        if (!this.codeCompiled || !isCurrentRun()) break;
-        if (hasStructured && (this.activeInstrIndex < 0 || this.activeInstrIndex >= this.compiledProgram.length)) break;
-        if (!hasStructured && this.activeLine >= this.compiledCode.length) break;
-      }
-
-      if (safety <= 0 && isCurrentRun()) this.addLog(this.t('logs.runFastLimit'), 'system');
-    } finally {
-      // A cancelled async chunk must never stop a subsequently started run.
-      if (generation === this._runGeneration) this._stopRun();
-    }
-  },
-
   resetValues(options = {}) {
     const { resetMemory = true, resetLogs = true, logMessage = this.t('logs.registersReset') } = options;
     this._stopRun();
@@ -894,18 +503,6 @@ export const executionActions: Actions & ThisType<Machine> = {
 
     if (logMessage) {
       this.addLog(logMessage, 'system');
-    }
-  },
-
-  clearActiveTimeouts() {
-    // Clear all active timeouts and reset all signals to false
-    this.activeTimeouts.forEach((timeoutId) => {
-      clearTimeout(timeoutId);
-    });
-    this.activeTimeouts = [];
-    // Immediately turn off all signals
-    for (const key in this.signals) {
-      this.signals[key] = false;
     }
   },
 };

@@ -4,7 +4,7 @@ import type { MobileMemoryHeaderProps } from '@/Types/Components';
 import BusLabel from './BusLabel';
 import SignalButton from './SignalButton';
 
-export default function MobileMemoryHeader({
+const MobileMemoryHeader = ({
   signals,
   mobileView,
   busAValue,
@@ -13,8 +13,11 @@ export default function MobileMemoryHeader({
   formatNumber,
   onOpen,
   onClickItem,
-}: MobileMemoryHeaderProps) {
+}: MobileMemoryHeaderProps) => {
   const { t } = useI18n();
+  // BusLabel's mobileView flag hides the label, so the mobile header inverts it.
+  const hideBusLabels = !mobileView;
+
   return (
     <div className="mobile-memory-header">
       <div className="memory-signal-in">
@@ -33,7 +36,7 @@ export default function MobileMemoryHeader({
           busName="A"
           busValue={busAValue}
           showInvisibleRegisters={showInvisibleRegisters}
-          mobileView={!mobileView}
+          mobileView={hideBusLabels}
           formatNumber={formatNumber}
         />
       </div>
@@ -82,10 +85,12 @@ export default function MobileMemoryHeader({
           busName="S"
           busValue={busSValue}
           showInvisibleRegisters={showInvisibleRegisters}
-          mobileView={!mobileView}
+          mobileView={hideBusLabels}
           formatNumber={formatNumber}
         />
       </div>
     </div>
   );
-}
+};
+
+export default MobileMemoryHeader;

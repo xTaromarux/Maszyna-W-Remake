@@ -1,18 +1,29 @@
 import { useI18n } from '@/I18n/Index';
-import type { RefObject } from 'react';
+import type { ChangeEvent, MouseEvent, RefObject } from 'react';
 import type { ChatSession } from '../Hooks/UseChatSession';
-type Props = Pick<ChatSession, 'state' | 'patch' | 'hasApiKey' | 'closeApiKeyModal' | 'saveApiKey' | 'clearApiKey'> & {
+
+type ApiKeyDialogProps = Pick<ChatSession, 'state' | 'patch' | 'hasApiKey' | 'closeApiKeyModal' | 'saveApiKey' | 'clearApiKey'> & {
   inputRef: RefObject<HTMLInputElement | null>;
 };
-export default function ApiKeyDialog({ state, patch, hasApiKey, closeApiKeyModal, saveApiKey, clearApiKey, inputRef }: Props) {
+
+const ApiKeyDialog = ({ state, patch, hasApiKey, closeApiKeyModal, saveApiKey, clearApiKey, inputRef }: ApiKeyDialogProps) => {
   const { t } = useI18n();
+  const hasError = Boolean(state.apiKeyError);
+
+  const closeBackdrop = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      closeApiKeyModal();
+    }
+  };
+
+  const updateDraft = (event: ChangeEvent<HTMLInputElement>) => {
+    patch({ apiKeyDraft: event.target.value });
+  };
+
+  const toggleKeyVisibility = () => patch({ showApiKeyValue: !state.showApiKeyValue });
+
   return (
-    <div
-      className="apiKeyGate"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) closeApiKeyModal();
-      }}
-    >
+    <div className="apiKeyGate" onClick={closeBackdrop}>
       <form className="apiKeyCard" onSubmit={saveApiKey}>
         <p className="apiKeyEyebrow">{t('aiChat.apiKey.eyebrow')}</p>
         <h2>{t(hasApiKey ? 'aiChat.apiKey.editTitle' : 'aiChat.apiKey.title')}</h2>
@@ -25,13 +36,15 @@ export default function ApiKeyDialog({ state, patch, hasApiKey, closeApiKeyModal
             id="ai-chat-api-key"
             ref={inputRef}
             value={state.apiKeyDraft}
-            onChange={(event) => patch({ apiKeyDraft: event.target.value })}
+            onChange={updateDraft}
             type={state.showApiKeyValue ? 'text' : 'password'}
             placeholder={t('aiChat.apiKey.placeholder')}
             autoComplete="off"
             spellCheck={false}
+            aria-invalid={hasError}
+            aria-describedby={hasError ? 'ai-chat-api-key-error' : undefined}
           />
-          <button className="apiKeyToggle" type="button" onClick={() => patch({ showApiKeyValue: !state.showApiKeyValue })}>
+          <button className="apiKeyToggle" type="button" onClick={toggleKeyVisibility}>
             {t(state.showApiKeyValue ? 'aiChat.apiKey.hide' : 'aiChat.apiKey.show')}
           </button>
         </div>
@@ -44,7 +57,11 @@ export default function ApiKeyDialog({ state, patch, hasApiKey, closeApiKeyModal
             ))}
           </ul>
         </div>
-        {state.apiKeyError && <p className="apiKeyError">{state.apiKeyError}</p>}
+        {hasError && (
+          <p id="ai-chat-api-key-error" className="apiKeyError" role="alert">
+            {state.apiKeyError}
+          </p>
+        )}
         <div className="apiKeyActions">
           <button className="execution-btn execution-btn--run apiKeyPrimary" type="submit">
             {t('aiChat.apiKey.save')}
@@ -63,4 +80,6 @@ export default function ApiKeyDialog({ state, patch, hasApiKey, closeApiKeyModal
       </form>
     </div>
   );
-}
+};
+
+export default ApiKeyDialog;

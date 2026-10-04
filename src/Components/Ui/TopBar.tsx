@@ -7,7 +7,14 @@ import AiChatIcon from '@/Components/AiChat/Ui/AiChatIcon';
 import { useI18n } from '@/I18n/Index';
 import type { TopBarProps } from '@/Types/Components';
 
-export default function TopBar({
+const CONNECTION_STATUSES: Record<string, { translationSuffix: string; className: string }> = {
+  disconnected: { translationSuffix: 'Disconnected', className: 'off' },
+  connected: { translationSuffix: 'Connected', className: 'ok' },
+  connecting: { translationSuffix: 'Connecting', className: 'pending' },
+  error: { translationSuffix: 'Error', className: 'err' },
+};
+
+const TopBar = ({
   hasConsoleErrors = false,
   wsStatus = 'disconnected',
   platform = process.env.NEXT_PUBLIC_APP_PLATFORM,
@@ -15,41 +22,40 @@ export default function TopBar({
   onToggleConsole,
   onOpenChat,
   onOpenSettings,
-}: TopBarProps) {
+}: TopBarProps) => {
   const { t } = useI18n();
-  const state = {
-    disconnected: ['Disconnected', 'off'],
-    connected: ['Connected', 'ok'],
-    connecting: ['Connecting', 'pending'],
-    error: ['Error', 'err'],
-  }[wsStatus] || ['Disconnected', 'off'];
+  const connectionStatus = CONNECTION_STATUSES[wsStatus] || CONNECTION_STATUSES.disconnected;
+
   return (
     <header id="topBar" data-component="TopBar">
       <PolslLogoLongWhite className="logo" />
       <div className="flexRow">
         {platform === 'esp' && (
           <button
-            className={`wsBadge ws--${state[1]}`}
-            title={t(`topBar.ws${state[0]}Title`)}
+            type="button"
+            className={`wsBadge ws--${connectionStatus.className}`}
+            title={t(`topBar.ws${connectionStatus.translationSuffix}Title`)}
             aria-label={t('topBar.wsStatusAria')}
             onClick={onWsReconnect}
           >
             <span className={`dot${wsStatus === 'connecting' ? ' spin' : ''}`} />
-            <span className="label">{t(`topBar.ws${state[0]}`)}</span>
+            <span className="label">{t(`topBar.ws${connectionStatus.translationSuffix}`)}</span>
           </button>
         )}
-        <button className="simpleSvgButton" aria-label={t('topBar.openConsole')} onClick={onToggleConsole}>
+        <button type="button" className="simpleSvgButton" aria-label={t('topBar.openConsole')} onClick={onToggleConsole}>
           <ConsoleIcon hasError={hasConsoleErrors} />
         </button>
         {platform !== 'esp' && (
-          <button className="simpleSvgButton" aria-label={t('topBar.openChat')} onClick={onOpenChat}>
+          <button type="button" className="simpleSvgButton" aria-label={t('topBar.openChat')} onClick={onOpenChat}>
             <AiChatIcon fillColor="#ddd" strokeColor="#ddd" strokeWidth="250" />
           </button>
         )}
-        <button className="simpleSvgButton" aria-label={t('topBar.openSettings')} onClick={onOpenSettings}>
+        <button type="button" className="simpleSvgButton" aria-label={t('topBar.openSettings')} onClick={onOpenSettings}>
           <KogWheelIcon />
         </button>
       </div>
     </header>
   );
-}
+};
+
+export default TopBar;

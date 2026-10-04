@@ -5,9 +5,9 @@ import LinkedInIcon from '@/Assets/Svg/LinkedInIcon';
 import { useI18n } from '@/I18n/Index';
 import type { PeopleSectionProps } from '@/Types/Components';
 
-export default function PeopleSection({ title, isMobile = true, people = [], showGithub = true, columns = 2 }: PeopleSectionProps) {
+const PeopleSection = ({ title, people = [], showGithub = true, columns = 2 }: PeopleSectionProps) => {
   const { t } = useI18n();
-  if (!isMobile) return null;
+
   return (
     <section className="people-section" data-component="PeopleSection">
       <header className="creatorsHeader">
@@ -59,4 +59,6 @@ export default function PeopleSection({ title, isMobile = true, people = [], sho
       </div>
     </section>
   );
-}
+};
+
+export default PeopleSection;

@@ -455,7 +455,6 @@ export interface LabCatalogDialogProps {
 
 export interface PeopleSectionProps {
   title?: string;
-  isMobile?: boolean;
   people?: Person[];
   showGithub?: boolean;
   columns?: number;

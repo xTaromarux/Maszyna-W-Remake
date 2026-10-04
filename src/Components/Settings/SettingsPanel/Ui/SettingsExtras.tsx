@@ -37,21 +37,11 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
 
         return (
           <div key={key} className={`settingsGroup${isOpen ? ' open' : ''}`}>
-            <div
-              className="settingsGroupHeader"
-              role="button"
-              aria-expanded={isOpen}
-              tabIndex={0}
-              onClick={() => toggleGroup(key)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  toggleGroup(key);
-                }
-              }}
-            >
-              <span className="chevron" aria-hidden="true" />
-              <span className="group-title">{title}</span>
+            <div className="settingsGroupHeader">
+              <button type="button" className="settingsGroupToggle" aria-expanded={isOpen} onClick={() => toggleGroup(key)}>
+                <span className="chevron" aria-hidden="true" />
+                <span className="group-title">{title}</span>
+              </button>
               <SettingsSwitch
                 label={title}
                 checked={children.every((child) => values[child])}

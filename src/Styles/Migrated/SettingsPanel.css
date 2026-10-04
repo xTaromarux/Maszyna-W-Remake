@@ -55,8 +55,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 8px 0;
-  cursor: pointer;
   user-select: none;
+}
+
+:where([data-component='SettingsPanel']) .settingsGroupToggle {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
 :where([data-component='SettingsPanel']) .settingsGroupHeader .chevron {

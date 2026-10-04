@@ -19,12 +19,12 @@ npm run dev:esp
 
 Tryb `npm run dev` domyślnie działa jako symulator webowy bez automatycznego łączenia z WebSocket. Aby użyć wspólnego polecenia `npm run dev:ws`, ustaw wcześniej `NEXT_PUBLIC_APP_PLATFORM=esp`.
 
-| Zmienna | Domyślna wartość | Zastosowanie |
-| --- | --- | --- |
-| `WS_HOST` | `127.0.0.1` | Adres nasłuchiwania serwera Node.js. |
-| `WS_PORT` | `8080` | Port serwera Node.js; `0` wybiera wolny port do testów. |
-| `NEXT_PUBLIC_WS_URL` | `ws://localhost:8080` | Adres połączenia klienta Next.js. |
-| `NEXT_PUBLIC_APP_PLATFORM` | `web` | Ustaw `esp`, aby interfejs łączył się z urządzeniem lub lokalnym serwerem. |
+| Zmienna                    | Domyślna wartość      | Zastosowanie                                                               |
+| -------------------------- | --------------------- | -------------------------------------------------------------------------- |
+| `WS_HOST`                  | `127.0.0.1`           | Adres nasłuchiwania serwera Node.js.                                       |
+| `WS_PORT`                  | `8080`                | Port serwera Node.js; `0` wybiera wolny port do testów.                    |
+| `NEXT_PUBLIC_WS_URL`       | `ws://localhost:8080` | Adres połączenia klienta Next.js.                                          |
+| `NEXT_PUBLIC_APP_PLATFORM` | `web`                 | Ustaw `esp`, aby interfejs łączył się z urządzeniem lub lokalnym serwerem. |
 
 `WS_HOST` i `WS_PORT` są zmiennymi procesu serwera; `server.cjs` nie ładuje plików `.env`. Zmienne `NEXT_PUBLIC_*` można ustawić w środowisku lub w `.env.local`. Next.js zapisuje je w kodzie klienta podczas kompilacji, więc po zmianie adresu trzeba ponownie uruchomić tryb developerski lub wykonać build.
 
@@ -72,13 +72,13 @@ Przekaźnik dostarcza je do przeglądarki, która przełącza sygnał i wysyła 
 { "type": "reg-update", "field": "acc", "value": 42 }
 ```
 
-| Pole | Znaczenie |
-| --- | --- |
-| `acc` | Akumulator AK |
-| `a` | Rejestr adresowy A |
-| `s` | Rejestr słowa S |
-| `c` | Licznik programu L |
-| `i` | Rejestr rozkazów I |
+| Pole  | Znaczenie          |
+| ----- | ------------------ |
+| `acc` | Akumulator AK      |
+| `a`   | Rejestr adresowy A |
+| `s`   | Rejestr słowa S    |
+| `c`   | Licznik programu L |
+| `i`   | Rejestr rozkazów I |
 
 Obserwacja stanu maszyny wysyła tym samym typem również zmiany sygnałów: `field` zawiera wtedy nazwę sygnału, np. `busS`, a `value` jest wartością logiczną. Firmware powinien odróżniać te pola od pól rejestrów.
 

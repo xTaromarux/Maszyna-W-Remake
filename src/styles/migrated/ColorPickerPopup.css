@@ -1,5 +1,4 @@
-
-:where([data-component="ColorPickerPopup"]).color-popup-overlay {
+:where([data-component='ColorPickerPopup']).color-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,7 +12,7 @@
   backdrop-filter: blur(2px);
 }
 
-:where([data-component="ColorPickerPopup"]) .color-popup {
+:where([data-component='ColorPickerPopup']) .color-popup {
   background: var(--panelBackgroundColor);
   border-radius: var(--default-border-radius);
   border: 1px solid var(--panelOutlineColor);
@@ -36,7 +35,7 @@
   }
 }
 
-:where([data-component="ColorPickerPopup"]) .color-popup-header {
+:where([data-component='ColorPickerPopup']) .color-popup-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45,14 +44,14 @@
   background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
 }
 
-:where([data-component="ColorPickerPopup"]) .color-popup-header h3 {
+:where([data-component='ColorPickerPopup']) .color-popup-header h3 {
   margin: 0;
   color: var(--fontColor);
   font-size: 1.1rem;
   font-weight: 600;
 }
 
-:where([data-component="ColorPickerPopup"]) .close-btn {
+:where([data-component='ColorPickerPopup']) .close-btn {
   background: none;
   border: none;
   color: var(--fontColor);
@@ -68,17 +67,17 @@
   transition: background 0.2s;
 }
 
-:where([data-component="ColorPickerPopup"]) .close-btn:hover {
+:where([data-component='ColorPickerPopup']) .close-btn:hover {
   background: var(--buttonHoverColor);
 }
 
-:where([data-component="ColorPickerPopup"]) .color-popup-content {
+:where([data-component='ColorPickerPopup']) .color-popup-content {
   padding: 20px;
   overflow-y: auto;
   max-height: 60vh;
 }
 
-:where([data-component="ColorPickerPopup"]) .color-preview {
+:where([data-component='ColorPickerPopup']) .color-preview {
   margin-top: 20px;
   display: flex;
   align-items: center;
@@ -89,7 +88,7 @@
   border: 1px solid var(--panelOutlineColor);
 }
 
-:where([data-component="ColorPickerPopup"]) .preview-box {
+:where([data-component='ColorPickerPopup']) .preview-box {
   width: 60px;
   height: 60px;
   border-radius: var(--default-border-radius);
@@ -97,7 +96,7 @@
   flex-shrink: 0;
 }
 
-:where([data-component="ColorPickerPopup"]) .color-info {
+:where([data-component='ColorPickerPopup']) .color-info {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -105,7 +104,7 @@
   font-size: 0.9rem;
 }
 
-:where([data-component="ColorPickerPopup"]) .color-popup-footer {
+:where([data-component='ColorPickerPopup']) .color-popup-footer {
   display: flex;
   gap: 10px;
   padding: 15px 20px;
@@ -113,8 +112,8 @@
   background: var(--panelBackgroundColorSecondary, rgba(0, 0, 0, 0.1));
 }
 
-:where([data-component="ColorPickerPopup"]) .cancel-btn,
-:where([data-component="ColorPickerPopup"]) .apply-btn {
+:where([data-component='ColorPickerPopup']) .cancel-btn,
+:where([data-component='ColorPickerPopup']) .apply-btn {
   flex: 1;
   padding: 10px 20px;
   border-radius: var(--default-border-radius);
@@ -124,22 +123,22 @@
   transition: all 0.2s;
 }
 
-:where([data-component="ColorPickerPopup"]) .cancel-btn {
+:where([data-component='ColorPickerPopup']) .cancel-btn {
   background: var(--buttonBackgroundColor);
   color: var(--buttonTextColor);
 }
 
-:where([data-component="ColorPickerPopup"]) .cancel-btn:hover {
+:where([data-component='ColorPickerPopup']) .cancel-btn:hover {
   background: var(--buttonHoverColor);
 }
 
-:where([data-component="ColorPickerPopup"]) .apply-btn {
+:where([data-component='ColorPickerPopup']) .apply-btn {
   background: #003c7d;
   color: white;
   border-color: #003c7d;
 }
 
-:where([data-component="ColorPickerPopup"]) .apply-btn:hover {
+:where([data-component='ColorPickerPopup']) .apply-btn:hover {
   background: #0056b3;
   border-color: #0056b3;
 }

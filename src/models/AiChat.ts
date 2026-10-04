@@ -1,42 +1,4 @@
-export enum ApiState {
-  IDLE = 'idle',
-  CHECKING = 'checking',
-  WAKING = 'waking',
-  ERROR = 'error',
-}
-
-export type Sender = 'user' | 'assistant';
-
-export interface ChatMessage {
-  id: string;
-  sender: Sender;
-  text: string;
-  timestamp: number;
-}
-
-export interface StreamChunk {
-  messageId: string;
-  text?: string;
-  chunk?: string;
-  done?: boolean;
-  error?: string;
-  errorKey?: string;
-  errorDetail?: string;
-  cancelled?: boolean;
-  streaming?: boolean;
-}
-
-export interface HealthResponse {
-  upstream_ok?: boolean;
-  status?: string;
-  [key: string]: unknown;
-}
-
-export interface RateLimit {
-  maxRequests: number;
-  windowMs: number;
-  message?: string;
-}
+import type { RateLimit } from '../types/chat';
 
 export const STORAGE_VERSION = 1;
 export const STORAGE_KEY = 'aiChat.messages';

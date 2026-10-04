@@ -12,13 +12,13 @@
   gap: 0 !important;
 }
 
-#layer4{
+#layer4 {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.additionalInterruptsSignalsConteiner{
+.additionalInterruptsSignalsConteiner {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -29,8 +29,8 @@
 }
 
 @media (max-width: 675px) {
-  .additionalInterruptsSignalsConteiner { 
-    margin-left: 0; 
+  .additionalInterruptsSignalsConteiner {
+    margin-left: 0;
   }
 
   .layer:nth-child(2) {
@@ -38,13 +38,12 @@
   }
 }
 
-.additionalInterruptsSignal{
+.additionalInterruptsSignal {
   display: block;
   width: 100%;
 }
 
-
-.layerCenter{
+.layerCenter {
   justify-content: center;
   align-items: center;
 }

@@ -1,5 +1,13 @@
-.flexRow { display: flex; flex-direction: row; gap: 1rem; }
-.flexColumn { display: flex; flex-direction: column; gap: 1rem; }
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
 .switchDiv {
   --width: 2rem;

@@ -1,4 +1,3 @@
-
 .console-dock[data-editor-console-dock] {
   display: grid;
   grid-template-columns: 3.5rem 1fr; /* left rail + console */
@@ -122,9 +121,9 @@
   filter: drop-shadow(0 0 2px var(--accentColor, #00aaff));
 }
 @keyframes spin-data-editor-console-dock {
-to {
+  to {
     transform: rotate(360deg);
-}
+  }
 }
 
 /* Enhanced hover effects */
@@ -194,11 +193,11 @@ to {
   background: linear-gradient(90deg, transparent, #ff6666, transparent);
 }
 @keyframes pulse-indicator-data-editor-console-dock {
-0%,
+  0%,
   100% {
     opacity: 1;
-}
-50% {
+  }
+  50% {
     opacity: 0.6;
-}
+  }
 }

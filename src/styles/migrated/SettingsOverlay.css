@@ -1,5 +1,4 @@
-
-:where([data-component="SettingsOverlay"])#settings-overlay {
+:where([data-component='SettingsOverlay'])#settings-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -7,7 +6,7 @@
   animation: fadeIn 0.3s ease-in-out forwards;
 }
 
-:where([data-component="SettingsOverlay"])#settings-overlay.is-closing {
+:where([data-component='SettingsOverlay'])#settings-overlay.is-closing {
   pointer-events: none;
 }
 
@@ -21,11 +20,11 @@
 }
 
 @media (max-width: 768px) {
-  :where([data-component="SettingsOverlay"]) #settings {
+  :where([data-component='SettingsOverlay']) #settings {
     width: 100vw;
     max-width: 100vw;
   }
-  :where([data-component="SettingsOverlay"]) #creators {
+  :where([data-component='SettingsOverlay']) #creators {
     width: 85vw;
     max-width: 85vw;
   }

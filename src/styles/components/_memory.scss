@@ -5,8 +5,8 @@
 #rbRegister {
   display: grid;
   grid-template-areas:
-    "in out"
-    "r r";
+    'in out'
+    'r r';
   gap: 0 0.5rem;
   padding-bottom: 20px;
 }
@@ -14,16 +14,16 @@
 #rzRegister {
   display: grid;
   grid-template-areas:
-    "b"
-    "r";
+    'b'
+    'r';
   padding-bottom: 20px;
 }
 
 #rmRegister {
   display: grid;
   grid-template-areas:
-    "r r"
-    "in out";
+    'r r'
+    'in out';
   gap: 0 0.5rem;
 }
 
@@ -31,12 +31,12 @@
   #rmRegister {
     gap: 0 0;
   }
-  
-  #rbRegister, 
+
+  #rbRegister,
   #gRegister {
     grid-template-areas:
-      "r r"
-      "in out";
+      'r r'
+      'in out';
     padding-bottom: 0;
   }
 }
@@ -44,8 +44,8 @@
 #apRegister {
   display: grid;
   grid-template-areas:
-    "r r"
-    "out .";
+    'r r'
+    'out .';
   grid-template-columns: 1fr 1fr;
   gap: 0 0.5rem;
 }
@@ -67,20 +67,28 @@
   border-radius: 0.5rem;
 }
 
-#wyy, #start, #wyrm, #wyg{
+#wyy,
+#start,
+#wyrm,
+#wyg {
   padding-bottom: 10px;
 }
 
-#wyx, #wyrb, #start {
+#wyx,
+#wyrb,
+#start {
   padding-bottom: 20px;
 }
 
- #werm, #wey, #wex, #werb {
+#werm,
+#wey,
+#wex,
+#werb {
   margin-left: 15px !important;
   padding-bottom: 20px;
 }
 
-#wyap{
+#wyap {
   padding-bottom: 10px;
 }
 
@@ -114,7 +122,7 @@
 #iRegister .signals {
   display: flex;
   flex-direction: row;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
   flex-grow: 1;
 }
@@ -137,9 +145,9 @@
 
 @media (max-width: 675px) {
   .stopConteiner {
-   margin-right: 0;
-   width: 50px;
-   padding-bottom: 60px;
+    margin-right: 0;
+    width: 50px;
+    padding-bottom: 60px;
   }
 
   #iRegister #wei {
@@ -154,20 +162,20 @@
 .wylsConteiner {
   display: flex;
   width: 80px;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
 }
 
 .wylsBusConteiner {
   display: flex;
-  align-items: stretch; 
+  align-items: stretch;
   align-content: stretch;
 }
 
 .wylsBusDiv {
-  width: 55px; 
+  width: 55px;
   height: 2px;
-} 
+}
 
 .wylsBusExt,
 .wylsSignalsExt {
@@ -179,7 +187,7 @@
 
 @media (max-width: 675px) {
   #counter #wyl {
-     margin-left: 5px !important;
+    margin-left: 5px !important;
   }
 
   .wylsSignalsExt {
@@ -189,20 +197,19 @@
     border-right: 0px solid var(--signal, black);
   }
 
-  .wylsBusExt{
+  .wylsBusExt {
     width: 3px;
     background-color: var(--signal, black);
     border-right: 0px solid var(--signal, black);
   }
 
-  .wylsBusDiv{
+  .wylsBusDiv {
     width: 9px;
   }
 
   #wyls {
     margin-left: 0 !important;
   }
-
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -216,17 +223,17 @@
   --wylsExtColor: var(--signal-active);
 }
 
-.wylsSignalsConteiner{
+.wylsSignalsConteiner {
   grid-area: cont;
   display: flex;
   flex-direction: row;
 }
 
-.wylsSignalsConteinerContent{
+.wylsSignalsConteinerContent {
   justify-content: space-between;
 }
 
-.wylsSignalsConteinerContentEnd{
+.wylsSignalsConteinerContentEnd {
   justify-content: flex-end;
 }
 
@@ -270,11 +277,11 @@
   align-items: stretch;
   justify-items: center;
   grid-template-areas:
-    "wea ."
-    "aRegister operations"
-    "memoryTable operations"
-    "sRegister operations"
-    "signals .";
+    'wea .'
+    'aRegister operations'
+    'memoryTable operations'
+    'sRegister operations'
+    'signals .';
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto 1fr auto auto;
 }
@@ -478,9 +485,9 @@
   align-items: stretch;
   justify-items: center;
   grid-template-areas:
-    "wea ."
-    "mobile-toggle operations"
-    "signals .";
+    'wea .'
+    'mobile-toggle operations'
+    'signals .';
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto 1fr auto auto;
 }
@@ -565,18 +572,18 @@
   height: 100%;
   display: grid;
   grid-template-areas:
-    "wea ."
-    "memory memory-signals-in"
-    "memory-signals-out .";
+    'wea .'
+    'memory memory-signals-in'
+    'memory-signals-out .';
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   align-items: stretch;
   justify-items: stretch;
 }
 
-.memory-signal-in{
+.memory-signal-in {
   height: 100%;
-    display: flex;
+  display: flex;
   height: 100%;
   flex-direction: row;
   justify-content: center;
@@ -589,25 +596,25 @@
   justify-content: center;
   flex-wrap: wrap;
   height: 100%;
-  gap: .5rem;
-  padding: .5rem !important;
-  border-radius: .5rem;
+  gap: 0.5rem;
+  padding: 0.5rem !important;
+  border-radius: 0.5rem;
   border: 1px solid var(--panelOutlineColor, black);
   background: var(--panelBackgroundColor, black);
   cursor: pointer;
 }
 
-.memory-signals-in{
+.memory-signals-in {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding-bottom: 20px;
   padding-right: 20px;
-  gap: 10px
+  gap: 10px;
 }
 
-.memory-signals-out{
+.memory-signals-out {
   display: flex;
   height: 100%;
   flex-direction: row;

@@ -24,14 +24,14 @@ Build regeneruje oba parsery Lezer. Skrypty używają webpacka; kompilowanie oso
 
 Zmienne dla przeglądarki mają prefiks `NEXT_PUBLIC_` i są utrwalane podczas budowania. Dawne `VITE_APP_PLATFORM` i `VITE_API_URL` zastąpiono odpowiednio `NEXT_PUBLIC_APP_PLATFORM` i `NEXT_PUBLIC_API_URL`. Skopiuj `.env.example` do `.env.local` i dostosuj adresy. Lokalne pliki `.env*` są ignorowane przez Git; wersjonowane są wyłącznie szablony `.env.example`.
 
-| Zmienna | Znaczenie |
-| --- | --- |
-| `NEXT_PUBLIC_APP_PLATFORM` | `web` lub `esp`; skrypty `*:esp` ustawiają `esp` automatycznie. |
-| `NEXT_PUBLIC_API_URL` | Adres czatu; domyślnie `/api/chat`. Dla statycznego hostingu podaj pełny adres API. |
-| `NEXT_PUBLIC_HEALTH_URL` | Adres kontroli dostępności; domyślnie `/health` na tym samym serwerze co API. |
-| `NEXT_PUBLIC_WS_URL` | Adres WebSocket; domyślnie `ws://localhost:8080`. Dla HTTPS użyj dostępnego `wss://`. |
-| `API_PROXY_TARGET` | Opcjonalny adres serwera API, np. `http://127.0.0.1:8787`. Next przekazuje `/api/*` i `/health`. |
-| `API_PROXY_STRIP_PREFIX` | `1` dla starszego serwera obsługującego `/chat`, domyślnie `0` dla dołączonego `/api/chat`. |
+| Zmienna                    | Znaczenie                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_APP_PLATFORM` | `web` lub `esp`; skrypty `*:esp` ustawiają `esp` automatycznie.                                  |
+| `NEXT_PUBLIC_API_URL`      | Adres czatu; domyślnie `/api/chat`. Dla statycznego hostingu podaj pełny adres API.              |
+| `NEXT_PUBLIC_HEALTH_URL`   | Adres kontroli dostępności; domyślnie `/health` na tym samym serwerze co API.                    |
+| `NEXT_PUBLIC_WS_URL`       | Adres WebSocket; domyślnie `ws://localhost:8080`. Dla HTTPS użyj dostępnego `wss://`.            |
+| `API_PROXY_TARGET`         | Opcjonalny adres serwera API, np. `http://127.0.0.1:8787`. Next przekazuje `/api/*` i `/health`. |
+| `API_PROXY_STRIP_PREFIX`   | `1` dla starszego serwera obsługującego `/chat`, domyślnie `0` dla dołączonego `/api/chat`.      |
 
 Klucza użytkownika nie umieszczaj w `NEXT_PUBLIC_*`. Czat przyjmuje go w interfejsie; zgodnie z dotychczasowym działaniem zapisuje lokalnie i przesyła do skonfigurowanego API. Istniejące lokalne ustawienia pod kluczem `W` są odczytywane, ale zapisywane są tylko preferencje, bez rejestrów, pamięci, timerów i logów. Uszkodzone dane nie blokują startu strony.
 
@@ -93,7 +93,9 @@ Testy jednostkowe obejmują assembler, silnik, renderowanie rejestrów, worker c
 
 - `src/app/` — App Router, metadane, ekran błędu i klient symulatora.
 - `src/components/` — komponenty React i dotychczasowe podziały funkcjonalne.
+- [`src/types/`](src/types/README.md) ? wsp?lne typy aplikacji; komponenty `.tsx` i narz?dzia `.ts` sprawdzane z `strict: true`.
 - `src/state/` — niezależny model maszyny, operacje, selektory i subskrypcja przez `useSyncExternalStore`.
+- [`src/shared/utils/`](src/shared/utils/README.md) — wspólne funkcje liczbowe, kolory, aliasy rozkazów, storage, klonowanie i opóźnienia, bez zależności od React.
 - `src/WLAN/`, `src/codemirror-langs/` — assembler, gramatyki i obsługa języków.
 - `src/i18n/` — pełne słowniki PL/EN i tłumaczenia bez Vue.
 - `src/styles/` — zachowany SCSS oraz izolowane style komponentów przeniesione z SFC.

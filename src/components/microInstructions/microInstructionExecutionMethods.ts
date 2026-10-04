@@ -1,5 +1,6 @@
-﻿/* eslint-disable no-bitwise */
-export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[]) => any> = {
+import type { Machine, MicroActions } from '@/types/simulator';
+/* eslint-disable no-bitwise */
+export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machine> = {
   detectAndHandleStackOperations() {
     const signals = this.nextLine;
     if (signals.has('wyws') && signals.has('wea') && signals.has('wyak') && signals.has('wes')) {
@@ -801,7 +802,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
     this.activeTimeouts.push(id);
   },
   werm() {
-    if (this._instant(() => { this.RM = this.BusS & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.RM = this.BusS & 0xf;
+      })
+    )
+      return;
     console.log('WERM called: BusS=', this.BusS, 'S=', this.S, 'A=', this.A);
     this.signals.werm = true;
     this.signals.busS = true;
@@ -815,7 +821,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   wyrm() {
-    if (this._instant(() => { this.BusS = this.RM & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.BusS = this.RM & 0xf;
+      })
+    )
+      return;
     this.signals.wyrm = true;
     this.signals.busS = true;
     this.BusS = this.RM & 0xf;
@@ -827,7 +838,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   wyap() {
-    if (this._instant(() => { this.BusA = this.AP & this.addrMask(); })) return;
+    if (
+      this._instant(() => {
+        this.BusA = this.AP & this.addrMask();
+      })
+    )
+      return;
     this.signals.wyap = true;
     this.signals.busA = true;
     this.BusA = this.AP & this.addrMask();
@@ -839,7 +855,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   weap() {
-    if (this._instant(() => { this.AP = this.BusA & this.addrMask(); })) return;
+    if (
+      this._instant(() => {
+        this.AP = this.BusA & this.addrMask();
+      })
+    )
+      return;
     this.signals.weap = true;
     this.signals.busA = true;
     this.AP = this.BusA & this.addrMask();
@@ -850,7 +871,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   wyrz() {
-    if (this._instant(() => { this.BusS = this.RZ & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.BusS = this.RZ & 0xf;
+      })
+    )
+      return;
     this.signals.wyrz = true;
     this.signals.busS = true;
     this.BusS = this.RZ & 0xf;
@@ -862,7 +888,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   werz() {
-    if (this._instant(() => { this.RZ = this.BusS & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.RZ = this.BusS & 0xf;
+      })
+    )
+      return;
     this.signals.werz = true;
     this.signals.busS = true;
     this.RZ = this.BusS & 0xf;
@@ -874,7 +905,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   wyrp() {
-    if (this._instant(() => { this.BusS = this.RP & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.BusS = this.RP & 0xf;
+      })
+    )
+      return;
     this.signals.wyrp = true;
     this.signals.busS = true;
     this.BusS = this.RP & 0xf;
@@ -886,7 +922,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   werp() {
-    if (this._instant(() => { this.RP = this.BusS & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.RP = this.BusS & 0xf;
+      })
+    )
+      return;
     this.signals.werp = true;
     this.signals.busS = true;
     this.RP = this.BusS & 0xf;
@@ -898,7 +939,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   ustrm() {
-    if (this._instant(() => { this.RM = (this.RM | (1 << (this.BusA & 0x3))) & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.RM = (this.RM | (1 << (this.BusA & 0x3))) & 0xf;
+      })
+    )
+      return;
     console.log('USTRM called, BusA=', this.BusA);
     this.signals.ustrm = true;
     this.signals.busA = true;
@@ -913,7 +959,12 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
   },
 
   czrm() {
-    if (this._instant(() => { this.RM = (this.RM & ~(1 << (this.BusA & 0x3))) & 0xf; })) return;
+    if (
+      this._instant(() => {
+        this.RM = this.RM & ~(1 << (this.BusA & 0x3)) & 0xf;
+      })
+    )
+      return;
     this.signals.czrm = true;
     this.signals.busA = true;
     const bitNum = this.BusA & 0x3;
@@ -926,4 +977,3 @@ export const mainMicroInstructionExecutionMethods: Record<string, (...args: any[
     this.addLog(this.t('logs.rmBitCleared', { bit: bitNum, rm: this.RM, irq: bitNum + 1 }), 'interrupt');
   },
 };
-

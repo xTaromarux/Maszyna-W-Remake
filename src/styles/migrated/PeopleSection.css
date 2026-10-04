@@ -1,5 +1,4 @@
-
-:where([data-component="PeopleSection"]) .creatorsContent {
+:where([data-component='PeopleSection']) .creatorsContent {
   flex: 1;
   overflow: visible; /* nie zawijamy dodatkowego scrolla w sekcji */
   padding: 0.5rem 1rem 0.75rem 1rem; /* trochę ciaśniej */
@@ -8,7 +7,7 @@
 }
 
 /* GRID na 2 kolumny, z możliwością sterowania przez props `columns` */
-:where([data-component="PeopleSection"]) .creatorsList {
+:where([data-component='PeopleSection']) .creatorsList {
   display: grid;
   width: 100%;
   grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
@@ -22,7 +21,7 @@
 }
 
 /* Karta kompaktowa, równa wysokość */
-:where([data-component="PeopleSection"]) .creatorItem {
+:where([data-component='PeopleSection']) .creatorItem {
   height: 100%;
   padding: 8px 10px;
   background-color: var(--panelBackgroundColor);
@@ -36,25 +35,25 @@
   align-items: center;
   gap: 6px;
 }
-:where([data-component="PeopleSection"]) .creatorItem:hover {
+:where([data-component='PeopleSection']) .creatorItem:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
 }
 
-:where([data-component="PeopleSection"]) .creatorName {
+:where([data-component='PeopleSection']) .creatorName {
   font-weight: 600;
   line-height: 1.2;
   color: var(--fontColor);
 }
 
 /* Role zwijamy ciaśniej, żeby nie rozwlekały wysokości */
-:where([data-component="PeopleSection"]) .creatorRoles {
+:where([data-component='PeopleSection']) .creatorRoles {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
 }
-:where([data-component="PeopleSection"]) .creatorRole {
+:where([data-component='PeopleSection']) .creatorRole {
   font-size: 0.72rem;
   opacity: 0.85;
   padding: 1px 6px;
@@ -62,13 +61,13 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-:where([data-component="PeopleSection"]) .creatorLinks {
+:where([data-component='PeopleSection']) .creatorLinks {
   display: flex;
   justify-content: center;
   gap: 6px;
   margin-top: 2px;
 }
-:where([data-component="PeopleSection"]) .iconLink {
+:where([data-component='PeopleSection']) .iconLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -79,14 +78,14 @@
   border-radius: 4px;
   padding: 2px;
 }
-:where([data-component="PeopleSection"]) .iconLink:hover {
+:where([data-component='PeopleSection']) .iconLink:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.06);
 }
 
 /* Nagłówek sekcji na stałej wysokości – opcjonalnie "sticky" dla lepszej orientacji */
-:where([data-component="PeopleSection"]) .creatorsHeader {
+:where([data-component='PeopleSection']) .creatorsHeader {
   display: flex;
   height: 56px;
   align-items: center;
@@ -95,7 +94,7 @@
   background: #003c7d;
   color: #fff;
 }
-:where([data-component="PeopleSection"]) .creatorsHeader h1 {
+:where([data-component='PeopleSection']) .creatorsHeader h1 {
   font-size: 1.25rem;
   color: #fff;
   margin: 0;
@@ -103,12 +102,12 @@
 
 /* Responsywność: na bardzo wąskim panelu (np. na telefonie) przejdź na 1 kolumnę */
 @media (max-width: 340px) {
-  :where([data-component="PeopleSection"]) .creatorsList {
+  :where([data-component='PeopleSection']) .creatorsList {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
 /* Dystans między sekcjami */
-:where([data-component="PeopleSection"]).people-section + .people-section {
+:where([data-component='PeopleSection']).people-section + .people-section {
   margin-top: 10px;
 }

@@ -16,6 +16,8 @@
     "preview": "next start",
     "build:static": "npm run build:parsers && node scripts/next.mjs static build --webpack",
     "start": "next start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",

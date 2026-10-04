@@ -1,4 +1,4 @@
-@use "../abstracts/mixins" as mixins;
+@use '../abstracts/mixins' as mixins;
 
 .toggleButtonDiv {
   display: grid;
@@ -39,7 +39,7 @@
 }
 
 .toggleButtonDiv::after {
-  content: "";
+  content: '';
   position: absolute;
   z-index: 2;
   top: 0;

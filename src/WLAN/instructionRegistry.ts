@@ -1,7 +1,8 @@
-﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { CommandArity } from '@/types/registry';
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import { collectCommandAliases, normalizeMnemonicToken } from '../shared/utils/commandMnemonics';
+import type { InstructionRegistry, NormalizedRuntimeCommand, RuntimeCommand, RuntimeCommandKind } from '../types/registry';
 import { WlanError } from './error';
-import type { InstructionRegistry, NormalizedRuntimeCommand, RuntimeCommand, RuntimeCommandKind } from './types/registry';
-import { collectCommandAliases, normalizeMnemonicToken } from '../utils/data/commandMnemonics';
 
 const BUILT_INS: RuntimeCommand[] = [
   { name: 'RST', kind: 'memory', args: 1 },
@@ -10,11 +11,7 @@ const BUILT_INS: RuntimeCommand[] = [
   { name: 'DATA', kind: 'directive', argsMin: 1, argsMax: Number.MAX_SAFE_INTEGER },
 ];
 
-function toUpperName(name: unknown): string {
-  return normalizeMnemonicToken(name, 'upper');
-}
-
-function normalizeArity(cmd: RuntimeCommand): { min: number; max: number } {
+function normalizeArity(cmd: RuntimeCommand): CommandArity {
   const hasRange = typeof cmd.argsMin === 'number' || typeof cmd.argsMax === 'number';
 
   if (hasRange) {
@@ -43,7 +40,7 @@ function normalizeArity(cmd: RuntimeCommand): { min: number; max: number } {
 }
 
 function normalizeCommand(cmd: RuntimeCommand, fallbackKind: RuntimeCommandKind): NormalizedRuntimeCommand {
-  const name = toUpperName(cmd.name);
+  const name = normalizeMnemonicToken(cmd.name);
   if (!name) {
     throw new WlanError('Found command with empty name in commandList.', {
       code: 'REG_EMPTY_NAME',
@@ -107,6 +104,6 @@ export function buildInstructionRegistry(commandList: RuntimeCommand[] = []): In
   };
 }
 
-export function getArity(cmd: RuntimeCommand): { min: number; max: number } {
+export function getArity(cmd: RuntimeCommand): CommandArity {
   return normalizeArity(cmd);
 }

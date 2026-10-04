@@ -1,5 +1,4 @@
-
-:where([data-component="LabCatalogDialog"]).labDialogBackdrop {
+:where([data-component='LabCatalogDialog']).labDialogBackdrop {
   position: fixed;
   inset: 0;
   z-index: 220;
@@ -10,7 +9,7 @@
   padding: 1rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDialog {
+:where([data-component='LabCatalogDialog']) .labDialog {
   width: min(1000px, 95vw);
   max-height: 88vh;
   overflow: hidden;
@@ -25,7 +24,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-:where([data-component="LabCatalogDialog"]) .labDialogHeader {
+:where([data-component='LabCatalogDialog']) .labDialogHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,12 +33,12 @@
   padding: 0.8rem 1rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDialogHeader h2 {
+:where([data-component='LabCatalogDialog']) .labDialogHeader h2 {
   margin: 0;
   font-size: 1.05rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .closeBtn {
+:where([data-component='LabCatalogDialog']) .closeBtn {
   border: none;
   background: transparent;
   color: #fff;
@@ -48,13 +47,13 @@
   cursor: pointer;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDialogBody {
+:where([data-component='LabCatalogDialog']) .labDialogBody {
   min-height: 0;
   display: grid;
   grid-template-columns: 280px 1fr;
 }
 
-:where([data-component="LabCatalogDialog"]) .labList {
+:where([data-component='LabCatalogDialog']) .labList {
   border-right: 1px solid var(--panelOutlineColor);
   overflow: auto;
   padding: 0.65rem;
@@ -63,7 +62,7 @@
   gap: 0.5rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .labListItem {
+:where([data-component='LabCatalogDialog']) .labListItem {
   width: 100%;
   text-align: left;
   border: 1px solid var(--panelOutlineColor);
@@ -75,39 +74,39 @@
   transition: background 0.2s ease;
 }
 
-:where([data-component="LabCatalogDialog"]) .labListItem:hover {
+:where([data-component='LabCatalogDialog']) .labListItem:hover {
   background: var(--buttonHoverColor);
 }
 
-:where([data-component="LabCatalogDialog"]) .labListItem.active {
+:where([data-component='LabCatalogDialog']) .labListItem.active {
   border-color: #0056b3;
   background: rgba(0, 86, 179, 0.18);
 }
 
-:where([data-component="LabCatalogDialog"]) .labListItemTitle {
+:where([data-component='LabCatalogDialog']) .labListItemTitle {
   font-weight: 600;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDetails {
+:where([data-component='LabCatalogDialog']) .labDetails {
   overflow: auto;
   padding: 1rem;
   text-align: left;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDetails h3 {
+:where([data-component='LabCatalogDialog']) .labDetails h3 {
   margin: 0 0 0.45rem 0;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDetails h4 {
+:where([data-component='LabCatalogDialog']) .labDetails h4 {
   margin: 0.95rem 0 0.4rem 0;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDetails p {
+:where([data-component='LabCatalogDialog']) .labDetails p {
   margin: 0;
   line-height: 1.45;
 }
 
-:where([data-component="LabCatalogDialog"]) .labOutcomeList {
+:where([data-component='LabCatalogDialog']) .labOutcomeList {
   margin: 0;
   padding-left: 1.1rem;
   display: flex;
@@ -115,7 +114,7 @@
   gap: 0.25rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .pythonPreview {
+:where([data-component='LabCatalogDialog']) .pythonPreview {
   margin: 0;
   border: 1px solid var(--panelOutlineColor);
   border-radius: var(--default-border-radius);
@@ -127,7 +126,7 @@
   font-size: 0.86rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .asmPreview {
+:where([data-component='LabCatalogDialog']) .asmPreview {
   margin: 0.5rem 0 0 0;
   border: 1px solid var(--panelOutlineColor);
   border-radius: var(--default-border-radius);
@@ -139,14 +138,14 @@
   font-size: 0.86rem;
 }
 
-:where([data-component="LabCatalogDialog"]) .labDialogFooter {
+:where([data-component='LabCatalogDialog']) .labDialogFooter {
   border-top: 1px solid var(--panelOutlineColor);
   padding: 0.75rem 1rem;
   display: flex;
   justify-content: flex-end;
 }
 
-:where([data-component="LabCatalogDialog"]) .SvgAndTextButton {
+:where([data-component='LabCatalogDialog']) .SvgAndTextButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -161,32 +160,32 @@
   font-weight: 500;
 }
 
-:where([data-component="LabCatalogDialog"]) .SvgAndTextButton:hover {
+:where([data-component='LabCatalogDialog']) .SvgAndTextButton:hover {
   background: var(--buttonHoverColor);
   transform: translateY(-1px);
 }
 
-:where([data-component="LabCatalogDialog"]) .SvgAndTextButton:active {
+:where([data-component='LabCatalogDialog']) .SvgAndTextButton:active {
   background: var(--buttonActiveColor);
   transform: translateY(0);
 }
 
-:where([data-component="LabCatalogDialog"]) .compact-button {
+:where([data-component='LabCatalogDialog']) .compact-button {
   min-width: 130px;
 }
 
 @media (max-width: 900px) {
-  :where([data-component="LabCatalogDialog"]) .labDialog {
+  :where([data-component='LabCatalogDialog']) .labDialog {
     width: min(1000px, 96vw);
     max-height: 92vh;
   }
 
-  :where([data-component="LabCatalogDialog"]) .labDialogBody {
+  :where([data-component='LabCatalogDialog']) .labDialogBody {
     grid-template-columns: 1fr;
     grid-template-rows: 180px 1fr;
   }
 
-  :where([data-component="LabCatalogDialog"]) .labList {
+  :where([data-component='LabCatalogDialog']) .labList {
     border-right: 0;
     border-bottom: 1px solid var(--panelOutlineColor);
   }

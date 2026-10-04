@@ -1,13 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import React, { createElement } from 'react';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import MaszynaW from '../src/components/MaszynaW.jsx';
-import RegisterComponent, { parseRegisterInput } from '../src/components/RegisterComponent.jsx';
-import { createMachineStore } from '../src/state/createMachineStore.js';
-
-// tsx uses the classic runtime for .jsx; Next compiles these with its JSX runtime.
-(globalThis as any).React = React;
+import MaszynaW from '../src/components/MaszynaW';
+import RegisterComponent from '../src/components/RegisterComponent';
+import { parseRegisterInput } from '../src/shared/utils/registerInput';
+import { createMachineStore } from '../src/state/createMachineStore';
 
 test('the complete machine diagram renders on the server without browser globals', () => {
   assert.equal(typeof window, 'undefined');
@@ -17,13 +15,31 @@ test('the complete machine diagram renders on the server without browser globals
     if (typeof extras[key] === 'boolean') extras[key] = true;
     else for (const field of Object.keys(extras[key])) extras[key][field] = true;
   }
-  const markup = renderToStaticMarkup(createElement(MaszynaW, {
-    ...machine,
-    extras,
-    wordBits: machine.codeBits + machine.addresBits,
-    rzInputs: machine.RZInputs,
-  }));
-  for (const id of ['W', 'counter', 'memory', 'accumulator', 'jaml', 'iRegister', 'xRegister', 'yRegister', 'wsRegister', 'rbRegister', 'gRegister', 'rzRegister', 'rpRegister', 'rmRegister', 'apRegister']) {
+  const markup = renderToStaticMarkup(
+    createElement(MaszynaW, {
+      ...machine,
+      extras,
+      wordBits: machine.codeBits + machine.addresBits,
+      rzInputs: machine.RZInputs,
+    })
+  );
+  for (const id of [
+    'W',
+    'counter',
+    'memory',
+    'accumulator',
+    'jaml',
+    'iRegister',
+    'xRegister',
+    'yRegister',
+    'wsRegister',
+    'rbRegister',
+    'gRegister',
+    'rzRegister',
+    'rpRegister',
+    'rmRegister',
+    'apRegister',
+  ]) {
     assert.ok(markup.includes(`id="${id}"`), `${id} should be available in the full diagram`);
   }
   assert.ok(markup.includes('role="button"'));

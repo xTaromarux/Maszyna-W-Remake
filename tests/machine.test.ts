@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test, { type TestContext } from 'node:test';
-import { createMachineStore } from '../src/state/createMachineStore.js';
+import { createMachineStore } from '../src/state/createMachineStore';
 
 function fixture(context: TestContext, start = false) {
   const saved = new Map<string, string>();
@@ -59,7 +59,18 @@ test('plain microcode advances beyond its first phase and finishes in timed mode
 
 test('fast execution pauses at a breakpoint and resumes the pending phase once', async (context) => {
   const { machine } = fixture(context);
-  machine.handleProgramSectionCompile({ text: 'iak;\niak;\niak;', program: [{ phases: [{ iak: true, srcLine: 0 }, { iak: true, srcLine: 1 }, { iak: true, srcLine: 2 }] }] });
+  machine.handleProgramSectionCompile({
+    text: 'iak;\niak;\niak;',
+    program: [
+      {
+        phases: [
+          { iak: true, srcLine: 0 },
+          { iak: true, srcLine: 1 },
+          { iak: true, srcLine: 2 },
+        ],
+      },
+    ],
+  });
   machine.breakpoints.add(1);
   await machine.runToEndFast();
   assert.equal(machine.ACC, 1);
@@ -155,7 +166,25 @@ test('React store batches nested arrays and sets while persisting settings only'
 
 test('conditional branch identity survives observable store updates', async (context) => {
   const { machine } = fixture(context, true);
-  machine.handleProgramSectionCompile({ text: 'IF Z\niak\niak', program: [{ phases: [{ conditional: true, flag: 'Z', srcLine: 0, truePhases: [{ iak: true, srcLine: 1 }, { iak: true, srcLine: 2 }], falsePhases: [{ dak: true, srcLine: 3 }] }] }] });
+  machine.handleProgramSectionCompile({
+    text: 'IF Z\niak\niak',
+    program: [
+      {
+        phases: [
+          {
+            conditional: true,
+            flag: 'Z',
+            srcLine: 0,
+            truePhases: [
+              { iak: true, srcLine: 1 },
+              { iak: true, srcLine: 2 },
+            ],
+            falsePhases: [{ dak: true, srcLine: 3 }],
+          },
+        ],
+      },
+    ],
+  });
   machine.executeLine();
   assert.equal(machine.ACC, 1);
   await Promise.resolve();
@@ -170,13 +199,21 @@ test('stale WebSocket events do not overwrite the replacement connection', (cont
     readyState = 0;
     binaryType = '';
     sent: string[] = [];
-    constructor(public url: string) { super(); }
-    send(value: string) { this.sent.push(value); }
-    close() { this.readyState = 3; }
+    constructor(public url: string) {
+      super();
+    }
+    send(value: string) {
+      this.sent.push(value);
+    }
+    close() {
+      this.readyState = 3;
+    }
   }
   const previousSocket = globalThis.WebSocket;
   (globalThis as any).WebSocket = Socket;
-  context.after(() => { globalThis.WebSocket = previousSocket; });
+  context.after(() => {
+    globalThis.WebSocket = previousSocket;
+  });
   const { machine } = fixture(context);
   machine.initWebsocket();
   const oldSocket = machine.ws as Socket;

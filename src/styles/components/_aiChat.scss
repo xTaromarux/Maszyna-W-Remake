@@ -53,7 +53,13 @@
   position: fixed;
   inset: 0;
   z-index: 90;
-  background: linear-gradient(270deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0.1) 24%, rgba(15, 23, 42, 0.04) 42%, rgba(15, 23, 42, 0) 62%);
+  background: linear-gradient(
+    270deg,
+    rgba(15, 23, 42, 0.18) 0%,
+    rgba(15, 23, 42, 0.1) 24%,
+    rgba(15, 23, 42, 0.04) 42%,
+    rgba(15, 23, 42, 0) 62%
+  );
 }
 
 #aiChat.chatPanel {
@@ -66,8 +72,11 @@
   max-width: 1000px;
   display: flex;
   flex-direction: column;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panelBackgroundColor, #ffffff) 94%, #f8fafc), var(--panelBackgroundColor, #ffffff));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panelBackgroundColor, #ffffff) 94%, #f8fafc),
+    var(--panelBackgroundColor, #ffffff)
+  );
   border-left: 1px solid color-mix(in srgb, var(--panelOutlineColor, #ddd) 75%, #e2e8f0);
   box-shadow: -12px 0 42px rgba(15, 23, 42, 0.18);
   overflow: hidden;
@@ -112,8 +121,7 @@
   padding: 0.75rem 1rem;
   min-height: var(--topbar-height, calc(43.877px + 1rem));
   box-sizing: border-box;
-  background:
-    linear-gradient(135deg, #003c7d 0%, #0f4c96 56%, #0ea5e9 160%);
+  background: linear-gradient(135deg, #003c7d 0%, #0f4c96 56%, #0ea5e9 160%);
   color: #fff;
 }
 
@@ -574,12 +582,11 @@
   padding: 1.15rem 1.15rem 1rem;
   border-radius: 18px;
   border: 1px solid var(--panelOutlineColor, #111);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 94%, var(--backgroundColor, #ffffff)),
-      var(--panelBackgroundColor, #f8f8f8)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 94%, var(--backgroundColor, #ffffff)),
+    var(--panelBackgroundColor, #f8f8f8)
+  );
   box-shadow:
     0 20px 40px rgba(15, 23, 42, 0.18),
     0 0 0 1px color-mix(in srgb, var(--primaryColor, #003c7d) 10%, transparent);

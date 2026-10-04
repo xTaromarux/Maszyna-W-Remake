@@ -1,4 +1,3 @@
-
 .toggleButtonProgram[data-editor-program-editor] {
   width: 100%;
 }
@@ -11,14 +10,14 @@
   min-height: 35.8rem;
 }
 @media (min-width: 675px) and (max-width: 1195px) {
-.programEditor[data-editor-program-editor] {
+  .programEditor[data-editor-program-editor] {
     width: 40rem;
-}
+  }
 }
 @media (max-width: 675px) {
-.programEditor[data-editor-program-editor] {
+  .programEditor[data-editor-program-editor] {
     width: 100%;
-}
+  }
 }
 .flexRow[data-editor-program-editor] {
   max-width: 230px;

@@ -14,16 +14,16 @@ The worker is created from a relative `new URL('../workers/chat.worker.js', impo
 
 ## Configuration
 
-| Variable | Runtime | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_APP_PLATFORM` | Next build | `esp` exposes connection status and LED colour controls. |
-| `NEXT_PUBLIC_API_URL` | Next build | Chat endpoint; defaults to `/api/chat`. Use an absolute URL for a static export hosted without a proxy. |
-| `NEXT_PUBLIC_HEALTH_URL` | Next build | Optional explicit health endpoint. By default the final `/api/chat` or `/chat` is replaced with `/health`. |
-| `API_PROXY_TARGET` | Next configuration | Server-side proxy destination configured by the Next application. |
-| `HF_TARGET_URL` or `HF_SPACE` | Proxy server | Upstream chat service URL or `owner/space` slug. |
-| `ALLOWED_ORIGINS` | Proxy server | Comma-separated browser origins allowed to call the proxy. Include the deployed website origin when it calls the proxy directly. |
-| `PORT` | Proxy server | Proxy listening port; default `8787`. |
-| `BODY_LIMIT_MB` | Proxy server | JSON body limit; default 2 MB, bounded to 1–16 MB. |
+| Variable                      | Runtime            | Purpose                                                                                                                          |
+| ----------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_PLATFORM`    | Next build         | `esp` exposes connection status and LED colour controls.                                                                         |
+| `NEXT_PUBLIC_API_URL`         | Next build         | Chat endpoint; defaults to `/api/chat`. Use an absolute URL for a static export hosted without a proxy.                          |
+| `NEXT_PUBLIC_HEALTH_URL`      | Next build         | Optional explicit health endpoint. By default the final `/api/chat` or `/chat` is replaced with `/health`.                       |
+| `API_PROXY_TARGET`            | Next configuration | Server-side proxy destination configured by the Next application.                                                                |
+| `HF_TARGET_URL` or `HF_SPACE` | Proxy server       | Upstream chat service URL or `owner/space` slug.                                                                                 |
+| `ALLOWED_ORIGINS`             | Proxy server       | Comma-separated browser origins allowed to call the proxy. Include the deployed website origin when it calls the proxy directly. |
+| `PORT`                        | Proxy server       | Proxy listening port; default `8787`.                                                                                            |
+| `BODY_LIMIT_MB`               | Proxy server       | JSON body limit; default 2 MB, bounded to 1–16 MB.                                                                               |
 
 `NEXT_PUBLIC_*` values are public build configuration. A provider key must not be put in those variables. CORS restricts browser origins; it is not authentication. The migration does not add authentication or change who may use an existing proxy deployment.
 

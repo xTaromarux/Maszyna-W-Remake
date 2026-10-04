@@ -1,14 +1,11 @@
+import type { MacroCompletionOption } from '@/types/editor';
+import type { MacroCompletionItem } from '../types/editor';
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
-import type { Extension } from '@codemirror/state';
-import { StateField, RangeSetBuilder, EditorState } from '@codemirror/state';
-import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { autocompletion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
-
-export interface MacroCompletionItem {
-  label: string;
-  detail?: string;
-  insertText?: string;
-}
+import type { Extension } from '@codemirror/state';
+import { EditorState, RangeSetBuilder, StateField } from '@codemirror/state';
+import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
+import { normalizeMnemonicToken } from '../shared/utils/commandMnemonics';
 
 function escapeRx(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -26,9 +23,7 @@ function normalizeWordList(words: string[] = []): string[] {
   const seen = new Set<string>();
 
   for (const raw of words || []) {
-    const key = String(raw ?? '')
-      .trim()
-      .toUpperCase();
+    const key = normalizeMnemonicToken(raw);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(key);
@@ -42,14 +37,10 @@ function normalizeCompletionItems(items: MacroCompletionItem[] = []): MacroCompl
   const seen = new Set<string>();
 
   for (const item of items || []) {
-    const label = String(item?.label ?? '')
-      .trim()
-      .toUpperCase();
+    const label = normalizeMnemonicToken(item?.label);
     if (!label) continue;
 
-    const insertText = String(item?.insertText ?? '')
-      .trim()
-      .toUpperCase();
+    const insertText = normalizeMnemonicToken(item?.insertText);
     const dedupeKey = `${label}|${insertText}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
@@ -119,12 +110,7 @@ export function macroWRuntimeCompletions(items: MacroCompletionItem[] = []): rea
     if (!word) return null;
 
     const opts = base.map(({ label, detail, insertText }) => {
-      const option: {
-        label: string;
-        type: 'keyword';
-        detail?: string;
-        apply?: string;
-      } = {
+      const option: MacroCompletionOption = {
         label: matchCase(label, word.text),
         type: 'keyword',
         detail,

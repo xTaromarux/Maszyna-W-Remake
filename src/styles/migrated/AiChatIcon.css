@@ -1,5 +1,4 @@
-
-:where([data-component="AiChatIcon"]).customIcon {
+:where([data-component='AiChatIcon']).customIcon {
   display: inline-block;
   vertical-align: middle;
   margin-top: 2px;

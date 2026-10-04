@@ -1,16 +1,9 @@
+import type { AsmPipelineResult } from '../types/asmPipeline';
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
-import { parse } from './parser';
+import type { MicroProgramEntry } from '../types/model';
+import type { RuntimeCommand } from '../types/registry';
 import { generateMicroProgram, injectCJumpMeta } from './microGenerator';
-import type { ProgramIR, IRInitAssignment } from './types/assemblerIR';
-import type { RuntimeCommand } from './types/registry';
-import type { MicroProgramEntry } from './types/model';
-
-export interface AsmPipelineResult {
-  ir: ProgramIR;
-  initAssignments: IRInitAssignment[];
-  microProgram: MicroProgramEntry[];
-  microAsmText: string;
-}
+import { parse } from './parser';
 
 function renderMicroProgram(program: MicroProgramEntry[]): string {
   const asmFragments: string[] = [];
@@ -18,8 +11,8 @@ function renderMicroProgram(program: MicroProgramEntry[]): string {
 
   for (const entry of program) {
     for (const phase of entry.phases) {
-      if ((phase as any).conditional === true) {
-        const cond = phase as any;
+      if (phase.conditional === true) {
+        const cond = phase;
         const flag = cond.flag;
         const labels = cond.__labels || {};
         const tLabel = labels.t || 'zero';
@@ -29,10 +22,10 @@ function renderMicroProgram(program: MicroProgramEntry[]): string {
         const t = cond.truePhases?.[0] ?? {};
         const f = cond.falsePhases?.[0] ?? {};
         const trueSignals = Object.keys(t)
-          .filter((k) => t[k])
+          .filter((k) => Reflect.get(t, k))
           .join(' ');
         const falseSignals = Object.keys(f)
-          .filter((k) => f[k])
+          .filter((k) => Reflect.get(f, k))
           .join(' ');
 
         const prefix = prefixArr && prefixArr.length ? prefixArr.join(' ') + ' ' : '';
@@ -51,9 +44,9 @@ function renderMicroProgram(program: MicroProgramEntry[]): string {
           lineNo++;
         }
       } else {
-        const regularPhase = phase as Record<string, any>;
+        const regularPhase = phase;
         const signals = Object.keys(regularPhase)
-          .filter((key) => regularPhase[key] === true)
+          .filter((key) => Reflect.get(regularPhase, key) === true)
           .join(' ');
 
         if (signals.trim()) {

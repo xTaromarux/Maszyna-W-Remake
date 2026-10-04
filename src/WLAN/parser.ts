@@ -1,12 +1,8 @@
-﻿/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import type { ParseOptions, RawLine, RawNode, UnresolvedOperand } from '../types/parser';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
-import { lex } from './lexer';
-import { buildInstructionRegistry } from './instructionRegistry';
-import { errorFromToken, WlanError } from './error';
-import { TokenType } from './types/model';
 import { translate as t } from '../i18n';
-import type { Token } from './types/model';
 import type {
   IRDirective,
   IRImmediateOperand,
@@ -15,8 +11,13 @@ import type {
   IRLabel,
   IRMemoryDecl,
   ProgramIR,
-} from './types/assemblerIR';
-import type { NormalizedRuntimeCommand, RuntimeCommand } from './types/registry';
+} from '../types/assemblerIR';
+import type { Token } from '../types/model';
+import { TokenType } from '../types/model';
+import type { NormalizedRuntimeCommand } from '../types/registry';
+import { errorFromToken, WlanError } from './error';
+import { buildInstructionRegistry } from './instructionRegistry';
+import { lex } from './lexer';
 
 const ADDRESS_MIN = 0;
 const ADDRESS_MAX = 0xffff;
@@ -39,58 +40,6 @@ function parseNumberLiteral(text: string): number {
 
   return neg ? -val : val;
 }
-
-interface ParseOptions {
-  commandList: RuntimeCommand[];
-}
-
-type UnresolvedOperand = { kind: 'Immediate'; value: number; token: Token } | { kind: 'Symbol'; name: string; token: Token };
-
-interface RawLine {
-  line: number;
-  labelTok?: Token;
-  mnemonicTok?: Token;
-  operands: UnresolvedOperand[];
-}
-
-interface RawInstruction {
-  nodeType: 'Instruction';
-  line: number;
-  address: number;
-  name: string;
-  mnemonicTok: Token;
-  operands: UnresolvedOperand[];
-}
-
-interface RawMemoryDecl {
-  nodeType: 'MemoryDecl';
-  line: number;
-  address: number;
-  name: 'RST' | 'RPA';
-  mnemonicTok: Token;
-  operands: UnresolvedOperand[];
-}
-
-interface RawDataDirective {
-  nodeType: 'DataDirective';
-  line: number;
-  address: number;
-  name: 'DATA';
-  mnemonicTok: Token;
-  operands: UnresolvedOperand[];
-}
-
-interface RawOrgDirective {
-  nodeType: 'OrgDirective';
-  line: number;
-  addressBefore: number;
-  name: 'ORG';
-  mnemonicTok: Token;
-  value: number;
-  valueToken: Token;
-}
-
-type RawNode = RawInstruction | RawMemoryDecl | RawDataDirective | RawOrgDirective;
 
 function normalizeSymbol(name: string): string {
   return String(name).trim().replace(/^@/, '').toLowerCase();
@@ -230,7 +179,7 @@ export class Parser {
       return { kind: 'Symbol', name: ident.text, token: ident };
     }
 
-  throw errorFromToken(
+    throw errorFromToken(
       this.source,
       tok,
       t('wlan.parser.unexpectedTokenInOperand', { type: tok.type, text: tok.text }),
@@ -468,14 +417,19 @@ export class Parser {
             break;
           }
 
-          throw errorFromToken(this.source, line.mnemonicTok, t('wlan.parser.unsupportedDirective', { name: cmd.name }), 'PARSE_UNSUPPORTED_DIRECTIVE');
+          throw errorFromToken(
+            this.source,
+            line.mnemonicTok,
+            t('wlan.parser.unsupportedDirective', { name: cmd.name }),
+            'PARSE_UNSUPPORTED_DIRECTIVE'
+          );
         }
 
         default:
           throw errorFromToken(
             this.source,
             line.mnemonicTok,
-            t('wlan.parser.unsupportedCommandType', { kind: String((cmd as any).kind) }),
+            t('wlan.parser.unsupportedCommandType', { kind: String(cmd.kind) }),
             'PARSE_UNKNOWN_KIND'
           );
       }

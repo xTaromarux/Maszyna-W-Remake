@@ -1,11 +1,10 @@
-
-:where([data-component="ColorPicker"]).cp-root {
+:where([data-component='ColorPicker']).cp-root {
   color: var(--fontColor);
   font-family: inherit;
   user-select: none;
 }
 
-:where([data-component="ColorPicker"]) .cp-wheel-wrap {
+:where([data-component='ColorPicker']) .cp-wheel-wrap {
   position: relative;
   margin: 0 auto 12px auto;
   cursor: crosshair;
@@ -17,20 +16,20 @@
   background-clip: padding-box;
 }
 
-:where([data-component="ColorPicker"]) .cp-wheel {
+:where([data-component='ColorPicker']) .cp-wheel {
   display: block;
   border: none;
   border-radius: 0; /* juĹĽ niepotrzebne */
 }
 
-:where([data-component="ColorPicker"]) .cp-hitbox {
+:where([data-component='ColorPicker']) .cp-hitbox {
   position: absolute;
   inset: 0;
   touch-action: none;
 }
 
 /* interakcja po caĹ‚ym kole */
-:where([data-component="ColorPicker"]) .cp-indicator {
+:where([data-component='ColorPicker']) .cp-indicator {
   position: absolute;
   width: 14px;
   height: 14px;
@@ -41,33 +40,33 @@
   pointer-events: none;
 }
 
-:where([data-component="ColorPicker"]) .cp-section {
+:where([data-component='ColorPicker']) .cp-section {
   margin-top: 14px;
 }
 
-:where([data-component="ColorPicker"]) .cp-label {
+:where([data-component='ColorPicker']) .cp-label {
   font-size: 12px;
   opacity: 0.85;
   margin-bottom: 6px;
 }
 
-:where([data-component="ColorPicker"]) .cp-bar {
+:where([data-component='ColorPicker']) .cp-bar {
   height: 8px;
   border-radius: 9999px;
   box-shadow: inset 0 0 0 1px var(--panelOutlineColor);
 }
 
-:where([data-component="ColorPicker"]) .cp-bar-grey {
+:where([data-component='ColorPicker']) .cp-bar-grey {
   background: linear-gradient(90deg, #222, #eee);
 }
 
-:where([data-component="ColorPicker"]) .cp-mini {
+:where([data-component='ColorPicker']) .cp-mini {
   font-size: 12px;
   opacity: 0.8;
   margin-top: 6px;
 }
 
-:where([data-component="ColorPicker"]) .cp-range {
+:where([data-component='ColorPicker']) .cp-range {
   width: 100%;
   margin-top: 8px;
   appearance: none;
@@ -75,13 +74,13 @@
   background: transparent;
 }
 
-:where([data-component="ColorPicker"]) .cp-range::-webkit-slider-runnable-track {
+:where([data-component='ColorPicker']) .cp-range::-webkit-slider-runnable-track {
   height: 8px;
   border-radius: 9999px;
   background: transparent;
 }
 
-:where([data-component="ColorPicker"]) .cp-range::-webkit-slider-thumb {
+:where([data-component='ColorPicker']) .cp-range::-webkit-slider-thumb {
   appearance: none;
   width: 18px;
   height: 18px;
@@ -91,13 +90,13 @@
   margin-top: -5px;
 }
 
-:where([data-component="ColorPicker"]) .cp-range::-moz-range-track {
+:where([data-component='ColorPicker']) .cp-range::-moz-range-track {
   height: 8px;
   border-radius: 9999px;
   background: transparent;
 }
 
-:where([data-component="ColorPicker"]) .cp-range::-moz-range-thumb {
+:where([data-component='ColorPicker']) .cp-range::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 9999px;
@@ -105,14 +104,14 @@
   border: 2px solid #003c7d;
 }
 
-:where([data-component="ColorPicker"]) .cp-swatches {
+:where([data-component='ColorPicker']) .cp-swatches {
   margin-top: 14px;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 8px;
 }
 
-:where([data-component="ColorPicker"]) .cp-swatch {
+:where([data-component='ColorPicker']) .cp-swatch {
   width: 26px;
   height: 26px;
   border-radius: 9999px;
@@ -120,7 +119,7 @@
   cursor: pointer;
 }
 
-:where([data-component="ColorPicker"]) .cp-readout {
+:where([data-component='ColorPicker']) .cp-readout {
   margin-top: 14px;
   display: flex;
   align-items: center;
@@ -128,18 +127,18 @@
   gap: 10px;
 }
 
-:where([data-component="ColorPicker"]) .cp-current {
+:where([data-component='ColorPicker']) .cp-current {
   width: 28px;
   height: 28px;
   border-radius: 9999px;
   border: 1px solid var(--panelOutlineColor);
 }
 
-:where([data-component="ColorPicker"]) .cp-text {
+:where([data-component='ColorPicker']) .cp-text {
   font-size: 12px;
   line-height: 1.25;
 }
 
-:where([data-component="ColorPicker"]) .cp-line {
+:where([data-component='ColorPicker']) .cp-line {
   opacity: 0.9;
 }

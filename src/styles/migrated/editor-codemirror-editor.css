@@ -1,4 +1,3 @@
-
 .editor-wrapper[data-editor-codemirror-editor] {
   position: relative;
   width: 100%;
@@ -11,14 +10,14 @@
     left 0.3s ease;
 }
 @media (min-width: 675px) and (max-width: 1195px) {
-.editor-wrapper[data-editor-codemirror-editor] {
+  .editor-wrapper[data-editor-codemirror-editor] {
     width: 40rem;
-}
+  }
 }
 @media (max-width: 675px) {
-.programEditor[data-editor-codemirror-editor] {
+  .programEditor[data-editor-codemirror-editor] {
     width: 100%;
-}
+  }
 }
 [data-editor-codemirror-editor] .cm-content .cm-macrow-keyword {
   color: #0a84ff !important;
@@ -137,7 +136,8 @@
 }
 
 /* Zaznaczony element */
-[data-editor-codemirror-editor] .cm-tooltip-autocomplete li[aria-selected='true'],[data-editor-codemirror-editor] .cm-tooltip-autocomplete .cm-completionSelected {
+[data-editor-codemirror-editor] .cm-tooltip-autocomplete li[aria-selected='true'],
+[data-editor-codemirror-editor] .cm-tooltip-autocomplete .cm-completionSelected {
   background: #e6f0ff !important;
   color: #003c7d !important;
 }

@@ -1,8 +1,9 @@
-﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
-
-import { BaseAppError, ErrorLevel } from '../errors';
+import type { DiagnosticOptions, DiagnosticToken } from '@/types/diagnostics';
+import { ErrorLevel } from '@/types/errors';
+import { BaseAppError } from '../errors';
 import { translate as t } from '../i18n';
-import type { Severity, DiagnosticLocation, DiagnosticData } from './types/error';
+import { clamp } from '../shared/utils/numbers'; /* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { DiagnosticData, DiagnosticLocation, Severity } from '../types/diagnostics';
 
 export function makeCodeFrame(
   source: string,
@@ -13,7 +14,7 @@ export function makeCodeFrame(
 ): string {
   if (!source) return '';
   const lines = source.replace(/\r\n?/g, '\n').split('\n');
-  const lineIdx = Math.max(0, Math.min(lines.length - 1, lineOneBased - 1));
+  const lineIdx = clamp(lineOneBased - 1, 0, lines.length - 1);
   const startCtx = Math.max(0, lineIdx - contextLines);
   const endCtx = Math.min(lines.length - 1, lineIdx + contextLines);
 
@@ -40,7 +41,7 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
   loc?: DiagnosticLocation;
   frame?: string;
 
-  constructor(message: string, options?: DiagnosticData & { source?: string }) {
+  constructor(message: string, options?: DiagnosticOptions) {
     const composed = WlanError.composeMessage(message, options);
     super(composed, {
       code: options?.code,
@@ -56,7 +57,7 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
     this.frame = options?.frame;
   }
 
-  static composeMessage(message: string, options?: DiagnosticData & { source?: string }): string {
+  static composeMessage(message: string, options?: DiagnosticOptions): string {
     const parts: string[] = [];
     const code = options?.code ? `[${options.code}] ` : '';
     const where = options?.loc ? ` (${t('wlan.error.location', { line: options.loc.line, col: options.loc.col })})` : '';
@@ -73,7 +74,7 @@ export class WlanError extends BaseAppError<string, DiagnosticData> {
 
 export function errorFromToken(
   source: string,
-  token: { line: number; col: number; text?: string },
+  token: DiagnosticToken,
   message: string,
   code?: string,
   hint?: string,
@@ -110,4 +111,3 @@ function severityToLevel(sev?: Severity): ErrorLevel {
       return ErrorLevel.ERROR;
   }
 }
-

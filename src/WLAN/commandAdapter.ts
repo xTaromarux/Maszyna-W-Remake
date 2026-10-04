@@ -1,7 +1,9 @@
-﻿/* eslint-disable prefer-arrow/prefer-arrow-functions */
+import type { ConditionalChunk } from '@/types/commandAdapter';
+import type { RuntimeCommand } from '@/types/registry';
+/* eslint-disable prefer-arrow/prefer-arrow-functions */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import type { Phase as TemplatePhase, Signal, SignalSet, ConditionalPhase } from './types/instructions';
-import type { Cmd, Built } from './types/commandAdapter';
+import type { Built } from '../types/commandAdapter';
+import type { ConditionalPhase, Signal, SignalSet, Phase as TemplatePhase } from '../types/instructions';
 
 const KNOWN: ReadonlySet<string> = new Set([
   'czyt',
@@ -61,7 +63,7 @@ function cutEND(text: string): string {
 
 function toSignalSet(line: string): SignalSet {
   const set: SignalSet = {};
-  for (const tok of line.trim().split(/\s+/)) if (KNOWN.has(tok)) (set as any)[tok as Signal] = true;
+  for (const tok of line.trim().split(/\s+/)) if (KNOWN.has(tok)) set[tok as Signal] = true;
   return set;
 }
 
@@ -71,7 +73,7 @@ function toSignalArray(line: string): Signal[] {
   return out;
 }
 
-function splitChunkAtIF(chunk: string): { before?: string; ifPart?: string } {
+function splitChunkAtIF(chunk: string): ConditionalChunk {
   const m = IF_RE.exec(chunk);
   if (!m) return {};
   const idx = m.index;
@@ -90,7 +92,7 @@ function pickBranchBodyFromChunk(chunk: string, label: string): SignalSet[] {
   return any ? [sset] : [];
 }
 
-export function buildFromCommandList(list: Cmd[]): Built {
+export function buildFromCommandList(list: RuntimeCommand[]): Built {
   const templates: Record<string, TemplatePhase[]> = {};
   const postAsm: Record<string, string[]> = {};
 
@@ -131,7 +133,7 @@ export function buildFromCommandList(list: Cmd[]): Built {
         if (truePhases.length) i++;
         if (falsePhases.length) i++;
 
-        const conditional: ConditionalPhase & { __labels?: any; __prefix?: Signal[] } = {
+        const conditional: ConditionalPhase = {
           conditional: true,
           flag,
           truePhases,

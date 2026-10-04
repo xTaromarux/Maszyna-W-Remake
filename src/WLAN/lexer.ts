@@ -1,7 +1,7 @@
 /* eslint-disable prefer-arrow/prefer-arrow-functions */
-import type { Token, TokenType } from './types/model';
-import { errorAt } from './error';
 import { translate as t } from '../i18n';
+import type { Token, TokenType } from '../types/model';
+import { errorAt } from './error';
 
 const tokenSpecs: [string, RegExp][] = [
   ['WHITESPACE', /^[ \t\r]+/],

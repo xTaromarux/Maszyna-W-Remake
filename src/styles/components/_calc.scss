@@ -2,12 +2,12 @@
   padding-top: 2rem;
   display: grid;
   grid-template-areas:
-    ". . ."
-    "accSignals accumulator ."
-    "accSignals accumulator wyak"
-    ". flags wyak"
-    "jamlSignals jaml wyak"
-    ". weja wyak";
+    '. . .'
+    'accSignals accumulator .'
+    'accSignals accumulator wyak'
+    '. flags wyak'
+    'jamlSignals jaml wyak'
+    '. weja wyak';
   grid-template-rows: auto auto auto auto 1fr auto;
 }
 
@@ -16,12 +16,12 @@
     width: 100%;
     padding-top: 0;
     margin-bottom: 20px;
-      grid-template-areas:
-    ". . . "
-    "accSignals accSignals accumulator"
-    "accSignals accSignals accumulator"
-    ". . flags"
-    "jamlSignals jamlSignals jaml";
+    grid-template-areas:
+      '. . . '
+      'accSignals accSignals accumulator'
+      'accSignals accSignals accumulator'
+      '. . flags'
+      'jamlSignals jamlSignals jaml';
   }
 }
 
@@ -109,7 +109,7 @@
 }
 
 #calc #jaml::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -122,7 +122,7 @@
 }
 
 #calc #jaml::after {
-  content: "JAL";
+  content: 'JAL';
   position: absolute;
   top: 50%;
   left: 50%;

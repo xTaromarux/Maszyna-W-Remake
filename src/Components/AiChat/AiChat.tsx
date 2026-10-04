@@ -50,6 +50,9 @@ const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '
     }
   };
 
+  const updateMessageDraft = (text: string) => patch({ text });
+  const updateApiKeyDraft = (apiKeyDraft: string) => patch({ apiKeyDraft });
+  const toggleKeyVisibility = () => patch({ showApiKeyValue: !state.showApiKeyValue });
   const dismissSuggestions = () => patch({ showSuggestions: false });
 
   const selectSuggestion = (text: string) => {
@@ -119,12 +122,13 @@ const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '
             {state.showSuggestions && !state.messages.length && (
               <ChatSuggestions onDismiss={dismissSuggestions} onSelect={selectSuggestion} />
             )}
-            <ChatConversation state={state} cancelResponse={cancelResponse} />
+            <ChatConversation messages={state.messages} currentAiMessageId={state.currentAiMessageId} cancelResponse={cancelResponse} />
           </div>
           <ChatComposer
             inert={showApiKeyGate}
-            state={state}
-            patch={patch}
+            text={state.text}
+            errorMessage={state.rateLimitMessage || state.generalError}
+            updateText={updateMessageDraft}
             inputDisabled={inputDisabled}
             sendUserMessage={sendUserMessage}
             inputRef={panel.textInput}
@@ -133,8 +137,11 @@ const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '
           />
           {showApiKeyGate && (
             <ApiKeyDialog
-              state={state}
-              patch={patch}
+              apiKeyDraft={state.apiKeyDraft}
+              apiKeyError={state.apiKeyError}
+              showApiKeyValue={state.showApiKeyValue}
+              updateApiKeyDraft={updateApiKeyDraft}
+              toggleKeyVisibility={toggleKeyVisibility}
               hasApiKey={hasApiKey}
               closeApiKeyModal={closeApiKeyModal}
               saveApiKey={saveKeyAndFocus}

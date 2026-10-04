@@ -1,7 +1,6 @@
 'use client';
 
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
-import type { NumberFormat } from '@/Shared/Types/Numbers';
 import type { ProcessorDiagramProps } from '@/Components/ProcessorDiagram/Types';
 import APRegisterSection from './Registers/ApRegisterSection';
 import BusSignal from './Ui/BusSignal';
@@ -17,64 +16,18 @@ import WSRegisterSection from './Registers/WsRegisterSection';
 import XRegisterSection from './Registers/XRegisterSection';
 import YRegisterSection from './Registers/YRegisterSection';
 import { createRegisterBindings } from './Bindings/RegisterBindings';
+import { createAluBindings, createMemoryBindings } from './Bindings/DiagramBindings';
 import InterruptLayer from './Ui/InterruptLayer';
 import MobileAluSignals from './Ui/MobileAluSignals';
 
 const ProcessorDiagram = (props: ProcessorDiagramProps) => {
-  const {
-    manualMode,
-    signals,
-    programCounter,
-    formatNumber,
-    registerFormats,
-    extras,
-    BusA,
-    BusS,
-    I,
-    ACC,
-    JAML,
-    A,
-    S,
-    mem,
-    X,
-    Y,
-    RB,
-    G,
-    RM,
-    AP,
-    RZ,
-    RP,
-    WS,
-    wordBits = 8,
-    decSigned = false,
-    decToCommand,
-    decToArgument,
-    onClickItem,
-    onUpdateNumberFormat,
-  } = props;
+  const { manualMode, signals, programCounter, formatNumber, extras, BusA, BusS, I, X, Y, RB, G, RM, AP, RZ, RP, WS, onClickItem } = props;
   const isMobile = useWindowWidth() <= 768;
   const registers = createRegisterBindings(props);
 
-  const calcProps = {
-    signals,
-    extras,
-    ACC,
-    JAML,
-    WS,
-    decSigned,
-    wordBits,
-    formatNumber,
-    numberFormat: registerFormats.WS,
-    accFormat: registerFormats.ACC,
-    jamlFormat: registerFormats.JAML,
-    onUpdateAccFormat: (value: NumberFormat) => onUpdateNumberFormat?.({ field: 'ACC', value }),
-    onUpdateNumberFormat: (value: NumberFormat) => onUpdateNumberFormat?.({ field: 'WS', value }),
-    onUpdateJamlFormat: (value: NumberFormat) => onUpdateNumberFormat?.({ field: 'JAML', value }),
-    onUpdateACC: props.onUpdateACC,
-    onUpdateJAML: props.onUpdateJAML,
-    onUpdateWS: props.onUpdateWS,
-    onClickItem,
-  };
+  const alu = createAluBindings(props);
+  const memory = createMemoryBindings(props, isMobile);
+
   const busProps = (name: 'A' | 'S', value: number) => ({
     signalStatus: signals[`bus${name}`],
     busValue: value,
@@ -121,7 +74,7 @@ const ProcessorDiagram = (props: ProcessorDiagramProps) => {
         )}
         <div className="layer">
           <RegisterISection I={I} {...registers.I} />
-          {!isMobile && <AluSection {...calcProps} />}
+          {!isMobile && <AluSection {...alu} />}
           {extras.busConnectors && (
             <>
               <SignalButton
@@ -142,21 +95,7 @@ const ProcessorDiagram = (props: ProcessorDiagramProps) => {
               />
             </>
           )}
-          <MemorySection
-            {...{ A, S, mem, signals, formatNumber, decToCommand, decToArgument, onClickItem, wordBits }}
-            aFormat={registerFormats.A}
-            sFormat={registerFormats.S}
-            onUpdateAFormat={(value: NumberFormat) => onUpdateNumberFormat?.({ field: 'A', value })}
-            onUpdateSFormat={(value: NumberFormat) => onUpdateNumberFormat?.({ field: 'S', value })}
-            onUpdateA={props.onUpdateA}
-            onUpdateS={props.onUpdateS}
-            onUpdateMem={props.onUpdateMem}
-            mobileView={isMobile}
-            busAValue={BusA}
-            busSValue={BusS}
-            signedDec={decSigned}
-            showInvisibleRegisters={extras.showInvisibleRegisters}
-          />
+          <MemorySection {...memory} />
         </div>
       </div>
       <BusSignal {...busProps('S', BusS)} />
@@ -169,7 +108,7 @@ const ProcessorDiagram = (props: ProcessorDiagramProps) => {
       {isMobile && (
         <>
           <div id="layer4" className="layer">
-            <AluSection {...calcProps} />
+            <AluSection {...alu} />
           </div>
           <div className="layer">{ioRegisters}</div>
           {extras.stack?.wsRegister && <BusSignal {...busProps('S', BusS)} />}

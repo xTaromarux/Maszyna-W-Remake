@@ -1,6 +1,6 @@
 import type { ExecutionControlsProps } from '@/Components/MicrocodeEditor/Types';
 import type { ProcessorDiagramProps, RegisterUpdates } from '@/Components/ProcessorDiagram/Types';
-import type { Machine, MachineRegisters, MachineState } from '@/Machine/Types/Machine';
+import type { LogEvent, Machine, MachineRegisters, MachineState } from '@/Machine/Types/Machine';
 
 export type UpdateMachineField = <K extends keyof MachineState>(field: K) => (value: MachineState[K]) => void;
 
@@ -62,4 +62,49 @@ export const createRegisterBindings = (machine: Machine, update: UpdateMachineFi
   onUpdateAP: update('AP'),
   WS: machine.WS,
   onUpdateWS: update('WS'),
+});
+
+type MainInteractionBindings = {
+  openChat: () => void;
+  openSettings: () => void;
+  updateRegisterFormat: NonNullable<ProcessorDiagramProps['onUpdateNumberFormat']>;
+  setManualMode: (enabled: boolean) => void;
+  updateDeviceInput: (value: number) => void;
+  logProgramEvent: (event: LogEvent) => void;
+  disableBreakpoints: () => void;
+  clearBreakpoints: () => void;
+};
+
+/** Adapts view events to ordered writes and actions on the observable machine. */
+export const createMainInteractionBindings = (machine: Machine, t: Machine['t']): MainInteractionBindings => ({
+  openChat: () => {
+    machine.aiChatOpen = true;
+  },
+  openSettings: () => {
+    machine.settingsOpen = true;
+  },
+  updateRegisterFormat: ({ field, value }) => {
+    machine.registerFormats[field] = value;
+  },
+  setManualMode: (enabled) => {
+    if (enabled) {
+      machine.manualModeCheck();
+    } else {
+      machine.manualModeUncheck();
+    }
+  },
+  updateDeviceInput: (value) => {
+    machine.DEV_IN = value;
+    machine.DEV_READY = value ? 0 : 1;
+  },
+  logProgramEvent: (event) => {
+    machine.addLog(event.message, event.class, event.error);
+  },
+  disableBreakpoints: () => {
+    machine.breakpointsEnabled = false;
+  },
+  clearBreakpoints: () => {
+    machine.breakpoints.clear();
+    machine.addLog(t('logs.breakpointsCleared'), 'system');
+  },
 });

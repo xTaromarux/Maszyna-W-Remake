@@ -2,8 +2,6 @@
 
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import { MachineContext } from '@/Machine/MachineContext';
-import type { ProcessorDiagramProps } from '@/Components/ProcessorDiagram/Types';
-import type { LogEvent } from '@/Machine/Types/Machine';
 import ConsoleDock from '../Console/ConsoleDock';
 import AssemblyEditor from '../AssemblyEditor/AssemblyEditor';
 import ProcessorDiagram from '../ProcessorDiagram/ProcessorDiagram';
@@ -11,7 +9,12 @@ import ExecutionControls from '../MicrocodeEditor/ExecutionControls';
 import MicrocodeEditor from '../MicrocodeEditor/MicrocodeEditor';
 import TopBar from './Ui/TopBar';
 import { useMachine } from './Hooks/UseMachine';
-import { createMachineUpdater, createExecutionBindings, createRegisterBindings } from './Bindings/MachineBindings';
+import {
+  createMachineUpdater,
+  createExecutionBindings,
+  createRegisterBindings,
+  createMainInteractionBindings,
+} from './Bindings/MachineBindings';
 import { MachineOverlays } from './Ui/MachineOverlays';
 
 /** Composes simulator views around the single observable machine instance. */
@@ -22,48 +25,13 @@ const Main = () => {
   const execution = createExecutionBindings(machine);
   const registerProps = createRegisterBindings(machine, update);
 
-  const openChat = () => {
-    machine.aiChatOpen = true;
-  };
-  const openSettings = () => {
-    machine.settingsOpen = true;
-  };
-
-  const updateRegisterFormat: NonNullable<ProcessorDiagramProps['onUpdateNumberFormat']> = ({ field, value }) => {
-    machine.registerFormats[field] = value;
-  };
-
-  const setManualMode = (enabled: boolean) => {
-    if (enabled) {
-      machine.manualModeCheck();
-    } else {
-      machine.manualModeUncheck();
-    }
-  };
-
-  const updateDeviceInput = (value: number) => {
-    machine.DEV_IN = value;
-    machine.DEV_READY = value ? 0 : 1;
-  };
-
-  const logProgramEvent = (event: LogEvent) => {
-    machine.addLog(event.message, event.class, event.error);
-  };
-
-  const disableBreakpoints = () => {
-    machine.breakpointsEnabled = false;
-  };
-
-  const clearBreakpoints = () => {
-    machine.breakpoints.clear();
-    machine.addLog(t('logs.breakpointsCleared'), 'system');
-  };
+  const interactions = createMainInteractionBindings(machine, t);
 
   const breakpointControls = {
     breakpointsEnabled: machine.breakpointsEnabled,
     onUpdateBreakpointsEnabled: update('breakpointsEnabled'),
-    onDisableAllBreakpoints: disableBreakpoints,
-    onClearBreakpoints: clearBreakpoints,
+    onDisableAllBreakpoints: interactions.disableBreakpoints,
+    onClearBreakpoints: interactions.clearBreakpoints,
   };
 
   return (
@@ -71,8 +39,8 @@ const Main = () => {
       <TopBar
         hasConsoleErrors={machine.hasConsoleErrors}
         wsStatus={machine.wsStatus}
-        onOpenChat={openChat}
-        onOpenSettings={openSettings}
+        onOpenChat={interactions.openChat}
+        onOpenSettings={interactions.openSettings}
         onToggleConsole={machine.toggleConsole}
         onWsReconnect={machine.reconnectWS}
       />
@@ -91,7 +59,7 @@ const Main = () => {
           decToCommand={machine.decToCommand}
           decToArgument={machine.decToArgument}
           onClickItem={machine.handleSignalToggle}
-          onUpdateNumberFormat={updateRegisterFormat}
+          onUpdateNumberFormat={interactions.updateRegisterFormat}
         />
         <div id="inputs">
           <MicrocodeEditor
@@ -110,9 +78,9 @@ const Main = () => {
             breakpoints={machine.breakpoints}
             breakpointsEnabled={machine.breakpointsEnabled}
             onToggleBreakpoint={machine.toggleBreakpoint}
-            onSetManualMode={setManualMode}
+            onSetManualMode={interactions.setManualMode}
             onUpdateCode={update('code')}
-            onUpdateDevIn={updateDeviceInput}
+            onUpdateDevIn={interactions.updateDeviceInput}
             onUpdateDevReady={update('DEV_READY')}
           />
           <ExecutionControls {...execution} />
@@ -126,7 +94,7 @@ const Main = () => {
           autocompleteEnabled={machine.autocompleteEnabled}
           autoResetOnAsmCompile={machine.autoResetOnAsmCompile}
           onUpdateCode={machine.handleProgramSectionCompile}
-          onLog={logProgramEvent}
+          onLog={interactions.logProgramEvent}
           onInitMemory={machine.applyInitMemory}
           onResetRegisters={machine.handleAsmAutoReset}
         />

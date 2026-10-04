@@ -1,4 +1,6 @@
 import Simulator from './Simulator';
-export default function Page() {
+const Page = () => {
   return <Simulator />;
-}
+};
+
+export default Page;

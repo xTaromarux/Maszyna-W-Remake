@@ -1,6 +1,6 @@
 'use client';
 
-import useWindowWidth from '@/Hooks/UseWindowWidth';
+import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import { useI18n } from '@/I18n/Index';
 import type { MemorySectionProps } from '@/Types/Components';
 import { useEffect, useRef, useState } from 'react';

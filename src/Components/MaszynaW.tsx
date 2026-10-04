@@ -1,6 +1,6 @@
 'use client';
 
-import useWindowWidth from '@/Hooks/UseWindowWidth';
+import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { NumberFormat } from '@/Types/Common';
 import type { MaszynaWProps } from '@/Types/Components';
 import type { RegisterFormatField } from '@/Types/Simulator';

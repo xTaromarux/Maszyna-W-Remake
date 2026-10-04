@@ -1,6 +1,6 @@
 'use client';
 
-import useWindowWidth from '@/Hooks/UseWindowWidth';
+import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import { toUnsigned } from '@/Shared/Utils/Numbers';
 import type { CalcSectionProps } from '@/Types/Components';
 import RegisterComponent from './Registers/RegisterComponent';

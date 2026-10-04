@@ -1,6 +1,6 @@
 'use client';
 
-import useWindowWidth from '@/Hooks/UseWindowWidth';
+import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { WSRegisterSectionProps } from '@/Types/Components';
 import BusLabel from '../BusLabel';
 import RegisterComponent from './RegisterComponent';

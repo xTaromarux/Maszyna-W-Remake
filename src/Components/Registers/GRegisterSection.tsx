@@ -1,6 +1,6 @@
 'use client';
 
-import useWindowWidth from '@/Hooks/UseWindowWidth';
+import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { GRegisterSectionProps } from '@/Types/Components';
 import RegisterComponent from './RegisterComponent';
 import SignalButton from '../SignalButton';

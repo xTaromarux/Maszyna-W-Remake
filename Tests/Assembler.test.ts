@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { compileAsmToMicroProgram } from '../src/Wlan/AsmPipeline';
 import { WlanError } from '../src/Wlan/Error';
-import { commandList } from '../src/Utils/Data/Commands.js';
+import { commandList } from '../src/Shared/Utils/Data/Commands.js';
 import type { RuntimeCommand } from '../src/Types/Registry';
 
 const compile = (source: string, commands: RuntimeCommand[] = commandList) => compileAsmToMicroProgram(source, commands);

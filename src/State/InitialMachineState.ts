@@ -1,6 +1,6 @@
 import type { Machine, MachineState } from '@/Types/Simulator';
-import { commandList } from '../Utils/Data/Commands.js';
-import { createLabCatalog, defaultLabId } from '../Utils/Data/Labs.js';
+import { commandList } from '../Shared/Utils/Data/Commands.js';
+import { createLabCatalog, defaultLabId } from '../Shared/Utils/Data/Labs.js';
 export function initialMachineState(this: Machine): MachineState {
   return {
     _skipNextBreakpoint: false,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { prepareProgramCompilation } from '../src/Components/InstructionsEditor/Helpers/PrepareProgramCompilation';
-import { commandList } from '../src/Utils/Data/Commands.js';
+import { commandList } from '../src/Shared/Utils/Data/Commands.js';
 import { WlanError } from '../src/Wlan/Error';
 
 const options = { commandList, codeBits: 4, addresBits: 4 };

@@ -1,6 +1,6 @@
 # WLAN Command List
 
-Readable reference for commands defined in `src/Utils/Data/Commands.js`.
+Readable reference for commands defined in `src/Shared/Utils/Data/Commands.js`.
 Descriptions are localized when available.
 
 ## STP

@@ -25,8 +25,8 @@ blob-report/
 .playwright-mcp/
 /cypress/videos/
 /cypress/screenshots/
-/docs/verification/*
-!/docs/verification/README.md
+/Docs/Verification/*
+!/Docs/Verification/Readme.md
 
 # Logs and caches
 logs/

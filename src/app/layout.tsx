@@ -1,18 +1,18 @@
-import '@/styles/main.scss';
-import '@/styles/migrated/index.css';
-import type { ChildrenProps } from '@/types/common';
+import '@/Styles/Main.scss';
+import '@/Styles/Migrated/Index.css';
+import type { ChildrenProps } from '@/Types/Common';
 
 export const metadata = {
   title: 'Maszyna W v.0.2.1',
   description: 'Interaktywny symulator Maszyny W — assembler, mikroinstrukcje i laboratoria.',
-  manifest: '/site.webmanifest',
+  manifest: '/Site.webmanifest',
   icons: {
     icon: [
-      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/Favicon96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/Favicon.svg', type: 'image/svg+xml' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: '/AppleTouchIcon.png',
   },
   appleWebApp: { title: 'Maszyna W' },
 };

@@ -15,10 +15,10 @@ export default defineConfig([
     'playwright-report/**',
     'blob-report/**',
     'next-env.d.ts',
-    'src/codemirror-langs/macroW.js',
-    'src/codemirror-langs/macroW.terms.js',
-    'src/codemirror-langs/maszynaW.js',
-    'src/codemirror-langs/maszynaW.terms.js',
+    'src/CodeMirrorLangs/MacroW.js',
+    'src/CodeMirrorLangs/MacroW.terms.js',
+    'src/CodeMirrorLangs/MaszynaW.js',
+    'src/CodeMirrorLangs/MaszynaW.terms.js',
   ]),
   {
     files: ['**/*.{js,cjs,mjs,ts,tsx}'],
@@ -35,7 +35,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/**/*.{js,ts,tsx}', 'tests/**/*.{js,ts,tsx}'],
+    files: ['src/**/*.{js,ts,tsx}', 'Tests/**/*.{js,ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.worker },
     },

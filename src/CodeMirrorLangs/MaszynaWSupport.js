@@ -1,0 +1,17 @@
+import { parser } from './MaszynaW.js';
+import { LRLanguage, LanguageSupport } from '@codemirror/language';
+import { maszynaWHighlight } from './MaszynaWHighlight.js';
+
+export const maszynaWLanguage = LRLanguage.define({
+  parser: parser.configure({ props: [maszynaWHighlight] }),
+  languageData: {
+    name: 'maszynaW',
+    extensions: ['.mw'],
+    commentTokens: { line: '//' },
+    wordChars: 'A-Za-z0-9_ĄąĆćĘęŁłŃńÓóŚśŹźŻż', // ← DODAJ
+  },
+});
+
+export function maszynaW() {
+  return new LanguageSupport(maszynaWLanguage);
+}

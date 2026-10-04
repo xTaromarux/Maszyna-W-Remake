@@ -1,0 +1,71 @@
+@top Program { statement* }
+
+@tokens {
+  // mnemonic rozkazu
+
+  PLUpper { "Ą" | "Ć" | "Ę" | "Ł" | "Ń" | "Ó" | "Ś" | "Ź" | "Ż" }
+  PLLower { "ą" | "ć" | "ę" | "ł" | "ń" | "ó" | "ś" | "ź" | "ż" }
+  UnicodeLetter { @asciiLetter | PLUpper | PLLower }
+  WordChar { UnicodeLetter | @digit | "_" }
+
+
+  instrWord { UnicodeLetter WordChar* }
+  labelDef  { UnicodeLetter WordChar* ":" }
+  labelRef  { "@" UnicodeLetter WordChar* }
+  identifier { UnicodeLetter WordChar* }
+
+  // słowa kluczowe IF/THEN/ELSE jako osobne tokeny
+  IF { "IF" }
+  THEN { "THEN" }
+  ELSE { "ELSE" }
+
+  number   { @digit+ }
+
+  ";" "," "."
+
+  // UWAGA: instrWord przed identifier, by rozstrzygać konflikt na korzyść mnemoników
+  @precedence { IF, THEN, ELSE, instrWord, labelDef, identifier }
+
+  space { @whitespace+ }
+  LineComment { "//" ![\n]* }
+}
+
+@skip { space | LineComment }
+
+statement {
+  labelDef |
+  instruction |
+  directive |
+  conditionalStatement
+}
+
+instruction {
+  instrWord argument*
+}
+
+directive {
+  "." identifier argument*
+}
+
+conditionalStatement {
+  IF expression THEN statement !else |
+  IF expression THEN statement ELSE statement
+}
+
+@precedence { else }
+
+expression {
+  number |
+  identifier |
+  labelRef
+}
+
+argument {
+  number |
+  identifier |
+  labelRef
+}
+
+@external propSource macroWHighlight from "./MacroWHighlight.js"
+
+@detectDelim

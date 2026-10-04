@@ -4,10 +4,10 @@ import CodeMirrorEditor from '@/Components/CodeMirrorEditor/CodeMirrorEditor';
 import SegmentedToggle from '@/Components/SegmentedToggle';
 import { useI18n } from '@/I18n/Index';
 import type { ProgramEditorProps } from '@/Types/Components';
-import { useEffect, useRef } from 'react';
 import IOPanel from './IoPanel';
+import CompiledProgramView from './Ui/CompiledProgramView';
 
-export default function ProgramEditor({
+const ProgramEditor = ({
   manualMode,
   codeCompiled,
   code = '',
@@ -31,12 +31,12 @@ export default function ProgramEditor({
   children,
   className = '',
   ...rest
-}: ProgramEditorProps) {
+}: ProgramEditorProps) => {
   const { t } = useI18n();
-  const compiledEl = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    compiledEl.current?.querySelector(`[data-row="${activeLine}"]`)?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-  }, [activeLine, codeCompiled]);
+
+  const showSourceEditor = !manualMode && !codeCompiled;
+  const showCompiledProgram = !manualMode && codeCompiled;
+
   return (
     <div data-editor-program-editor="" {...rest} className={`programEditor ${className}`}>
       <SegmentedToggle
@@ -64,11 +64,12 @@ export default function ProgramEditor({
       <div data-editor-program-editor="" className="chooseProgram">
         {chooseProgram ?? children}
       </div>
-      {manualMode ? (
+      {manualMode && (
         <div data-editor-program-editor="" className="manualModeInstruction">
           <p data-editor-program-editor="">{t('programEditor.manualInstruction')}</p>
         </div>
-      ) : !codeCompiled ? (
+      )}
+      {showSourceEditor && (
         <CodeMirrorEditor
           modelValue={code}
           onUpdateModelValue={onUpdateCode}
@@ -76,47 +77,15 @@ export default function ProgramEditor({
           theme="mwTheme"
           maxHeight={showIo ? '18.3rem' : '32rem'}
         />
-      ) : (
-        <div data-editor-program-editor="" className={`compiledCode${breakpointsEnabled ? '' : ' bp-disabled'}`} ref={compiledEl}>
-          {!breakpointsEnabled && (
-            <div data-editor-program-editor="" className="bp-disabled-banner">
-              {t('programEditor.breakpoints.disabled')}
-            </div>
-          )}
-          {compiledCode.map((line, index) => (
-            <span
-              data-editor-program-editor=""
-              key={index}
-              className={`flexRow${activeLine === index ? ' active' : ''}${breakpoints.has(index) ? ' bp-line' : ''}`}
-              data-row={index}
-            >
-              <button
-                data-editor-program-editor=""
-                className={`bp-dot gutter${breakpoints.has(index) ? ' bp-dot--active' : ''}`}
-                disabled={!breakpointsEnabled}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleBreakpoint?.(index);
-                }}
-                title={t(
-                  !breakpointsEnabled
-                    ? 'programEditor.breakpoints.disabled'
-                    : breakpoints.has(index)
-                      ? 'programEditor.breakpoints.remove'
-                      : 'programEditor.breakpoints.add'
-                )}
-                aria-label="Toggle breakpoint"
-              />
-              <span data-editor-program-editor="" className="lineNo">
-                {index}
-              </span>
-              <span data-editor-program-editor="">:</span>
-              <span data-editor-program-editor="" className="codeLine">
-                {line}
-              </span>
-            </span>
-          ))}
-        </div>
+      )}
+      {showCompiledProgram && (
+        <CompiledProgramView
+          compiledCode={compiledCode}
+          activeLine={activeLine}
+          breakpoints={breakpoints}
+          breakpointsEnabled={breakpointsEnabled}
+          onToggleBreakpoint={onToggleBreakpoint}
+        />
       )}
       {manualMode && (
         <div data-editor-program-editor="" className="nextLine">
@@ -134,4 +103,6 @@ export default function ProgramEditor({
       )}
     </div>
   );
-}
+};
+
+export default ProgramEditor;

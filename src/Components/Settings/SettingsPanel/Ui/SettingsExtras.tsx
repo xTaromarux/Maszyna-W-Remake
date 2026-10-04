@@ -17,6 +17,20 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const toggleGroup = (key: string) => setOpenGroups((previous) => ({ ...previous, [key]: !previous[key] }));
 
+  const updateExtra = (key: (typeof BOOLEAN_KEYS)[number], checked: boolean) => {
+    onUpdateExtras?.({ [key]: checked });
+  };
+
+  const updateGroup = (key: keyof typeof GROUPS, checked: boolean) => {
+    const children = GROUPS[key];
+    const groupPatch = Object.fromEntries(children.map((child) => [child, checked]));
+    onUpdateExtras?.({ [key]: groupPatch });
+  };
+
+  const updateGroupItem = (key: keyof typeof GROUPS, child: string, checked: boolean) => {
+    onUpdateExtras?.({ [key]: { [child]: checked } });
+  };
+
   return (
     <div className="extras">
       <label>{t('settings.extras.heading')}</label>
@@ -26,12 +40,13 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
           <SettingsSwitch
             label={t(`settings.extras.labels.${key}`)}
             checked={extras[key]}
-            onChange={(checked) => onUpdateExtras?.({ [key]: checked })}
+            onChange={(checked) => updateExtra(key, checked)}
           />
         </div>
       ))}
       {Object.entries(GROUPS).map(([key, children]) => {
-        const values: Record<string, boolean> = extras[key as keyof typeof GROUPS];
+        const groupKey = key as keyof typeof GROUPS;
+        const values: Record<string, boolean> = extras[groupKey];
         const title = t(`settings.extras.groups.${key}.title`);
         const isOpen = Boolean(openGroups[key]);
 
@@ -45,7 +60,7 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
               <SettingsSwitch
                 label={title}
                 checked={children.every((child) => values[child])}
-                onChange={(checked) => onUpdateExtras?.({ [key]: Object.fromEntries(children.map((child) => [child, checked])) })}
+                onChange={(checked) => updateGroup(groupKey, checked)}
               />
             </div>
             <div className="collapsible" hidden={!isOpen}>
@@ -55,7 +70,7 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
                   <SettingsSwitch
                     label={t(`settings.extras.groups.${key}.${child}`)}
                     checked={values[child]}
-                    onChange={(checked) => onUpdateExtras?.({ [key]: { [child]: checked } })}
+                    onChange={(checked) => updateGroupItem(groupKey, child, checked)}
                   />
                 </div>
               ))}

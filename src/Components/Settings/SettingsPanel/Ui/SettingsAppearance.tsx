@@ -19,48 +19,57 @@ type AppearanceProps = Pick<
   | 'onUpdateDecSigned'
 >;
 
+interface SettingsChoiceProps<T extends ToggleValue> {
+  label: ReactNode;
+  options: ToggleOption<T>[];
+  value: T | undefined;
+  onChange?: Update<T>;
+}
+
+/** Presents one appearance choice with the settings panel's existing label and wrapper. */
+const SettingsChoice = <T extends ToggleValue>({ label, options, value, onChange }: SettingsChoiceProps<T>) => (
+  <div className="flexColumn">
+    {label && <label>{label}:</label>}
+    <SegmentedToggle options={options} modelValue={value} onUpdateModelValue={onChange} />
+  </div>
+);
+
 const SettingsAppearance = (props: AppearanceProps) => {
   const { t } = useI18n();
   const { lightMode, language = 'pl', numberFormat, decSigned = false, codeBits, addresBits } = props;
   const options = <const T extends ToggleValue>(prefix: string, values: readonly (readonly [string, T])[]) =>
     values.map(([key, value]) => ({ label: t(`${prefix}.${key}`), value }));
-  const choice = <T extends ToggleValue>(label: ReactNode, values: ToggleOption<T>[], value: T | undefined, onChange?: Update<T>) => (
-    <div className="flexColumn">
-      {label && <label>{label}:</label>}
-      <SegmentedToggle options={values} modelValue={value} onUpdateModelValue={onChange} />
-    </div>
-  );
 
   return (
     <>
-      {choice(
-        null,
-        options('settings.theme', [
+      <SettingsChoice
+        label={null}
+        options={options('settings.theme', [
           ['light', true],
           ['dark', false],
-        ]),
-        lightMode,
-        props.onUpdateLightMode
-      )}
-      {choice(
-        t('settings.language.label'),
-        options('settings.language', [
+        ])}
+        value={lightMode}
+        onChange={props.onUpdateLightMode}
+      />
+      <SettingsChoice
+        label={t('settings.language.label')}
+        options={options('settings.language', [
           ['pl', 'pl'],
           ['en', 'en'],
-        ]),
-        language,
-        props.onUpdateLanguage
-      )}
-      {choice(
-        t('settings.numberFormat.label'),
-        options('settings.numberFormat.options', [
+        ])}
+        value={language}
+        onChange={props.onUpdateLanguage}
+      />
+      <SettingsChoice
+        label={t('settings.numberFormat.label')}
+        options={options('settings.numberFormat.options', [
           ['dec', 'dec'],
           ['hex', 'hex'],
           ['bin', 'bin'],
-        ]),
-        numberFormat,
-        props.onUpdateNumberFormat
-      )}
+        ])}
+        value={numberFormat}
+        onChange={props.onUpdateNumberFormat}
+      />
       {numberFormat === 'dec' && (
         <div className="flexColumn">
           <label>{t('settings.decSigned.label')}:</label>

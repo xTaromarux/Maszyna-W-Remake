@@ -134,7 +134,6 @@ export default function Main() {
             wordBits={m.codeBits + m.addresBits}
             formatNumber={m.formatNumber}
             breakpoints={m.breakpoints}
-            breakpointsEnabled={m.breakpointsEnabled}
             onToggleBreakpoint={m.toggleBreakpoint}
             onSetManualMode={(flag) => (flag ? m.manualModeCheck() : m.manualModeUncheck())}
             onUpdateCode={update('code')}
@@ -160,36 +159,31 @@ export default function Main() {
           onResetRegisters={m.handleAsmAutoReset}
         />
         <ConsoleDock
-          {...execution}
+          execution={execution}
           logs={m.logs.slice().reverse()}
-          breakpointsEnabled={m.breakpointsEnabled}
           consoleOpen={m.consoleOpen}
           hasConsoleErrors={m.hasConsoleErrors}
           onClose={m.closeConsole}
           onClear={m.clearConsole}
           onOpen={m.toggleConsole}
-          onUpdateBreakpointsEnabled={update('breakpointsEnabled')}
-          onDisableAllBreakpoints={() => {
-            m.breakpointsEnabled = false;
-          }}
-          onClearBreakpoints={() => {
-            m.breakpoints.clear();
-            m.addLog(t('logs.breakpointsCleared'), 'system');
+          breakpoints={{
+            breakpointsEnabled: m.breakpointsEnabled,
+            onUpdateBreakpointsEnabled: update('breakpointsEnabled'),
+            onDisableAllBreakpoints: () => {
+              m.breakpointsEnabled = false;
+            },
+            onClearBreakpoints: () => {
+              m.breakpoints.clear();
+              m.addLog(t('logs.breakpointsCleared'), 'system');
+            },
           }}
           className={!m.consoleOpen ? 'console-collapsed' : ''}
         />
         {!m.consoleOpen && (
-          <div
+          <button
             className={`console-indicator ${m.hasConsoleErrors ? 'has-errors' : ''}`}
-            role="button"
-            tabIndex={0}
+            type="button"
             onClick={m.toggleConsole}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                m.toggleConsole();
-              }
-            }}
             title={t('consoleDock.openConsole')}
             aria-label={t('consoleDock.openConsole')}
           />

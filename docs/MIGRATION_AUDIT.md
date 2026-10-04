@@ -27,6 +27,10 @@ flowchart TD
   B --> M[Tłumaczenia PL i EN]
 ```
 
+## Refaktor konsoli (4 pa?dziernika 2026)
+
+`src/components/Console/` rozdziela sk?adanie widoku (`Console`, `ConsoleDock`), cz??ci interfejsu i ikony (`UI/`), prezentacj? log?w (`helpers/logPresentation.ts`) oraz przewijanie (`hooks/useConsoleScroll.ts`). Rozwini?cie szczeg???w jest lokalnym stanem wpisu. Ka?dy log otrzymuje stabilne ID w `addLog`; agregowanie powtarzanych komunikat?w zachowuje to ID. Najnowsze wpisy pozostaj? na g?rze, a automatyczne przewijanie ?ledzi g?r? tylko wtedy, gdy u?ytkownik nie czyta starszych log?w. Wska?niki otwierania konsoli u?ywaj? natywnych przycisk?w.
+
 ## Wszystkie pierwotne zależności bezpośrednie
 
 „Wersja obecna” oznacza wersję rozwiązaną w pliku blokady, a nie tylko zakres dopuszczony w manifeście. Kolumna decyzji dotyczy deklaracji bezpośredniej; usunięta deklaracja nie zawsze oznacza zniknięcie pakietu z całego grafu.

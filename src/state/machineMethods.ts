@@ -1,4 +1,5 @@
 import { getErrorMessage } from '@/shared/utils/errors';
+import { generateId } from '@/shared/utils/identifiers';
 import { ErrorLevel } from '@/types/errors';
 import type { MicroProgramEntry, Phase } from '@/types/model';
 import type { ExtrasPatch, LogEntry, LogError, Machine, MachineActions } from '@/types/simulator';
@@ -569,6 +570,7 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
 
     // Enhanced log entry structure that supports both legacy and new error formats
     const logEntry: LogEntry = {
+      id: generateId('log'),
       timestamp,
       message: translatedMessage,
       class: classification,

@@ -218,29 +218,40 @@ export interface ConsoleProps extends DivProps {
   className?: string;
 }
 
-export interface ConsoleDockProps extends DivProps {
+export interface ConsoleExecutionControls {
   manualMode: boolean;
   codeCompiled: boolean;
   code?: string;
   isRunning: boolean;
   isFastRunning?: boolean;
   fastProgress?: number;
-  logs?: LogEntry[];
-  consoleOpen?: boolean;
-  hasConsoleErrors?: boolean;
-  breakpointsEnabled?: boolean;
   onCompile?: Action;
   onEdit?: Action;
   onStep?: Action;
   onRun?: Action;
   onRunFast?: Action;
   onStop?: Action;
-  onClose?: Action;
-  onClear?: Action;
-  onOpen?: Action;
+}
+
+export interface ConsoleBreakpointControls {
+  breakpointsEnabled?: boolean;
   onUpdateBreakpointsEnabled?: Update<boolean>;
   onDisableAllBreakpoints?: Action;
   onClearBreakpoints?: Action;
+}
+
+export interface ConsoleControlsProps {
+  execution: ConsoleExecutionControls;
+  breakpoints: ConsoleBreakpointControls;
+}
+
+export interface ConsoleDockProps extends DivProps, ConsoleControlsProps {
+  logs?: LogEntry[];
+  consoleOpen?: boolean;
+  hasConsoleErrors?: boolean;
+  onClose?: Action;
+  onClear?: Action;
+  onOpen?: Action;
   className?: string;
 }
 

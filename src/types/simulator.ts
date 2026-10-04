@@ -54,6 +54,7 @@ export interface StackEntry {
 }
 export type LogError = Partial<BaseErrorData> & DiagnosticData;
 export interface LogEntry {
+  id: string;
   level?: BaseErrorData['level'];
   message: string;
   class: string;

@@ -23,7 +23,7 @@ test('assembler compiles and runs DOD 0 with the original result', async ({ page
   await page.getByRole('button', { name: 'Uruchom (bez animacji)', exact: true }).first().click();
   await expect(page.getByRole('spinbutton', { name: 'Akumulator', exact: true })).toHaveValue('16');
   await expect(page.getByRole('spinbutton', { name: 'Licznik', exact: true })).toHaveValue('1');
-  await page.getByRole('button', { name: 'Otworz konsole' }).click();
+  await page.getByRole('button', { name: 'Otworz konsole' }).first().click();
   await expect(page.getByText('Kod zakończony', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -33,7 +33,7 @@ test('compiler errors include diagnostics and editing supports undo', async ({ p
   const editor = page.locator('#program .cm-content');
   await editor.fill('NIEZNANY 0');
   await page.getByRole('button', { name: 'Kompiluj', exact: true }).click();
-  await page.getByRole('button', { name: 'Otworz konsole' }).click();
+  await page.getByRole('button', { name: 'Otworz konsole' }).first().click();
   await expect(page.locator('.console-dock')).toContainText('NIEZNANY');
   await editor.click();
   await page.keyboard.press('Control+z');

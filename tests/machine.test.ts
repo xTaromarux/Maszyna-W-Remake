@@ -23,6 +23,24 @@ function fixture(context: TestContext, start = false) {
 }
 
 const delay = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+test('log IDs remain stable when repeated messages coalesce and distinct entries share a timestamp', (context) => {
+  const { machine } = fixture(context);
+  const initialLength = machine.logs.length;
+
+  machine.addLog('Repeated log');
+  const firstId = machine.logs.at(-1).id;
+  machine.addLog('Repeated log');
+  assert.equal(machine.logs.length, initialLength + 1);
+  assert.equal(machine.logs.at(-1).id, firstId);
+
+  machine.addLog('Different log');
+  const secondId = machine.logs.at(-1).id;
+  machine.logs.at(-1).timestamp = machine.logs.at(-2).timestamp;
+  assert.notEqual(secondId, firstId);
+  assert.equal(machine.logs.at(-2).id, firstId);
+});
+
 test('instruction register retains the opcode while wyad outputs only the address', (context) => {
   const { machine } = fixture(context);
   machine.codeBits = 4;

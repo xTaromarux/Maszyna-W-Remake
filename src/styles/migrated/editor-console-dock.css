@@ -158,6 +158,8 @@
 
 /* Console Dock indicator styles */
 .console-dock-indicator[data-editor-console-dock] {
+  border: 0;
+  padding: 0;
   grid-area: c;
   height: 4px;
   width: 100%;

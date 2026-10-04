@@ -1,14 +1,18 @@
 'use client';
 
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
-import { toUnsigned } from '@/Shared/Utils/Numbers';
 import type { CalcSectionProps } from '@/Types/Components';
 import RegisterComponent from './Registers/RegisterComponent';
 import AluBlock from './Registers/Ui/AluBlock';
 import SignalButton from './SignalButton';
 import WSRegisterSection from './Registers/WsRegisterSection';
+import FlagIndicators from './CalcSection/Ui/FlagIndicators';
 
-export default function CalcSection({
+const BASE_OPERATIONS = ['weak', 'przep', 'dod', 'ode'];
+const EXTRA_OPERATIONS = ['mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'];
+const ACCUMULATOR_OPERATIONS = ['iak', 'dak'];
+
+const CalcSection = ({
   extras,
   signals,
   ACC,
@@ -23,13 +27,10 @@ export default function CalcSection({
   onUpdateWS,
   onUpdateAccFormat,
   onUpdateNumberFormat,
-}: CalcSectionProps) {
+}: CalcSectionProps) => {
   const isMobile = useWindowWidth() <= 768;
-  const modulo = 2 ** wordBits;
-  const accumulator = toUnsigned(ACC, wordBits);
-  const nFlag = accumulator >= modulo / 2;
-  const zFlag = accumulator === 0;
-  const operations = ['weak', 'przep', 'dod', 'ode', ...(extras.jamlExtras ? ['mno', 'dziel', 'shr', 'shl', 'neg', 'lub', 'i'] : [])];
+  const operations = extras.jamlExtras ? [...BASE_OPERATIONS, ...EXTRA_OPERATIONS] : BASE_OPERATIONS;
+
   return (
     <div className={`calcConteiner${extras.stack?.wsRegister ? ' calcConteinerAdditionalSpace' : ''}`}>
       {!isMobile && (
@@ -46,15 +47,10 @@ export default function CalcSection({
         />
       )}
       <div id="calc">
-        {extras.jamlExtras && (
-          <div id="flags">
-            FLAGI:{nFlag && <div title="Negative number in Acc">N</div>}
-            {zFlag && <div title="Zero in Acc">Z</div>}
-          </div>
-        )}
+        {extras.jamlExtras && <FlagIndicators accumulator={ACC} wordBits={wordBits} />}
         <div className="accSignals">
           {extras.jamlExtras &&
-            ['iak', 'dak'].map((signal) => (
+            ACCUMULATOR_OPERATIONS.map((signal) => (
               <SignalButton
                 key={signal}
                 id={signal}
@@ -111,4 +107,6 @@ export default function CalcSection({
       </div>
     </div>
   );
-}
+};
+
+export default CalcSection;

@@ -1,5 +1,12 @@
 export const messages = {
   pl: {
+    calc: {
+      flags: {
+        label: 'FLAGI',
+        negativeTitle: 'Liczba ujemna w akumulatorze',
+        zeroTitle: 'Zero w akumulatorze',
+      },
+    },
     settings: {
       title: 'Ustawienia',
       actions: {
@@ -563,6 +570,13 @@ export const messages = {
     },
   },
   en: {
+    calc: {
+      flags: {
+        label: 'FLAGS',
+        negativeTitle: 'Negative number in accumulator',
+        zeroTitle: 'Zero in accumulator',
+      },
+    },
     settings: {
       title: 'Settings',
       actions: {

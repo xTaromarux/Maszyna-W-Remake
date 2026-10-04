@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
-const workerSource = readFileSync(new URL('../src/Workers/ChatWorker.ts', import.meta.url), 'utf8');
-const source = ts.transpileModule(workerSource, {
-  compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
-}).outputText;
+const workerPath = fileURLToPath(new URL('../src/Workers/Chat/ChatWorker.ts', import.meta.url));
+
 type WorkerMessage = {
   messageId?: string;
   text?: string;
@@ -18,7 +18,7 @@ type WorkerMessage = {
   streaming?: boolean;
 };
 
-function workerHarness(fetchImpl: typeof fetch) {
+const workerHarness = (fetchImpl: typeof fetch) => {
   let listener: (event: { data: unknown }) => void;
   const messages: WorkerMessage[] = [];
   let resolveDone: (value: WorkerMessage) => void;
@@ -42,7 +42,29 @@ function workerHarness(fetchImpl: typeof fetch) {
       },
     },
   });
-  vm.runInContext(source, context, { filename: 'ChatWorker.ts' });
+  const modules = new Map<string, { exports: Record<string, unknown> }>();
+
+  const loadModule = (file: string): Record<string, unknown> => {
+    const cached = modules.get(file);
+    if (cached) {
+      return cached.exports;
+    }
+
+    const module = { exports: {} };
+    modules.set(file, module);
+
+    const source = ts.transpileModule(readFileSync(file, 'utf8'), {
+      compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
+    }).outputText;
+
+    const evaluate = vm.runInContext(`(function(exports, require, module) {${source}\n})`, context, { filename: file });
+    const requireModule = (specifier: string) => loadModule(path.resolve(path.dirname(file), specifier + '.ts'));
+    evaluate(module.exports, requireModule, module);
+
+    return module.exports;
+  };
+
+  loadModule(workerPath);
   return {
     messages,
     done,
@@ -62,7 +84,7 @@ function workerHarness(fetchImpl: typeof fetch) {
         },
       }),
   };
-}
+};
 
 test('chat worker sends the established API protocol and reads JSON response shapes', async () => {
   for (const body of [
@@ -189,4 +211,124 @@ test('chat worker closes failed SSE readers and hides upstream diagnostics', asy
   assert.equal(result.errorKey, 'aiChat.fetchFailed');
   assert.equal(cancelled, true);
   assert.doesNotMatch(JSON.stringify(worker.messages), /secret-upstream-key/);
+});
+
+test('chat worker rejects empty SSE replies, including heartbeat-only and DONE-only streams', async () => {
+  for (const body of ['', ': heartbeat\n\n', 'data: [DONE]\n\n']) {
+    const worker = workerHarness(async () => new Response(body, { headers: { 'Content-Type': 'text/event-stream' } }));
+    worker.start({ healthUrl: '' });
+
+    const result = await worker.done;
+    assert.equal(result.errorKey, 'aiChat.fetchFailed');
+    assert.equal(result.errorDetail, 'AI did not return a response');
+    assert.equal(result.text, undefined);
+  }
+});
+
+test('replacing a request suppresses stale completion and preserves the replacement', async () => {
+  let resolveOld!: (response: Response) => void;
+  let resolveNew!: (response: Response) => void;
+  let oldSignal!: AbortSignal;
+  let calls = 0;
+
+  const worker = workerHarness(async (_url, options) => {
+    calls += 1;
+
+    if (calls === 1) {
+      oldSignal = options!.signal!;
+      return new Promise<Response>((resolve) => {
+        resolveOld = resolve;
+      });
+    }
+
+    return new Promise<Response>((resolve) => {
+      resolveNew = resolve;
+    });
+  });
+
+  worker.start();
+  worker.start({ query: 'replacement' });
+  assert.equal(oldSignal.aborted, true);
+
+  // Ignore abort in the mock to model a late result from the replaced request.
+  resolveOld(Response.json({ response: 'stale reply' }));
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.deepEqual(worker.messages, []);
+
+  resolveNew(Response.json({ response: 'current reply' }));
+  assert.equal((await worker.done).text, 'current reply');
+  assert.equal(worker.messages.length, 1);
+  assert.equal(worker.messages[0].cancelled, undefined);
+});
+
+test('replacing a streaming request suppresses its later chunks and cancellation', async () => {
+  let streamController!: ReadableStreamDefaultController<Uint8Array>;
+  let resolveNew!: (response: Response) => void;
+  let calls = 0;
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      streamController = controller;
+    },
+  });
+
+  const worker = workerHarness(async () => {
+    if (++calls === 1) {
+      return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
+    }
+
+    return new Promise<Response>((resolve) => {
+      resolveNew = resolve;
+    });
+  });
+
+  worker.start();
+  streamController.enqueue(encoder.encode('data: {"delta":"old"}\n\n'));
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(worker.messages[0].text, 'old');
+
+  worker.start({ query: 'replacement' });
+  streamController.enqueue(encoder.encode('data: {"delta":" stale"}\n\ndata: [DONE]\n\n'));
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.equal(worker.messages.length, 1);
+
+  resolveNew(Response.json({ response: 'new reply' }));
+  assert.equal((await worker.done).text, 'new reply');
+  assert.equal(worker.messages.length, 2);
+  assert.equal(
+    worker.messages.some((message) => message.cancelled),
+    false
+  );
+});
+
+test('cancellation during health recovery aborts the check without waking or retrying', async () => {
+  const urls: string[] = [];
+  let signal!: AbortSignal;
+  let checkStarted!: () => void;
+  const checking = new Promise<void>((resolve) => {
+    checkStarted = resolve;
+  });
+
+  const worker = workerHarness(async (url, options) => {
+    urls.push(String(url));
+    if (urls.length === 1) {
+      return new Response('', { status: 503 });
+    }
+
+    signal = options!.signal!;
+    const response = new Promise<Response>((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Cancelled', 'AbortError')), { once: true });
+    });
+    checkStarted();
+    return response;
+  });
+
+  worker.start();
+  await checking;
+  worker.send({ type: 'cancel', messageId: 'assistant-1' });
+
+  assert.equal((await worker.done).cancelled, true);
+  assert.equal(signal.aborted, true);
+  assert.deepEqual(urls, ['https://proxy.test/api/chat', 'https://proxy.test/health?check=1']);
 });

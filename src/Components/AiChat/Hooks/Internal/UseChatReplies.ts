@@ -104,7 +104,7 @@ export const useChatReplies = ({ latest, runtime, patch, stopAnimation }: ChatSe
 
   const ensureWorker = () => {
     if (!runtime.current.worker) {
-      const worker = new Worker(new URL('../../../../Workers/ChatWorker.ts', import.meta.url), { type: 'module' });
+      const worker = new Worker(new URL('../../../../Workers/Chat/ChatWorker.ts', import.meta.url), { type: 'module' });
 
       worker.addEventListener('message', receiveWorkerMessage);
       worker.addEventListener('error', (event) => {

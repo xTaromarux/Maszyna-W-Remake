@@ -2,11 +2,11 @@
 
 import { useI18n } from '@/I18n/Index';
 import { MachineContext } from '@/State/MachineContext';
-import type { MaszynaWProps } from '@/Types/Components';
+import type { ProcessorDiagramProps } from '@/Types/Components';
 import type { LogEvent } from '@/Types/Simulator';
 import ConsoleDock from './Console/ConsoleDock';
 import ProgramSection from './InstructionsEditor/ProgramSection';
-import MaszynaW from './MaszynaW';
+import ProcessorDiagram from './ProcessorDiagram';
 import ExecutionControls from './MicroInstructionsEditor/ExecutionControls';
 import ProgramEditor from './MicroInstructionsEditor/ProgramEditor';
 import TopBar from './Ui/TopBar';
@@ -29,7 +29,7 @@ const Main = () => {
     machine.settingsOpen = true;
   };
 
-  const updateRegisterFormat: NonNullable<MaszynaWProps['onUpdateNumberFormat']> = ({ field, value }) => {
+  const updateRegisterFormat: NonNullable<ProcessorDiagramProps['onUpdateNumberFormat']> = ({ field, value }) => {
     machine.registerFormats[field] = value;
   };
 
@@ -77,7 +77,7 @@ const Main = () => {
         onWsReconnect={machine.reconnectWS}
       />
       <div id="wLayout">
-        <MaszynaW
+        <ProcessorDiagram
           {...registerProps}
           manualMode={machine.manualMode}
           signals={machine.signals}

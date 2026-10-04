@@ -2,7 +2,7 @@
 
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { NumberFormat } from '@/Types/Common';
-import type { MaszynaWProps } from '@/Types/Components';
+import type { ProcessorDiagramProps } from '@/Types/Components';
 import APRegisterSection from './Registers/ApRegisterSection';
 import BusSignal from './BusSignal';
 import CalcSection from './CalcSection';
@@ -16,11 +16,11 @@ import SignalButton from './SignalButton';
 import WSRegisterSection from './Registers/WsRegisterSection';
 import XRegisterSection from './Registers/XRegisterSection';
 import YRegisterSection from './Registers/YRegisterSection';
-import { createRegisterBindings } from './MaszynaW/Helpers/RegisterBindings';
-import InterruptLayer from './MaszynaW/Ui/InterruptLayer';
-import MobileAluSignals from './MaszynaW/Ui/MobileAluSignals';
+import { createRegisterBindings } from './ProcessorDiagram/Helpers/RegisterBindings';
+import InterruptLayer from './ProcessorDiagram/Ui/InterruptLayer';
+import MobileAluSignals from './ProcessorDiagram/Ui/MobileAluSignals';
 
-const MaszynaW = (props: MaszynaWProps) => {
+const ProcessorDiagram = (props: ProcessorDiagramProps) => {
   const {
     manualMode,
     signals,
@@ -182,4 +182,4 @@ const MaszynaW = (props: MaszynaWProps) => {
   );
 };
 
-export default MaszynaW;
+export default ProcessorDiagram;

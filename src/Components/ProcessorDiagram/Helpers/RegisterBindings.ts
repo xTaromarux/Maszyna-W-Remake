@@ -1,9 +1,9 @@
 import type { NumberFormat } from '@/Types/Common';
-import type { MaszynaWProps } from '@/Types/Components';
+import type { ProcessorDiagramProps } from '@/Types/Components';
 import type { RegisterFormatField } from '@/Types/Simulator';
 
 /** Connects each diagram register to its explicit value callback and number format. */
-export const createRegisterBindings = (props: MaszynaWProps) => {
+export const createRegisterBindings = (props: ProcessorDiagramProps) => {
   const formatBinding = (field: RegisterFormatField) => ({
     signals: props.signals,
     formatNumber: props.formatNumber,

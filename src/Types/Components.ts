@@ -78,7 +78,7 @@ export interface SettingsOverlayProps extends SettingsPanelProps {
   settingsOpen?: boolean;
 }
 export type RegisterUpdates = { [K in RegisterField as `onUpdate${Capitalize<K>}`]?: Update<number> };
-export interface MaszynaWProps extends MachineRegisters, RegisterUpdates {
+export interface ProcessorDiagramProps extends MachineRegisters, RegisterUpdates {
   mem: number[];
   manualMode: boolean;
   signals: Signals;

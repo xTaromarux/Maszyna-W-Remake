@@ -1,4 +1,4 @@
-import type { ExecutionControlsProps, MaszynaWProps, RegisterUpdates } from '@/Types/Components';
+import type { ExecutionControlsProps, ProcessorDiagramProps, RegisterUpdates } from '@/Types/Components';
 import type { Machine, MachineRegisters, MachineState } from '@/Types/Simulator';
 
 export type UpdateMachineField = <K extends keyof MachineState>(field: K) => (value: MachineState[K]) => void;
@@ -26,7 +26,7 @@ export const createExecutionBindings = (machine: Machine): ExecutionControlsProp
   onStop: machine.stopRun,
 });
 
-type RegisterBindings = Omit<MachineRegisters, 'BusA' | 'BusS'> & RegisterUpdates & Pick<MaszynaWProps, 'mem' | 'onUpdateMem'>;
+type RegisterBindings = Omit<MachineRegisters, 'BusA' | 'BusS'> & RegisterUpdates & Pick<ProcessorDiagramProps, 'mem' | 'onUpdateMem'>;
 
 export const createRegisterBindings = (machine: Machine, update: UpdateMachineField): RegisterBindings => ({
   programCounter: machine.programCounter,

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import MaszynaW from '../src/Components/MaszynaW';
+import ProcessorDiagram from '../src/Components/ProcessorDiagram';
 import RegisterComponent from '../src/Components/Registers/RegisterComponent';
 import { parseRegisterInput } from '../src/Shared/Utils/RegisterInput';
 import { createMachineStore } from '../src/State/CreateMachineStore';
@@ -16,7 +16,7 @@ test('the complete machine diagram renders on the server without browser globals
     else for (const field of Object.keys(extras[key])) extras[key][field] = true;
   }
   const markup = renderToStaticMarkup(
-    createElement(MaszynaW, {
+    createElement(ProcessorDiagram, {
       ...machine,
       extras,
       wordBits: machine.codeBits + machine.addresBits,

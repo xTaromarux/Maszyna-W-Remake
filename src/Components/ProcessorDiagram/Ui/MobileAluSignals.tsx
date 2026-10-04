@@ -1,7 +1,7 @@
-import type { MaszynaWProps } from '@/Types/Components';
+import type { ProcessorDiagramProps } from '@/Types/Components';
 import SignalButton from '../../SignalButton';
 
-type MobileAluSignalsProps = Pick<MaszynaWProps, 'signals' | 'onClickItem'>;
+type MobileAluSignalsProps = Pick<ProcessorDiagramProps, 'signals' | 'onClickItem'>;
 
 const MobileAluSignals = ({ signals, onClickItem }: MobileAluSignalsProps) => (
   <>

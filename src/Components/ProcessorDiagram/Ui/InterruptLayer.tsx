@@ -1,10 +1,10 @@
-import type { MaszynaWProps } from '@/Types/Components';
+import type { ProcessorDiagramProps } from '@/Types/Components';
 import RPRegisterSection from '../../Registers/RpRegisterSection';
 import RZRegisterSection from '../../Registers/RzRegisterSection';
 import SignalButton from '../../SignalButton';
 import type { RegisterBindings } from '../Helpers/RegisterBindings';
 
-type InterruptLayerProps = Pick<MaszynaWProps, 'extras' | 'signals' | 'RZ' | 'RP' | 'onClickItem'> & {
+type InterruptLayerProps = Pick<ProcessorDiagramProps, 'extras' | 'signals' | 'RZ' | 'RP' | 'onClickItem'> & {
   registers: Pick<RegisterBindings, 'RZ' | 'RP'>;
 };
 

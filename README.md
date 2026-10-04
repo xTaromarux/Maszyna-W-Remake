@@ -75,6 +75,8 @@ Skopiuj `hf-proxy/.env.example` do `hf-proxy/.env` i ustaw `HF_TARGET_URL` lub `
 
 ## Weryfikacja
 
+Rejestr instrukcji `I` przechowuje pełne słowo (kod rozkazu i argument); sygnał `wyad` wyprowadza tylko część adresową. Nazwy rozkazów w pamięci, na liście rozkazów i w podpowiedziach edytora odpowiadają językowi interfejsu. Asembler celowo akceptuje zarówno nazwy polskie, jak i angielskie aliasy, także w jednym programie. Dyrektywy `RST`, `RPA`, `ORG` i `DATA` są wspólne dla obu języków i dostępne w podpowiedziach.
+
 ```sh
 npm --prefix hf-proxy ci
 npm test

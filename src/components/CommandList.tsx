@@ -1,7 +1,7 @@
 'use client';
 
 import { useI18n } from '@/i18n';
-import { normalizeMnemonicToken } from '@/shared/utils/commandMnemonics';
+import { collectCommandAliases, normalizeMnemonicToken } from '@/shared/utils/commandMnemonics';
 import { cloneJson } from '@/shared/utils/json';
 import type { ActionIconProps, CommandListProps } from '@/types/components';
 import type { RuntimeCommand } from '@/types/registry';
@@ -325,7 +325,7 @@ export default function CommandList({
               onClick={() => selectCommand(index)}
               className={`execution-btn execution-btn--run${selectedCommand === index ? ' selected' : ''}`}
             >
-              <span data-editor-command-list="">{command.name}</span>
+              <span data-editor-command-list="">{collectCommandAliases(command, { locale }).preferred[0]}</span>
             </button>
           ))}
         </div>

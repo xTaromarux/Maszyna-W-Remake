@@ -8,6 +8,7 @@ import { maszynaW } from '@/codemirror-langs/maszynaW.support.js';
 import { macroTheme, mwTheme } from '@/codemirror-langs/themes.js';
 import { useI18n } from '@/i18n';
 import { collectCommandAliases } from '@/shared/utils/commandMnemonics';
+import { buildInstructionRegistry } from '@/WLAN/instructionRegistry';
 import type { CodeMirrorEditorProps } from '@/types/components';
 import type { RuntimeCommand } from '@/types/registry';
 import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
@@ -109,15 +110,18 @@ export default function CodeMirrorEditor({
 
   const metadata = useMemo(
     () =>
-      commandList.map((command) => {
+      (language === 'macroW' ? buildInstructionRegistry(commandList).entries : commandList).map((command) => {
         let description = command.description;
         if (!description) description = t('commandList.commandDescription', { name: command.name });
         else if (typeof description === 'object')
           description =
             description[locale] || description[locale?.split('-')[0]] || description.en || description.pl || Object.values(description)[0];
-        return { aliases: collectCommandAliases(command, { locale }), description: description == null ? undefined : String(description) };
+        return {
+          aliases: collectCommandAliases(command, { locale }),
+          description: description == null ? undefined : String(description),
+        };
       }),
-    [commandList, locale, t]
+    [commandList, language, locale, t]
   );
 
   const extensions = useMemo(() => {

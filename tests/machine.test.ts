@@ -23,6 +23,23 @@ function fixture(context: TestContext, start = false) {
 }
 
 const delay = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+test('instruction register retains the opcode while wyad outputs only the address', (context) => {
+  const { machine } = fixture(context);
+  machine.codeBits = 4;
+  machine.addresBits = 6;
+  for (const fast of [false, true]) {
+    machine.isFastRunning = fast;
+    machine.BusS = 3 * 64 + 17;
+    machine.wei();
+    assert.equal(machine.I, 209);
+    machine.wyad();
+    assert.equal(machine.BusA, 17);
+  }
+  assert.equal(machine.getMaxValueForRegister('I'), 1023);
+  assert.equal(machine.getMaxValueForRegister('S'), 1023);
+  assert.equal(machine.getMaxValueForRegister('A'), 63);
+});
+
 async function waitForStop(machine: any) {
   const deadline = Date.now() + 1500;
   while (machine.isRunning && Date.now() < deadline) await delay(5);

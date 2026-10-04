@@ -5,10 +5,21 @@ import type { InstructionRegistry, NormalizedRuntimeCommand, RuntimeCommand, Run
 import { WlanError } from './error';
 
 const BUILT_INS: RuntimeCommand[] = [
-  { name: 'RST', kind: 'memory', args: 1 },
-  { name: 'RPA', kind: 'memory', args: 0 },
-  { name: 'ORG', kind: 'directive', args: 1 },
-  { name: 'DATA', kind: 'directive', argsMin: 1, argsMax: Number.MAX_SAFE_INTEGER },
+  {
+    name: 'RST',
+    kind: 'memory',
+    args: 1,
+    description: { pl: 'Rezerwuj słowo i wpisz stałą', en: 'Reserve a word initialized with a constant' },
+  },
+  { name: 'RPA', kind: 'memory', args: 0, description: { pl: 'Rezerwuj słowo pamięci', en: 'Reserve a memory word' } },
+  { name: 'ORG', kind: 'directive', args: 1, description: { pl: 'Ustaw adres kolejnych słów', en: 'Set the address of subsequent words' } },
+  {
+    name: 'DATA',
+    kind: 'directive',
+    argsMin: 1,
+    argsMax: Number.MAX_SAFE_INTEGER,
+    description: { pl: 'Zapisz listę wartości w pamięci', en: 'Initialize memory with a list of values' },
+  },
 ];
 
 function normalizeArity(cmd: RuntimeCommand): CommandArity {

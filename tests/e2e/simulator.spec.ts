@@ -40,6 +40,27 @@ test('compiler errors include diagnostics and editing supports undo', async ({ p
   await expect(editor).toContainText('DOD 0');
 });
 
+test('English memory mnemonics and data directive completions follow the interface language', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Program', exact: true }).click();
+  await page.locator('#program .cm-content').fill('POB value\nSTP\nvalue: RST 7');
+  await page.getByRole('button', { name: 'Kompiluj', exact: true }).click();
+  await expect(page.locator('#memoryTable')).toContainText('POB');
+  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
+  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
+  await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+  await expect(page.locator('#memoryTable')).toContainText('LOAD');
+  await expect(page.locator('#memoryTable')).not.toContainText('POB');
+  await page.locator('#program .execution-btn--edit').click();
+  const editor = page.locator('#program .cm-content');
+  await editor.fill('RS');
+  await page.keyboard.press('Control+Space');
+  await expect(page.getByRole('option', { name: /RST/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await editor.fill('RP');
+  await page.keyboard.press('Control+Space');
+  await expect(page.getByRole('option', { name: /RPA/ })).toBeVisible();
+});
+
 test('theme, language, number format and optional registers survive reload', async ({ page }) => {
   await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
   await page.getByRole('tab', { name: 'Ciemny', exact: true }).click();

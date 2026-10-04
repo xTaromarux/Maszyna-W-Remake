@@ -3,6 +3,7 @@
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { useI18n } from '@/i18n';
 import { toSigned, toUnsigned } from '@/shared/utils/numbers';
+import { collectCommandAliases } from '@/shared/utils/commandMnemonics';
 import { useMachineServices } from '@/state/MachineContext';
 import type { MemoryContentProps, MemoryInputProps } from '@/types/components';
 import { Fragment, useEffect, useState } from 'react';
@@ -58,7 +59,7 @@ export default function MemoryContent({
 }: MemoryContentProps) {
   const width = useWindowWidth();
   const isMobile = width < 1080;
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { showToast } = useMachineServices();
   const modulo = 2 ** wordBits;
   const min = signedDec ? -modulo / 2 : 0;
@@ -121,7 +122,7 @@ export default function MemoryContent({
                       onChange={(raw) => updateMemoryValue(raw, index)}
                     />
                   </div>
-                  <span className={selected}>{command ? command.name : t('memory.empty')}</span>
+                  <span className={selected}>{command ? collectCommandAliases(command, { locale }).preferred[0] : t('memory.empty')}</span>
                   <span className={selected}>{formatNumber(decToArgument(value))}</span>
                 </Fragment>
               );

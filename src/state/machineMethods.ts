@@ -34,8 +34,8 @@ export const machineMethods: MachineActions & ThisType<Machine> = {
     const irqMax = 0x0f;
 
     if (['RM', 'RZ', 'RP'].includes(type)) return irqMax;
-    if (['programCounter', 'L', 'I', 'A', 'S', 'AP', 'WS', 'BusA'].includes(type)) return addrMax;
-    if (['ACC', 'AK', 'JAML', 'JAL', 'X', 'Y', 'RB', 'G', 'BusS', 'memory'].includes(type)) return wordMax;
+    if (['programCounter', 'L', 'A', 'AP', 'WS', 'BusA'].includes(type)) return addrMax;
+    if (['I', 'S', 'ACC', 'AK', 'JAML', 'JAL', 'X', 'Y', 'RB', 'G', 'BusS', 'memory'].includes(type)) return wordMax;
 
     return wordMax;
   },

@@ -1,4 +1,4 @@
-import type { Machine, MicroActions } from '@/types/simulator';
+﻿import type { Machine, MicroActions } from '@/types/simulator';
 /* eslint-disable no-bitwise */
 export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machine> = {
   detectAndHandleStackOperations() {
@@ -17,7 +17,6 @@ export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machi
       signals.has('wyl') &&
       signals.has('wea')
     ) {
-      console.log('PZS: popping stack to ACC');
       const memAddrToClear = this.WS & this.addrMask();
       this.stackPop('Data');
       this._pendingMemoryClear = memAddrToClear;
@@ -98,6 +97,7 @@ export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machi
     if (this.nextLine.has('start')) this.start();
     if (this.nextLine.has('ustrm')) this.ustrm();
     if (this.nextLine.has('czrm')) this.czrm();
+
     this.nextLine.clear();
     if (this._pendingMemoryClear !== null) {
       const idx = this._pendingMemoryClear;
@@ -178,13 +178,13 @@ export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machi
   wyad() {
     if (
       this._instant(() => {
-        this.BusA = this.I;
+        this.BusA = this.I & this.addrMask();
       })
     )
       return;
     this.signals.wyad = true;
     this.signals.busA = true;
-    this.BusA = this.I;
+    this.BusA = this.I & this.addrMask();
     const timeoutId = setTimeout(() => {
       this.signals.wyad = false;
     }, this.oddDelay);
@@ -194,15 +194,13 @@ export const mainMicroInstructionExecutionMethods: MicroActions & ThisType<Machi
   wei() {
     if (
       this._instant(() => {
-        const mask = (1 << this.addresBits) - 1;
-        this.I = this.BusS & mask;
+        this.I = this.toWord(this.BusS);
       })
     )
       return;
     this.signals.wei = true;
     this.signals.busS = true;
-    const mask = (1 << this.addresBits) - 1;
-    this.I = this.BusS & mask;
+    this.I = this.toWord(this.BusS);
     const timeoutId = setTimeout(() => {
       this.signals.wei = false;
     }, this.oddDelay);

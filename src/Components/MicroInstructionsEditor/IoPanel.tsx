@@ -5,7 +5,7 @@ import type { IOPanelProps } from '@/Types/Components';
 import type { InputEvent } from 'react';
 import { useId } from 'react';
 
-export default function IOPanel({
+const IOPanel = ({
   devIn = 0,
   devOut = 0,
   devReady = 1,
@@ -15,15 +15,26 @@ export default function IOPanel({
   onUpdateDevReady,
   className = '',
   ...rest
-}: IOPanelProps) {
+}: IOPanelProps) => {
   const { t } = useI18n();
   const inputId = useId();
-  const onInput = (event: InputEvent<HTMLInputElement>) => {
-    const value = (event.currentTarget.value?.charCodeAt(0) || 0) & ((1 << wordBits) - 1);
+  const wordMask = (1 << wordBits) - 1;
+  const isReady = Boolean(devReady);
+  const statusClassName = isReady ? 'ready' : 'busy';
+  const statusLabel = t(isReady ? 'ioPanel.statusReady' : 'ioPanel.statusBusy');
+  const outputCharacter = String.fromCharCode(devOut || 32);
+
+  const handleCharacterInput = (event: InputEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const characterCode = input.value?.charCodeAt(0) || 0;
+    const value = characterCode & wordMask;
+
+    // A nonzero input waits for the processor; zero means the device is ready.
     onUpdateDevIn?.(value);
     onUpdateDevReady?.(value ? 0 : 1);
-    event.currentTarget.value = '';
+    input.value = '';
   };
+
   return (
     <div data-editor-io-panel="" {...rest} className={`io-card ${className}`}>
       <h3 data-editor-io-panel="">{t('ioPanel.title')}</h3>
@@ -37,7 +48,7 @@ export default function IOPanel({
           type="text"
           maxLength={1}
           placeholder={t('ioPanel.inputPlaceholder')}
-          onInput={onInput}
+          onInput={handleCharacterInput}
         />
       </div>
       <div data-editor-io-panel="" className="row hint">
@@ -51,15 +62,17 @@ export default function IOPanel({
       <div data-editor-io-panel="" className="row">
         <label data-editor-io-panel="">{t('ioPanel.outputLabel')}</label>
         <div data-editor-io-panel="" className="value-box">
-          {formatNumber(devOut)} ({String.fromCharCode(devOut || 32)})
+          {formatNumber(devOut)} ({outputCharacter})
         </div>
       </div>
       <div data-editor-io-panel="" className="row">
         <label data-editor-io-panel="">{t('ioPanel.statusLabel')}</label>
-        <div data-editor-io-panel="" className={`status ${devReady ? 'ready' : 'busy'}`}>
-          {t(devReady ? 'ioPanel.statusReady' : 'ioPanel.statusBusy')}
+        <div data-editor-io-panel="" className={`status ${statusClassName}`}>
+          {statusLabel}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default IOPanel;

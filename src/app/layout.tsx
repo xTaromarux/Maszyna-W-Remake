@@ -16,7 +16,7 @@ export const metadata = {
   },
   appleWebApp: { title: 'Maszyna W' },
 };
-export default function RootLayout({ children }: ChildrenProps) {
+const RootLayout = ({ children }: ChildrenProps) => {
   return (
     <html lang="pl" suppressHydrationWarning>
       <body className="lightMode" suppressHydrationWarning>
@@ -24,4 +24,6 @@ export default function RootLayout({ children }: ChildrenProps) {
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

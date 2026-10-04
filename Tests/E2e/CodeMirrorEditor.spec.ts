@@ -1,4 +1,5 @@
 ﻿import { expect, test } from '@playwright/test';
+import { openEnglishSettings } from './Support/SettingsActions';
 
 test('expanded editor fits a phone and supports compilation and editing', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
@@ -37,8 +38,7 @@ test('editing and undo survive language and autocomplete reconfiguration', async
   const original = await editor.innerText();
   await editor.fill('STP');
 
-  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
-  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
+  await openEnglishSettings(page);
   await page.getByRole('button', { name: 'Close settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Expand editor', exact: true })).toBeVisible();
 

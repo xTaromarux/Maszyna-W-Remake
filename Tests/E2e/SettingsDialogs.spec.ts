@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test';
-
-const openSettings = async (page: import('@playwright/test').Page) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
-  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Settings', exact: true });
-};
+import { openEnglishSettings } from './Support/SettingsActions';
 
 test('color dialog contains focus and Escape closes only the nested dialog', async ({ page }) => {
   test.skip(process.env.E2E_APP_PLATFORM !== 'esp', 'LED controls are available in the ESP build.');
-  const settings = await openSettings(page);
+  await page.goto('/');
+  const settings = await openEnglishSettings(page);
   const trigger = settings.getByRole('button', { name: 'Signal lines', exact: true });
   await trigger.click();
   const picker = page.getByRole('dialog', { name: 'Signal line color', exact: true });
@@ -33,7 +28,8 @@ test('color dialog contains focus and Escape closes only the nested dialog', asy
 
 test('reopening a saved LED color preserves its base color and brightness', async ({ page }) => {
   test.skip(process.env.E2E_APP_PLATFORM !== 'esp', 'LED controls are available in the ESP build.');
-  const settings = await openSettings(page);
+  await page.goto('/');
+  const settings = await openEnglishSettings(page);
   const trigger = settings.getByRole('button', { name: 'Signal lines', exact: true });
   await trigger.click();
   const picker = page.getByRole('dialog', { name: 'Signal line color', exact: true });
@@ -48,7 +44,8 @@ test('reopening a saved LED color preserves its base color and brightness', asyn
 
 test('settings group expansion is independent of the module switch', async ({ page }) => {
   test.skip(process.env.E2E_APP_PLATFORM === 'esp', 'Optional modules are only available in the simulator build.');
-  const settings = await openSettings(page);
+  await page.goto('/');
+  const settings = await openEnglishSettings(page);
   const expand = settings.getByRole('button', { name: 'Interrupts', exact: true });
   const toggle = settings.getByRole('checkbox', { name: 'Interrupts', exact: true });
   await expect(expand).toHaveAttribute('aria-expanded', 'false');

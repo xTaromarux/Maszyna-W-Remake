@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { openEnglishSettings } from './Support/SettingsActions';
 
 test('command catalog receives focus and restores it outside closing settings on Escape', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
-  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
-  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  const settings = await openEnglishSettings(page);
   const trigger = settings.getByRole('button', { name: 'Command list', exact: true });
   await trigger.click();
   const dialog = page.locator('#commandList');

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openEnglishSettings } from './Support/SettingsActions';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -45,8 +46,7 @@ test('English memory mnemonics and data directive completions follow the interfa
   await page.locator('#program .cm-content').fill('POB value\nSTP\nvalue: RST 7');
   await page.getByRole('button', { name: 'Kompiluj', exact: true }).click();
   await expect(page.locator('#memoryTable')).toContainText('POB');
-  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
-  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
+  await openEnglishSettings(page);
   await page.getByRole('button', { name: 'Close settings', exact: true }).click();
   await expect(page.locator('#memoryTable')).toContainText('LOAD');
   await expect(page.locator('#memoryTable')).not.toContainText('POB');

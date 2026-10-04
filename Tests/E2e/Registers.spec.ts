@@ -1,4 +1,5 @@
 ﻿import { expect, test } from '@playwright/test';
+import { openEnglishSettings } from './Support/SettingsActions';
 
 test('register format options support keyboard selection and restore focus', async ({ page }) => {
   await page.goto('/');
@@ -33,8 +34,7 @@ test('register format options support keyboard selection and restore focus', asy
 
 test('interrupt buttons stay synchronized with direct RZ edits and toggles', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
-  await page.getByRole('tab', { name: 'Angielski', exact: true }).click();
+  await openEnglishSettings(page);
 
   const interrupts = page.getByRole('checkbox', { name: 'Interrupts', exact: true });
   if (!(await interrupts.isChecked())) {

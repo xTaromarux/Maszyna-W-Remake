@@ -1,14 +1,22 @@
 'use client';
 
+import { useI18n } from '@/I18n/Index';
 import dynamic from 'next/dynamic';
+
+const SimulatorLoading = () => {
+  const { t } = useI18n();
+  return (
+    <div className="app-loading" role="status">
+      {t('app.loading')}
+    </div>
+  );
+};
+
 const Main = dynamic(() => import('@/Components/Main'), {
   ssr: false,
-  loading: () => (
-    <div className="app-loading" role="status">
-      Ładowanie Maszyny W…
-    </div>
-  ),
+  loading: SimulatorLoading,
 });
-export default function Simulator() {
-  return <Main />;
-}
+
+const Simulator = () => <Main />;
+
+export default Simulator;

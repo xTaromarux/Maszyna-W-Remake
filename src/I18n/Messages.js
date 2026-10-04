@@ -1,5 +1,10 @@
 export const messages = {
   pl: {
+    app: {
+      loading: 'Ładowanie Maszyny W…',
+      startupError: 'Nie udało się uruchomić symulatora.',
+      retry: 'Spróbuj ponownie',
+    },
     calc: {
       flags: {
         label: 'FLAGI',
@@ -570,6 +575,11 @@ export const messages = {
     },
   },
   en: {
+    app: {
+      loading: 'Loading Maszyna W…',
+      startupError: 'The simulator could not start.',
+      retry: 'Try again',
+    },
     calc: {
       flags: {
         label: 'FLAGS',

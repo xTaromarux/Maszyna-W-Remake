@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const RefreshIcon = (props: IconProps) => {
   return (
     <svg
       {...props}
@@ -21,4 +22,6 @@ export default function Icon(props: IconProps) {
       />
     </svg>
   );
-}
+};
+
+export default RefreshIcon;

@@ -33,6 +33,42 @@ const focusableElements = (root: HTMLElement): HTMLElement[] =>
     ),
   ].filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0);
 
+const wrapTabFocus = (event: KeyboardEvent, root: HTMLElement): void => {
+  const elements = focusableElements(root);
+  const first = elements[0];
+  const last = elements.at(-1);
+  if (!first || !last) {
+    event.preventDefault();
+    root.focus();
+    return;
+  }
+
+  const active = document.activeElement;
+  const outsideTabOrder = !elements.includes(active as HTMLElement);
+  if (event.shiftKey && (active === first || outsideTabOrder)) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && (active === last || outsideTabOrder)) {
+    event.preventDefault();
+    first.focus();
+  }
+};
+
+const removeDialogAndReparentFocus = (entry: DialogEntry): void => {
+  const { root } = entry;
+  const index = dialogs.indexOf(entry);
+  if (index >= 0) {
+    dialogs.splice(index, 1);
+  }
+
+  // If a parent closes first, its child must restore focus outside that closing parent.
+  for (const remaining of dialogs) {
+    if (remaining.previousFocus && root.contains(remaining.previousFocus)) {
+      remaining.previousFocus = entry.previousFocus;
+    }
+  }
+};
+
 /** Keeps focus and Escape in the topmost dialog, locks scrolling, and restores focus on close. */
 export const useModalFocus = <T extends HTMLElement = HTMLDivElement>(visible: boolean, onClose?: () => void) => {
   const dialog = useRef<T>(null);
@@ -68,24 +104,7 @@ export const useModalFocus = <T extends HTMLElement = HTMLDivElement>(visible: b
         return;
       }
 
-      const elements = focusableElements(root);
-      const first = elements[0];
-      const last = elements.at(-1);
-      if (!first || !last) {
-        event.preventDefault();
-        root.focus();
-        return;
-      }
-
-      const active = document.activeElement;
-      const outsideTabOrder = !elements.includes(active as HTMLElement);
-      if (event.shiftKey && (active === first || outsideTabOrder)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || outsideTabOrder)) {
-        event.preventDefault();
-        first.focus();
-      }
+      wrapTabFocus(event, root);
     };
 
     const keepFocus = (event: FocusEvent) => {
@@ -101,17 +120,7 @@ export const useModalFocus = <T extends HTMLElement = HTMLDivElement>(visible: b
       document.removeEventListener('keydown', handleKey, true);
       document.removeEventListener('focusin', keepFocus);
       const wasTopmost = isTopmost();
-      const index = dialogs.indexOf(entry);
-      if (index >= 0) {
-        dialogs.splice(index, 1);
-      }
-
-      // If a parent closes first, its child must restore focus outside that closing parent.
-      for (const remaining of dialogs) {
-        if (remaining.previousFocus && root.contains(remaining.previousFocus)) {
-          remaining.previousFocus = entry.previousFocus;
-        }
-      }
+      removeDialogAndReparentFocus(entry);
 
       unlockScrolling();
       if (wasTopmost && entry.previousFocus?.isConnected) {

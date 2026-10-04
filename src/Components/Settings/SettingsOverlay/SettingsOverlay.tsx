@@ -2,7 +2,6 @@
 
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { SettingsOverlayProps } from '@/Components/Settings/Types';
-import { useMemo } from 'react';
 import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import { DEFAULT_CREATORS, DEFAULT_CAREGIVERS } from '../About/Data/People';
 import { localizePeople } from '../About/Helpers/LocalizePeople';
@@ -22,8 +21,8 @@ const SettingsOverlay = ({
   const { t } = useI18n();
   const { open, isAnimated } = useOverlayPresence(settingsOpen);
   const dialog = useModalFocus(open && settingsOpen, onClose);
-  const localizedCreators = useMemo(() => localizePeople(creators, t), [creators, t]);
-  const localizedCaregivers = useMemo(() => localizePeople(caregivers, t), [caregivers, t]);
+  const localizedCreators = localizePeople(creators, t);
+  const localizedCaregivers = localizePeople(caregivers, t);
 
   if (!open) {
     return null;

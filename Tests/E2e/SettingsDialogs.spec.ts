@@ -60,3 +60,16 @@ test('settings group expansion is independent of the module switch', async ({ pa
   await expect(expand).toHaveAttribute('aria-expanded', 'true');
   await expect(toggle).toBeChecked();
 });
+test('supervisor titles follow language changes while settings stay open', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Otworz ustawienia' }).click();
+  const polishSettings = page.getByRole('dialog', { name: 'Ustawienia', exact: true });
+  await expect(polishSettings.getByText(/Dr .*Robert Tutajewicz/)).toBeVisible();
+
+  await polishSettings.getByRole('tab', { name: 'Angielski', exact: true }).click();
+  const englishSettings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(englishSettings.getByText('PhD Eng. Robert Tutajewicz', { exact: true })).toBeVisible();
+
+  await englishSettings.getByRole('tab', { name: 'Polish', exact: true }).click();
+  await expect(polishSettings.getByText(/Dr .*Robert Tutajewicz/)).toBeVisible();
+});

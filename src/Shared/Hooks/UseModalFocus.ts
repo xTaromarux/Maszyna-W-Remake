@@ -2,7 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 
-const dialogs: symbol[] = [];
+type DialogEntry = {
+  root: HTMLElement;
+  previousFocus: HTMLElement | null;
+};
+
+const dialogs: DialogEntry[] = [];
 let scrollLocks = 0;
 let savedOverflow = '';
 
@@ -40,13 +45,13 @@ export const useModalFocus = <T extends HTMLElement = HTMLDivElement>(visible: b
       return;
     }
 
-    const token = Symbol('dialog');
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialogs.push(token);
+    const entry = { root, previousFocus };
+    dialogs.push(entry);
     lockScrolling();
     root.focus();
 
-    const isTopmost = () => dialogs.at(-1) === token;
+    const isTopmost = () => dialogs.at(-1) === entry;
     const handleKey = (event: KeyboardEvent) => {
       if (!isTopmost()) {
         return;
@@ -95,13 +100,22 @@ export const useModalFocus = <T extends HTMLElement = HTMLDivElement>(visible: b
     return () => {
       document.removeEventListener('keydown', handleKey, true);
       document.removeEventListener('focusin', keepFocus);
-      const index = dialogs.indexOf(token);
+      const wasTopmost = isTopmost();
+      const index = dialogs.indexOf(entry);
       if (index >= 0) {
         dialogs.splice(index, 1);
       }
+
+      // If a parent closes first, its child must restore focus outside that closing parent.
+      for (const remaining of dialogs) {
+        if (remaining.previousFocus && root.contains(remaining.previousFocus)) {
+          remaining.previousFocus = entry.previousFocus;
+        }
+      }
+
       unlockScrolling();
-      if (previousFocus?.isConnected) {
-        previousFocus.focus();
+      if (wasTopmost && entry.previousFocus?.isConnected) {
+        entry.previousFocus.focus();
       }
     };
   }, [visible]);

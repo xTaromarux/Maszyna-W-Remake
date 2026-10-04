@@ -4,9 +4,12 @@ import { useI18n } from '@/I18n/Index';
 import type { CreatorsPanelProps } from '@/Types/Components';
 import PeopleSection from './PeopleSection';
 
-export default function CreatorsPanel({ isMobile = false, isAnimated = false, creators = [], caregivers = [] }: CreatorsPanelProps) {
+const CreatorsPanel = ({ isMobile = false, isAnimated = false, creators = [], caregivers = [] }: CreatorsPanelProps) => {
   const { t } = useI18n();
-  if (isMobile) return null;
+  if (isMobile) {
+    return null;
+  }
+
   return (
     <div
       id="creators"
@@ -19,4 +22,6 @@ export default function CreatorsPanel({ isMobile = false, isAnimated = false, cr
       <PeopleSection title={t('settings.people.creators')} people={creators} />
     </div>
   );
-}
+};
+
+export default CreatorsPanel;

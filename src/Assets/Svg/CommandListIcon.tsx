@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const CommandListIcon = (props: IconProps) => {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="24" height="24" viewBox="0 0 24 24">
       <line x1="8" y1="6" x2="21" y2="6" strokeWidth="2" strokeLinecap="round" />
@@ -10,4 +11,6 @@ export default function Icon(props: IconProps) {
       <circle cx="4" cy="18" r="1" fill="currentColor" />
     </svg>
   );
-}
+};
+
+export default CommandListIcon;

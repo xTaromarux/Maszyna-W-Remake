@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const PolslLogoLongWhite = (props: IconProps) => {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="164.859" height="43.877" viewBox="0 0 164.859 43.877">
       <g transform="translate(-34.016 -34.016)">
@@ -43,4 +44,6 @@ export default function Icon(props: IconProps) {
       </g>
     </svg>
   );
-}
+};
+
+export default PolslLogoLongWhite;

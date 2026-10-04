@@ -3,9 +3,9 @@
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { toUnsigned } from '@/shared/utils/numbers';
 import type { CalcSectionProps } from '@/types/components';
-import RegisterComponent from './RegisterComponent';
+import RegisterComponent from './registers/RegisterComponent';
 import SignalButton from './SignalButton';
-import WSRegisterSection from './WSRegisterSection';
+import WSRegisterSection from './registers/WSRegisterSection';
 
 export default function CalcSection({
   extras,

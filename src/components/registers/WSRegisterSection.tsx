@@ -2,9 +2,9 @@
 
 import useWindowWidth from '@/hooks/useWindowWidth';
 import type { WSRegisterSectionProps } from '@/types/components';
-import BusLabel from './BusLabel';
+import BusLabel from '../BusLabel';
 import RegisterComponent from './RegisterComponent';
-import SignalButton from './SignalButton';
+import SignalButton from '../SignalButton';
 
 export default function WSRegisterSection({
   visible,

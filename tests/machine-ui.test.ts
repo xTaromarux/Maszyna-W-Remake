@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import MaszynaW from '../src/components/MaszynaW';
-import RegisterComponent from '../src/components/RegisterComponent';
+import RegisterComponent from '../src/components/registers/RegisterComponent';
 import { parseRegisterInput } from '../src/shared/utils/registerInput';
 import { createMachineStore } from '../src/state/createMachineStore';
 

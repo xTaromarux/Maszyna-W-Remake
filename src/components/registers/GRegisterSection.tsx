@@ -3,7 +3,7 @@
 import useWindowWidth from '@/hooks/useWindowWidth';
 import type { GRegisterSectionProps } from '@/types/components';
 import RegisterComponent from './RegisterComponent';
-import SignalButton from './SignalButton';
+import SignalButton from '../SignalButton';
 
 export default function GRegisterSection({
   visible,

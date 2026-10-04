@@ -1,6 +1,6 @@
 import type { APRegisterSectionProps } from '@/types/components';
 import RegisterComponent from './RegisterComponent';
-import SignalButton from './SignalButton';
+import SignalButton from '../SignalButton';
 
 export default function APRegisterSection({
   visible,

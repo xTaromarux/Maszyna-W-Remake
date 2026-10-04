@@ -4,21 +4,21 @@ import useWindowWidth from '@/hooks/useWindowWidth';
 import type { NumberFormat } from '@/types/common';
 import type { MaszynaWProps } from '@/types/components';
 import type { RegisterFormatField } from '@/types/simulator';
-import APRegisterSection from './APRegisterSection';
+import APRegisterSection from './registers/APRegisterSection';
 import BusSignal from './BusSignal';
 import CalcSection from './CalcSection';
-import CounterComponent from './CounterComponent';
-import GRegisterSection from './GRegisterSection';
+import CounterComponent from './registers/CounterComponent';
+import GRegisterSection from './registers/GRegisterSection';
 import MemorySection from './MemorySection';
-import RBRegisterSection from './RBRegisterSection';
-import RegisterISection from './RegisterISection';
-import RMRegisterSection from './RMRegisterSection';
-import RPRegisterSection from './RPRegisterSection';
-import RZRegisterSection from './RZRegisterSection';
+import RBRegisterSection from './registers/RBRegisterSection';
+import RegisterISection from './registers/RegisterISection';
+import RMRegisterSection from './registers/RMRegisterSection';
+import RPRegisterSection from './registers/RPRegisterSection';
+import RZRegisterSection from './registers/RZRegisterSection';
 import SignalButton from './SignalButton';
-import WSRegisterSection from './WSRegisterSection';
-import XRegisterSection from './XRegisterSection';
-import YRegisterSection from './YRegisterSection';
+import WSRegisterSection from './registers/WSRegisterSection';
+import XRegisterSection from './registers/XRegisterSection';
+import YRegisterSection from './registers/YRegisterSection';
 
 export default function MaszynaW(props: MaszynaWProps) {
   const {

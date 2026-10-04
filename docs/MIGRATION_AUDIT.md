@@ -144,7 +144,7 @@ Pierwotne repozytorium zawierało **57 plików `.vue`**. Dla **55** istnieją ko
 | `src/assets/svg/RunIcon.vue`                                   | `src/assets/svg/RunIcon.tsx`                                                                  |
 | `src/assets/svg/SunIcon.vue`                                   | `src/assets/svg/SunIcon.tsx`                                                                  |
 | `src/assets/svg/polslLogoLongWhite.vue`                        | `src/assets/svg/polslLogoLongWhite.tsx`                                                       |
-| `src/components/APRegisterSection.vue`                         | `src/components/APRegisterSection.tsx`                                                        |
+| `src/components/APRegisterSection.vue`                         | `src/components/registers/APRegisterSection.tsx`                                              |
 | `src/components/AiChat.vue`                                    | `src/components/AiChat.tsx`                                                                   |
 | `src/components/AiChatIcon.vue`                                | `src/components/AiChatIcon.tsx`                                                               |
 | `src/components/AiChatTrashIcon.vue`                           | `src/components/AiChatTrashIcon.tsx`                                                          |
@@ -155,8 +155,8 @@ Pierwotne repozytorium zawierało **57 plików `.vue`**. Dla **55** istnieją ko
 | `src/components/CommandList.vue`                               | `src/components/CommandList.tsx`                                                              |
 | `src/components/Console/Console.vue`                           | `src/components/Console/Console.tsx`                                                          |
 | `src/components/Console/ConsoleDock.vue`                       | `src/components/Console/ConsoleDock.tsx`                                                      |
-| `src/components/CounterComponent.vue`                          | `src/components/CounterComponent.tsx`                                                         |
-| `src/components/GRegisterSection.vue`                          | `src/components/GRegisterSection.tsx`                                                         |
+| `src/components/CounterComponent.vue`                          | `src/components/registers/CounterComponent.tsx`                                               |
+| `src/components/GRegisterSection.vue`                          | `src/components/registers/GRegisterSection.tsx`                                               |
 | `src/components/InstructionsEditor/ProgramSection.vue`         | `src/components/InstructionsEditor/ProgramSection.tsx`                                        |
 | `src/components/Main.vue`                                      | `src/components/Main.tsx`                                                                     |
 | `src/components/MaszynaW.vue`                                  | `src/components/MaszynaW.tsx`                                                                 |
@@ -167,12 +167,12 @@ Pierwotne repozytorium zawierało **57 plików `.vue`**. Dla **55** istnieją ko
 | `src/components/MicroInstructionsEdtior/ProgramEditor.vue`     | `src/components/MicroInstructionsEdtior/ProgramEditor.tsx`                                    |
 | `src/components/MobileMemoryHeader.vue`                        | `src/components/MobileMemoryHeader.tsx`                                                       |
 | `src/components/ProgramSection.vue`                            | Nieu?ywany duplikat; funkcj? realizuje `src/components/InstructionsEditor/ProgramSection.tsx` |
-| `src/components/RBRegisterSection.vue`                         | `src/components/RBRegisterSection.tsx`                                                        |
-| `src/components/RMRegisterSection.vue`                         | `src/components/RMRegisterSection.tsx`                                                        |
-| `src/components/RPRegisterSection.vue`                         | `src/components/RPRegisterSection.tsx`                                                        |
-| `src/components/RZRegisterSection.vue`                         | `src/components/RZRegisterSection.tsx`                                                        |
-| `src/components/RegisterComponent.vue`                         | `src/components/RegisterComponent.tsx`                                                        |
-| `src/components/RegisterISection.vue`                          | `src/components/RegisterISection.tsx`                                                         |
+| `src/components/RBRegisterSection.vue`                         | `src/components/registers/RBRegisterSection.tsx`                                              |
+| `src/components/RMRegisterSection.vue`                         | `src/components/registers/RMRegisterSection.tsx`                                              |
+| `src/components/RPRegisterSection.vue`                         | `src/components/registers/RPRegisterSection.tsx`                                              |
+| `src/components/RZRegisterSection.vue`                         | `src/components/registers/RZRegisterSection.tsx`                                              |
+| `src/components/RegisterComponent.vue`                         | `src/components/registers/RegisterComponent.tsx`                                              |
+| `src/components/RegisterISection.vue`                          | `src/components/registers/RegisterISection.tsx`                                               |
 | `src/components/SegmentedToggle.vue`                           | `src/components/SegmentedToggle.tsx`                                                          |
 | `src/components/Settings/ColorPicker.vue`                      | `src/components/Settings/ColorPicker.tsx`                                                     |
 | `src/components/Settings/ColorPickerPopup.vue`                 | `src/components/Settings/ColorPickerPopup.tsx`                                                |
@@ -183,9 +183,9 @@ Pierwotne repozytorium zawierało **57 plików `.vue`**. Dla **55** istnieją ko
 | `src/components/Settings/SettingsPanel.vue`                    | `src/components/Settings/SettingsPanel.tsx`                                                   |
 | `src/components/SignalButton.vue`                              | `src/components/SignalButton.tsx`                                                             |
 | `src/components/UI/TopBar.vue`                                 | `src/components/UI/TopBar.tsx`                                                                |
-| `src/components/WSRegisterSection.vue`                         | `src/components/WSRegisterSection.tsx`                                                        |
-| `src/components/XRegisterSection.vue`                          | `src/components/XRegisterSection.tsx`                                                         |
-| `src/components/YRegisterSection.vue`                          | `src/components/YRegisterSection.tsx`                                                         |
+| `src/components/WSRegisterSection.vue`                         | `src/components/registers/WSRegisterSection.tsx`                                              |
+| `src/components/XRegisterSection.vue`                          | `src/components/registers/XRegisterSection.tsx`                                               |
+| `src/components/YRegisterSection.vue`                          | `src/components/registers/YRegisterSection.tsx`                                               |
 
 Duplikat `src/components/ProgramSection.vue` nie był importowany przez żaden aktywny komponent: `Main.vue` importował `./InstructionsEditor/ProgramSection.vue`. Starszy duplikat nie zawierał obserwowania zmiany programu, które posiadała wersja używana przy ładowaniu laboratoriów. Usunięcie nie odbiera działającej funkcji; implementacją docelową jest `InstructionsEditor/ProgramSection.tsx`.
 

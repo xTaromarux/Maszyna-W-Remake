@@ -7,7 +7,7 @@ import { collectCommandAliases } from '@/shared/utils/commandMnemonics';
 import { useMachineServices } from '@/state/MachineContext';
 import type { MemoryContentProps, MemoryInputProps } from '@/types/components';
 import { Fragment, useEffect, useState } from 'react';
-import RegisterComponent from './RegisterComponent';
+import RegisterComponent from './registers/RegisterComponent';
 import SignalButton from './SignalButton';
 
 function MemoryInput({ value, min, max, label, onChange }: MemoryInputProps) {

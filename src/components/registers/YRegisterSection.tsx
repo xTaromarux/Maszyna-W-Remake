@@ -1,41 +1,41 @@
-import type { XRegisterSectionProps } from '@/types/components';
+import type { YRegisterSectionProps } from '@/types/components';
 import RegisterComponent from './RegisterComponent';
-import SignalButton from './SignalButton';
+import SignalButton from '../SignalButton';
 
-export default function XRegisterSection({
+export default function YRegisterSection({
   visible,
-  X,
+  Y,
   signals,
   numberFormat,
-  onUpdateX,
+  onUpdateY,
   onUpdateNumberFormat,
   onClickItem,
-}: XRegisterSectionProps) {
+}: YRegisterSectionProps) {
   if (!visible) return null;
   return (
-    <div id="xRegister">
+    <div id="yRegister">
       <SignalButton
-        id="wyx"
-        signal={signals.wyx}
-        label="wyx"
+        id="wyy"
+        signal={signals.wyy}
+        label="wyy"
         divClassNames="pathUpOnRight"
         spanClassNames="lineRightOnBottom"
-        onClick={() => onClickItem?.('wyx')}
+        onClick={() => onClickItem?.('wyy')}
       />
       <RegisterComponent
-        label="X"
-        model={X}
-        onUpdateModel={onUpdateX}
+        label="Y"
+        model={Y}
+        onUpdateModel={onUpdateY}
         numberFormat={numberFormat}
         onUpdateNumberFormat={onUpdateNumberFormat}
       />
       <SignalButton
-        id="wex"
-        signal={signals.wex}
-        label="wex"
+        id="wey"
+        signal={signals.wey}
+        label="wey"
         divClassNames="pathDownOnLeft"
         spanClassNames="arrowLeftOnBottom"
-        onClick={() => onClickItem?.('wex')}
+        onClick={() => onClickItem?.('wey')}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import type { CounterComponentProps } from '@/types/components';
 import RegisterComponent from './RegisterComponent';
-import SignalButton from './SignalButton';
+import SignalButton from '../SignalButton';
 
 export default function CounterComponent({
   signals,

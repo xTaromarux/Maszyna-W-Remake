@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function AiChatTrashIcon({ width = 20, height = 20, fill = 'currentColor', className = '', style, ...rest }: IconProps) {
+
+const AiChatTrashIcon = ({ width = 20, height = 20, fill = 'currentColor', className = '', style, ...rest }: IconProps) => {
   return (
     <svg
       style={{ '--icon-width': `${width}px`, '--icon-height': `${height}px`, ...style }}
@@ -29,4 +30,6 @@ export default function AiChatTrashIcon({ width = 20, height = 20, fill = 'curre
       </g>
     </svg>
   );
-}
+};
+
+export default AiChatTrashIcon;

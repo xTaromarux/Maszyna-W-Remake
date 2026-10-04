@@ -1,7 +1,7 @@
 import type { NumberFormat } from '../../Shared/Types/Numbers';
 import type { DiagnosticData } from '../../Shared/Errors/Diagnostics';
 import type { BaseErrorData } from '../../Shared/Errors/Types';
-import type { ConditionalPhase, MicroPhase, MicroProgramEntry, Phase } from '../../Assembler/Types/Model';
+import type { ConditionalPhase, MicroPhase, MicroProgramEntry, RuntimePhase } from '../../Assembler/Types/Model';
 import type { Action, Timer, Translator } from '../../Shared/Types/Common';
 import type { Lab, LocalizedLab } from './Labs';
 import type { RuntimeCommand } from '../../Assembler/Types/Registry';
@@ -272,7 +272,7 @@ export interface MachineActions {
   handleInterrupt(): void;
   executeLine(): void;
   _refreshHighlight(): void;
-  getResolvedPhase(phase: Phase | null | undefined): MicroPhase;
+  getResolvedPhase(phase: RuntimePhase | null | undefined): MicroPhase;
   evaluateFlag(flag: string): boolean;
   stopRun(): void;
   runCode(): void;

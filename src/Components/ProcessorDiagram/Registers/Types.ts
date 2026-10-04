@@ -3,14 +3,18 @@ import type { Update } from '../../../Shared/Types/Common';
 import type { Extras, Signals } from '../../../Machine/Types/Machine';
 import type { FormatNumber } from '@/Shared/Types/Numbers';
 
-export interface APRegisterSectionProps {
+/** Shared display and interaction fields of the six optional signal registers. */
+interface SignalRegisterSectionProps {
   visible?: boolean;
-  AP: number;
   signals: Signals;
   numberFormat?: NumberFormat;
-  onUpdateAP?: Update<number>;
   onUpdateNumberFormat?: Update<NumberFormat>;
   onClickItem?: Update<string>;
+}
+
+export interface APRegisterSectionProps extends SignalRegisterSectionProps {
+  AP: number;
+  onUpdateAP?: Update<number>;
 }
 
 export interface CounterComponentProps {
@@ -23,24 +27,14 @@ export interface CounterComponentProps {
   onUpdateNumberFormat?: Update<NumberFormat>;
 }
 
-export interface GRegisterSectionProps {
-  visible?: boolean;
+export interface GRegisterSectionProps extends SignalRegisterSectionProps {
   G: number;
-  signals: Signals;
-  numberFormat?: NumberFormat;
   onUpdateG?: Update<number>;
-  onUpdateNumberFormat?: Update<NumberFormat>;
-  onClickItem?: Update<string>;
 }
 
-export interface RBRegisterSectionProps {
-  visible?: boolean;
+export interface RBRegisterSectionProps extends SignalRegisterSectionProps {
   RB: number;
-  signals: Signals;
-  numberFormat?: NumberFormat;
   onUpdateRB?: Update<number>;
-  onUpdateNumberFormat?: Update<NumberFormat>;
-  onClickItem?: Update<string>;
 }
 
 export interface RegisterComponentProps {
@@ -56,14 +50,9 @@ export interface RegisterComponentProps {
   onUpdateNumberFormat?: Update<NumberFormat>;
 }
 
-export interface RMRegisterSectionProps {
-  visible?: boolean;
+export interface RMRegisterSectionProps extends SignalRegisterSectionProps {
   RM: number;
-  signals: Signals;
-  numberFormat?: NumberFormat;
   onUpdateRM?: Update<number>;
-  onUpdateNumberFormat?: Update<NumberFormat>;
-  onClickItem?: Update<string>;
 }
 
 export interface RPRegisterSectionProps {
@@ -95,24 +84,14 @@ export interface WSRegisterSectionProps {
   onClickItem?: Update<string>;
 }
 
-export interface XRegisterSectionProps {
-  visible?: boolean;
+export interface XRegisterSectionProps extends SignalRegisterSectionProps {
   X: number;
-  signals: Signals;
-  numberFormat?: NumberFormat;
   onUpdateX?: Update<number>;
-  onUpdateNumberFormat?: Update<NumberFormat>;
-  onClickItem?: Update<string>;
 }
 
-export interface YRegisterSectionProps {
-  visible?: boolean;
+export interface YRegisterSectionProps extends SignalRegisterSectionProps {
   Y: number;
-  signals: Signals;
-  numberFormat?: NumberFormat;
   onUpdateY?: Update<number>;
-  onUpdateNumberFormat?: Update<NumberFormat>;
-  onClickItem?: Update<string>;
 }
 
 export interface RegisterISectionProps {

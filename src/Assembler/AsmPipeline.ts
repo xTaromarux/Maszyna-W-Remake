@@ -1,5 +1,5 @@
 import type { AsmPipelineResult } from './Types/AsmPipeline';
-import type { ConditionalPhase, MicroProgramEntry, Phase } from './Types/Model';
+import type { ConditionalPhase, MicroProgramEntry, RuntimePhase } from './Types/Model';
 import type { RuntimeCommand } from './Types/Registry';
 import { generateMicroProgram, injectCJumpMeta } from './MicroGenerator';
 import { parse } from './Parser';
@@ -38,7 +38,7 @@ const renderConditionalPhase = (phase: ConditionalPhase, fragments: string[], so
   return sourceLine;
 };
 
-const renderRegularPhase = (phase: Phase, fragments: string[], sourceLine: number): number => {
+const renderRegularPhase = (phase: RuntimePhase, fragments: string[], sourceLine: number): number => {
   const signals = Object.keys(phase)
     .filter((key) => Reflect.get(phase, key) === true)
     .join(' ');

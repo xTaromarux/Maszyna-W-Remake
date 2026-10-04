@@ -1,7 +1,7 @@
-﻿import { useI18n } from '@/I18n/Hooks/UseI18n';
+import { useI18n } from '@/I18n/Hooks/UseI18n';
 import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import { colorDataFromHSV, hexToRgb, rgbToHex, rgbToHsv } from '@/Shared/Utils/Colors';
-import type { ColorPickerContentProps } from '@/Components/Settings/ColorPicker/Types';
+import type { ColorPickerContentProps } from '@/Components/Settings/ColorPickerPopup/Types';
 import { useState } from 'react';
 import ColorPicker from '../../ColorPicker/ColorPicker';
 

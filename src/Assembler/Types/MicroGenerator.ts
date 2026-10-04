@@ -1,4 +1,4 @@
-export interface Phase {
+export interface MicroOperationToken {
   op: string;
 }
 
@@ -18,6 +18,6 @@ export interface ConditionalLines {
 }
 export interface ConditionalBuild {
   meta?: CJumpMeta;
-  phases?: Phase[];
-  condPhase?: import('./Model').Phase;
+  phases?: MicroOperationToken[];
+  condPhase?: import('./Model').RuntimePhase;
 }

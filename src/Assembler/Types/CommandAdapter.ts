@@ -1,4 +1,4 @@
-import type { Phase as TemplatePhase } from './Instructions';
+import type { TemplatePhase } from './Instructions';
 
 export interface Built {
   templates: Record<string, TemplatePhase[]>;

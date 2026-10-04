@@ -51,15 +51,6 @@ export interface SwitchProps {
   onChange?: Update<boolean>;
 }
 
-export type SettingsNumber = readonly [
-  key: 'codeBits' | 'addresBits' | 'oddDelay' | 'stepDelay',
-  id: string,
-  label: string,
-  help: string,
-  min: number,
-  max: number,
-];
-
 export type PendingColor = ColorSelection & Pick<ColorUpdate, 'type'>;
 
 export type SavedColor = Pick<ColorSelection, 'color' | 'brightness'> & Partial<Pick<ColorSelection, 'colorData'>>;

@@ -1,7 +1,7 @@
 import type { ConditionalChunk } from '@/Assembler/Types/CommandAdapter';
 import type { RuntimeCommand } from '@/Assembler/Types/Registry';
 import type { Built } from './Types/CommandAdapter';
-import type { ConditionalPhase, Signal, SignalSet, Phase as TemplatePhase } from './Types/Instructions';
+import type { ConditionalPhase, Signal, SignalSet, TemplatePhase } from './Types/Instructions';
 
 const KNOWN_SIGNALS: ReadonlySet<string> = new Set([
   'czyt',

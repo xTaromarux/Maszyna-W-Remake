@@ -1,6 +1,6 @@
-import type { ConditionalLines, ConditionalBuild, CJumpMeta, Phase } from './Types/MicroGenerator';
+import type { ConditionalLines, ConditionalBuild, CJumpMeta, MicroOperationToken } from './Types/MicroGenerator';
 import type { Signal, SignalSet } from './Types/Instructions';
-import type { MicroPhase, Phase as RuntimePhase } from './Types/Model';
+import type { MicroPhase, RuntimePhase } from './Types/Model';
 
 const CONDITIONAL_LINE_RE = /^\s*IF\s+([A-Z])\s+THEN\s+@([\p{L}\w]+)\s+ELSE\s+@([\p{L}\w]+)\s*;?\s*$/u;
 
@@ -16,7 +16,7 @@ const toMicroPhaseFromSignalSet = (signalSet: SignalSet): MicroPhase => {
   return microPhase;
 };
 
-const trimAtEndMarker = (phases: Phase[]): Phase[] => {
+const trimAtEndMarker = (phases: MicroOperationToken[]): MicroOperationToken[] => {
   const endIndex = phases.findIndex((phase) => phase.op === 'END' || phase.op === 'END_BRANCH');
   return endIndex >= 0 ? phases.slice(0, endIndex) : phases;
 };
@@ -38,15 +38,15 @@ const collectLabelBodyLines = (lines: string[], labelName: string): string[] => 
   return bodyLines;
 };
 
-const tokenizeLineToOps = (line: string): Phase[] =>
+const tokenizeLineToOps = (line: string): MicroOperationToken[] =>
   line
     .split(/\s+/)
     .map((token) => token.trim())
     .filter(Boolean)
     .map((token) => ({ op: token }));
 
-const flattenLinesToOps = (lines: string[]): Phase[] => {
-  const phases: Phase[] = [];
+const flattenLinesToOps = (lines: string[]): MicroOperationToken[] => {
+  const phases: MicroOperationToken[] = [];
   for (const line of lines) {
     phases.push(...tokenizeLineToOps(line));
   }
@@ -61,7 +61,7 @@ const splitLinesBeforeConditional = (lines: string[]): ConditionalLines => {
   return { prefixLines: lines.slice(0, conditionalLineIndex), conditionalLineIndex };
 };
 
-const opsToSingleBranchPhases = (ops: Phase[]): MicroPhase[] => {
+const opsToSingleBranchPhases = (ops: MicroOperationToken[]): MicroPhase[] => {
   if (!ops.length) {
     return [];
   }

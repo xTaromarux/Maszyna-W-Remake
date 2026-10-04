@@ -91,13 +91,13 @@ export interface ConditionalPhase {
   falsePhases: MicroPhase[];
 }
 
-export type Phase = MicroPhase | ConditionalPhase;
+export type RuntimePhase = MicroPhase | ConditionalPhase;
 
 export interface MicroProgramEntry {
   srcLine?: number;
   pc: number;
   asmLine: string;
-  phases: Phase[];
+  phases: RuntimePhase[];
   meta?: {
     kind?: 'JUMP' | 'CJUMP' | 'NONE';
     flagName?: string;

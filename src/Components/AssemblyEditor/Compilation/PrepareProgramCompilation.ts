@@ -1,12 +1,16 @@
 import { translate as t } from '@/I18n/Translator';
-import type { AssemblyEditorProps } from '@/Components/AssemblyEditor/Types';
+import type { RuntimeCommand } from '@/Assembler/Types/Registry';
 import type { MemoryAssignment } from '@/Machine/Types/Machine';
 import { compileAsmToMicroProgram } from '@/Assembler/AsmPipeline';
 import { AssemblerError } from '@/Assembler/Errors/AssemblerError';
 
-type Options = Required<Pick<AssemblyEditorProps, 'commandList' | 'codeBits' | 'addresBits'>>;
+export type CompilationOptions = {
+  commandList: RuntimeCommand[];
+  codeBits: number;
+  addresBits: number;
+};
 
-const buildOpcodeLookup = (commands: Options['commandList']): Map<string, number> => {
+const buildOpcodeLookup = (commands: CompilationOptions['commandList']): Map<string, number> => {
   const opcodes = new Map<string, number>();
 
   commands.forEach((command, index) => {
@@ -24,7 +28,7 @@ const buildOpcodeLookup = (commands: Options['commandList']): Map<string, number
 };
 
 /** Prepares the complete program and validates every memory write before the simulator is modified. */
-export const prepareProgramCompilation = (source: string, { commandList, codeBits, addresBits }: Options) => {
+export const prepareProgramCompilation = (source: string, { commandList, codeBits, addresBits }: CompilationOptions) => {
   const { ir, initAssignments, microProgram, microAsmText } = compileAsmToMicroProgram(source, commandList);
   const opcodes = buildOpcodeLookup(commandList);
 

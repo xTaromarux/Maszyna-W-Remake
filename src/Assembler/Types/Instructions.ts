@@ -72,5 +72,5 @@ export interface ConditionalPhase {
   falsePhases: SignalSet[];
 }
 
-export type Phase = Signal[] | ConditionalPhase;
-export type InstructionTemplates = Record<string, Phase[]>;
+export type TemplatePhase = Signal[] | ConditionalPhase;
+export type InstructionTemplates = Record<string, TemplatePhase[]>;

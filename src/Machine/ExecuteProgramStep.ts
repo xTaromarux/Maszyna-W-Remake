@@ -1,4 +1,4 @@
-﻿import type { MicroProgramEntry, Phase } from '@/Assembler/Types/Model';
+import type { MicroProgramEntry, RuntimePhase } from '@/Assembler/Types/Model';
 import type { Machine } from './Types/Machine';
 
 const shouldPauseOn = (machine: Machine, line: number | undefined) => {
@@ -19,7 +19,7 @@ const shouldPauseOn = (machine: Machine, line: number | undefined) => {
 
 /** Executes one structured phase, retaining its branch cursor and breakpoint semantics. */
 export const executeStructuredStep = (machine: Machine) => {
-  const setHighlight = (node?: Phase | MicroProgramEntry) => {
+  const setHighlight = (node?: RuntimePhase | MicroProgramEntry) => {
     if (machine._headless) return;
     if (node && typeof node.srcLine === 'number' && typeof node.srcLine === 'number' && Number.isFinite(node.srcLine)) {
       machine.activeLine = node.srcLine;
@@ -74,7 +74,7 @@ export const executeStructuredStep = (machine: Machine) => {
     return false;
   };
 
-  const executeMicroPhase = (phase: Phase) => {
+  const executeMicroPhase = (phase: RuntimePhase) => {
     const signals = new Set(Object.keys(phase || {}).filter((key) => Reflect.get(phase, key) === true));
     machine.nextLine = signals;
     machine.executeSignalsFromNextLine();

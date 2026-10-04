@@ -3,9 +3,9 @@ export { buildConditionalForInstr } from './ConditionalTemplate';
 import { normalizeMnemonicToken } from '@/Assembler/CommandMnemonics';
 import { translate as t } from '../I18n/Translator';
 import type { IRInstruction, ProgramIR } from './Types/AssemblerIr';
-import type { Signal, SignalSet, ConditionalPhase as TemplateConditionalPhase, Phase as TemplatePhase } from './Types/Instructions';
-import type { CJumpMeta, Phase } from './Types/MicroGenerator';
-import type { MicroPhase, MicroProgramEntry, Phase as RuntimePhase } from './Types/Model';
+import type { Signal, SignalSet, ConditionalPhase as TemplateConditionalPhase, TemplatePhase } from './Types/Instructions';
+import type { CJumpMeta, MicroOperationToken } from './Types/MicroGenerator';
+import type { MicroPhase, MicroProgramEntry, RuntimePhase } from './Types/Model';
 import type { RuntimeCommand } from './Types/Registry';
 import { buildFromCommandList } from './CommandAdapter';
 import { AssemblerError } from './Errors/AssemblerError';
@@ -87,7 +87,7 @@ function resolveFallbackLines(
     .filter(Boolean);
 }
 
-function prependPrefixSignals(runtimePhases: RuntimePhase[], prefixOps?: Phase[]): void {
+function prependPrefixSignals(runtimePhases: RuntimePhase[], prefixOps?: MicroOperationToken[]): void {
   if (!prefixOps?.length) return;
 
   const prefixSignalSet: SignalSet = {};

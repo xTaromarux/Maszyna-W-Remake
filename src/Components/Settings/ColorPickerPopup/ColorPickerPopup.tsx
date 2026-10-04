@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import type { ColorPickerPopupProps } from '@/Components/Settings/ColorPicker/Types';
+import type { ColorPickerPopupProps } from '@/Components/Settings/ColorPickerPopup/Types';
 import { createPortal } from 'react-dom';
 import ColorPickerContent from './Ui/ColorPickerContent';
 

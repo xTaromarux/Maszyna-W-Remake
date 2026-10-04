@@ -1,11 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function AiChatIcon({
-  fillColor = 'currentColor',
-  strokeColor = 'none',
-  strokeWidth = 0,
-  className = '',
-  ...rest
-}: IconProps) {
+
+const AiChatIcon = ({ fillColor = 'currentColor', strokeColor = 'none', strokeWidth = 0, className = '', ...rest }: IconProps) => {
   return (
     <svg
       data-component="AiChatIcon"
@@ -43,4 +38,6 @@ export default function AiChatIcon({
       </g>
     </svg>
   );
-}
+};
+
+export default AiChatIcon;

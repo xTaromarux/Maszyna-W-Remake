@@ -1,80 +1,89 @@
 import type { AsmPipelineResult } from './Types/AsmPipeline';
-import type { MicroProgramEntry } from './Types/Model';
+import type { ConditionalPhase, MicroProgramEntry, Phase } from './Types/Model';
 import type { RuntimeCommand } from './Types/Registry';
 import { generateMicroProgram, injectCJumpMeta } from './MicroGenerator';
 import { parse } from './Parser';
 
-function renderMicroProgram(program: MicroProgramEntry[]): string {
-  const asmFragments: string[] = [];
-  let lineNo = 0;
+const renderConditionalPhase = (phase: ConditionalPhase, fragments: string[], sourceLine: number): number => {
+  const labels = phase.__labels || {};
+  const trueLabel = labels.t || 'zero';
+  const falseLabel = labels.f || 'notzero';
+  const prefixSignals = phase.__prefix;
+  const trueBranch = phase.truePhases?.[0] ?? {};
+  const falseBranch = phase.falsePhases?.[0] ?? {};
+
+  // Conditional branches retain all truthy properties; regular phases select only true.
+  const trueSignals = Object.keys(trueBranch)
+    .filter((key) => Reflect.get(trueBranch, key))
+    .join(' ');
+  const falseSignals = Object.keys(falseBranch)
+    .filter((key) => Reflect.get(falseBranch, key))
+    .join(' ');
+  const prefix = prefixSignals && prefixSignals.length ? prefixSignals.join(' ') + ' ' : '';
+
+  phase.srcLine = sourceLine;
+  fragments.push(`${prefix}IF ${phase.flag} THEN @${trueLabel} ELSE @${falseLabel};`);
+  sourceLine++;
+
+  trueBranch.srcLine = sourceLine;
+  fragments.push(trueSignals ? `@${trueLabel} ${trueSignals};` : `@${trueLabel};`);
+  sourceLine++;
+
+  if (falseSignals) {
+    falseBranch.srcLine = sourceLine;
+    fragments.push(`@${falseLabel} ${falseSignals};`);
+    sourceLine++;
+  }
+
+  return sourceLine;
+};
+
+const renderRegularPhase = (phase: Phase, fragments: string[], sourceLine: number): number => {
+  const signals = Object.keys(phase)
+    .filter((key) => Reflect.get(phase, key) === true)
+    .join(' ');
+
+  if (signals.trim()) {
+    phase.srcLine = sourceLine;
+    fragments.push(`${signals};`);
+    sourceLine++;
+  }
+
+  return sourceLine;
+};
+
+/** Renders the micro-assembly and assigns source-line indices to the existing phase objects. */
+const renderAndAssignSourceLines = (program: MicroProgramEntry[]): string => {
+  const fragments: string[] = [];
+  let sourceLine = 0;
 
   for (const entry of program) {
     for (const phase of entry.phases) {
-      if (phase.conditional === true) {
-        const cond = phase;
-        const flag = cond.flag;
-        const labels = cond.__labels || {};
-        const tLabel = labels.t || 'zero';
-        const fLabel = labels.f || 'notzero';
-        const prefixArr = cond.__prefix;
-
-        const t = cond.truePhases?.[0] ?? {};
-        const f = cond.falsePhases?.[0] ?? {};
-        const trueSignals = Object.keys(t)
-          .filter((k) => Reflect.get(t, k))
-          .join(' ');
-        const falseSignals = Object.keys(f)
-          .filter((k) => Reflect.get(f, k))
-          .join(' ');
-
-        const prefix = prefixArr && prefixArr.length ? prefixArr.join(' ') + ' ' : '';
-
-        cond.srcLine = lineNo;
-        asmFragments.push(`${prefix}IF ${flag} THEN @${tLabel} ELSE @${fLabel};`);
-        lineNo++;
-
-        t.srcLine = lineNo;
-        asmFragments.push(trueSignals ? `@${tLabel} ${trueSignals};` : `@${tLabel};`);
-        lineNo++;
-
-        if (falseSignals) {
-          f.srcLine = lineNo;
-          asmFragments.push(`@${fLabel} ${falseSignals};`);
-          lineNo++;
-        }
-      } else {
-        const regularPhase = phase;
-        const signals = Object.keys(regularPhase)
-          .filter((key) => Reflect.get(regularPhase, key) === true)
-          .join(' ');
-
-        if (signals.trim()) {
-          regularPhase.srcLine = lineNo;
-          asmFragments.push(`${signals};`);
-          lineNo++;
-        }
-      }
+      sourceLine =
+        phase.conditional === true
+          ? renderConditionalPhase(phase, fragments, sourceLine)
+          : renderRegularPhase(phase, fragments, sourceLine);
     }
 
-    const extra = entry.meta?.postAsm;
-    if (extra?.length) {
-      for (const line of extra) {
-        asmFragments.push(`${line};`);
-        lineNo++;
+    const postAssemblyLines = entry.meta?.postAsm;
+    if (postAssemblyLines?.length) {
+      for (const line of postAssemblyLines) {
+        fragments.push(`${line};`);
+        sourceLine++;
       }
     }
   }
 
-  return asmFragments.join('\n');
-}
+  return fragments.join('\n');
+};
 
-export function compileAsmToMicroProgram(source: string, commandList: RuntimeCommand[]): AsmPipelineResult {
+export const compileAsmToMicroProgram = (source: string, commandList: RuntimeCommand[]): AsmPipelineResult => {
   const ir = parse(source, { commandList });
 
   let microProgram = generateMicroProgram(ir, commandList);
   microProgram = injectCJumpMeta(microProgram);
 
-  const microAsmText = renderMicroProgram(microProgram);
+  const microAsmText = renderAndAssignSourceLines(microProgram);
   console.log('Generated micro-assembly:\n', microAsmText);
 
   return {
@@ -83,4 +92,4 @@ export function compileAsmToMicroProgram(source: string, commandList: RuntimeCom
     microProgram,
     microAsmText,
   };
-}
+};

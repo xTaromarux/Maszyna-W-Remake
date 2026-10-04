@@ -3,22 +3,43 @@ import RefreshIcon from '@/Shared/Ui/Icons/RefreshIcon';
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { SettingsPanelProps } from '@/Components/Settings/Types';
 type SettingsActionsProps = Pick<SettingsPanelProps, 'onOpenLabDialog' | 'onResetValues' | 'onDefaultSettings' | 'onOpenCommandList'>;
+
 const SettingsActions = (props: SettingsActionsProps) => {
   const { t } = useI18n();
+  const actions = [
+    {
+      id: 'openLabDialog',
+      labelKey: 'labs.chooseButton',
+      onClick: props.onOpenLabDialog,
+      Icon: CommandListIcon,
+    },
+    {
+      id: 'resetValues',
+      labelKey: 'settings.actions.resetRegisters',
+      onClick: props.onResetValues,
+      Icon: RefreshIcon,
+    },
+    {
+      id: 'defaultSettings',
+      labelKey: 'settings.actions.defaultSettings',
+      onClick: props.onDefaultSettings,
+      Icon: RefreshIcon,
+    },
+    {
+      id: 'openCommandList',
+      labelKey: 'settings.actions.commandList',
+      onClick: props.onOpenCommandList,
+      Icon: CommandListIcon,
+    },
+  ];
+
   return (
     <div className="flexColumn">
       <div className="flexColumn button-column">
-        {(
-          [
-            ['openLabDialog', 'labs.chooseButton', props.onOpenLabDialog, CommandListIcon],
-            ['resetValues', 'settings.actions.resetRegisters', props.onResetValues, RefreshIcon],
-            ['defaultSettings', 'settings.actions.defaultSettings', props.onDefaultSettings, RefreshIcon],
-            ['openCommandList', 'settings.actions.commandList', props.onOpenCommandList, CommandListIcon],
-          ] as const
-        ).map(([id, label, handler, Icon]) => (
-          <button key={id} id={id} className="SvgAndTextButton compact-button execution-btn execution-btn--step" onClick={handler}>
+        {actions.map(({ id, labelKey, onClick, Icon }) => (
+          <button key={id} id={id} className="SvgAndTextButton compact-button execution-btn execution-btn--step" onClick={onClick}>
             <Icon />
-            <span>{t(label)}</span>
+            <span>{t(labelKey)}</span>
           </button>
         ))}
       </div>

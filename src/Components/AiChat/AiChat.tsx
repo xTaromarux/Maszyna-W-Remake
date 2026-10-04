@@ -10,6 +10,7 @@ import ChatComposer from './Ui/ChatComposer';
 import ChatConversation from './Ui/ChatConversation';
 import ChatSuggestions from './Ui/ChatSuggestions';
 import { useChatSession } from './Hooks/UseChatSession';
+import { isCheckingModel } from './Helpers/ChatRequests';
 import { useChatPanel } from './Hooks/UseChatPanel';
 
 const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '', onClose }: AiChatProps) => {
@@ -109,7 +110,7 @@ const AiChat = ({ visible = false, title = '', placeholder = '', instruction = '
         </header>
         <div className={`chatBody${showApiKeyGate ? ' chatBodyLocked' : ''}`}>
           <div id="conversation" ref={panel.conversation} inert={showApiKeyGate}>
-            {[ApiState.CHECKING, ApiState.WAKING].includes(state.apiState) && (
+            {isCheckingModel(state.apiState) && (
               <div className="healthBanner">
                 <span>{t(state.apiState === ApiState.CHECKING ? 'aiChat.checking' : 'aiChat.waking')}</span>
                 <span className="dots">

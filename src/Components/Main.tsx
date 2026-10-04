@@ -1,259 +1,169 @@
 'use client';
 
-import type { MachineState } from '@/Types/Simulator';
-
 import { useI18n } from '@/I18n/Index';
-import { createMachineStore } from '@/State/CreateMachineStore';
 import { MachineContext } from '@/State/MachineContext';
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import AiChat from './AiChat/AiChat';
-import CommandList from './CommandList';
+import type { MaszynaWProps } from '@/Types/Components';
+import type { LogEvent } from '@/Types/Simulator';
 import ConsoleDock from './Console/ConsoleDock';
 import ProgramSection from './InstructionsEditor/ProgramSection';
 import MaszynaW from './MaszynaW';
 import ExecutionControls from './MicroInstructionsEditor/ExecutionControls';
 import ProgramEditor from './MicroInstructionsEditor/ProgramEditor';
-import LabCatalogDialog from './Settings/LabCatalogDialog';
-import SettingsOverlay from './Settings/SettingsOverlay';
 import TopBar from './Ui/TopBar';
+import { useMachine } from './Main/Hooks/UseMachine';
+import { createMachineUpdater, createExecutionBindings, createRegisterBindings } from './Main/Helpers/MachineBindings';
+import { MachineOverlays } from './Main/Ui/MachineOverlays';
 
-export default function Main() {
-  const [store] = useState(createMachineStore);
-  useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
-  const m = store.machine;
+/** Composes simulator views around the single observable machine instance. */
+const Main = () => {
+  const { machine, services } = useMachine();
   const { t } = useI18n();
-  useEffect(() => {
-    store.start();
-    return () => store.dispose();
-  }, [store]);
-  const services = useMemo(() => ({ showToast: m.showToast, getMaxValueForRegister: m.getMaxValueForRegister }), [m]);
-  const update =
-    <K extends keyof MachineState>(field: K) =>
-    (value: MachineState[K]) => {
-      (m as MachineState)[field] = value;
-    };
-  const execution = {
-    manualMode: m.manualMode,
-    codeCompiled: m.codeCompiled,
-    code: m.code,
-    isRunning: m.isRunning,
-    isFastRunning: m.isFastRunning,
-    fastProgress: m.fastProgress,
-    onCompile: m.compileCode,
-    onEdit: m.uncompileCode,
-    onStep: m.executeLine,
-    onRun: m.runCode,
-    onRunFast: m.runToEndFast,
-    onStop: m.stopRun,
+  const update = createMachineUpdater(machine);
+  const execution = createExecutionBindings(machine);
+  const registerProps = createRegisterBindings(machine, update);
+
+  const openChat = () => {
+    machine.aiChatOpen = true;
   };
-  const registerProps = {
-    programCounter: m.programCounter,
-    onUpdateProgramCounter: update('programCounter'),
-    I: m.I,
-    onUpdateI: update('I'),
-    ACC: m.ACC,
-    onUpdateACC: update('ACC'),
-    JAML: m.JAML,
-    onUpdateJAML: update('JAML'),
-    A: m.A,
-    onUpdateA: update('A'),
-    S: m.S,
-    onUpdateS: update('S'),
-    mem: m.mem,
-    onUpdateMem: update('mem'),
-    X: m.X,
-    onUpdateX: update('X'),
-    Y: m.Y,
-    onUpdateY: update('Y'),
-    RB: m.RB,
-    onUpdateRB: update('RB'),
-    G: m.G,
-    onUpdateG: update('G'),
-    RZ: m.RZ,
-    onUpdateRZ: update('RZ'),
-    RP: m.RP,
-    onUpdateRP: update('RP'),
-    RM: m.RM,
-    onUpdateRM: update('RM'),
-    AP: m.AP,
-    onUpdateAP: update('AP'),
-    WS: m.WS,
-    onUpdateWS: update('WS'),
+  const openSettings = () => {
+    machine.settingsOpen = true;
   };
-  const closeBackdrop = () => {
-    m.closePopups('settingsOpen');
-    m.closePopups('commandListOpen');
+
+  const updateRegisterFormat: NonNullable<MaszynaWProps['onUpdateNumberFormat']> = ({ field, value }) => {
+    machine.registerFormats[field] = value;
   };
+
+  const setManualMode = (enabled: boolean) => {
+    if (enabled) {
+      machine.manualModeCheck();
+    } else {
+      machine.manualModeUncheck();
+    }
+  };
+
+  const updateDeviceInput = (value: number) => {
+    machine.DEV_IN = value;
+    machine.DEV_READY = value ? 0 : 1;
+  };
+
+  const logProgramEvent = (event: LogEvent) => {
+    machine.addLog(event.message, event.class, event.error);
+  };
+
+  const disableBreakpoints = () => {
+    machine.breakpointsEnabled = false;
+  };
+
+  const clearBreakpoints = () => {
+    machine.breakpoints.clear();
+    machine.addLog(t('logs.breakpointsCleared'), 'system');
+  };
+
+  const breakpointControls = {
+    breakpointsEnabled: machine.breakpointsEnabled,
+    onUpdateBreakpointsEnabled: update('breakpointsEnabled'),
+    onDisableAllBreakpoints: disableBreakpoints,
+    onClearBreakpoints: clearBreakpoints,
+  };
+
   return (
     <MachineContext.Provider value={services}>
       <TopBar
-        hasConsoleErrors={m.hasConsoleErrors}
-        wsStatus={m.wsStatus}
-        onOpenChat={() => {
-          m.aiChatOpen = true;
-        }}
-        onOpenSettings={() => {
-          m.settingsOpen = true;
-        }}
-        onToggleConsole={m.toggleConsole}
-        onWsReconnect={m.reconnectWS}
+        hasConsoleErrors={machine.hasConsoleErrors}
+        wsStatus={machine.wsStatus}
+        onOpenChat={openChat}
+        onOpenSettings={openSettings}
+        onToggleConsole={machine.toggleConsole}
+        onWsReconnect={machine.reconnectWS}
       />
       <div id="wLayout">
         <MaszynaW
           {...registerProps}
-          manualMode={m.manualMode}
-          signals={m.signals}
-          decSigned={m.decSigned}
-          formatNumber={m.formatNumber}
-          registerFormats={m.registerFormats}
-          extras={m.extras}
-          BusA={m.BusA}
-          BusS={m.BusS}
-          wordBits={m.codeBits + m.addresBits}
-          decToCommand={m.decToCommand}
-          decToArgument={m.decToArgument}
-          onClickItem={m.handleSignalToggle}
-          onUpdateNumberFormat={({ field, value }) => {
-            m.registerFormats[field] = value;
-          }}
+          manualMode={machine.manualMode}
+          signals={machine.signals}
+          decSigned={machine.decSigned}
+          formatNumber={machine.formatNumber}
+          registerFormats={machine.registerFormats}
+          extras={machine.extras}
+          BusA={machine.BusA}
+          BusS={machine.BusS}
+          wordBits={machine.codeBits + machine.addresBits}
+          decToCommand={machine.decToCommand}
+          decToArgument={machine.decToArgument}
+          onClickItem={machine.handleSignalToggle}
+          onUpdateNumberFormat={updateRegisterFormat}
         />
         <div id="inputs">
           <ProgramEditor
-            manualMode={m.manualMode}
-            codeCompiled={m.codeCompiled}
-            code={m.code}
-            compiledCode={m.compiledCode}
-            activeLine={m.activeLine}
-            nextLine={m.nextLine}
-            showIo={m.extras.io.rbRegister}
-            devIn={m.DEV_IN}
-            devOut={m.DEV_OUT}
-            devReady={m.DEV_READY}
-            wordBits={m.codeBits + m.addresBits}
-            formatNumber={m.formatNumber}
-            breakpoints={m.breakpoints}
-            onToggleBreakpoint={m.toggleBreakpoint}
-            onSetManualMode={(flag) => (flag ? m.manualModeCheck() : m.manualModeUncheck())}
+            manualMode={machine.manualMode}
+            codeCompiled={machine.codeCompiled}
+            code={machine.code}
+            compiledCode={machine.compiledCode}
+            activeLine={machine.activeLine}
+            nextLine={machine.nextLine}
+            showIo={machine.extras.io.rbRegister}
+            devIn={machine.DEV_IN}
+            devOut={machine.DEV_OUT}
+            devReady={machine.DEV_READY}
+            wordBits={machine.codeBits + machine.addresBits}
+            formatNumber={machine.formatNumber}
+            breakpoints={machine.breakpoints}
+            breakpointsEnabled={machine.breakpointsEnabled}
+            onToggleBreakpoint={machine.toggleBreakpoint}
+            onSetManualMode={setManualMode}
             onUpdateCode={update('code')}
-            onUpdateDevIn={(value) => {
-              m.DEV_IN = value;
-              m.DEV_READY = value ? 0 : 1;
-            }}
+            onUpdateDevIn={updateDeviceInput}
             onUpdateDevReady={update('DEV_READY')}
           />
           <ExecutionControls {...execution} />
         </div>
         <ProgramSection
-          manualMode={m.manualMode}
-          commandList={m.commandList}
-          program={m.program}
-          codeBits={m.codeBits}
-          addresBits={m.addresBits}
-          autocompleteEnabled={m.autocompleteEnabled}
-          autoResetOnAsmCompile={m.autoResetOnAsmCompile}
-          onUpdateCode={m.handleProgramSectionCompile}
-          onLog={(event) => m.addLog(event.message, event.class, event.error)}
-          onInitMemory={m.applyInitMemory}
-          onResetRegisters={m.handleAsmAutoReset}
+          manualMode={machine.manualMode}
+          commandList={machine.commandList}
+          program={machine.program}
+          codeBits={machine.codeBits}
+          addresBits={machine.addresBits}
+          autocompleteEnabled={machine.autocompleteEnabled}
+          autoResetOnAsmCompile={machine.autoResetOnAsmCompile}
+          onUpdateCode={machine.handleProgramSectionCompile}
+          onLog={logProgramEvent}
+          onInitMemory={machine.applyInitMemory}
+          onResetRegisters={machine.handleAsmAutoReset}
         />
         <ConsoleDock
           execution={execution}
-          logs={m.logs.slice().reverse()}
-          consoleOpen={m.consoleOpen}
-          hasConsoleErrors={m.hasConsoleErrors}
-          onClose={m.closeConsole}
-          onClear={m.clearConsole}
-          onOpen={m.toggleConsole}
-          breakpoints={{
-            breakpointsEnabled: m.breakpointsEnabled,
-            onUpdateBreakpointsEnabled: update('breakpointsEnabled'),
-            onDisableAllBreakpoints: () => {
-              m.breakpointsEnabled = false;
-            },
-            onClearBreakpoints: () => {
-              m.breakpoints.clear();
-              m.addLog(t('logs.breakpointsCleared'), 'system');
-            },
-          }}
-          className={!m.consoleOpen ? 'console-collapsed' : ''}
+          logs={machine.logs.slice().reverse()}
+          consoleOpen={machine.consoleOpen}
+          hasConsoleErrors={machine.hasConsoleErrors}
+          onClose={machine.closeConsole}
+          onClear={machine.clearConsole}
+          onOpen={machine.toggleConsole}
+          breakpoints={breakpointControls}
+          className={!machine.consoleOpen ? 'console-collapsed' : ''}
         />
-        {!m.consoleOpen && (
+        {!machine.consoleOpen && (
           <button
-            className={`console-indicator ${m.hasConsoleErrors ? 'has-errors' : ''}`}
+            className={`console-indicator ${machine.hasConsoleErrors ? 'has-errors' : ''}`}
             type="button"
-            onClick={m.toggleConsole}
+            onClick={machine.toggleConsole}
             title={t('consoleDock.openConsole')}
             aria-label={t('consoleDock.openConsole')}
           />
         )}
-        {m.disappearBlour && <div onClick={closeBackdrop} className={m.globalBackdropOpen ? 'show' : 'hide'} id="popupsBackdrop" />}
-        <SettingsOverlay
-          settingsOpen={m.settingsOpen}
-          isMobile={m.isMobile}
-          lightMode={m.lightMode}
-          language={m.language}
-          numberFormat={m.numberFormat}
-          codeBits={m.codeBits}
-          addresBits={m.addresBits}
-          decSigned={m.decSigned}
-          oddDelay={m.oddDelay}
-          stepDelay={m.stepDelay}
-          extras={m.extras}
-          autocompleteEnabled={m.autocompleteEnabled}
-          autoResetOnAsmCompile={m.autoResetOnAsmCompile}
-          onClose={() => m.closePopups('settingsOpen')}
-          onUpdateLightMode={update('lightMode')}
-          onUpdateLanguage={update('language')}
-          onUpdateNumberFormat={update('numberFormat')}
-          onUpdateDecSigned={update('decSigned')}
-          onUpdateCodeBits={update('codeBits')}
-          onUpdateAddresBits={update('addresBits')}
-          onUpdateOddDelay={update('oddDelay')}
-          onUpdateStepDelay={update('stepDelay')}
-          onUpdateExtras={(patch) => {
-            m.extras = m.mergeExtras(m.extras, patch);
-          }}
-          onResetValues={() => m.resetValues()}
-          onDefaultSettings={m.restoreDefaults}
-          onOpenCommandList={m.openCommandList}
-          onOpenLabDialog={m.openLabDialog}
-          onUpdateAutocompleteEnabled={update('autocompleteEnabled')}
-          onUpdateAutoResetOnAsmCompile={update('autoResetOnAsmCompile')}
-          onColorChange={m.sendColorToESP}
-        />
-        <LabCatalogDialog
-          visible={m.labDialogOpen}
-          labs={m.localizedLabCatalog}
-          selectedLabId={m.selectedLabId}
-          onClose={m.closeLabDialog}
-          onSelectLab={m.selectLab}
-          onLoadLab={m.loadSelectedLab}
-        />
-        <CommandList
-          visible={m.commandListOpen}
-          commandList={m.commandList}
-          codeBits={m.codeBits}
-          onUpdateCommandList={update('commandList')}
-          onClose={() => m.closePopups('commandListOpen')}
-        />
-        <AiChat
-          visible={m.aiChatOpen}
-          onClose={() => m.closePopups('aiChatOpen')}
-          title={t('aiChat.title')}
-          placeholder={t('aiChat.placeholder')}
-          instruction={t('aiChat.instruction')}
-        />
+        <MachineOverlays machine={machine} update={update} />
       </div>
-      {m.toast.visible && (
+      {machine.toast.visible && (
         <div className="app-toast" role="status" aria-live="polite">
-          {m.toast.message}
+          {machine.toast.message}
         </div>
       )}
-      {m.errorMessage && (
+      {machine.errorMessage && (
         <div className="app-toast" role="alert">
-          {m.errorMessage}
+          {machine.errorMessage}
         </div>
       )}
     </MachineContext.Provider>
   );
-}
+};
+
+export default Main;

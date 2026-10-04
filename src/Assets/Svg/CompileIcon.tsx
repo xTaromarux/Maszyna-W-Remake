@@ -1,5 +1,6 @@
 import type { IconProps } from '@/Types/Common';
-export default function Icon(props: IconProps) {
+
+const CompileIcon = (props: IconProps) => {
   return (
     <svg
       {...props}
@@ -15,4 +16,6 @@ export default function Icon(props: IconProps) {
       <path d="m8 6-6 6 6 6" />
     </svg>
   );
-}
+};
+
+export default CompileIcon;

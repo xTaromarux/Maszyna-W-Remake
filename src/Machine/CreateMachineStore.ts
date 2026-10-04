@@ -1,5 +1,4 @@
 import type { Action } from '@/Shared/Types/Common';
-import type { NumberFormat } from '@/Shared/Types/Numbers';
 import type { Machine, MachineStore, RegisterFormats } from '@/Machine/Types/Machine';
 import { translate } from '../I18n/Translator';
 import { clamp } from '../Shared/Utils/Numbers';
@@ -8,36 +7,31 @@ import { initialMachineState } from './InitialMachineState';
 import { machineMethods } from './MachineMethods';
 import { createMicroInstructionActions } from './MicroInstructions/MicroInstructionActions';
 import { machineSelectors } from './MachineSelectors';
+import {
+  collectPreferences,
+  getRegisterFormatPreferences,
+  isNumberFormat,
+  mergeExtraPreferences,
+  parsePreferences,
+  persistedSettings,
+  validateSettingPreference,
+} from './Preferences/MachinePreferences';
 
-export const persistedSettings = [
-  'addresBits',
-  'codeBits',
-  'oddDelay',
-  'stepDelay',
-  'numberFormat',
-  'extras',
-  'lightMode',
-  'language',
-  'registerFormats',
-  'autocompleteEnabled',
-  'autoResetOnAsmCompile',
-  'decSigned',
-] as const;
-const formats = ['dec', 'hex', 'bin'];
+export { persistedSettings } from './Preferences/MachinePreferences';
 
 /** React subscribes to a revision; timed micro-operations share one live machine.
  * Only plain data and sets are observed. Native sockets, dates and timers retain
  * their identity. Preferences are persisted once per batch, independently of logs. */
-export function createMachineStore(): MachineStore {
-  let version = 0,
-    scheduled = false,
-    active = false,
-    initialized = false,
-    restoring = false;
+export const createMachineStore = (): MachineStore => {
+  let version = 0;
+  let scheduled = false;
+  let active = false;
+  let initialized = false;
+  let restoring = false;
   let settingsDirty = false;
-  const listeners = new Set<Action>(),
-    proxies = new WeakMap<object, Map<string, object>>(),
-    rawValues = new WeakMap<object, object>();
+  const listeners = new Set<Action>();
+  const proxies = new WeakMap<object, Map<string, object>>();
+  const rawValues = new WeakMap<object, object>();
   // Populated synchronously below before the store is exposed.
   const target = {} as Machine;
   const publish = () => {
@@ -54,38 +48,67 @@ export function createMachineStore(): MachineStore {
       listeners.forEach((listener) => listener());
     });
   };
-  function changed(root: string, path: string[], value?: unknown, oldValue?: unknown) {
-    if (!active) return;
-    if (persistedSettings.some((key) => key === root)) settingsDirty = true;
+  const applySettingChange = (root: string, value: unknown) => {
     if (!restoring) {
-      if (root === 'addresBits') machine.resizeMemory();
-      if (root === 'lightMode') applyTheme();
-      if (root === 'language') machine.syncDocumentLanguage();
-      if (root === 'numberFormat' && formats.includes(value as NumberFormat))
-        machine.registerFormats = Object.fromEntries(
-          Object.keys(machine.registerFormats).map((key) => [key, value as NumberFormat])
-        ) as RegisterFormats;
+      if (root === 'addresBits') {
+        machine.resizeMemory();
+      }
+      if (root === 'lightMode') {
+        applyTheme();
+      }
+      if (root === 'language') {
+        machine.syncDocumentLanguage();
+      }
+      if (root === 'numberFormat' && isNumberFormat(value)) {
+        machine.registerFormats = Object.fromEntries(Object.keys(machine.registerFormats).map((key) => [key, value])) as RegisterFormats;
+      }
     }
+  };
+
+  const updateBackdrop = (root: string) => {
     if ((root === 'settingsOpen' || root === 'commandListOpen') && machine.globalBackdropOpen) {
       clearTimeout(machine.blurHideTimer ?? undefined);
       machine.disappearBlour = true;
     }
+  };
+
+  const broadcastChange = (root: string, path: string[], value?: unknown, oldValue?: unknown) => {
     if (!machine.suppressBroadcast && !restoring) {
       const fields: Record<string, string> = { ACC: 'acc', A: 'a', S: 's', programCounter: 'c', I: 'i' };
-      if (fields[root] && (typeof value === 'number' || typeof value === 'boolean')) machine.sendPartialData(fields[root], value);
-      if (root === 'signals') {
-        if (path.length === 1 && typeof value === 'boolean') machine.sendPartialData(path[0], value);
-        else
-          Object.keys(machine.signals).forEach((key) => {
-            if (machine.signals[key] !== (oldValue && typeof oldValue === 'object' ? Reflect.get(oldValue, key) : undefined))
-              machine.sendPartialData(key, machine.signals[key]);
-          });
+      if (fields[root] && (typeof value === 'number' || typeof value === 'boolean')) {
+        machine.sendPartialData(fields[root], value);
       }
-      if (root === 'mem' && (!path.length || Number(path[0]) < 4)) machine.sendMemUpdate();
+      if (root === 'signals') {
+        if (path.length === 1 && typeof value === 'boolean') {
+          machine.sendPartialData(path[0], value);
+        } else {
+          Object.keys(machine.signals).forEach((key) => {
+            if (machine.signals[key] !== (oldValue && typeof oldValue === 'object' ? Reflect.get(oldValue, key) : undefined)) {
+              machine.sendPartialData(key, machine.signals[key]);
+            }
+          });
+        }
+      }
+      if (root === 'mem' && (!path.length || Number(path[0]) < 4)) {
+        machine.sendMemUpdate();
+      }
     }
+  };
+
+  const changed = (root: string, path: string[], value?: unknown, oldValue?: unknown) => {
+    if (!active) {
+      return;
+    }
+    if (persistedSettings.some((key) => key === root)) {
+      settingsDirty = true;
+    }
+    applySettingChange(root, value);
+    updateBackdrop(root);
+    broadcastChange(root, path, value, oldValue);
     publish();
-  }
-  function observable(value: unknown, root: string, path: string[] = []): unknown {
+  };
+
+  const observable = (value: unknown, root: string, path: string[] = []): unknown => {
     if (!value || typeof value !== 'object') return value;
     if (rawValues.has(value)) return value;
     const plain = Object.getPrototypeOf(value) === Object.prototype || Array.isArray(value);
@@ -127,7 +150,7 @@ export function createMachineStore(): MachineStore {
     rawValues.set(proxy, value);
     byPath.set(key, proxy);
     return proxy;
-  }
+  };
   const machine: Machine = new Proxy(target, {
     get(object, key) {
       return observable(Reflect.get(object, key, machine), String(key));
@@ -158,7 +181,7 @@ export function createMachineStore(): MachineStore {
   };
   target.saveToLS = () => {
     try {
-      setStorageItem('W', JSON.stringify(Object.fromEntries(persistedSettings.map((key) => [key, machine[key]]))));
+      setStorageItem('W', JSON.stringify(collectPreferences(machine)));
     } catch {
       /* Storage may be unavailable or full; simulation remains usable. */
     }
@@ -166,28 +189,27 @@ export function createMachineStore(): MachineStore {
   target.loadFromLS = () => {
     restoring = true;
     try {
-      const saved = JSON.parse(getStorageItem('W') || '{}');
-      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+      const saved = parsePreferences(getStorageItem('W'));
+      if (!saved) {
+        return;
+      }
       for (const key of persistedSettings) {
         const value = saved[key];
-        if (value === undefined) continue;
+        if (value === undefined) {
+          continue;
+        }
         if (key === 'extras' && value && typeof value === 'object') {
-          const defaults = machine.getDefaultExtras();
-          for (const [name, entry] of Object.entries(defaults)) {
-            if (typeof entry === 'boolean') Reflect.set(defaults, name, typeof value[name] === 'boolean' ? value[name] : entry);
-            else
-              for (const sub of Object.keys(entry))
-                if (typeof value[name]?.[sub] === 'boolean') Reflect.set(Reflect.get(defaults, name), sub, value[name][sub]);
-          }
-          machine.extras = defaults;
+          machine.extras = mergeExtraPreferences(machine.getDefaultExtras(), value as Record<string, unknown>);
         } else if (key === 'registerFormats' && value && typeof value === 'object') {
-          for (const field of Object.keys(machine.registerFormats))
-            if (formats.includes(value[field])) Reflect.set(machine.registerFormats, field, value[field]);
-        } else if (key === 'numberFormat' && formats.includes(value as NumberFormat)) Reflect.set(machine, key, value);
-        else if (key === 'language' && ['pl', 'en'].includes(value)) Reflect.set(machine, key, value);
-        else if (typeof machine[key] === 'boolean' && typeof value === 'boolean') Reflect.set(machine, key, value);
-        else if (typeof machine[key] === 'number' && Number.isFinite(value))
-          Reflect.set(machine, key, clamp(value, key === 'stepDelay' ? 5 : 0, 10000));
+          for (const [field, format] of getRegisterFormatPreferences(machine.registerFormats, value as Record<string, unknown>)) {
+            Reflect.set(machine.registerFormats, field, format);
+          }
+        } else {
+          const preference = validateSettingPreference(key, value, machine[key]);
+          if (preference !== undefined) {
+            Reflect.set(machine, key, preference);
+          }
+        }
       }
     } catch {
       /* Ignore malformed legacy preferences. */
@@ -238,4 +260,4 @@ export function createMachineStore(): MachineStore {
       window.removeEventListener('pagehide', machine.saveToLS);
     },
   };
-}
+};

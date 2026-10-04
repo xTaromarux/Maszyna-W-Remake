@@ -5,14 +5,7 @@ import type { LabCatalogDialogProps } from '@/Types/Components';
 import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import LabDetails from './LabCatalogDialog/Ui/LabDetails';
 
-const LabCatalogDialog = ({
-  visible = false,
-  labs = [],
-  selectedLabId = '',
-  onClose,
-  onSelectLab,
-  onLoadLab,
-}: LabCatalogDialogProps) => {
+const LabCatalogDialog = ({ visible = false, labs = [], selectedLabId = '', onClose, onSelectLab, onLoadLab }: LabCatalogDialogProps) => {
   const { t } = useI18n();
   const dialog = useModalFocus<HTMLElement>(visible, onClose);
   const selectedLab = labs.find((lab) => lab.id === selectedLabId) || labs[0];
@@ -20,11 +13,6 @@ const LabCatalogDialog = ({
     return null;
   }
 
-  return () => {
-      if (previous instanceof HTMLElement) previous.focus();
-    };
-  }, [visible]);
-  if (!visible) return null;
   return (
     <div
       data-component="LabCatalogDialog"
@@ -35,14 +23,7 @@ const LabCatalogDialog = ({
         }
       }}
     >
-      <section
-        ref={dialog}
-        tabIndex={-1}
-        className="labDialog"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('labs.dialog.aria')}
-      >
+      <section ref={dialog} tabIndex={-1} className="labDialog" role="dialog" aria-modal="true" aria-label={t('labs.dialog.aria')}>
         <header className="labDialogHeader">
           <h2>{t('labs.dialog.title')}</h2>
           <button className="closeBtn" type="button" onClick={onClose} aria-label={t('labs.dialog.closeAria')}>

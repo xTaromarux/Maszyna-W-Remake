@@ -5,7 +5,7 @@ import type { SegmentedToggleProps, ToggleOption, ToggleValue } from '@/Types/Co
 import type { KeyboardEvent } from 'react';
 import { useRef } from 'react';
 
-export default function SegmentedToggle<T extends ToggleValue>({
+const SegmentedToggle = <T extends ToggleValue>({
   options,
   modelValue = null,
   ariaLabel,
@@ -17,24 +17,33 @@ export default function SegmentedToggle<T extends ToggleValue>({
   className = '',
   style,
   ...rest
-}: SegmentedToggleProps<T>) {
+}: SegmentedToggleProps<T>) => {
   const { t } = useI18n();
   const root = useRef<HTMLDivElement | null>(null);
   const valueOf = (option: ToggleOption<T>): T => (option !== null && typeof option === 'object' ? option[valueKey] : option);
   const activeIndex = modelValue == null ? -1 : options.findIndex((option) => valueOf(option) === modelValue);
+  const tabStopIndex = activeIndex < 0 ? 0 : activeIndex;
+
+  const optionLabel = (option: ToggleOption<T>, index: number) => {
+    if (renderOption) {
+      return renderOption(option, index);
+    }
+    if (option !== null && typeof option === 'object') {
+      return option[labelKey];
+    }
+    return String(option);
+  };
+
   const select = (option: ToggleOption<T>) => {
     const value = valueOf(option);
     onUpdateModelValue?.(value);
     onChange?.(value);
   };
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, option: ToggleOption<T>, index: number) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
       const next = (index + (event.key === 'ArrowLeft' ? -1 : 1) + options.length) % options.length;
       root.current?.querySelectorAll<HTMLButtonElement>('.seg-btn')[next]?.focus();
-    } else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      select(option);
     }
   };
 
@@ -56,14 +65,16 @@ export default function SegmentedToggle<T extends ToggleValue>({
             className="seg-btn"
             role="tab"
             aria-selected={index === activeIndex}
-            tabIndex={index === activeIndex ? 0 : -1}
+            tabIndex={index === tabStopIndex ? 0 : -1}
             onClick={() => select(option)}
-            onKeyDown={(event) => onKeyDown(event, option, index)}
+            onKeyDown={(event) => onKeyDown(event, index)}
           >
-            {renderOption ? renderOption(option, index) : option !== null && typeof option === 'object' ? option[labelKey] : String(option)}
+            {optionLabel(option, index)}
           </button>
         ))}
       </div>
     </div>
   );
-}
+};
+
+export default SegmentedToggle;

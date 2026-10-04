@@ -8,7 +8,7 @@ import BusSignal from './BusSignal';
 import CalcSection from './CalcSection';
 import CounterComponent from './Registers/CounterComponent';
 import GRegisterSection from './Registers/GRegisterSection';
-import MemorySection from './MemorySection';
+import MemorySection from './MemorySection/MemorySection';
 import RBRegisterSection from './Registers/RbRegisterSection';
 import RegisterISection from './Registers/RegisterISection';
 import RMRegisterSection from './Registers/RmRegisterSection';

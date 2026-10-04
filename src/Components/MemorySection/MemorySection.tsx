@@ -3,9 +3,9 @@
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { MemorySectionProps } from '@/Types/Components';
 import { useEffect, useState } from 'react';
-import MemoryContent from './MemoryContent';
-import MobileMemoryHeader from './MobileMemoryHeader';
-import MobileMemoryDialog from './MemorySection/Ui/MobileMemoryDialog';
+import MemoryContent from './Ui/MemoryContent';
+import MobileMemoryHeader from '../MobileMemoryHeader';
+import MobileMemoryDialog from './Ui/MobileMemoryDialog';
 
 const MemorySection = (props: MemorySectionProps) => {
   const isMobile = useWindowWidth() < 1080;

@@ -2,7 +2,7 @@
 import { useModalFocus } from '@/Shared/Hooks/UseModalFocus';
 import type { MemorySectionProps } from '@/Types/Components';
 import { createPortal } from 'react-dom';
-import MemoryContent from '../../MemoryContent';
+import MemoryContent from './MemoryContent';
 
 interface MobileMemoryDialogProps {
   memory: MemorySectionProps;

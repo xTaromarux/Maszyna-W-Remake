@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getMemoryBounds, parseMemoryInput } from '../src/Components/MemoryContent/Helpers/MemoryValues';
+import { getMemoryBounds, parseMemoryInput } from '../src/Components/MemorySection/Helpers/MemoryValues';
 import { toUnsigned } from '../src/Shared/Utils/Numbers';
 
 test('memory input requires a complete decimal integer', () => {

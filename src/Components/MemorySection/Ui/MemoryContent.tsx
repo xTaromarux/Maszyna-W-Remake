@@ -2,10 +2,10 @@
 
 import useWindowWidth from '@/Shared/Hooks/UseWindowWidth';
 import type { MemoryContentProps } from '@/Types/Components';
-import RegisterComponent from './Registers/RegisterComponent';
-import SignalButton from './SignalButton';
-import { useMemoryValues } from './MemoryContent/Hooks/UseMemoryValues';
-import MemoryTable from './MemoryContent/Ui/MemoryTable';
+import RegisterComponent from '../../Registers/RegisterComponent';
+import SignalButton from '../../SignalButton';
+import { useMemoryValues } from '../Hooks/UseMemoryValues';
+import MemoryTable from './MemoryTable';
 
 const MemoryContent = ({
   A,

@@ -3,7 +3,7 @@ import type { RuntimeCommand } from '@/Assembler/Types/Registry';
 import type { Built } from './Types/CommandAdapter';
 import type { ConditionalPhase, Signal, SignalSet, Phase as TemplatePhase } from './Types/Instructions';
 
-const KNOWN: ReadonlySet<string> = new Set([
+const KNOWN_SIGNALS: ReadonlySet<string> = new Set([
   'czyt',
   'wys',
   'wei',
@@ -52,117 +52,158 @@ const KNOWN: ReadonlySet<string> = new Set([
   'popAcc',
 ]);
 
-const IF_RE = /\bIF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\b/i;
-const IF_LINE_RE = /^\s*IF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\s*$/i;
+const CONDITIONAL_CHUNK_PATTERN = /\bIF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\b/i;
+const CONDITIONAL_LINE_PATTERN = /^\s*IF\s+([A-Za-z]+)\s+THEN\s+@([^\s;]+)\s+ELSE\s+@([^\s;]+)\s*$/i;
 
-function cutEND(text: string): string {
-  return text.replace(/\bEND\b/gi, '').trim();
-}
+const removeEndMarkers = (text: string): string => text.replace(/\bEND\b/gi, '').trim();
 
-function toSignalSet(line: string): SignalSet {
+const toSignalSet = (line: string): SignalSet => {
   const set: SignalSet = {};
-  for (const tok of line.trim().split(/\s+/)) if (KNOWN.has(tok)) set[tok as Signal] = true;
+  for (const token of line.trim().split(/\s+/)) {
+    if (KNOWN_SIGNALS.has(token)) {
+      set[token as Signal] = true;
+    }
+  }
   return set;
-}
+};
 
-function toSignalArray(line: string): Signal[] {
+const toSignalArray = (line: string): Signal[] => {
   const out: Signal[] = [];
-  for (const tok of line.trim().split(/\s+/)) if (KNOWN.has(tok)) out.push(tok as Signal);
+  for (const token of line.trim().split(/\s+/)) {
+    if (KNOWN_SIGNALS.has(token)) {
+      out.push(token as Signal);
+    }
+  }
   return out;
-}
+};
 
-function splitChunkAtIF(chunk: string): ConditionalChunk {
-  const m = IF_RE.exec(chunk);
-  if (!m) return {};
+const splitChunkAtConditional = (chunk: string): ConditionalChunk => {
+  const m = CONDITIONAL_CHUNK_PATTERN.exec(chunk);
+  if (!m) {
+    return {};
+  }
   const idx = m.index;
   const before = chunk.slice(0, idx).trim().replace(/;+$/, '');
   const ifPart = chunk.slice(idx).trim().replace(/;+$/, '');
   return { before: before || undefined, ifPart };
-}
+};
 
-function pickBranchBodyFromChunk(chunk: string, label: string): SignalSet[] {
+const readBranchFromChunk = (chunk: string, label: string): SignalSet[] => {
   const re = new RegExp(`^@${label}\\s+(.+)$`, 'i');
   const mm = re.exec(chunk.trim());
-  if (!mm) return [];
-  const body = cutEND(mm[1]);
+  if (!mm) {
+    return [];
+  }
+  const body = removeEndMarkers(mm[1]);
   const sset = toSignalSet(body);
   const any = Object.keys(sset).length > 0;
   return any ? [sset] : [];
-}
+};
 
-export function buildFromCommandList(list: RuntimeCommand[]): Built {
+/** Consumes branch chunks only when they contain known signals. */
+const parseConditionalChunk = (
+  chunk: string,
+  chunks: string[],
+  index: number,
+  prefixSignals?: Signal[]
+): { phase: ConditionalPhase; consumedChunks: number } | undefined => {
+  const match = CONDITIONAL_LINE_PATTERN.exec(chunk);
+  if (!match) {
+    return undefined;
+  }
+  const rawFlag = (match[1] || '').toUpperCase();
+  const flag: 'Z' | 'N' | string = rawFlag === 'M' ? 'N' : rawFlag;
+  const trueLabel = match[2];
+  const falseLabel = match[3];
+
+  const trueBranchChunk = chunks[index + 1] ?? '';
+  const falseBranchChunk = chunks[index + 2] ?? '';
+
+  const truePhases = readBranchFromChunk(trueBranchChunk, trueLabel);
+  const falsePhases = readBranchFromChunk(falseBranchChunk, falseLabel);
+
+  const consumedChunks = Number(truePhases.length > 0) + Number(falsePhases.length > 0);
+
+  const conditional: ConditionalPhase = {
+    conditional: true,
+    flag,
+    truePhases,
+    falsePhases,
+  };
+  conditional.__labels = { t: trueLabel, f: falseLabel };
+  if (prefixSignals?.length) {
+    conditional.__prefix = prefixSignals;
+  }
+
+  return { phase: conditional, consumedChunks };
+};
+
+const buildCommandTemplate = (command: RuntimeCommand): { phases: TemplatePhase[]; extras: string[] } => {
+  const rawChunks = String(command.lines || '')
+    .split(';')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const phases: TemplatePhase[] = [];
+  const extras: string[] = [];
+
+  for (let i = 0; i < rawChunks.length; i++) {
+    let chunk = rawChunks[i];
+
+    const split = splitChunkAtConditional(chunk);
+    let prefixSignals: Signal[] | undefined;
+    if (split.before) {
+      const signals = toSignalArray(removeEndMarkers(split.before));
+      if (signals.length) {
+        prefixSignals = signals;
+      }
+    }
+    if (split.ifPart) {
+      chunk = split.ifPart;
+    }
+
+    const conditional = parseConditionalChunk(chunk, rawChunks, i, prefixSignals);
+    if (conditional) {
+      phases.push(conditional.phase);
+      i += conditional.consumedChunks;
+      continue;
+    }
+
+    if (chunk.startsWith('@')) {
+      const body = removeEndMarkers(chunk.replace(/^@\S+\s+/, ''));
+      const signals = toSignalArray(body);
+      if (signals.length) {
+        phases.push(signals);
+      }
+      continue;
+    }
+
+    if (/^stop$/i.test(chunk)) {
+      extras.push('stop');
+      continue;
+    }
+
+    const signals = toSignalArray(removeEndMarkers(chunk));
+    if (signals.length) {
+      phases.push(signals);
+    }
+  }
+
+  return { phases, extras };
+};
+
+export const buildFromCommandList = (list: RuntimeCommand[]): Built => {
   const templates: Record<string, TemplatePhase[]> = {};
   const postAsm: Record<string, string[]> = {};
 
-  for (const cmd of list || []) {
-    const key = (cmd.name || '').toLowerCase();
-    const rawChunks = String(cmd.lines || '')
-      .split(';')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    const phases: TemplatePhase[] = [];
-    const extras: string[] = [];
-
-    for (let i = 0; i < rawChunks.length; i++) {
-      let ln = rawChunks[i];
-
-      const split = splitChunkAtIF(ln);
-      let prefixArr: Signal[] | undefined;
-      if (split.before) {
-        const arr = toSignalArray(cutEND(split.before));
-        if (arr.length) prefixArr = arr;
-      }
-      if (split.ifPart) ln = split.ifPart;
-
-      if (IF_LINE_RE.test(ln)) {
-        const m = IF_LINE_RE.exec(ln)!;
-        const rawFlag = (m[1] || '').toUpperCase();
-        const flag: 'Z' | 'N' | string = rawFlag === 'M' ? 'N' : rawFlag;
-        const tLabel = m[2];
-        const fLabel = m[3];
-
-        const next1 = rawChunks[i + 1] ?? '';
-        const next2 = rawChunks[i + 2] ?? '';
-
-        const truePhases = pickBranchBodyFromChunk(next1, tLabel);
-        const falsePhases = pickBranchBodyFromChunk(next2, fLabel);
-
-        if (truePhases.length) i++;
-        if (falsePhases.length) i++;
-
-        const conditional: ConditionalPhase = {
-          conditional: true,
-          flag,
-          truePhases,
-          falsePhases,
-        };
-        conditional.__labels = { t: tLabel, f: fLabel };
-        if (prefixArr?.length) conditional.__prefix = prefixArr;
-
-        phases.push(conditional);
-        continue;
-      }
-
-      if (ln.startsWith('@')) {
-        const body = cutEND(ln.replace(/^@\S+\s+/, ''));
-        const arr = toSignalArray(body);
-        if (arr.length) phases.push(arr);
-        continue;
-      }
-
-      if (/^stop$/i.test(ln)) {
-        extras.push('stop');
-        continue;
-      }
-
-      const arr = toSignalArray(cutEND(ln));
-      if (arr.length) phases.push(arr);
-    }
-
+  for (const command of list || []) {
+    const key = (command.name || '').toLowerCase();
+    const { phases, extras } = buildCommandTemplate(command);
     templates[key] = phases;
-    if (extras.length) postAsm[key] = extras;
+    if (extras.length) {
+      postAsm[key] = extras;
+    }
   }
 
   return { templates, postAsm };
-}
+};

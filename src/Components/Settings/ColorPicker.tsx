@@ -1,11 +1,10 @@
 'use client';
 
 import { useI18n } from '@/I18n/Index';
-import { colorDataFromHSV, hexToRgb, hsvToRgb, rgbToHex, rgbToHsv } from '@/Shared/Utils/Colors';
-import { clamp01 } from '@/Shared/Utils/Numbers';
+import { hsvToRgb, rgbToHex } from '@/Shared/Utils/Colors';
 import type { ColorPickerProps } from '@/Types/Components';
-import type { PointerEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useColorSelection } from './ColorPicker/Hooks/UseColorSelection';
+import { useColorWheel } from './ColorPicker/Hooks/UseColorWheel';
 
 const SWATCHES = [
   '#ffffff',
@@ -25,98 +24,39 @@ const SWATCHES = [
   '#40e0d0',
   '#8a2be2',
 ];
-export default function ColorPicker({
+const ColorPicker = ({
   modelValue = '#ff00ff',
   size = 240,
   brightness = 1,
   onUpdateModelValue,
   onUpdateBrightness,
   onChange,
-}: ColorPickerProps) {
+}: ColorPickerProps) => {
   const { t } = useI18n();
-  const wheel = useRef<HTMLCanvasElement | null>(null);
-  const picking = useRef(false);
-  const callbacks = useRef({ onUpdateModelValue, onUpdateBrightness, onChange });
-  callbacks.current = { onUpdateModelValue, onUpdateBrightness, onChange };
-  const [hsv, setHsv] = useState(() => {
-    const rgb = hexToRgb(modelValue) || { r: 255, g: 0, b: 255 };
-    return rgbToHsv(rgb.r, rgb.g, rgb.b);
+  const { hsv, power, data, selectWheelColor, updateColorBrightness, updateLedBrightness, selectSwatch } = useColorSelection({
+    modelValue,
+    brightness,
+    onUpdateModelValue,
+    onUpdateBrightness,
+    onChange,
   });
-  const [power, setPower] = useState(clamp01(brightness));
-  const data = colorDataFromHSV(hsv, power);
+  const { canvas, startPicking, continuePicking, stopPicking } = useColorWheel({ size, onSelect: selectWheelColor });
   const hexPure = rgbToHex(hsvToRgb(hsv.h, hsv.s, 1));
   const angle = (hsv.h * Math.PI) / 180;
   const indicator = { x: size / 2 + (size / 2) * hsv.s * Math.cos(angle), y: size / 2 + (size / 2) * hsv.s * Math.sin(angle) };
-  useEffect(() => {
-    setPower(clamp01(brightness));
-  }, [brightness]);
-  useEffect(() => {
-    const canvas = wheel.current;
-    if (!canvas) return;
-    const scale = Math.min(window.devicePixelRatio || 1, 3);
-    const width = Math.round(size * scale);
-    canvas.width = width;
-    canvas.height = width;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    const pixels = context.createImageData(width, width);
-    const center = width / 2,
-      radius = width / 2 - 0.5;
-    for (let y = 0; y < width; y++)
-      for (let x = 0; x < width; x++) {
-        const dx = x - center,
-          dy = y - center,
-          distance = Math.hypot(dx, dy),
-          offset = (y * width + x) * 4;
-        if (distance > radius) continue;
-        const hue = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
-        const rgb = hsvToRgb(hue, Math.min(1, distance / radius), 1);
-        pixels.data[offset] = rgb.r;
-        pixels.data[offset + 1] = rgb.g;
-        pixels.data[offset + 2] = rgb.b;
-        pixels.data[offset + 3] = 255;
-      }
-    context.putImageData(pixels, 0, 0);
-  }, [size]);
-  useEffect(() => {
-    const value = colorDataFromHSV(hsv, power);
-    callbacks.current.onUpdateModelValue?.(value.hex);
-    callbacks.current.onUpdateBrightness?.(power);
-    callbacks.current.onChange?.(value);
-  }, [hsv, power]);
-  const pick = (event: PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const dx = ((event.clientX - rect.left) / rect.width) * size - size / 2,
-      dy = ((event.clientY - rect.top) / rect.height) * size - size / 2;
-    setHsv((previous) => ({
-      ...previous,
-      h: ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360,
-      s: Math.min(1, Math.hypot(dx, dy) / (size / 2)),
-    }));
-  };
+
   return (
     <div className="cp-root" data-component="ColorPicker" onDragStart={(event) => event.preventDefault()}>
       <div className="cp-wheel-wrap" style={{ width: size, height: size }}>
-        <canvas ref={wheel} className="cp-wheel" style={{ width: size, height: size }} />
+        <canvas ref={canvas} className="cp-wheel" style={{ width: size, height: size }} />
         <div className="cp-indicator" style={{ left: indicator.x, top: indicator.y, background: data.hex }} />
         <div
           className="cp-hitbox"
-          onPointerDown={(event) => {
-            event.preventDefault();
-            picking.current = true;
-            event.currentTarget.setPointerCapture?.(event.pointerId);
-            pick(event);
-          }}
-          onPointerMove={(event) => {
-            if (picking.current) pick(event);
-          }}
-          onPointerUp={(event) => {
-            picking.current = false;
-            if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-          }}
-          onPointerCancel={() => {
-            picking.current = false;
-          }}
+          onPointerDown={startPicking}
+          onPointerMove={continuePicking}
+          onPointerUp={stopPicking}
+          onPointerCancel={stopPicking}
+          onLostPointerCapture={stopPicking}
         />
       </div>
       <div className="cp-section">
@@ -130,7 +70,7 @@ export default function ColorPicker({
           max="1"
           step="0.001"
           value={hsv.v}
-          onChange={(event) => setHsv((previous) => ({ ...previous, v: Number(event.target.value) }))}
+          onChange={(event) => updateColorBrightness(Number(event.target.value))}
         />
         <div className="cp-mini">{Math.round(hsv.v * 100)}%</div>
       </div>
@@ -145,7 +85,7 @@ export default function ColorPicker({
           max="1"
           step="0.001"
           value={power}
-          onChange={(event) => setPower(clamp01(Number(event.target.value)))}
+          onChange={(event) => updateLedBrightness(Number(event.target.value))}
         />
         <div className="cp-mini">{Math.round(power * 100)}%</div>
       </div>
@@ -157,12 +97,7 @@ export default function ColorPicker({
             className="cp-swatch"
             style={{ background: color }}
             aria-label={color}
-            onClick={() => {
-              const rgb = hexToRgb(color);
-              if (!rgb) return;
-              setPower(1);
-              setHsv(rgbToHsv(rgb.r, rgb.g, rgb.b));
-            }}
+            onClick={() => selectSwatch(color)}
           />
         ))}
       </div>
@@ -180,4 +115,6 @@ export default function ColorPicker({
       </div>
     </div>
   );
-}
+};
+
+export default ColorPicker;

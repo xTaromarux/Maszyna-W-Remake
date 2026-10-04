@@ -14,7 +14,7 @@ export interface ChildrenProps {
 }
 export interface ErrorPageProps {
   error?: Error & { digest?: string };
-  reset: Action;
+  retry: Action;
 }
 export type StyledProperties = CSSProperties & { [key: `--${string}`]: string | number };
 export type JsonPrimitive = string | number | boolean | null;

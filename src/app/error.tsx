@@ -1,13 +1,21 @@
 'use client';
 
+import { useI18n } from '@/I18n/Index';
 import type { ErrorPageProps } from '@/Types/Common';
-export default function ErrorPage({ reset }: ErrorPageProps) {
+
+const ErrorPage = ({ retry }: ErrorPageProps) => {
+  const { t } = useI18n();
+
   return (
     <div role="alert" className="app-loading">
       <div>
-        <p>Nie udało się uruchomić symulatora.</p>
-        <button onClick={reset}>Spróbuj ponownie</button>
+        <p>{t('app.startupError')}</p>
+        <button type="button" onClick={retry}>
+          {t('app.retry')}
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default ErrorPage;

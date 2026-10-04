@@ -3,7 +3,7 @@ interface Props {
   onDismiss: () => void;
   onSelect: (text: string) => void;
 }
-export default function ChatSuggestions({ onDismiss, onSelect }: Props) {
+const ChatSuggestions = ({ onDismiss, onSelect }: Props) => {
   const { t } = useI18n();
   return (
     <div className="suggestionPanel">
@@ -22,4 +22,6 @@ export default function ChatSuggestions({ onDismiss, onSelect }: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default ChatSuggestions;

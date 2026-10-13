@@ -1,0 +1,221 @@
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: linear-gradient(
+    270deg,
+    rgba(15, 23, 42, 0.18) 0%,
+    rgba(15, 23, 42, 0.1) 24%,
+    rgba(15, 23, 42, 0.04) 42%,
+    rgba(15, 23, 42, 0) 62%
+  );
+}
+
+#aiChat.chatPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  min-width: 500px;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panelBackgroundColor, #ffffff) 94%, #f8fafc),
+    var(--panelBackgroundColor, #ffffff)
+  );
+  border-left: 1px solid color-mix(in srgb, var(--panelOutlineColor, #ddd) 75%, #e2e8f0);
+  box-shadow: -12px 0 42px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  z-index: 100;
+}
+
+@media screen and (max-width: 500px) {
+  #aiChat.chatPanel {
+    width: 90%;
+    min-width: 90%;
+    max-width: 90%;
+  }
+}
+
+.chatPanel.show {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.chatPanel.hide {
+  animation: slideOut 0.5s ease-in forwards;
+}
+
+.resizer {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+
+  &:hover {
+    background: rgba(0, 60, 125, 0.1);
+  }
+}
+
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  min-height: var(--topbar-height, calc(43.877px + 1rem));
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #003c7d 0%, #0f4c96 56%, #0ea5e9 160%);
+  color: #fff;
+}
+
+.chatHeader h1 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.chatHeaderTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.chatHeaderTitle h1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apiKeyChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.apiKeyChipReady {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(110, 231, 183, 0.35);
+}
+
+.headerBtns {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.apiKeyBtn {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.apiKeyBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.42);
+  transform: translateY(-1px);
+}
+
+.resetBtn .trashIcon {
+  fill: #ffffff;
+  transition: fill 0.2s ease;
+}
+
+.resetBtn:hover .trashIcon {
+  fill: rgba(136, 136, 136, 0.5333333333);
+}
+
+.resetBtn,
+.closeBtn {
+  background: none;
+  width: 50px;
+  border: none;
+  border-radius: 0.25rem !important;
+  color: inherit;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: opacity 0.2s;
+}
+
+.resetBtn:hover,
+.closeBtn:hover {
+  color: rgba(136, 136, 136, 0.5333333333) !important;
+  opacity: 0.75;
+}

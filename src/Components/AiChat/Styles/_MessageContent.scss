@@ -1,0 +1,144 @@
+.messageHtml .code-group {
+  margin: 0.6rem 0;
+}
+
+.messageHtml .code-toolbar-outside {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0 0.35rem;
+  background: transparent;
+}
+
+.messageHtml .code-lang {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.messageHtml .code-lang.no-lang {
+  opacity: 0.6;
+}
+
+.messageHtml .copy-btn {
+  appearance: none;
+  border: 3px solid #003c7d;
+  background: var(--panelBackgroundColor, #ffffff);
+  color: var(--fontColor, black);
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.messageHtml .copy-btn:hover {
+  background: #f3f4f6;
+}
+
+.messageHtml .copy-btn.copied {
+  background: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.messageHtml .code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  background: #0f172a;
+  color: #e5e7eb;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  overflow: auto;
+  line-height: 1.45;
+  border: 1px solid #1f2937;
+}
+
+.messageHtml .inline-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  background: var(--panelBackgroundColor, #ffffff);
+  border: 1px solid #e1e4e8;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+.messageText pre,
+.messageText code,
+.messageText .code-toolbar-outside {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+body.darkMode .apiKeyGate {
+  background:
+    radial-gradient(circle at top, rgba(74, 158, 255, 0.16), transparent 48%),
+    linear-gradient(180deg, rgba(21, 22, 26, 0.14), rgba(42, 44, 51, 0.34));
+}
+
+body.darkMode .apiKeyCard {
+  box-shadow:
+    0 24px 44px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(74, 158, 255, 0.12);
+}
+
+body.darkMode .apiKeyField {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body.darkMode .apiKeyHint {
+  background: color-mix(in srgb, var(--panelBackgroundColor, #2a2c33) 90%, #101828);
+}
+
+body.darkMode .apiKeyNotice {
+  background: color-mix(in srgb, var(--panelBackgroundColor, #2a2c33) 92%, #101828);
+}
+
+body.darkMode .apiKeyDanger:hover {
+  background: color-mix(in srgb, #b91c1c 12%, var(--buttonBackgroundColor, #373a41));
+}
+
+body.darkMode .suggestionPanel {
+  background: var(--panelBackgroundColor, #0f172a);
+}
+
+body.darkMode .suggestionTile {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #1d4ed8;
+}
+
+@media (max-width: 700px) {
+  .chatHeaderTitle {
+    gap: 0.45rem;
+  }
+
+  .apiKeyChip {
+    display: none;
+  }
+
+  .apiKeyField {
+    flex-direction: column;
+  }
+
+  .apiKeyCard {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .apiKeyCard h2 {
+    font-size: 1.25rem;
+  }
+
+  .apiKeyToggle {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 80%, transparent);
+    border-radius: 0 0 13px 13px;
+  }
+
+  .apiKeyToggle,
+  .apiKeyPrimary,
+  .apiKeySecondary {
+    width: 100%;
+  }
+}

@@ -1,0 +1,234 @@
+.apiGateFade-enter-active,
+.apiGateFade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.apiGateFade-enter-from,
+.apiGateFade-leave-to {
+  opacity: 0;
+}
+
+.apiKeyGate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--primaryColor, #003c7d) 14%, transparent), transparent 48%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 24%, transparent),
+      color-mix(in srgb, var(--backgroundColor, #ffffff) 30%, transparent)
+    );
+  backdrop-filter: blur(14px);
+}
+
+.apiKeyCard {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 430px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.15rem 1.15rem 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--panelOutlineColor, #111);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 94%, var(--backgroundColor, #ffffff)),
+    var(--panelBackgroundColor, #f8f8f8)
+  );
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--primaryColor, #003c7d) 10%, transparent);
+  color: var(--fontColor, #111);
+}
+
+.apiKeyCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primaryColor, #003c7d), var(--accentColor, #00aaff));
+}
+
+.apiKeyCard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.apiKeyEyebrow {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primaryColor, #003c7d);
+}
+
+.apiKeyCard h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  color: var(--fontColor, #111);
+}
+
+.apiKeyDescription {
+  margin: 0.15rem 0 0.25rem;
+  color: color-mix(in srgb, var(--fontColor, #111) 76%, transparent);
+  line-height: 1.45;
+}
+
+.apiKeyLabel {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--fontColor, #111) 78%, transparent);
+}
+
+.apiKeyField {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--panelOutlineColor, #111);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--backgroundColor, #ffffff) 68%, var(--panelBackgroundColor, #f8f8f8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.apiKeyField:focus-within {
+  border-color: var(--primaryColor, #003c7d);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaryColor, #003c7d) 18%, transparent);
+}
+
+.apiKeyField input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--fontColor, #111);
+  font-size: 0.95rem;
+  outline: none;
+  box-shadow: none;
+}
+
+.apiKeyField input::placeholder {
+  color: color-mix(in srgb, var(--fontColor, #111) 42%, transparent);
+}
+
+.apiKeyToggle {
+  flex-shrink: 0;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 80%, transparent);
+  border-radius: 0 13px 13px 0;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--buttonBackgroundColor, #eee) 92%, transparent);
+  color: var(--buttonTextColor, #111);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.apiKeyToggle:hover {
+  background: var(--buttonHoverColor, #fff);
+}
+
+.apiKeyHint {
+  margin: 0.1rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 55%, transparent);
+  background: color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 84%, var(--backgroundColor, #ffffff));
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--fontColor, #111) 72%, transparent);
+}
+
+.apiKeyNotice {
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 55%, transparent);
+  background: color-mix(in srgb, var(--panelBackgroundColor, #f8f8f8) 88%, var(--backgroundColor, #ffffff));
+}
+
+.apiKeyNoticeTitle {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primaryColor, #003c7d);
+}
+
+.apiKeyNoticeList {
+  margin: 0;
+  padding-left: 1rem;
+  color: color-mix(in srgb, var(--fontColor, #111) 78%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.apiKeyNoticeList li + li {
+  margin-top: 0.35rem;
+}
+
+.apiKeyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--panelOutlineColor, #111) 72%, transparent);
+}
+
+.apiKeyPrimary {
+  min-width: 170px;
+}
+
+.apiKeySecondary {
+  border: 1px solid var(--panelOutlineColor, #111);
+  border-radius: var(--default-border-radius, 0.375rem);
+  padding: 0.8rem 1rem;
+  background: var(--buttonBackgroundColor, #eee);
+  color: var(--buttonTextColor, #111);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.apiKeySecondary:hover {
+  background: var(--buttonHoverColor, #fff);
+  transform: translateY(-1px);
+}
+
+.apiKeySecondary:active {
+  background: var(--buttonActiveColor, #c1c4c5);
+  transform: translateY(0);
+}
+
+.apiKeyDanger {
+  color: #b91c1c;
+}
+
+.apiKeyDanger:hover {
+  border-color: #b91c1c;
+  background: color-mix(in srgb, #b91c1c 8%, var(--buttonHoverColor, #fff));
+}

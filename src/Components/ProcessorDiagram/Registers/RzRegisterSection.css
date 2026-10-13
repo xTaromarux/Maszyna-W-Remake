@@ -1,0 +1,41 @@
+.rz-register {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rz-inputs {
+  grid-area: b;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+}
+
+.rz-input {
+  appearance: none;
+  border: 1px solid var(--panelOutlineColor);
+  background: var(--panelBackgroundColor, white);
+  color: var(--fontColor, black);
+  font-weight: 600;
+  padding: 0.25rem 0;
+  border-radius: 2px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.rz-input:active {
+  transform: translateY(1px);
+}
+.rz-input.active {
+  background: #9fd18b;
+}
+
+.rz-display {
+  border: 2px solid #000;
+  background: #fff;
+  padding: 0.35rem 0.5rem;
+  border-radius: 2px;
+}

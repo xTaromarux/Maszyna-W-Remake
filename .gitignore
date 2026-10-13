@@ -29,27 +29,5 @@ coverage
 
 *.tsbuildinfo
 
-# Next.js generated files
-/.next/
-/out/
-/build/
-next-env.d.ts
-
-# Local environment files (keep example templates)
-.env*
-!.env.example
-!.env.*.example
-
-# Vercel deployment metadata
-.vercel/
-
-# Playwright reports and local QA artifacts
-/playwright-report/
-/playwright/.cache/
-/test-results/
-/.playwright-mcp/
-/qa-artifacts/
-
 # Local Netlify folder
 .netlify
-/materials/

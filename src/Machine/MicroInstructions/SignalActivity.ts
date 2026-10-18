@@ -26,6 +26,7 @@ const SIGNAL_BUSES: Partial<Record<MicroInstructionSignal, readonly Bus[]>> = {
   wys: ['S'],
   wyls: ['S'],
   wyg: ['S'],
+  werb: ['S'],
   wyrb: ['S'],
   werz: ['S'],
   wyrz: ['S'],

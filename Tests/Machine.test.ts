@@ -246,6 +246,46 @@ test('QA09: PZS and PWR preserve popped memory in both execution modes', (contex
   }
 });
 
+test('QA16: werb reads the full data bus independently of AK in both execution modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const value of [65, 0, 1023]) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.ACC = 7;
+      machine.BusS = value;
+      machine.werb();
+
+      assert.equal(machine.RB, value);
+      assert.equal(machine.DEV_OUT, value);
+      assert.equal(machine.ACC, 7);
+      assert.equal(machine.BusS, value);
+      assert.equal(machine.signals.busS, !fast);
+    }
+  }
+});
+
+test('QA16: WYP and WYP2 output the original accumulator value in both execution modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const instruction of ['WYP', 'WYP2']) {
+      machine.resetValues();
+      loadProgram(machine, `${instruction} 0\nSTP`);
+      machine.ACC = 65;
+      machine.isFastRunning = fast;
+      machine.executeLine();
+      machine.executeLine();
+
+      assert.equal(machine.ACC, instruction === 'WYP2' ? 0 : 65);
+      assert.equal(machine.BusS, 65);
+      assert.equal(machine.RB, 65);
+      assert.equal(machine.DEV_OUT, 65);
+    }
+  }
+});
+
 test('device completion survives subsequent phases and signal clearing', (context) => {
   context.mock.timers.enable({ apis: ['setTimeout'] });
   const { machine } = fixture(context);

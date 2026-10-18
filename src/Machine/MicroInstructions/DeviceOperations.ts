@@ -28,7 +28,7 @@ export const deviceOperations = {
   },
 
   werb: (machine) => {
-    const output = machine.toWord(machine.ACC);
+    const output = machine.toWord(machine.BusS);
     machine.DEV_OUT = output;
     machine.RB = output;
   },

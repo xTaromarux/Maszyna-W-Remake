@@ -93,7 +93,7 @@ export const executeStructuredStep = (machine: Machine) => {
     machine._condState = null;
   }
 
-  if (machine.activePhaseIndex === 0 && machine.extras?.interrupts?.eniSignal && machine.rint) {
+  if (machine.activePhaseIndex === 0 && machine.extras?.interrupts?.eniSignal && machine.hasPendingInterrupt) {
     machine.handleInterrupt();
     return;
   }

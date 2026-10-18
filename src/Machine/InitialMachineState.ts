@@ -173,6 +173,7 @@ export function initialMachineState(this: Machine): MachineState {
       wyg: false,
       werb: false,
       wyrb: false,
+      eni: false,
       rint: false,
       start: false,
       ustrm: false,

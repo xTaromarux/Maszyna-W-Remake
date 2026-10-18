@@ -573,6 +573,131 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   assert.equal(machine.RZ, 0);
 });
 
+test('QA12: manual eni accepts each unmasked IRQ without jumping or writing to the stack', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const [irq, bit] of [
+      [1, 1],
+      [2, 2],
+      [3, 4],
+      [4, 8],
+    ]) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.RZ = bit;
+      machine.programCounter = 11;
+      machine.A = 6;
+      machine.WS = 9;
+      const memory = [...machine.mem];
+
+      machine.handleSignalToggle('eni');
+      assert.equal(machine.RP, 0, 'selecting eni must not accept an interrupt before the tick');
+      machine.executeLine();
+
+      assert.equal(machine.RP, bit);
+      assert.equal(machine.AP, irq);
+      assert.equal(machine.RZ, bit, 'the accepted request remains pending until rint');
+      assert.equal(machine.RM, 0);
+      assert.equal(machine.programCounter, 11);
+      assert.equal(machine.A, 6);
+      assert.equal(machine.WS, 9);
+      assert.deepEqual([...machine.stack], []);
+      assert.deepEqual([...machine.mem], memory);
+    }
+  }
+});
+
+test('QA12: eni leaves absent, masked and already accepted interrupts untouched', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const [requests, mask, accepted, address] of [
+      [0, 0, 0, 0],
+      [5, 5, 0, 0],
+      [4, 0, 2, 9],
+    ]) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.RZ = requests;
+      machine.RM = mask;
+      machine.RP = accepted;
+      machine.AP = address;
+      machine.nextLine = new Set(['eni']);
+      machine.executeLine();
+
+      assert.equal(machine.RZ, requests);
+      assert.equal(machine.RM, mask);
+      assert.equal(machine.RP, accepted);
+      assert.equal(machine.AP, address);
+    }
+  }
+});
+
+test('QA12: manual rint clears only the accepted request and preserves masks in both modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const [bit, remaining] of [
+      [1, 14],
+      [2, 13],
+      [4, 11],
+      [8, 7],
+    ]) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.RZ = 15;
+      machine.RM = 15;
+      machine.RP = bit;
+      machine.AP = 10;
+      machine.programCounter = 11;
+      machine.WS = 9;
+      const memory = [...machine.mem];
+
+      machine.handleSignalToggle('rint');
+      machine.executeLine();
+
+      assert.equal(machine.RP, 0);
+      assert.equal(machine.AP, 0);
+      assert.equal(machine.RZ, remaining);
+      assert.equal(machine.RM, 15);
+      assert.equal(machine.programCounter, 11);
+      assert.equal(machine.WS, 9);
+      assert.deepEqual([...machine.stack], []);
+      assert.deepEqual([...machine.mem], memory);
+
+      machine.rint();
+      assert.equal(machine.RZ, remaining, 'resetting again must preserve all remaining requests');
+    }
+  }
+});
+
+test('QA12: a jump consumes AP before rint resets it in the same phase', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    machine.RZ = 5;
+    machine.RP = 4;
+    machine.AP = 12;
+    machine.nextLine = new Set(['rint', 'wea', 'wel', 'wyap']);
+    machine.executeLine();
+
+    assert.equal(machine.programCounter, 12);
+    assert.equal(machine.A, 12);
+    assert.equal(machine.AP, 0);
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.RZ, 1);
+
+    machine.nextLine = new Set(['eni']);
+    machine.executeLine();
+    assert.equal(machine.RP, 1);
+    assert.equal(machine.AP, 1);
+    assert.equal(machine.RZ, 1);
+  }
+});
+
 test('QA11: RM transfers use the address bus and retain four-bit masks in both modes', (context) => {
   const { machine } = fixture(context);
 

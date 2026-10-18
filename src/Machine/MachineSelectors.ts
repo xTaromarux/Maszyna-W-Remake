@@ -21,7 +21,7 @@ export const machineSelectors: SelectorMethods & ThisType<Machine> = {
     return this.labCatalog.find((lab) => lab.id === this.selectedLabId) || this.labCatalog[0] || null;
   },
 
-  rint() {
+  hasPendingInterrupt() {
     const active = this.RZ & ~this.RM;
     return active !== 0;
   },

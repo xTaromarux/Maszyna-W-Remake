@@ -56,6 +56,9 @@ export const MICRO_INSTRUCTION_ORDER = [
   'start',
   'ustrm',
   'czrm',
+  'eni',
+  // Consume AP and commit jump destinations before resetting interrupt state.
+  'rint',
 ] as const satisfies readonly MicroInstructionSignal[];
 
 /** Executes one phase in fixed order, then reconciles stack metadata. Device operations own their timing. */

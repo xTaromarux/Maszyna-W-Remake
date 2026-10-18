@@ -4,6 +4,22 @@ const INTERRUPT_MASK = 0x0f;
 const INTERRUPT_INDEX_MASK = 0x03;
 
 export const interruptOperations = {
+  eni: (machine) => {
+    if (machine.RP !== 0) return;
+    const irq = machine.highestPriorityIRQ;
+    if (irq === null) return;
+
+    machine.RP = 1 << (irq - 1);
+    // Interrupt vectors currently default to addresses 1–4.
+    machine.AP = irq & machine.addrMask();
+  },
+
+  rint: (machine) => {
+    machine.RZ &= ~machine.RP;
+    machine.RP = 0;
+    machine.AP = 0;
+  },
+
   werm: (machine) => {
     machine.RM = machine.BusA & INTERRUPT_MASK;
     machine.addLog(machine.t('logs.rmSet', { rm: machine.RM, busA: machine.BusA }), 'system');

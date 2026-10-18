@@ -128,7 +128,7 @@ export interface MachineSelectors {
   readonly globalBackdropOpen: boolean;
   readonly localizedLabCatalog: LocalizedLab[];
   readonly selectedLab: Lab | null;
-  readonly rint: boolean;
+  readonly hasPendingInterrupt: boolean;
   readonly highestPriorityIRQ: number | null;
 }
 
@@ -333,6 +333,8 @@ export interface MicroActions {
   werb(): void;
   wyrb(): void;
   start(): void;
+  eni(): void;
+  rint(): void;
   werm(): void;
   wyrm(): void;
   wyap(): void;

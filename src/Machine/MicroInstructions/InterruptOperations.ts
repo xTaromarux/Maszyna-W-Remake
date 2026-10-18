@@ -5,12 +5,12 @@ const INTERRUPT_INDEX_MASK = 0x03;
 
 export const interruptOperations = {
   werm: (machine) => {
-    machine.RM = machine.BusS & INTERRUPT_MASK;
-    machine.addLog(machine.t('logs.rmSet', { rm: machine.RM, busS: machine.BusS }), 'system');
+    machine.RM = machine.BusA & INTERRUPT_MASK;
+    machine.addLog(machine.t('logs.rmSet', { rm: machine.RM, busA: machine.BusA }), 'system');
   },
 
   wyrm: (machine) => {
-    machine.BusS = machine.RM & INTERRUPT_MASK;
+    machine.BusA = machine.RM & INTERRUPT_MASK;
   },
 
   wyap: (machine) => {

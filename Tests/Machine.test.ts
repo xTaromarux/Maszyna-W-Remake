@@ -573,9 +573,59 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   assert.equal(machine.RZ, 0);
 });
 
+test('QA11: RM transfers use the address bus and retain four-bit masks in both modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const value of [5, 0, 15, 0x1b]) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.BusA = value;
+      machine.BusS = 10;
+      machine.werm();
+      assert.equal(machine.RM, value & 0x0f);
+      assert.equal(machine.BusA, value);
+      assert.equal(machine.BusS, 10);
+      assert.ok(machine.logs.at(-1).message.endsWith(`[BusA=${value}]`));
+
+      machine.BusA = 0;
+      machine.RM = value;
+      machine.wyrm();
+      assert.equal(machine.BusA, value & 0x0f);
+      assert.equal(machine.BusS, 10);
+      assert.equal(machine.RM, value);
+      assert.equal(machine.signals.busA, !fast);
+      assert.equal(machine.signals.busS, false);
+    }
+  }
+});
+
+test('QA11: a phase transfers I to RM and RM to A independently of the data bus', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    machine.I = 5;
+    machine.ACC = 10;
+    machine.nextLine = new Set(['wyad', 'wyak', 'werm']);
+    machine.executeSignalsFromNextLine();
+    assert.equal(machine.RM, 5);
+    assert.equal(machine.BusA, 5);
+    assert.equal(machine.BusS, 10);
+
+    machine.BusA = 0;
+    machine.nextLine = new Set(['wyrm', 'wea']);
+    machine.executeSignalsFromNextLine();
+    assert.equal(machine.A, 5);
+    assert.equal(machine.BusA, 5);
+    assert.equal(machine.BusS, 10);
+  }
+});
+
 test('IRQ operations use framework-independent translations and no timers in fast mode', (context) => {
   const { machine } = fixture(context);
-  machine.BusS = 11;
+  machine.BusA = 11;
   machine.werm();
   assert.equal(machine.RM, 11);
   assert.ok(machine.logs.length > 0);

@@ -31,7 +31,7 @@ const InterruptLayer = ({ extras, signals, RZ, RP, onClickItem, registers }: Int
         {extras.interrupts?.eniSignal && (
           <SignalButton
             id="eni"
-            signal={signals.eni}
+            signal={signals.eni || extras.interrupts.eniAlwaysEnabled}
             label="eni"
             spanClassNames="arrowLeftOnBottom additionalInterruptsSignal"
             onClick={() => onClickItem?.('eni')}

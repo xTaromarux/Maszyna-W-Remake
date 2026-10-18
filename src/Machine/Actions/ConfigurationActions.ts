@@ -52,6 +52,7 @@ export const configurationActions: Actions & ThisType<Machine> = {
         apRegister: false,
         rintSignal: false,
         eniSignal: false,
+        eniAlwaysEnabled: false,
       },
       dl: false,
       jamlExtras: false,

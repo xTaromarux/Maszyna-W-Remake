@@ -573,6 +573,93 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   assert.equal(machine.RZ, 0);
 });
 
+test('continuous eni accepts IRQs on later ticks in manual, plain and structured execution', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const mode of ['manual', 'plain', 'structured']) {
+      for (const enabled of [false, true]) {
+        machine.resetValues();
+        machine.uncompileCode();
+        machine.manualMode = mode === 'manual';
+        if (mode === 'plain') machine.handleProgramSectionCompile('iak\niak');
+        if (mode === 'structured') {
+          machine.handleProgramSectionCompile({ text: 'iak;\niak;', program: [{ phases: [{ iak: true }, { iak: true }] }] });
+        }
+        machine.extras.interrupts.eniAlwaysEnabled = enabled;
+        machine.extras.interrupts.eniSignal = false;
+        machine.isFastRunning = fast;
+
+        for (let tick = 0; tick < 2; tick++) {
+          if (tick === 1) machine.RZ = 1;
+          if (mode === 'manual') machine.nextLine = new Set(['iak']);
+          machine.executeLine();
+        }
+
+        assert.equal(machine.ACC, 2);
+        assert.equal(machine.RP, enabled ? 1 : 0, `${mode}, enabled=${enabled}, fast=${fast}`);
+        assert.equal(machine.AP, enabled ? 1 : 0);
+        assert.equal(machine.RZ, 1);
+      }
+    }
+  }
+});
+
+test('continuous eni respects masks, priorities, an accepted IRQ and disabling the option', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.extras.interrupts.eniAlwaysEnabled = true;
+    machine.isFastRunning = fast;
+    machine.RZ = 15;
+    machine.RM = 5;
+    machine.executeLine();
+    assert.equal(machine.RP, 2);
+    assert.equal(machine.AP, 2);
+    assert.equal(machine.RZ, 15);
+
+    machine.RM = 0;
+    machine.executeLine();
+    assert.equal(machine.RP, 2, 'an accepted IRQ must remain selected until rint');
+
+    machine.nextLine = new Set(['rint']);
+    machine.executeLine();
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.RZ, 13);
+
+    machine.executeLine();
+    assert.equal(machine.RP, 1);
+    assert.equal(machine.RZ, 13);
+
+    machine.extras.interrupts.eniAlwaysEnabled = false;
+    machine.rint();
+    machine.executeLine();
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.AP, 0);
+    assert.equal(machine.RZ, 12);
+  }
+});
+
+test('continuous eni defaults off, persists and restores without enabling it for old preferences', (context) => {
+  const { machine, saved } = fixture(context);
+  assert.equal(machine.extras.interrupts.eniAlwaysEnabled, false);
+
+  saved.set('W', JSON.stringify({ extras: { interrupts: { eniSignal: true } } }));
+  machine.loadFromLS();
+  assert.equal(machine.extras.interrupts.eniAlwaysEnabled, false);
+
+  machine.extras.interrupts.eniAlwaysEnabled = true;
+  machine.saveToLS();
+  assert.equal(JSON.parse(saved.get('W')!).extras.interrupts.eniAlwaysEnabled, true);
+  machine.extras = machine.getDefaultExtras();
+  machine.loadFromLS();
+  assert.equal(machine.extras.interrupts.eniAlwaysEnabled, true);
+
+  machine.restoreDefaults();
+  assert.equal(machine.extras.interrupts.eniAlwaysEnabled, false);
+});
+
 test('QA15: showing eni does not accept interrupts in a program without that signal', (context) => {
   const { machine } = fixture(context);
 

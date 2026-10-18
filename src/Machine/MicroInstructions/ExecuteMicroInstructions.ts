@@ -67,6 +67,10 @@ export const executeMicroInstructions = (machine: Machine) => {
     machine.clearActiveTimeouts();
   }
 
+  if (machine.extras.interrupts.eniAlwaysEnabled) {
+    machine.nextLine.add('eni');
+  }
+
   const stackPhase = captureStackPhase(machine);
 
   for (const signal of MICRO_INSTRUCTION_ORDER) {

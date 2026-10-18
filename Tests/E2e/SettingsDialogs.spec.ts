@@ -57,6 +57,39 @@ test('settings group expansion is independent of the module switch', async ({ pa
   await expect(expand).toHaveAttribute('aria-expanded', 'true');
   await expect(toggle).toBeChecked();
 });
+test('continuous eni is independent of signal visibility and persists after reload', async ({ page }) => {
+  test.skip(process.env.E2E_APP_PLATFORM === 'esp', 'Optional modules are only available in the simulator build.');
+  await page.goto('/');
+  const settings = await openEnglishSettings(page);
+  await settings.getByRole('button', { name: 'Interrupts', exact: true }).click();
+  const alwaysEni = settings.getByRole('checkbox', { name: 'Always enable eni', exact: true });
+  await expect(alwaysEni).not.toBeChecked();
+  await settings.getByRole('checkbox', { name: 'Interrupts', exact: true }).locator('..').click();
+  await expect(alwaysEni).not.toBeChecked();
+  await alwaysEni.locator('..').click();
+  await settings.getByRole('checkbox', { name: 'eni signal', exact: true }).locator('..').click();
+  await settings.getByRole('button', { name: 'Close settings', exact: true }).click();
+
+  await page.reload();
+  await expect(page.locator('#eni')).toHaveCount(0);
+  await page.locator('#rzRegister input').fill('1');
+  await page.getByRole('button', { name: 'Execute step', exact: true }).click();
+  await expect(page.locator('#rpRegister input')).toHaveValue('1');
+  await expect(page.locator('#apRegister input')).toHaveValue('1');
+  await expect(page.locator('#rzRegister input')).toHaveValue('1');
+
+  await page.getByRole('button', { name: 'Open settings', exact: true }).click();
+  await settings.getByRole('button', { name: 'Interrupts', exact: true }).click();
+  await expect(alwaysEni).toBeChecked();
+  await alwaysEni.locator('..').click();
+  await settings.getByRole('button', { name: 'Close settings', exact: true }).click();
+  await page.locator('#rpRegister input').fill('0');
+  await page.locator('#apRegister input').fill('0');
+  await page.getByRole('button', { name: 'Execute step', exact: true }).click();
+  await expect(page.locator('#rpRegister input')).toHaveValue('0');
+  await expect(page.locator('#rzRegister input')).toHaveValue('1');
+});
+
 test('supervisor titles follow language changes while settings stay open', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Otworz ustawienia' }).click();

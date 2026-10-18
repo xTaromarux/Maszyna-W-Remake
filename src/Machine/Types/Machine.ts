@@ -46,6 +46,7 @@ export interface Extras {
     apRegister: boolean;
     rintSignal: boolean;
     eniSignal: boolean;
+    eniAlwaysEnabled: boolean;
   };
   dl: boolean;
   jamlExtras: boolean;

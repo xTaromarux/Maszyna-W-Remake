@@ -74,6 +74,16 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
                   />
                 </div>
               ))}
+              {groupKey === 'interrupts' && (
+                <div className="module-toggle-wrapper">
+                  <span className="module-label">{t('settings.extras.groups.interrupts.eniAlwaysEnabled')}</span>
+                  <SettingsSwitch
+                    label={t('settings.extras.groups.interrupts.eniAlwaysEnabled')}
+                    checked={extras.interrupts.eniAlwaysEnabled}
+                    onChange={(checked) => updateGroupItem('interrupts', 'eniAlwaysEnabled', checked)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );

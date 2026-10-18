@@ -71,8 +71,6 @@ export const completeStackPhase = (machine: Machine, phase: ReturnType<typeof ca
 
   if (phase.poppedType) {
     machine.stackPop(phase.poppedType);
-    machine.mem[phase.memoryAddress] = 0;
-    machine.addLog(machine.t('logs.memoryClearedFromStack', { idx: phase.memoryAddress }), 'stack');
   }
 
   if (phase.preparesWrite && (phase.writesAddress || phase.writesData)) {

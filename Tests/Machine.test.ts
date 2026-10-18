@@ -171,8 +171,8 @@ test('nested subroutine calls track committed stack writes without modifying AP'
     assert.equal(maximumDepth, 2);
     assert.deepEqual([...machine.stack], []);
     assert.equal(machine.WS, 0);
-    assert.equal(machine.mem[15], 0);
-    assert.equal(machine.mem[14], 0);
+    assert.equal(machine.mem[15], 1);
+    assert.equal(machine.mem[14], 3);
     assert.equal(machine.programCounter, 2);
     assert.equal(
       machine.logs.some((log: any) => log.class === 'error' || log.class === 'warning'),
@@ -181,7 +181,7 @@ test('nested subroutine calls track committed stack writes without modifying AP'
   }
 });
 
-test('data push metadata appears only after memory write and pop restores memory contents', (context) => {
+test('data push metadata appears only after memory write and pop preserves memory contents', (context) => {
   const { machine } = fixture(context);
 
   for (const fast of [false, true]) {
@@ -210,7 +210,39 @@ test('data push metadata appears only after memory write and pop restores memory
     assert.equal(machine.ACC, 11);
     assert.equal(machine.stack.length, 0);
     assert.equal(machine.WS, 0);
-    assert.equal(machine.mem[15], 0);
+    assert.equal(machine.mem[15], 11);
+  }
+});
+
+test('QA09: PZS and PWR preserve popped memory in both execution modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const [source, retainedValue] of [
+    ['DNS\nPOB other\nPZS\nSTP\nother: RST 11', 7],
+    ['SDP proc\nSTP\nproc: PWR', 1],
+  ] as const) {
+    for (const fast of [false, true]) {
+      machine.resetValues();
+      loadProgram(machine, source);
+      machine.ACC = 7;
+      machine.isFastRunning = fast;
+      const expectedMemory = [...machine.mem];
+      expectedMemory[15] = retainedValue;
+
+      let stepsLeft = 30;
+      while (machine.codeCompiled && stepsLeft-- > 0) machine.executeLine();
+
+      assert.equal(machine.codeCompiled, false, 'the program should terminate');
+      assert.equal(machine.ACC, 7);
+      assert.equal(machine.WS, 0);
+      assert.deepEqual([...machine.stack], []);
+      assert.deepEqual([...machine.mem], expectedMemory, 'only the push should write to memory');
+      const clearedMessage = machine.t('logs.memoryClearedFromStack', { idx: 15 });
+      assert.equal(
+        machine.logs.some((log: any) => log.message.startsWith(clearedMessage)),
+        false
+      );
+    }
   }
 });
 

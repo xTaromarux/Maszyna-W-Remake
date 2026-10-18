@@ -30,7 +30,7 @@ export const machineSelectors: SelectorMethods & ThisType<Machine> = {
     const active = this.RZ & ~this.RM;
     if (!active) return null;
 
-    for (let i = 3; i >= 0; i--) {
+    for (let i = 0; i < 4; i++) {
       if (active & (1 << i)) {
         return i + 1;
       }

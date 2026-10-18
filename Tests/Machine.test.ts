@@ -573,6 +573,76 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   assert.equal(machine.RZ, 0);
 });
 
+test('QA13: IRQ1 has the highest priority and masked requests are skipped', (context) => {
+  const { machine } = fixture(context);
+
+  for (const [requests, mask, expected] of [
+    [15, 0, 1],
+    [15, 1, 2],
+    [15, 3, 3],
+    [15, 7, 4],
+    [15, 15, null],
+    [0, 0, null],
+    [15, 5, 2],
+    [12, 0, 3],
+    [10, 0, 2],
+    [9, 0, 1],
+    [8, 0, 4],
+  ] as const) {
+    machine.RZ = requests;
+    machine.RM = mask;
+    assert.equal(machine.highestPriorityIRQ, expected, `RZ=${requests}, RM=${mask}`);
+  }
+});
+
+test('QA13: eni and rint process pending IRQs in priority order in both modes', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const [mask, accepted] of [
+      [
+        0,
+        [
+          [1, 1],
+          [2, 2],
+          [3, 4],
+          [4, 8],
+        ],
+      ],
+      [
+        5,
+        [
+          [2, 2],
+          [4, 8],
+        ],
+      ],
+    ] as const) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.RZ = 15;
+      machine.RM = mask;
+
+      for (const [irq, bit] of accepted) {
+        const pending = machine.RZ;
+        machine.nextLine = new Set(['eni']);
+        machine.executeLine();
+        assert.equal(machine.RP, bit);
+        assert.equal(machine.AP, irq);
+        assert.equal(machine.RZ, pending);
+        assert.equal(machine.RM, mask);
+
+        machine.nextLine = new Set(['rint']);
+        machine.executeLine();
+        assert.equal(machine.RP, 0);
+        assert.equal(machine.RZ, pending - bit);
+      }
+
+      assert.equal(machine.RZ, mask, 'masked requests remain pending');
+      assert.equal(machine.highestPriorityIRQ, null);
+    }
+  }
+});
+
 test('QA12: manual eni accepts each unmasked IRQ without jumping or writing to the stack', (context) => {
   const { machine } = fixture(context);
 

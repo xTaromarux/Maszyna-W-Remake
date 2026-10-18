@@ -2,19 +2,19 @@ import type { MicroOperation } from './Types';
 
 export const registerTransfers = {
   il: (machine) => {
-    machine.programCounter++;
+    machine.programCounter = (machine.programCounter + 1) & machine.addrMask();
   },
 
   dl: (machine) => {
-    machine.programCounter--;
+    machine.programCounter = (machine.programCounter - 1) & machine.addrMask();
   },
 
   wyl: (machine) => {
-    machine.BusA = machine.programCounter;
+    machine.BusA = machine.programCounter & machine.addrMask();
   },
 
   wel: (machine) => {
-    machine.programCounter = machine.BusA;
+    machine.programCounter = machine.BusA & machine.addrMask();
   },
 
   wyad: (machine) => {
@@ -70,6 +70,6 @@ export const registerTransfers = {
   },
 
   sa: (machine) => {
-    machine.BusA = machine.BusS;
+    machine.BusA = machine.BusS & machine.addrMask();
   },
 } satisfies Record<string, MicroOperation>;

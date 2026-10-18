@@ -345,6 +345,50 @@ test('instruction register retains the opcode while wyad outputs only the addres
   assert.equal(machine.getMaxValueForRegister('A'), 63);
 });
 
+test('QA06: L wraps at the configured address width in both execution modes', (context) => {
+  const { machine } = fixture(context);
+  for (const bits of [1, 4, 6, 16]) {
+    machine.addresBits = bits;
+    const maximum = 2 ** bits - 1;
+    for (const fast of [false, true]) {
+      machine.isFastRunning = fast;
+      machine.programCounter = maximum;
+      machine.il();
+      assert.equal(machine.programCounter, 0);
+      machine.dl();
+      assert.equal(machine.programCounter, maximum);
+    }
+  }
+});
+
+test('QA06: address transfers truncate wide values while preserving the data bus', (context) => {
+  const { machine } = fixture(context);
+  for (const bits of [1, 4, 6, 16]) {
+    machine.addresBits = bits;
+    const maximum = 2 ** bits - 1;
+    for (const fast of [false, true]) {
+      machine.isFastRunning = fast;
+      for (const [value, expected] of [
+        [machine.wordMask(), maximum],
+        [2 ** bits + 1, 1],
+      ]) {
+        machine.BusA = value;
+        machine.wel();
+        assert.equal(machine.programCounter, expected);
+        machine.programCounter = value;
+        machine.wyl();
+        assert.equal(machine.BusA, expected);
+        machine.ACC = value;
+        machine.nextLine = new Set(['wyak', 'sa', 'wel']);
+        machine.executeSignalsFromNextLine();
+        assert.equal(machine.BusS, value);
+        assert.equal(machine.BusA, expected);
+        assert.equal(machine.programCounter, expected);
+      }
+    }
+  }
+});
+
 async function waitForStop(machine: any) {
   const deadline = Date.now() + 1500;
   while (machine.isRunning && Date.now() < deadline) await delay(5);

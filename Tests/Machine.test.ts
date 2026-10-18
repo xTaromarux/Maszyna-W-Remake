@@ -470,6 +470,77 @@ test('instruction register retains the opcode while wyad outputs only the addres
   assert.equal(machine.getMaxValueForRegister('A'), 63);
 });
 
+test('QA22: changing code and address widths truncates live registers and memory', (context) => {
+  const { machine } = fixture(context, true);
+  const words = ['ACC', 'I', 'S', 'X', 'Y', 'RB', 'G', 'JAML', 'BusS', 'DEV_IN', 'DEV_OUT'];
+  const addresses = ['programCounter', 'A', 'AP', 'WS', 'BusA'];
+  for (const field of words) machine[field] = 1023;
+  for (const field of addresses) machine[field] = 15;
+  machine.RZ = 15;
+  machine.RM = 10;
+  machine.RP = 8;
+  machine.mem[8] = 1023;
+
+  machine.codeBits = 3;
+  for (const field of words) assert.equal(machine[field], 127, field);
+  for (const field of addresses) assert.equal(machine[field], 15, field);
+  assert.equal(machine.mem[8], 127);
+
+  machine.addresBits = 2;
+  for (const field of words) assert.equal(machine[field], 31, field);
+  for (const field of addresses) assert.equal(machine[field], 3, field);
+  assert.equal(machine.mem.length, 4);
+  assert.ok(machine.mem.every((value: number) => value >= 0 && value <= 31));
+  assert.equal(machine.RZ, 15);
+  assert.equal(machine.RM, 10);
+  assert.equal(machine.RP, 8);
+});
+
+test('QA22: width changes normalize state before starting the store', (context) => {
+  const { machine } = fixture(context);
+  machine.ACC = 1023;
+  machine.programCounter = 15;
+  machine.mem[0] = 1023;
+  machine.codeBits = 3;
+  assert.equal(machine.ACC, 127);
+  assert.equal(machine.mem[0], 127);
+  machine.addresBits = 2;
+  assert.equal(machine.ACC, 31);
+  assert.equal(machine.programCounter, 3);
+  assert.equal(machine.mem.length, 4);
+});
+
+test('QA22: restored small widths and 30-bit boundaries retain valid machine values', (context) => {
+  const { store, machine, saved } = fixture(context);
+  saved.set('W', JSON.stringify({ codeBits: 1, addresBits: 2 }));
+  machine.ACC = 1023;
+  machine.RZ = 15;
+  machine.RM = 10;
+  machine.RP = 8;
+  store.start();
+  assert.deepEqual([...machine.mem], [1, 2, 4, 0]);
+  assert.equal(machine.ACC, 7);
+  assert.equal(machine.RZ, 15);
+  assert.equal(machine.RM, 10);
+  assert.equal(machine.RP, 8);
+
+  machine.ACC = 7;
+  machine.codeBits = 16;
+  machine.addresBits = 14;
+  assert.equal(machine.ACC, 7, 'increasing widths must preserve existing register values');
+  machine.ACC = 2 ** 30 - 1;
+  machine.BusS = 2 ** 30 - 1;
+  machine.mem[8] = 2 ** 30 - 1;
+  machine.programCounter = 2 ** 14 - 1;
+  machine.codeBits = 15;
+  assert.equal(machine.ACC, 2 ** 29 - 1);
+  assert.equal(machine.BusS, 2 ** 29 - 1);
+  assert.equal(machine.mem[8], 2 ** 29 - 1);
+  machine.addresBits = 13;
+  assert.equal(machine.ACC, 2 ** 28 - 1);
+  assert.equal(machine.programCounter, 2 ** 13 - 1);
+});
+
 test('QA06: L wraps at the configured address width in both execution modes', (context) => {
   const { machine } = fixture(context);
   for (const bits of [1, 4, 6, 16]) {

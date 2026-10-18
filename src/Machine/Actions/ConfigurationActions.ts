@@ -89,7 +89,7 @@ export const configurationActions: Actions & ThisType<Machine> = {
     const defaultValues = [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000];
 
     for (let i = 0; i < Math.min(defaultValues.length, newSize); i++) {
-      newMem[i] = defaultValues[i];
+      newMem[i] = this.toWord(defaultValues[i]);
     }
 
     this.mem = newMem;

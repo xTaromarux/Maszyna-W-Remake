@@ -128,3 +128,31 @@ test('QA21: an incomplete minus is discarded on blur while an empty edit commits
   await page.locator('#counter input').focus();
   await expect(input).toHaveValue('0');
 });
+
+test('QA22: changing bit widths truncates registers and memory through settings', async ({ page }) => {
+  await page.goto('/');
+  const dataRegisters = ['Akumulator', 'Rejestr I (adresowy)', 'Rejestr S'];
+  for (const name of [...dataRegisters, 'Licznik']) {
+    const input = page.getByRole('spinbutton', { name, exact: true });
+    await input.fill(name === 'Licznik' ? '15' : '1023');
+    await input.press('Enter');
+  }
+  const memoryCell = page.getByRole('spinbutton', { name: 'Pamiec[8]', exact: true });
+  await memoryCell.fill('1023');
+  await page.getByRole('button', { name: 'Otworz ustawienia', exact: true }).click();
+  await page.locator('#commandBits').fill('3');
+  await page.getByRole('button', { name: 'Zamknij ustawienia', exact: true }).click();
+  for (const name of dataRegisters) {
+    await expect(page.getByRole('spinbutton', { name, exact: true })).toHaveValue('127');
+  }
+  await expect(memoryCell).toHaveValue('127');
+
+  await page.getByRole('button', { name: 'Otworz ustawienia', exact: true }).click();
+  await page.locator('#addresBits').fill('2');
+  await page.getByRole('button', { name: 'Zamknij ustawienia', exact: true }).click();
+  for (const name of dataRegisters) {
+    await expect(page.getByRole('spinbutton', { name, exact: true })).toHaveValue('31');
+  }
+  await expect(page.getByRole('spinbutton', { name: 'Licznik', exact: true })).toHaveValue('3');
+  await expect(memoryCell).toHaveCount(0);
+});

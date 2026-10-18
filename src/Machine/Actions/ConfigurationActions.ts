@@ -121,6 +121,7 @@ export const configurationActions: Actions & ThisType<Machine> = {
     // Reset to default settings
     this.codeBits = 6;
     this.addresBits = 4;
+    this.interruptVectors = [1, 2, 3, 4];
     this.oddDelay = 100;
     this.numberFormat = 'dec';
     this.autoResetOnAsmCompile = true;

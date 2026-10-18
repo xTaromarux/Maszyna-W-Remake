@@ -28,6 +28,7 @@ export function initialMachineState(this: Machine): MachineState {
     prevMem: [],
     addresBits: 4,
     codeBits: 6,
+    interruptVectors: [1, 2, 3, 4],
     JAML: 0,
     mem: [0b000001, 0b000010, 0b000100, 0b001000, 0b010001, 0b100010, 0b100100, 0b111000],
     programCounter: 0,

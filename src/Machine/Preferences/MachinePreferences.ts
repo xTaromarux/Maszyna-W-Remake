@@ -5,6 +5,7 @@ import { clamp } from '@/Shared/Utils/Numbers';
 export const persistedSettings = [
   'addresBits',
   'codeBits',
+  'interruptVectors',
   'oddDelay',
   'stepDelay',
   'numberFormat',
@@ -66,6 +67,9 @@ export const getRegisterFormatPreferences = (current: RegisterFormats, stored: R
 };
 
 export const validateSettingPreference = (key: PersistedSetting, value: unknown, current: unknown) => {
+  if (key === 'interruptVectors' && Array.isArray(value) && value.length === 4 && Array.isArray(current)) {
+    return value.map((address, index) => (Number.isInteger(address) && address >= 0 && address <= 0xffff ? address : current[index]));
+  }
   if (key === 'numberFormat' && isNumberFormat(value)) {
     return value;
   }

@@ -1,7 +1,9 @@
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { SettingsPanelProps } from '@/Components/Settings/Types';
+import type { InterruptVectors } from '@/Machine/Types/Machine';
 import { useState } from 'react';
 import SettingsSwitch from './SettingsSwitch';
+import { SettingsNumberField } from './SettingsNumbers';
 
 const BOOLEAN_KEYS = ['xRegister', 'yRegister', 'dl', 'jamlExtras', 'busConnectors', 'showInvisibleRegisters'] as const;
 const GROUPS = {
@@ -10,9 +12,12 @@ const GROUPS = {
   interrupts: ['rzRegister', 'rpRegister', 'rmRegister', 'apRegister', 'rintSignal', 'eniSignal'],
 };
 
-type SettingsExtrasProps = Pick<SettingsPanelProps, 'extras' | 'onUpdateExtras'>;
+type SettingsExtrasProps = Pick<
+  SettingsPanelProps,
+  'extras' | 'onUpdateExtras' | 'addresBits' | 'interruptVectors' | 'onUpdateInterruptVectors'
+>;
 
-const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
+const SettingsExtras = ({ extras, onUpdateExtras, addresBits, interruptVectors, onUpdateInterruptVectors }: SettingsExtrasProps) => {
   const { t } = useI18n();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const toggleGroup = (key: string) => setOpenGroups((previous) => ({ ...previous, [key]: !previous[key] }));
@@ -75,14 +80,32 @@ const SettingsExtras = ({ extras, onUpdateExtras }: SettingsExtrasProps) => {
                 </div>
               ))}
               {groupKey === 'interrupts' && (
-                <div className="module-toggle-wrapper">
-                  <span className="module-label">{t('settings.extras.groups.interrupts.eniAlwaysEnabled')}</span>
-                  <SettingsSwitch
-                    label={t('settings.extras.groups.interrupts.eniAlwaysEnabled')}
-                    checked={extras.interrupts.eniAlwaysEnabled}
-                    onChange={(checked) => updateGroupItem('interrupts', 'eniAlwaysEnabled', checked)}
-                  />
-                </div>
+                <>
+                  <div className="module-toggle-wrapper">
+                    <span className="module-label">{t('settings.extras.groups.interrupts.eniAlwaysEnabled')}</span>
+                    <SettingsSwitch
+                      label={t('settings.extras.groups.interrupts.eniAlwaysEnabled')}
+                      checked={extras.interrupts.eniAlwaysEnabled}
+                      onChange={(checked) => updateGroupItem('interrupts', 'eniAlwaysEnabled', checked)}
+                    />
+                  </div>
+                  <p>{t('settings.extras.groups.interrupts.addressHelp')}</p>
+                  {interruptVectors.map((address, index) => (
+                    <SettingsNumberField
+                      key={index}
+                      id={`irq${index + 1}Address`}
+                      labelKey={`settings.extras.groups.interrupts.irq${index + 1}Address`}
+                      value={address}
+                      min={0}
+                      max={(1 << addresBits) - 1}
+                      onChange={(value) => {
+                        const next = [...interruptVectors] as InterruptVectors;
+                        next[index] = value;
+                        onUpdateInterruptVectors?.(next);
+                      }}
+                    />
+                  ))}
+                </>
               )}
             </div>
           </div>

@@ -54,7 +54,15 @@ const SettingsPanel = (props: SettingsPanelProps) => {
           onUpdateOddDelay={props.onUpdateOddDelay}
           onUpdateStepDelay={props.onUpdateStepDelay}
         />
-        {platform !== 'esp' && <SettingsExtras extras={props.extras} onUpdateExtras={props.onUpdateExtras} />}
+        {platform !== 'esp' && (
+          <SettingsExtras
+            extras={props.extras}
+            addresBits={props.addresBits}
+            interruptVectors={props.interruptVectors}
+            onUpdateExtras={props.onUpdateExtras}
+            onUpdateInterruptVectors={props.onUpdateInterruptVectors}
+          />
+        )}
         <SettingsEditor
           autocompleteEnabled={props.autocompleteEnabled}
           autoResetOnAsmCompile={props.autoResetOnAsmCompile}

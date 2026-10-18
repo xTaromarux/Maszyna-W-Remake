@@ -1,5 +1,5 @@
 import type { Action } from '@/Shared/Types/Common';
-import type { Machine, MachineStore, RegisterFormats } from '@/Machine/Types/Machine';
+import type { InterruptVectors, Machine, MachineStore, RegisterFormats } from '@/Machine/Types/Machine';
 import { translate } from '../I18n/Translator';
 import { clamp } from '../Shared/Utils/Numbers';
 import { getStorageItem, setStorageItem } from '../Shared/Utils/Storage';
@@ -105,6 +105,7 @@ export const createMachineStore = (): MachineStore => {
     for (const field of ['programCounter', 'A', 'AP', 'WS', 'BusA'] as const) {
       machine[field] &= addressMask;
     }
+    machine.interruptVectors = machine.interruptVectors.map((address) => address & addressMask) as InterruptVectors;
     machine.mem = machine.mem.map((value) => value & wordMask);
   };
 

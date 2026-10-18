@@ -833,6 +833,111 @@ test('QA15: a program accepts and resets IRQs only in phases containing eni and 
   }
 });
 
+test('QA14: eni uses the configured handler address for each IRQ, including address zero', (context) => {
+  const { machine } = fixture(context);
+  machine.interruptVectors = [0, 15, 12, 0];
+
+  for (const fast of [false, true]) {
+    for (const [index, address] of machine.interruptVectors.entries()) {
+      machine.resetValues();
+      machine.isFastRunning = fast;
+      machine.RZ = 1 << index;
+      machine.eni();
+      assert.equal(machine.AP, address);
+      assert.equal(machine.RP, 1 << index);
+      assert.equal(machine.RZ, 1 << index);
+    }
+  }
+});
+
+test('QA14: program phases accept IRQ3 and jump only when microcode transfers AP', (context) => {
+  const { machine } = fixture(context);
+  machine.interruptVectors = [1, 2, 12, 4];
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.isFastRunning = fast;
+    const program = Array.from({ length: 16 }, () => ({ phases: [{ stop: true }] }));
+    machine.handleProgramSectionCompile({
+      text: 'eni;\nwyap wel wea rint;',
+      program: [{ phases: [{ eni: true }, { wyap: true, wel: true, wea: true, rint: true }] }, ...program.slice(1)],
+    });
+    machine.programCounter = 7;
+    machine.A = 6;
+    machine.WS = 9;
+    machine.RZ = 12;
+    const memory = [...machine.mem];
+
+    machine.executeLine();
+    assert.equal(machine.RP, 4);
+    assert.equal(machine.AP, 12);
+    assert.equal(machine.RZ, 12);
+    assert.equal(machine.programCounter, 7);
+    assert.equal(machine.A, 6);
+    assert.equal(machine.WS, 9);
+    assert.deepEqual([...machine.stack], []);
+    assert.deepEqual([...machine.mem], memory);
+
+    machine.executeLine();
+    assert.equal(machine.programCounter, 12);
+    assert.equal(machine.A, 12);
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.AP, 0);
+    assert.equal(machine.RZ, 8, 'rint clears IRQ3 while preserving IRQ4');
+    assert.equal(machine.WS, 9);
+    assert.deepEqual([...machine.stack], []);
+    assert.deepEqual([...machine.mem], memory);
+
+    machine.executeLine();
+    assert.equal(machine.codeCompiled, false);
+  }
+});
+
+test('QA14: handler addresses persist, survive register resets and restore defaults for legacy preferences', (context) => {
+  const { machine, saved } = fixture(context);
+  assert.deepEqual([...machine.interruptVectors], [1, 2, 3, 4]);
+  saved.set('W', JSON.stringify({ extras: { interrupts: { eniSignal: true } } }));
+  machine.loadFromLS();
+  assert.deepEqual([...machine.interruptVectors], [1, 2, 3, 4]);
+
+  machine.interruptVectors = [0, 15, 12, 7];
+  machine.resetValues();
+  assert.deepEqual([...machine.interruptVectors], [0, 15, 12, 7]);
+  machine.saveToLS();
+  assert.deepEqual(JSON.parse(saved.get('W')!).interruptVectors, [0, 15, 12, 7]);
+  machine.interruptVectors = [1, 2, 3, 4];
+  machine.loadFromLS();
+  assert.deepEqual([...machine.interruptVectors], [0, 15, 12, 7]);
+  machine.restoreDefaults();
+  assert.deepEqual([...machine.interruptVectors], [1, 2, 3, 4]);
+});
+
+test('QA14: malformed saved handler addresses cannot replace valid defaults', (context) => {
+  const { machine, saved } = fixture(context);
+  for (const invalid of [null, '12', {}, [1, 2, 3], [1, 2, 3, 4, 5], [-1, 2.5, '12', 65536]]) {
+    saved.set('W', JSON.stringify({ interruptVectors: invalid }));
+    machine.loadFromLS();
+    assert.deepEqual([...machine.interruptVectors], [1, 2, 3, 4]);
+  }
+  saved.set('W', JSON.stringify({ interruptVectors: [0, null, 12, {}] }));
+  machine.loadFromLS();
+  assert.deepEqual([...machine.interruptVectors], [0, 2, 12, 4]);
+});
+
+test('QA14: address-width changes and preference restoration keep handlers within memory', (context) => {
+  const { machine, saved } = fixture(context);
+  machine.interruptVectors = [0, 5, 12, 15];
+  machine.addresBits = 2;
+  assert.deepEqual([...machine.interruptVectors], [0, 1, 0, 3]);
+  machine.RZ = 8;
+  machine.eni();
+  assert.equal(machine.AP, 3);
+
+  saved.set('W', JSON.stringify({ addresBits: 3, interruptVectors: [0, 9, 12, 15] }));
+  machine.loadFromLS();
+  assert.deepEqual([...machine.interruptVectors], [0, 1, 4, 7]);
+});
+
 test('QA13: IRQ1 has the highest priority and masked requests are skipped', (context) => {
   const { machine } = fixture(context);
 

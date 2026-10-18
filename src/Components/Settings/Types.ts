@@ -1,7 +1,7 @@
 import type { ColorUpdate } from '../../Machine/Types/EspColors';
 import type { Action, Update } from '../../Shared/Types/Common';
 import type { NumberFormat } from '../../Shared/Types/Numbers';
-import type { Extras, ExtrasPatch } from '../../Machine/Types/Machine';
+import type { Extras, ExtrasPatch, InterruptVectors } from '../../Machine/Types/Machine';
 import type { Person } from './About/Types';
 import type { ColorSelection } from '../../Shared/Types/Colors';
 
@@ -17,6 +17,7 @@ export interface SettingsPanelProps {
   oddDelay: number;
   stepDelay: number;
   extras: Extras;
+  interruptVectors: InterruptVectors;
   platform?: string;
   autocompleteEnabled?: boolean;
   autoResetOnAsmCompile?: boolean;
@@ -24,6 +25,7 @@ export interface SettingsPanelProps {
   caregivers?: Person[];
   onClose?: Action;
   onUpdateExtras?: Update<ExtrasPatch>;
+  onUpdateInterruptVectors?: Update<InterruptVectors>;
   onColorChange?: Update<ColorUpdate>;
   onUpdateLightMode?: Update<boolean>;
   onUpdateLanguage?: Update<string>;

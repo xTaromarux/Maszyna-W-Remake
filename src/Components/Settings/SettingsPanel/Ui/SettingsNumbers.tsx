@@ -17,14 +17,14 @@ type SettingsNumbersProps = Pick<
 interface NumberField {
   id: string;
   labelKey: string;
-  helpKey: string;
+  helpKey?: string;
   value: number;
   min: number;
   max: number;
   onChange?: Update<number>;
 }
 
-const SettingsNumberField = ({ id, labelKey, helpKey, value, min, max, onChange }: NumberField) => {
+export const SettingsNumberField = ({ id, labelKey, helpKey, value, min, max, onChange }: NumberField) => {
   const { t } = useI18n();
   const updateNumber = (input: string) => {
     if (input.trim() === '') return;
@@ -47,7 +47,7 @@ const SettingsNumberField = ({ id, labelKey, helpKey, value, min, max, onChange 
         max={max}
         onChange={(event) => updateNumber(event.target.value)}
       />
-      <p>{t(helpKey)}</p>
+      {helpKey && <p>{t(helpKey)}</p>}
     </div>
   );
 };

@@ -45,6 +45,7 @@ export const MachineOverlays = ({ machine, update }: MachineOverlaysProps) => {
         oddDelay={machine.oddDelay}
         stepDelay={machine.stepDelay}
         extras={machine.extras}
+        interruptVectors={machine.interruptVectors}
         autocompleteEnabled={machine.autocompleteEnabled}
         autoResetOnAsmCompile={machine.autoResetOnAsmCompile}
         onClose={closeSettings}
@@ -57,6 +58,7 @@ export const MachineOverlays = ({ machine, update }: MachineOverlaysProps) => {
         onUpdateOddDelay={update('oddDelay')}
         onUpdateStepDelay={update('stepDelay')}
         onUpdateExtras={updateExtras}
+        onUpdateInterruptVectors={update('interruptVectors')}
         onResetValues={resetValues}
         onDefaultSettings={machine.restoreDefaults}
         onOpenCommandList={machine.openCommandList}

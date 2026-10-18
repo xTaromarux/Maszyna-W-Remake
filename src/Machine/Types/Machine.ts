@@ -32,6 +32,8 @@ export type MachineRegisters = Record<RegisterField, number>;
 
 export type RegisterFormats = Record<RegisterFormatField, NumberFormat>;
 
+export type InterruptVectors = [number, number, number, number];
+
 export type Signals = Record<string, boolean>;
 
 export interface Extras {
@@ -170,6 +172,7 @@ export interface MachineState extends MachineRegisters {
   prevMem: number[];
   addresBits: number;
   codeBits: number;
+  interruptVectors: InterruptVectors;
   mem: number[];
   DEV_READY: number;
   DEV_IN: number;
@@ -270,7 +273,6 @@ export interface MachineActions {
   loadSelectedLab(): void;
   compileCode(): void;
   uncompileCode(): void;
-  handleInterrupt(): void;
   executeLine(): void;
   _refreshHighlight(): void;
   getResolvedPhase(phase: RuntimePhase | null | undefined): MicroPhase;

@@ -22,7 +22,6 @@ type Actions = Pick<
   | 'loadSelectedLab'
   | 'compileCode'
   | 'uncompileCode'
-  | 'handleInterrupt'
   | 'executeLine'
   | '_refreshHighlight'
   | 'getResolvedPhase'
@@ -308,53 +307,6 @@ export const executionActions: Actions & ThisType<Machine> = {
     this.activePhaseIndex = 0;
     this._condState = null;
     this._stepGuard = 0;
-  },
-
-  handleInterrupt() {
-    const irqNum = this.highestPriorityIRQ;
-    if (!irqNum) {
-      this.addLog(this.t('logs.handleInterruptNone'), 'warning');
-      return;
-    }
-
-    this.addLog(this.t('logs.separator'), 'interrupt');
-    this.addLog(this.t('logs.interruptStart', { num: irqNum }), 'interrupt');
-
-    this.RP = irqNum;
-    this.addLog(this.t('logs.interruptRp', { num: irqNum }), 'interrupt');
-
-    const returnAddr = this.programCounter;
-    this.stackPush('Address', returnAddr);
-
-    const size = 1 << this.addresBits;
-    this.WS = (this.WS - 1 + size) % size;
-    const idx = this.WS & this.addrMask();
-    this.mem[idx] = returnAddr;
-    this.addLog(this.t('logs.interruptStackSaved', { pc: returnAddr, ws: this.WS }), 'interrupt');
-
-    const vectorAddress = irqNum;
-
-    if (vectorAddress < 0 || vectorAddress >= this.compiledProgram.length) {
-      this.addLog(this.t('logs.interruptVectorOob', { vector: vectorAddress }), 'error');
-      return;
-    }
-
-    this.A = vectorAddress;
-    this.programCounter = vectorAddress;
-
-    this.addLog(this.t('logs.interruptALoad', { a: this.A }), 'interrupt');
-    this.addLog(this.t('logs.interruptPcSet', { vector: vectorAddress, num: irqNum }), 'interrupt');
-
-    this.activeInstrIndex = vectorAddress;
-    this.activePhaseIndex = 0;
-
-    const vectorInstr = this.compiledProgram[vectorAddress];
-    this.addLog(this.t('logs.interruptExec', { line: vectorInstr?.asmLine || 'SOB' }), 'interrupt');
-
-    this.RZ &= ~(1 << (irqNum - 1));
-    this.addLog(this.t('logs.interruptRzClear', { rz: this.RZ, num: irqNum }), 'interrupt');
-
-    this.addLog(this.t('logs.separator'), 'interrupt');
   },
 
   executeLine() {

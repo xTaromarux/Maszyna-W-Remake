@@ -10,8 +10,7 @@ export const interruptOperations = {
     if (irq === null) return;
 
     machine.RP = 1 << (irq - 1);
-    // Interrupt vectors currently default to addresses 1–4.
-    machine.AP = irq & machine.addrMask();
+    machine.AP = machine.interruptVectors[irq - 1] & machine.addrMask();
   },
 
   rint: (machine) => {

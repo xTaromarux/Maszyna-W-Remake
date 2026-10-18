@@ -52,7 +52,6 @@ export const machineMethods: Omit<MachineActions, keyof MicroActions> & ThisType
   loadSelectedLab: executionActions.loadSelectedLab,
   compileCode: executionActions.compileCode,
   uncompileCode: executionActions.uncompileCode,
-  handleInterrupt: executionActions.handleInterrupt,
   executeLine: executionActions.executeLine,
   _refreshHighlight: executionActions._refreshHighlight,
   getResolvedPhase: executionActions.getResolvedPhase,

@@ -29,6 +29,16 @@ test('catalog import rejects malformed fields before updating editor state', () 
   assert.throws(() => parseCommandCatalog('{}'), /Invalid command list/);
 });
 
+test('catalog import rejects inverted argument ranges, including fallback argument counts', () => {
+  for (const arity of [
+    { argsMin: 2, argsMax: 1 },
+    { args: 1, argsMin: 2 },
+    { args: 2, argsMax: 1 },
+  ]) {
+    assert.throws(() => parseCommandCatalog(JSON.stringify([{ name: 'X', ...arity, lines: 'wyl wea;' }])), /REG_BAD_ARITY/);
+  }
+});
+
 test('duplicate detection includes commands outside the visible opcode range', () => {
   const commands = [{ name: 'LOAD' }, { name: 'DOD' }, { name: ' load ' }];
   assert.deepEqual([...findDuplicateNames(commands)], ['load']);

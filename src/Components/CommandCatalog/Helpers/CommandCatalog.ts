@@ -1,4 +1,5 @@
 import { normalizeMnemonicToken } from '@/Assembler/CommandMnemonics';
+import { getArity } from '@/Assembler/InstructionRegistry';
 import type { RuntimeCommand } from '@/Assembler/Types/Registry';
 
 export const findDuplicateNames = (commands: RuntimeCommand[]): Set<string> => {
@@ -18,6 +19,7 @@ export const findDuplicateNames = (commands: RuntimeCommand[]): Set<string> => {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 
+// Arity means the number of arguments a command accepts; this checks a single value.
 const isArity = (value: unknown): boolean =>
   value === undefined || (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0);
 
@@ -47,6 +49,8 @@ export const parseCommandCatalog = (contents: string): RuntimeCommand[] => {
   if (!Array.isArray(parsed) || !parsed.every(isCommand)) {
     throw new Error('Invalid command list');
   }
+
+  parsed.forEach(getArity);
 
   return parsed.map((command) => ({ ...command, kind: command.kind || 'exec', lines: command.lines || '' }));
 };

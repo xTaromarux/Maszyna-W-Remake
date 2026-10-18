@@ -93,11 +93,6 @@ export const executeStructuredStep = (machine: Machine) => {
     machine._condState = null;
   }
 
-  if (machine.activePhaseIndex === 0 && machine.extras?.interrupts?.eniSignal && machine.hasPendingInterrupt) {
-    machine.handleInterrupt();
-    return;
-  }
-
   machine._stepGuard = (machine._stepGuard || 0) + 1;
   if (machine._stepGuard > 100000) {
     machine.addLog(machine.t('logs.loopGuard'), 'system');

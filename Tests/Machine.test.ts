@@ -573,6 +573,68 @@ test('reset cancels an active runner and clears interrupt inputs', async (contex
   assert.equal(machine.RZ, 0);
 });
 
+test('QA15: showing eni does not accept interrupts in a program without that signal', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    for (const visible of [false, true]) {
+      machine.resetValues();
+      loadProgram(machine, 'DOD value\nSTP\nvalue: RST 1');
+      machine.extras.interrupts.eniSignal = visible;
+      machine.RZ = 1;
+      machine.isFastRunning = fast;
+      const memory = [...machine.mem];
+
+      machine.executeLine();
+      assert.equal(machine.I, 18);
+      assert.equal(machine.programCounter, 1);
+      assert.equal(machine.RP, 0);
+      assert.equal(machine.AP, 0);
+      assert.equal(machine.RZ, 1);
+      assert.equal(machine.WS, 0);
+      assert.deepEqual([...machine.stack], []);
+      assert.deepEqual([...machine.mem], memory);
+
+      let stepsLeft = 20;
+      while (machine.codeCompiled && stepsLeft-- > 0) machine.executeLine();
+      assert.equal(machine.codeCompiled, false);
+      assert.equal(machine.ACC, 1);
+      assert.equal(machine.RP, 0);
+      assert.equal(machine.RZ, 1);
+    }
+  }
+});
+
+test('QA15: a program accepts and resets IRQs only in phases containing eni and rint', (context) => {
+  const { machine } = fixture(context);
+
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    machine.handleProgramSectionCompile({
+      text: 'iak;\neni;\nrint;',
+      program: [{ phases: [{ iak: true }, { eni: true }, { rint: true }] }],
+    });
+    machine.extras.interrupts.eniSignal = true;
+    machine.RZ = 1;
+    machine.isFastRunning = fast;
+
+    machine.executeLine();
+    assert.equal(machine.ACC, 1);
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.RZ, 1);
+
+    machine.executeLine();
+    assert.equal(machine.RP, 1);
+    assert.equal(machine.AP, 1);
+    assert.equal(machine.RZ, 1);
+
+    machine.executeLine();
+    assert.equal(machine.RP, 0);
+    assert.equal(machine.AP, 0);
+    assert.equal(machine.RZ, 0);
+  }
+});
+
 test('QA13: IRQ1 has the highest priority and masked requests are skipped', (context) => {
   const { machine } = fixture(context);
 

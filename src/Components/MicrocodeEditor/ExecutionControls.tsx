@@ -4,6 +4,7 @@ import CompileIcon from '@/Shared/Ui/Icons/CompileIcon';
 import EditIcon from '@/Shared/Ui/Icons/EditIcon';
 import NextLineIcon from '@/Shared/Ui/Icons/NextLineIcon';
 import RunIcon from '@/Shared/Ui/Icons/RunIcon';
+import StopIcon from '@/Shared/Ui/Icons/StopIcon';
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { ExecutionControlsProps } from '@/Components/MicrocodeEditor/Types';
 
@@ -21,6 +22,7 @@ const ExecutionControls = ({
   onRunFast,
   onStop,
   showCompilation = true,
+  compact = false,
   className = '',
   ...rest
 }: ExecutionControlsProps) => {
@@ -69,10 +71,10 @@ const ExecutionControls = ({
         className="execution-btn execution-btn--run"
         title={t(`execution.${runAction}Title`)}
       >
-        <RunIcon />
+        {isRunning ? <StopIcon /> : <RunIcon />}
         <span data-editor-execution-controls="">{t(`execution.${runAction}`)}</span>
       </button>
-      {!isRunning && (
+      {!compact && !isRunning && (
         <button
           type="button"
           data-editor-execution-controls=""
@@ -85,7 +87,7 @@ const ExecutionControls = ({
           <span data-editor-execution-controls="">{t('execution.runFast')}</span>
         </button>
       )}
-      {showFastProgress && (
+      {!compact && showFastProgress && (
         <button
           type="button"
           data-editor-execution-controls=""

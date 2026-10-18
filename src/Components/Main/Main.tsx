@@ -19,6 +19,7 @@ import {
 } from './Bindings/MachineBindings';
 import { MachineOverlays } from './Ui/MachineOverlays';
 import EditorWorkspace from './Ui/EditorWorkspace';
+import MobileControls from './Ui/MobileControls';
 
 /** Composes simulator views around the single observable machine instance. */
 const Main = () => {
@@ -48,22 +49,24 @@ const Main = () => {
         onWsReconnect={machine.reconnectWS}
       />
       <div id="wLayout">
-        <ProcessorDiagram
-          {...registerProps}
-          manualMode={machine.manualMode}
-          signals={machine.signals}
-          decSigned={machine.decSigned}
-          formatNumber={machine.formatNumber}
-          registerFormats={machine.registerFormats}
-          extras={machine.extras}
-          BusA={machine.BusA}
-          BusS={machine.BusS}
-          wordBits={machine.codeBits + machine.addresBits}
-          decToCommand={machine.decToCommand}
-          decToArgument={machine.decToArgument}
-          onClickItem={machine.handleSignalToggle}
-          onUpdateNumberFormat={interactions.updateRegisterFormat}
-        />
+        <div id="processorViewport" className="processor-viewport" role="region" aria-label={t('workspace.diagram')} tabIndex={0}>
+          <ProcessorDiagram
+            {...registerProps}
+            manualMode={machine.manualMode}
+            signals={machine.signals}
+            decSigned={machine.decSigned}
+            formatNumber={machine.formatNumber}
+            registerFormats={machine.registerFormats}
+            extras={machine.extras}
+            BusA={machine.BusA}
+            BusS={machine.BusS}
+            wordBits={machine.codeBits + machine.addresBits}
+            decToCommand={machine.decToCommand}
+            decToArgument={machine.decToArgument}
+            onClickItem={machine.handleSignalToggle}
+            onUpdateNumberFormat={interactions.updateRegisterFormat}
+          />
+        </div>
         <EditorWorkspace
           manualMode={machine.manualMode}
           consoleOpen={machine.consoleOpen}
@@ -126,6 +129,7 @@ const Main = () => {
         />
         <MachineOverlays machine={machine} update={update} />
       </div>
+      <MobileControls execution={execution} />
       {machine.toast.visible && (
         <div className="app-toast" role="status" aria-live="polite">
           {machine.toast.message}

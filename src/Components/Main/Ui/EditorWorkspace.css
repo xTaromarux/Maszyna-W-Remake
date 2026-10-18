@@ -431,9 +431,16 @@ body.darkMode #editorWorkspace {
   border-radius: 0;
 }
 
-@media (max-width: 1195px) {
+@media (max-width: 1023px) {
   #editorWorkspace {
     position: relative;
     top: auto;
+    height: calc(100dvh - var(--topbar-height) - var(--mobile-controls-height));
+  }
+
+  #editorWorkspace.workspace-expanded {
+    position: fixed;
+    top: var(--topbar-height);
+    height: calc(100dvh - var(--topbar-height));
   }
 }

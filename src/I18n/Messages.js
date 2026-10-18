@@ -283,6 +283,9 @@ export const messages = {
       commandDescription: 'Rozkaz {name}',
     },
     workspace: {
+      diagram: 'Schemat',
+      editor: 'Edytor',
+      mobileControls: 'Nawigacja i wykonanie',
       title: 'Panel programu',
       views: 'Widok panelu programu',
       asm: 'Kod ASM',
@@ -875,6 +878,9 @@ export const messages = {
       commandDescription: 'Command {name}',
     },
     workspace: {
+      diagram: 'Diagram',
+      editor: 'Editor',
+      mobileControls: 'Navigation and execution',
       title: 'Program workspace',
       views: 'Program workspace view',
       asm: 'ASM source',

@@ -22,7 +22,7 @@ import MobileAluSignals from './Ui/MobileAluSignals';
 
 const ProcessorDiagram = (props: ProcessorDiagramProps) => {
   const { manualMode, signals, programCounter, formatNumber, extras, BusA, BusS, I, X, Y, RB, G, RM, AP, RZ, RP, WS, onClickItem } = props;
-  const isMobile = useWindowWidth() <= 768;
+  const isMobile = useWindowWidth() < 1080;
   const registers = createRegisterBindings(props);
 
   const alu = createAluBindings(props);

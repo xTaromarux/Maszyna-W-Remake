@@ -187,7 +187,7 @@ export const presentationActions: Actions & ThisType<Machine> = {
       this.hasConsoleErrors = false;
 
       requestAnimationFrame(() => {
-        if (window.innerWidth <= 1195) {
+        if (window.innerWidth < 1024) {
           document.querySelector('#editorWorkspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });

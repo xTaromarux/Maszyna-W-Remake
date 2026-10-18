@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 export interface ExecutionControlsProps extends DivProps {
   showCompilation?: boolean;
+  compact?: boolean;
   manualMode: boolean;
   codeCompiled: boolean;
   code: string;

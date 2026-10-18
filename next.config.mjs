@@ -7,6 +7,7 @@ const stripApiPrefix = process.env.API_PROXY_STRIP_PREFIX === '1';
 const nextConfig = {
   outputFileTracingRoot: fileURLToPath(new URL('.', import.meta.url)),
   reactStrictMode: true,
+  allowedDevOrigins: ['127.0.0.1'],
   output: staticExport ? 'export' : undefined,
   images: { unoptimized: true },
   devIndicators: false,

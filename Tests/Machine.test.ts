@@ -55,7 +55,7 @@ test('multiplication preserves low bits of 30-bit words in both execution modes'
   }
 });
 
-test('division uses the full word and retains the zero-divisor policy in both modes', (context) => {
+test('division uses the full signed word and retains the zero-divisor policy in both modes', (context) => {
   const { machine } = fixture(context);
 
   for (const fast of [false, true]) {
@@ -63,11 +63,64 @@ test('division uses the full word and retains the zero-divisor policy in both mo
     machine.ACC = 512;
     machine.JAML = 256;
     machine.dziel();
-    assert.equal(machine.JAML, 2);
+    assert.equal(machine.JAML, machine.toWord(-2));
 
     machine.JAML = 0;
     machine.dziel();
     assert.equal(machine.JAML, 0);
+  }
+});
+
+test('QA07: division interprets both operands as U2 and truncates toward zero', (context) => {
+  const { machine } = fixture(context);
+  for (const [codeBits, addresBits] of [
+    [1, 3],
+    [6, 4],
+    [16, 14],
+  ]) {
+    machine.codeBits = codeBits;
+    machine.addresBits = addresBits;
+    const minimum = -(2 ** (codeBits + addresBits - 1));
+    for (const fast of [false, true]) {
+      machine.isFastRunning = fast;
+      for (const [dividend, divisor, quotient] of [
+        [6, 2, 3],
+        [-6, 2, -3],
+        [6, -2, -3],
+        [-6, -2, 3],
+        [7, 2, 3],
+        [-7, 2, -3],
+        [7, -2, -3],
+        [-7, -2, 3],
+        [0, -2, 0],
+        [-6, 0, 0],
+        [minimum, 1, minimum],
+        [minimum, -1, -minimum],
+      ]) {
+        machine.ACC = machine.toWord(dividend);
+        machine.JAML = machine.toWord(divisor);
+        machine.dziel();
+        assert.equal(machine.JAML, machine.toWord(quotient), `${dividend} / ${divisor}`);
+        assert.equal(machine.ACC, machine.toWord(dividend), 'division writes JAML until weak commits the result');
+        machine.weak();
+        assert.equal(machine.ACC, machine.toWord(quotient));
+      }
+    }
+  }
+});
+
+test('QA07: DZI divides signed operands fetched from memory in both execution modes', (context) => {
+  const { machine } = fixture(context);
+  for (const fast of [false, true]) {
+    machine.resetValues();
+    loadProgram(machine, 'POB number\nDZI divisor\nSTP\nnumber: RST -6\ndivisor: RST 2');
+    machine.isFastRunning = fast;
+    let stepsLeft = 20;
+    while (machine.codeCompiled && stepsLeft-- > 0) machine.executeLine();
+    assert.equal(machine.codeCompiled, false, 'the program should terminate');
+    assert.equal(machine.ACC, 1021, 'ten-bit U2 representation of -3');
+    assert.equal(machine.mem[3], 1018, 'division must not modify the dividend in memory');
+    assert.equal(machine.mem[4], 2, 'division must not modify the divisor in memory');
   }
 });
 

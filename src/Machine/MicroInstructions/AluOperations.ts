@@ -1,3 +1,4 @@
+import { toSigned } from '@/Shared/Utils/Numbers';
 import type { MicroOperation } from './Types';
 
 /** ALU results keep the existing JAML/weak pipeline; shifts operate on the accumulator. */
@@ -27,8 +28,10 @@ export const aluOperations = {
   },
 
   dziel: (machine) => {
-    const divisor = machine.toWord(machine.JAML);
-    machine.JAML = divisor === 0 ? 0 : machine.toWord(Math.trunc(machine.ACC / divisor));
+    const wordBits = machine.codeBits + machine.addresBits;
+    const divisor = toSigned(machine.JAML, wordBits);
+    const dividend = toSigned(machine.ACC, wordBits);
+    machine.JAML = divisor === 0 ? 0 : machine.toWord(Math.trunc(dividend / divisor));
   },
 
   shr: (machine) => {

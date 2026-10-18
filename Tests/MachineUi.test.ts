@@ -58,5 +58,6 @@ test('register input parsing retains integer precision and rejects invalid digit
 test('signed register display uses the configured word width', () => {
   const markup = renderToStaticMarkup(createElement(RegisterComponent, { label: 'AK', model: 1023, signedDec: true, wordBits: 10 }));
   assert.ok(markup.includes('<span>-1</span>'));
+  assert.ok(markup.includes('value="-1"'));
   assert.ok(markup.includes('aria-label="Akumulator"'));
 });

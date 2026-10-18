@@ -1,12 +1,12 @@
 ﻿'use client';
 
 import { useI18n } from '@/I18n/Hooks/UseI18n';
-import { formatNumberInput } from '@/Shared/Utils/Numbers';
+import { formatNumberInput, toSigned } from '@/Shared/Utils/Numbers';
 import { parseRegisterInput } from '@/Shared/Utils/RegisterInput';
 import { useMachineServices } from '@/Machine/MachineContext';
 import type { NumberFormat } from '@/Shared/Types/Numbers';
-import type { ChangeEvent } from 'react';
-import { useEffect, useState } from 'react';
+import type { ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { normalizeRegisterValue } from '../Helpers/NormalizeRegisterValue';
 
 const REGISTER_TYPES: Record<string, string> = {
@@ -20,24 +20,34 @@ interface RegisterValueOptions {
   label: string;
   numberFormat: NumberFormat;
   fullName: string;
+  signedDec: boolean;
+  wordBits: number;
   onUpdateModel?: (value: number) => void;
 }
 
-/** Synchronizes the input draft with its register and commits valid integers, wrapping values outside its range. */
-export const useRegisterValue = ({ model, label, numberFormat, fullName, onUpdateModel }: RegisterValueOptions) => {
+/** Keeps edits local until Enter/blur; Escape restores the current register value. */
+export const useRegisterValue = ({ model, label, numberFormat, fullName, signedDec, wordBits, onUpdateModel }: RegisterValueOptions) => {
   const { t } = useI18n();
   const { showToast, getMaxValueForRegister } = useMachineServices();
 
-  const [draft, setDraft] = useState(() => formatNumberInput(model, numberFormat));
+  const formatDraft = (value: number) =>
+    formatNumberInput(numberFormat === 'dec' && signedDec ? toSigned(value, wordBits) : value, numberFormat);
+  const formattedModel = formatDraft(model);
+  const [draft, setDraft] = useState(formattedModel);
+  const dirty = useRef(false);
 
   useEffect(() => {
-    setDraft(formatNumberInput(model, numberFormat));
-  }, [model, numberFormat]);
+    if (!dirty.current) setDraft(formattedModel);
+  }, [formattedModel]);
 
-  const restoreDraft = () => setDraft(formatNumberInput(model, numberFormat));
+  const restoreDraft = () => {
+    dirty.current = false;
+    setDraft(formattedModel);
+  };
 
   const commitValue = (value: number) => {
-    setDraft(formatNumberInput(value, numberFormat));
+    dirty.current = false;
+    setDraft(formatDraft(value));
     onUpdateModel?.(value);
   };
 
@@ -53,16 +63,19 @@ export const useRegisterValue = ({ model, label, numberFormat, fullName, onUpdat
   };
 
   const updateValue = (event: ChangeEvent<HTMLInputElement>) => {
-    const rawInput = event.target.value;
-    const trimmedInput = rawInput.trim();
+    dirty.current = true;
+    setDraft(event.target.value);
+  };
 
-    // Empty input and a lone minus sign are unfinished edits, not register values.
-    if (trimmedInput === '' || trimmedInput === '-') {
-      setDraft(rawInput);
+  const finishEditing = (event: FocusEvent<HTMLInputElement> | KeyboardEvent<HTMLInputElement>) => {
+    if (!dirty.current) return;
+    // Number inputs expose a lone minus as an empty value with badInput set.
+    if (event.currentTarget.validity.badInput) {
+      restoreDraft();
       return;
     }
 
-    const parsedValue = parseRegisterInput(rawInput, numberFormat);
+    const parsedValue = draft.trim() === '' ? 0n : parseRegisterInput(draft, numberFormat);
     if (parsedValue === null) {
       restoreDraft();
       return;
@@ -85,14 +98,13 @@ export const useRegisterValue = ({ model, label, numberFormat, fullName, onUpdat
     commitValue(value);
   };
 
-  const finishEditing = () => {
-    if (draft === '') {
-      commitValue(0);
-      return;
-    }
-
-    restoreDraft();
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' && event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.key === 'Enter') finishEditing(event);
+    else restoreDraft();
   };
 
-  return { draft, updateValue, finishEditing };
+  return { draft, updateValue, finishEditing, handleKeyDown };
 };

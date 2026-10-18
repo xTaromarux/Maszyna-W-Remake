@@ -500,6 +500,7 @@ export const messages = {
     },
     registers: {
       invalid: 'Blad',
+      editHint: 'Enter lub opuszczenie pola zatwierdza wartość. Escape anuluje edycję.',
       names: {
         AK: 'Akumulator',
         X: 'Rejestr X',
@@ -1075,6 +1076,7 @@ export const messages = {
     },
     registers: {
       invalid: 'Error',
+      editHint: 'Press Enter or leave the field to apply the value. Escape cancels the edit.',
       names: {
         AK: 'Accumulator',
         X: 'X Register',

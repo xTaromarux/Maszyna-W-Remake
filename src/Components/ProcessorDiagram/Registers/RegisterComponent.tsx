@@ -22,11 +22,13 @@ const RegisterComponent = ({
 }: RegisterComponentProps) => {
   const { t } = useI18n();
   const fullName = t(NAMED_REGISTERS.has(label) ? `registers.names.${label}` : label);
-  const { draft, updateValue, finishEditing } = useRegisterValue({
+  const { draft, updateValue, finishEditing, handleKeyDown } = useRegisterValue({
     label,
     model,
     numberFormat,
     fullName,
+    signedDec,
+    wordBits,
     onUpdateModel,
   });
 
@@ -51,9 +53,12 @@ const RegisterComponent = ({
             inputMode={numberFormat === 'hex' ? 'text' : 'numeric'}
             className="hoverInput"
             aria-label={fullName}
+            title={t('registers.editHint')}
+            aria-description={t('registers.editHint')}
             value={draft}
             onChange={updateValue}
             onBlur={finishEditing}
+            onKeyDown={handleKeyDown}
           />
         </div>
       </div>

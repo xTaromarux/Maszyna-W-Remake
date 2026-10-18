@@ -1,6 +1,4 @@
-import { ErrorLevelColor } from '@/Shared/Errors/BaseAppError';
 import { useI18n } from '@/I18n/Hooks/UseI18n';
-import { ErrorLevel } from '@/Shared/Errors/Types';
 import type { LogEntry } from '@/Machine/Types/Machine';
 import { useState } from 'react';
 import { formatTimestamp, getLogLevel, hasErrorDetails } from '../Helpers/LogPresentation';
@@ -14,7 +12,6 @@ const ConsoleEntry = ({ log }: Props) => {
   const [expanded, setExpanded] = useState(false);
 
   const level = getLogLevel(log);
-  const color = ErrorLevelColor[level] || ErrorLevelColor[ErrorLevel.INFO];
   const hasDetails = hasErrorDetails(log);
   const error = log.error || {};
   const handleHeaderClick = () => {
@@ -29,39 +26,31 @@ const ConsoleEntry = ({ log }: Props) => {
     <div data-editor-console="" className={`console-entry level-${level.toLowerCase()}${hasDetails ? ' has-details' : ''}`}>
       <div data-editor-console="" className="entry-header" onClick={handleHeaderClick}>
         <div data-editor-console="" className="entry-meta">
-          <div data-editor-console="" className="severity-indicator" style={{ backgroundColor: color }} />
           <span data-editor-console="" className="timestamp">
             {formatTimestamp(log.timestamp)}
           </span>
-          <span data-editor-console="" className="level-badge" style={{ color }}>
+          <span data-editor-console="" className="level-badge">
             {level}
           </span>
         </div>
         <div data-editor-console="" className="entry-content">
-          <div data-editor-console="" className="message-line">
-            <span data-editor-console="" className="terminal-symbol">
-              {'>_'}
-            </span>
-            <span data-editor-console="" className="message">
-              {log.message || error.message || t('console.unknownMessage')}
-            </span>
-          </div>
+          <span data-editor-console="" className="message">
+            {log.message || error.message || t('console.unknownMessage')}
+          </span>
           {hasDetails && (
             <button
               type="button"
               data-editor-console=""
               className={`details-toggle${expanded ? ' expanded' : ''}`}
               aria-expanded={expanded}
-              aria-label={t('console.detailContext')}
+              aria-label={t('console.toggleDetails')}
               onClick={(event) => {
                 event.stopPropagation();
                 toggleDetails();
               }}
             >
               <ConsoleIcon>
-                <circle data-editor-console="" cx="12" cy="12" r="10" />
-                <path data-editor-console="" d="M12 16v-4" />
-                <path data-editor-console="" d="M12 8h.01" />
+                <path data-editor-console="" d="m6 9 6 6 6-6" />
               </ConsoleIcon>
             </button>
           )}

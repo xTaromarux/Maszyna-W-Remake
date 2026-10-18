@@ -109,15 +109,6 @@ const Main = () => {
           breakpoints={breakpointControls}
           className={!machine.consoleOpen ? 'console-collapsed' : ''}
         />
-        {!machine.consoleOpen && (
-          <button
-            className={`console-indicator ${machine.hasConsoleErrors ? 'has-errors' : ''}`}
-            type="button"
-            onClick={machine.toggleConsole}
-            title={t('consoleDock.openConsole')}
-            aria-label={t('consoleDock.openConsole')}
-          />
-        )}
         <MachineOverlays machine={machine} update={update} />
       </div>
       {machine.toast.visible && (

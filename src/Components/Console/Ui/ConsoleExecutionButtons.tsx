@@ -7,7 +7,7 @@ type Props = {
   execution: ConsoleExecutionControls & Required<Pick<ConsoleExecutionControls, 'code' | 'isFastRunning' | 'fastProgress'>>;
 };
 
-/** Renders the console rail's execution actions with its manual-mode and running-state policies. */
+/** Renders execution actions with their manual-mode and running-state policies. */
 export const ConsoleExecutionButtons = ({ execution }: Props) => {
   const { manualMode, codeCompiled, code, isRunning, isFastRunning, fastProgress } = execution;
   const { t } = useI18n();
@@ -47,7 +47,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
       <button
         type="button"
         data-editor-console-dock=""
-        className="rail-btn"
+        className="rail-btn rail-btn--step"
         disabled={stepDisabled}
         title={t(manualMode ? 'execution.stepManual' : 'execution.stepAuto')}
         onClick={execution.onStep}
@@ -55,6 +55,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
         <ConsoleIcon scope="dock" size={18}>
           <StepGlyph />
         </ConsoleIcon>
+        <span>{t(manualMode ? 'execution.stepManual' : 'execution.stepAuto')}</span>
       </button>
       {!isRunning ? (
         <button
@@ -63,11 +64,13 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           className="rail-btn"
           disabled={runDisabled}
           title={t('execution.runTitle')}
+          aria-label={t('execution.runTitle')}
           onClick={execution.onRun}
         >
           <ConsoleIcon scope="dock" size={18} fill="currentColor" stroke="none">
             <RunGlyph />
           </ConsoleIcon>
+          <span>{t('execution.run')}</span>
         </button>
       ) : (
         <button type="button" data-editor-console-dock="" className="rail-btn" title={t('execution.stopTitle')} onClick={execution.onStop}>

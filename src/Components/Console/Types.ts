@@ -1,12 +1,14 @@
 import type { Action, Update } from '../../Shared/Types/Common';
 import type { DivProps } from '../../Shared/Types/React';
 import type { LogEntry } from '../../Machine/Types/Machine';
+import type { ReactNode } from 'react';
 
 export interface ConsoleProps extends DivProps {
   logs?: LogEntry[];
   onClose?: Action;
   onClear?: Action;
   className?: string;
+  controls?: ReactNode;
 }
 
 export interface ConsoleExecutionControls {

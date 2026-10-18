@@ -20,17 +20,21 @@ const ConsoleDock = ({
   const { t } = useI18n();
   return (
     <div data-editor-console-dock="" {...rest} className={`console-dock ${className}`}>
-      {consoleOpen && <ConsoleControls execution={execution} breakpoints={breakpoints} />}
       {consoleOpen && (
         <section data-editor-console-dock="" className="console-wrap">
-          <Console logs={logs} onClose={onClose} onClear={onClear} />
+          <Console
+            logs={logs}
+            onClose={onClose}
+            onClear={onClear}
+            controls={<ConsoleControls execution={execution} breakpoints={breakpoints} />}
+          />
         </section>
       )}
       {!consoleOpen && (
         <button
           data-editor-console-dock=""
           type="button"
-          className={`console-dock-indicator${hasConsoleErrors ? ' has-errors' : ''}`}
+          className={`console-dock-indicator console-indicator${hasConsoleErrors ? ' has-errors' : ''}`}
           onClick={onOpen}
           title={t('consoleDock.openConsole')}
           aria-label={t('consoleDock.openConsole')}

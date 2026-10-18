@@ -1,6 +1,6 @@
 export const CompileGlyph = () => (
   <>
-    <path data-editor-console-dock="" d="M3 7h18M5 7v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <path data-editor-console-dock="" d="m8 5-6 7 6 7m8-14 6 7-6 7M14 3l-4 18" />
   </>
 );
 
@@ -32,8 +32,7 @@ export const StopGlyph = () => (
 
 export const FastRunGlyph = () => (
   <>
-    <path data-editor-console-dock="" d="M5 19c.5-1.5 2-4 6-4s5.5 2.5 6 4" />
-    <path data-editor-console-dock="" d="M12 3l3 3-3 9-3-9 3-3z" />
+    <path data-editor-console-dock="" d="m3 5 8 7-8 7V5Zm10 0 8 7-8 7V5Z" />
   </>
 );
 

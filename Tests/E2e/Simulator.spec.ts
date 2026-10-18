@@ -36,6 +36,7 @@ test('compiler errors include diagnostics and editing supports undo', async ({ p
   await page.getByRole('button', { name: 'Kompiluj', exact: true }).click();
   await page.getByRole('button', { name: 'Otworz konsole' }).first().click();
   await expect(page.locator('.console-dock')).toContainText('NIEZNANY');
+  await page.getByRole('tab', { name: 'Kod ASM', exact: true }).click();
   await editor.click();
   await page.keyboard.press('Control+z');
   await expect(editor).toContainText('DOD 0');

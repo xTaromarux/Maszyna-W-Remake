@@ -8,7 +8,8 @@ test('failed compilation preserves registers and memory, then successful compila
   const counter = page.getByRole('spinbutton', { name: 'Licznik', exact: true });
   const editor = page.locator('#program .cm-content');
   const memoryBefore = await page.locator('#memoryTable').innerText();
-  const microcodeBefore = await page.locator('.cm-content').first().innerText();
+  const microcode = page.locator('#inputs .cm-content');
+  const microcodeBefore = await microcode.textContent();
 
   await accumulator.fill('42');
   await counter.fill('3');
@@ -21,7 +22,7 @@ test('failed compilation preserves registers and memory, then successful compila
     await expect(counter).toHaveValue('3');
     await expect(editor).toHaveAttribute('contenteditable', 'true');
     expect(await page.locator('#memoryTable').innerText()).toBe(memoryBefore);
-    expect(await page.locator('.cm-content').first().innerText()).toBe(microcodeBefore);
+    expect(await microcode.textContent()).toBe(microcodeBefore);
   }
 
   await editor.fill('STP');

@@ -24,6 +24,7 @@ const CodeMirrorEditor = ({
   autocompleteEnabled = true,
   commandList = EMPTY_COMMANDS,
   maxHeight = '32rem',
+  expandable = true,
   className = '',
   style,
   ...rest
@@ -31,7 +32,7 @@ const CodeMirrorEditor = ({
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const isEditorReadOnly = readOnly || disable || programCompiled;
-  const supportsExpansion = language === 'macroW';
+  const supportsExpansion = language === 'macroW' && expandable;
   const isExpanded = supportsExpansion && expanded;
 
   const editorContainer = useCodeMirrorEditor({

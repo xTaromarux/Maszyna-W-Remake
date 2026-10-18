@@ -27,6 +27,13 @@
   gap: 0.375rem;
 }
 
+.controls-rail svg[data-editor-console-dock] {
+  width: 1rem;
+  height: 1rem;
+  color: inherit;
+  flex-shrink: 0;
+}
+
 .rail-btn[data-editor-console-dock] {
   display: inline-flex;
   align-items: center;

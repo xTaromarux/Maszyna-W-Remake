@@ -17,6 +17,7 @@ export interface CodeMirrorEditorProps extends DivProps {
   autocompleteEnabled?: boolean;
   commandList?: RuntimeCommand[];
   maxHeight?: string;
+  expandable?: boolean;
   className?: string;
   style?: CSSProperties;
 }

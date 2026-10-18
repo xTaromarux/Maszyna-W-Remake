@@ -2,11 +2,13 @@
 
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import { MachineContext } from '@/Machine/MachineContext';
-import ConsoleDock from '../Console/ConsoleDock';
+import Console from '../Console/Console';
+import ConsoleControls from '../Console/Ui/ConsoleControls';
 import AssemblyEditor from '../AssemblyEditor/AssemblyEditor';
 import ProcessorDiagram from '../ProcessorDiagram/ProcessorDiagram';
-import ExecutionControls from '../MicrocodeEditor/ExecutionControls';
 import MicrocodeEditor from '../MicrocodeEditor/MicrocodeEditor';
+import ExecutionControls from '../MicrocodeEditor/ExecutionControls';
+import IOPanel from '../MicrocodeEditor/Ui/IoPanel';
 import TopBar from './Ui/TopBar';
 import { useMachine } from './Hooks/UseMachine';
 import {
@@ -16,6 +18,7 @@ import {
   createMainInteractionBindings,
 } from './Bindings/MachineBindings';
 import { MachineOverlays } from './Ui/MachineOverlays';
+import EditorWorkspace from './Ui/EditorWorkspace';
 
 /** Composes simulator views around the single observable machine instance. */
 const Main = () => {
@@ -61,53 +64,65 @@ const Main = () => {
           onClickItem={machine.handleSignalToggle}
           onUpdateNumberFormat={interactions.updateRegisterFormat}
         />
-        <div id="inputs">
-          <MicrocodeEditor
-            manualMode={machine.manualMode}
-            codeCompiled={machine.codeCompiled}
-            code={machine.code}
-            compiledCode={machine.compiledCode}
-            activeLine={machine.activeLine}
-            nextLine={machine.nextLine}
-            showIo={machine.extras.io.rbRegister}
-            devIn={machine.DEV_IN}
-            devOut={machine.DEV_OUT}
-            devReady={machine.DEV_READY}
-            wordBits={machine.codeBits + machine.addresBits}
-            formatNumber={machine.formatNumber}
-            breakpoints={machine.breakpoints}
-            breakpointsEnabled={machine.breakpointsEnabled}
-            onToggleBreakpoint={machine.toggleBreakpoint}
-            onSetManualMode={interactions.setManualMode}
-            onUpdateCode={update('code')}
-            onUpdateDevIn={interactions.updateDeviceInput}
-            onUpdateDevReady={update('DEV_READY')}
-          />
-          <ExecutionControls {...execution} />
-        </div>
-        <AssemblyEditor
+        <EditorWorkspace
           manualMode={machine.manualMode}
-          commandList={machine.commandList}
-          program={machine.program}
-          codeBits={machine.codeBits}
-          addresBits={machine.addresBits}
-          autocompleteEnabled={machine.autocompleteEnabled}
-          autoResetOnAsmCompile={machine.autoResetOnAsmCompile}
-          onUpdateCode={machine.handleProgramSectionCompile}
-          onLog={interactions.logProgramEvent}
-          onInitMemory={machine.applyInitMemory}
-          onResetRegisters={machine.handleAsmAutoReset}
-        />
-        <ConsoleDock
-          execution={execution}
-          logs={machine.logs.slice().reverse()}
           consoleOpen={machine.consoleOpen}
           hasConsoleErrors={machine.hasConsoleErrors}
-          onClose={machine.closeConsole}
-          onClear={machine.clearConsole}
-          onOpen={machine.toggleConsole}
-          breakpoints={breakpointControls}
-          className={!machine.consoleOpen ? 'console-collapsed' : ''}
+          onSetManualMode={interactions.setManualMode}
+          onOpenConsole={machine.toggleConsole}
+          onCloseConsole={machine.closeConsole}
+          microcode={
+            <div id="inputs">
+              <MicrocodeEditor
+                manualMode={machine.manualMode}
+                codeCompiled={machine.codeCompiled}
+                code={machine.code}
+                compiledCode={machine.compiledCode}
+                activeLine={machine.activeLine}
+                nextLine={machine.nextLine}
+                breakpoints={machine.breakpoints}
+                breakpointsEnabled={machine.breakpointsEnabled}
+                onToggleBreakpoint={machine.toggleBreakpoint}
+                onUpdateCode={update('code')}
+              />
+              <ExecutionControls {...execution} />
+            </div>
+          }
+          devices={
+            <div className="workspace-devices">
+              <IOPanel
+                devIn={machine.DEV_IN}
+                devOut={machine.DEV_OUT}
+                devReady={machine.DEV_READY}
+                wordBits={machine.codeBits + machine.addresBits}
+                formatNumber={machine.formatNumber}
+                onUpdateDevIn={interactions.updateDeviceInput}
+                onUpdateDevReady={update('DEV_READY')}
+              />
+            </div>
+          }
+          asm={
+            <AssemblyEditor
+              manualMode={machine.manualMode}
+              commandList={machine.commandList}
+              program={machine.program}
+              codeBits={machine.codeBits}
+              addresBits={machine.addresBits}
+              autocompleteEnabled={machine.autocompleteEnabled}
+              autoResetOnAsmCompile={machine.autoResetOnAsmCompile}
+              onUpdateCode={machine.handleProgramSectionCompile}
+              onLog={interactions.logProgramEvent}
+              onInitMemory={machine.applyInitMemory}
+              onResetRegisters={machine.handleAsmAutoReset}
+              executionControls={<ExecutionControls {...execution} showCompilation={false} />}
+            />
+          }
+          console={
+            <div className="console-dock">
+              <Console logs={machine.logs.slice().reverse()} onClose={machine.closeConsole} onClear={machine.clearConsole} />
+            </div>
+          }
+          controls={<ConsoleControls execution={execution} breakpoints={breakpointControls} />}
         />
         <MachineOverlays machine={machine} update={update} />
       </div>

@@ -1,0 +1,439 @@
+#editorWorkspace {
+  --workspace-surface: #f3f5f8;
+  --workspace-canvas: #fff;
+  --workspace-raised: #fff;
+  --workspace-hover: #e7ecf3;
+  --workspace-rule: #dce2eb;
+  --workspace-muted: #66748a;
+  --workspace-selected: #e4edfa;
+  --workspace-on-accent: #fff;
+  --workspace-error: #b91c1c;
+  --console-divider: var(--workspace-rule);
+  --panelBackgroundColor: var(--workspace-surface);
+  --default-border-radius: 4px;
+
+  position: sticky;
+  top: var(--topbar-height);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: calc(100dvh - var(--topbar-height));
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--workspace-surface);
+  box-shadow: -1px 0 var(--workspace-rule);
+  color: var(--fontColor);
+  scroll-margin-top: var(--topbar-height);
+}
+
+.workspace-mode {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: 0.75rem;
+  padding: 0.875rem 0.875rem 0.625rem;
+  background: transparent;
+}
+
+.workspace-mode .segmented {
+  flex: 1;
+  min-width: 0;
+}
+
+#editorWorkspace .workspace-mode .track {
+  margin-bottom: 0;
+  padding: 3px;
+  border-radius: 6px;
+  background: var(--workspace-hover);
+}
+
+#editorWorkspace .workspace-mode .thumb {
+  display: block;
+  inset: 3px auto 3px 3px;
+  width: calc((100% - 6px) / var(--count));
+  border-radius: 4px;
+  background: var(--workspace-raised);
+  box-shadow: 0 1px 3px #0000000d;
+}
+
+#editorWorkspace .workspace-mode .seg-btn {
+  padding: 0.625rem 0.5rem;
+  border-radius: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--workspace-muted);
+  font-size: 0.8125rem;
+  box-shadow: none;
+  transform: none;
+}
+
+#editorWorkspace .workspace-mode .seg-btn[aria-selected='true'] {
+  color: var(--fontColor);
+}
+
+.workspace-expand {
+  width: 2rem;
+  padding: 0;
+  border: 0;
+  outline: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--workspace-muted);
+}
+
+.workspace-expand svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: inherit;
+}
+
+.workspace-expand:hover {
+  background: var(--workspace-hover);
+  color: var(--primaryColor);
+  transform: none;
+}
+
+.workspace-tabs {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 0;
+  padding-inline: 0.875rem;
+  border-bottom: 1px solid var(--workspace-rule);
+}
+
+.workspace-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  padding: 0.75rem 0.625rem;
+  outline: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--workspace-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.workspace-tab[aria-selected='true'] {
+  border-bottom-color: var(--primaryColor);
+  color: var(--fontColor);
+  font-weight: 700;
+}
+
+.workspace-tab:hover {
+  background: transparent;
+  color: var(--primaryColor);
+  transform: none;
+}
+
+#editorWorkspace button:focus-visible {
+  outline: 2px solid var(--primaryColor);
+  outline-offset: -2px;
+}
+
+.workspace-error-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.workspace-body,
+.workspace-view,
+#editorWorkspace #inputs {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+#editorWorkspace #inputs > .execution-controls {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.5rem;
+}
+
+.workspace-devices {
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+.workspace-view[hidden] {
+  display: none;
+}
+
+.workspace-view {
+  overflow: auto;
+}
+
+#editorWorkspace #inputs {
+  gap: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.workspace-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--workspace-rule);
+}
+
+#editorWorkspace .controls-rail {
+  border-bottom: 0;
+  padding: 0.75rem 0.875rem;
+  background: var(--workspace-surface);
+}
+
+#editorWorkspace .controls-rail > .divider {
+  display: none;
+}
+
+#editorWorkspace .console-dock,
+#editorWorkspace #console {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+}
+
+#editorWorkspace #console {
+  border: 0;
+  border-radius: 0;
+}
+
+#editorWorkspace .codemirror-container,
+#editorWorkspace .cm-editor,
+#editorWorkspace .cm-scroller,
+#editorWorkspace .cm-gutters,
+#editorWorkspace .compiledCode,
+#editorWorkspace .nextLine,
+#editorWorkspace .manualModeInstruction,
+#editorWorkspace .io-card,
+#editorWorkspace .entry-details,
+#editorWorkspace .code-block {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* The borderless workspace needs no legacy cursor or selection offsets. */
+#editorWorkspace .cm-selectionBackground,
+#editorWorkspace .cm-cursor {
+  margin: 0;
+}
+
+#editorWorkspace .manualModeInstruction {
+  justify-content: flex-start;
+  padding: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  text-align: left;
+  color: var(--workspace-muted);
+}
+
+#editorWorkspace .manualModeInstruction p {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  opacity: 1;
+}
+
+#editorWorkspace #program,
+#editorWorkspace .programEditor {
+  padding: 0.75rem;
+  gap: 0.75rem;
+}
+
+#editorWorkspace .editor-wrapper {
+  --panelBackgroundColor: var(--workspace-canvas);
+}
+
+#editorWorkspace .codemirror-container,
+#editorWorkspace .compiledCode,
+#editorWorkspace .nextLine {
+  border-radius: 4px;
+  background: var(--workspace-canvas);
+}
+
+#editorWorkspace .nextLineTitle {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--workspace-muted);
+}
+
+#editorWorkspace .compiledCode .flexRow {
+  border-radius: 0;
+}
+
+#editorWorkspace .console-header,
+#editorWorkspace .console-entry {
+  border-bottom: 1px solid var(--workspace-rule);
+}
+
+#editorWorkspace .console-entry {
+  background: transparent;
+}
+
+#editorWorkspace .level-badge {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--entry-color) 10%, transparent);
+}
+
+#editorWorkspace .execution-btn,
+#editorWorkspace .rail-btn,
+#editorWorkspace .console-header button,
+#editorWorkspace .details-toggle {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--workspace-muted);
+  box-shadow: none;
+  transform: none;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+#editorWorkspace .execution-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--fontColor);
+  background: var(--workspace-raised);
+}
+
+#editorWorkspace .execution-btn::before {
+  display: none;
+}
+
+#editorWorkspace .execution-btn svg,
+#editorWorkspace .execution-btn span {
+  color: inherit;
+  stroke: currentColor;
+  filter: none;
+  text-shadow: none;
+  transform: none;
+}
+
+#editorWorkspace .execution-btn:hover,
+#editorWorkspace .rail-btn:hover,
+#editorWorkspace .console-header button:hover,
+#editorWorkspace .details-toggle:hover {
+  border-color: transparent;
+  background: var(--workspace-hover);
+  color: var(--fontColor);
+}
+
+#editorWorkspace .execution-btn:disabled,
+#editorWorkspace .rail-btn:disabled {
+  color: var(--fontColor);
+  opacity: 0.4;
+  filter: none;
+}
+
+#editorWorkspace .rail-btn.active {
+  color: var(--primaryColor);
+  background: var(--workspace-selected);
+  box-shadow: none;
+}
+
+#editorWorkspace .execution-btn--compile,
+#editorWorkspace .execution-btn--step,
+#editorWorkspace .rail-btn--step {
+  background: var(--primaryColor);
+  color: var(--workspace-on-accent);
+}
+
+#editorWorkspace .execution-btn--compile:not(:disabled):hover,
+#editorWorkspace .execution-btn--step:not(:disabled):hover,
+#editorWorkspace .rail-btn--step:not(:disabled):hover {
+  background: color-mix(in srgb, var(--primaryColor) 90%, var(--fontColor));
+  color: var(--workspace-on-accent);
+}
+
+#editorWorkspace .entry-details {
+  border-radius: 4px;
+  background: var(--workspace-raised);
+}
+
+#editorWorkspace .code-block {
+  background: var(--workspace-surface);
+}
+
+#editorWorkspace .console-entry:hover {
+  background: var(--workspace-hover);
+}
+
+#editorWorkspace .io-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+#editorWorkspace .io-card input {
+  height: 2.125rem;
+  border: 1px solid var(--workspace-rule);
+  border-radius: 4px;
+  background: var(--workspace-raised);
+}
+
+#editorWorkspace .io-card input:focus {
+  border-color: var(--primaryColor);
+}
+
+#editorWorkspace .value-box {
+  border: 0;
+  border-radius: 4px;
+  background: var(--workspace-raised);
+}
+
+#editorWorkspace .status {
+  width: fit-content;
+  min-width: 4.5rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  background: var(--workspace-selected);
+  color: var(--primaryColor);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+#editorWorkspace .status.busy {
+  color: var(--workspace-error);
+  background: color-mix(in srgb, var(--workspace-error) 10%, transparent);
+}
+
+body.darkMode #editorWorkspace {
+  --workspace-surface: #1d2027;
+  --workspace-canvas: #181b21;
+  --workspace-raised: #2a2e38;
+  --workspace-hover: #2c3240;
+  --workspace-rule: #303642;
+  --workspace-muted: #a1acc0;
+  --workspace-selected: #263c56;
+  --workspace-on-accent: #101722;
+  --workspace-error: #f87171;
+}
+
+#editorWorkspace.workspace-expanded {
+  position: fixed;
+  inset: var(--topbar-height) 0 0;
+  width: 100%;
+  z-index: 40;
+  border-radius: 0;
+}
+
+@media (max-width: 1195px) {
+  #editorWorkspace {
+    position: relative;
+    top: auto;
+  }
+}

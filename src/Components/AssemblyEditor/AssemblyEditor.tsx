@@ -17,6 +17,7 @@ const AssemblyEditor = ({
   onLog,
   onInitMemory,
   onResetRegisters,
+  executionControls,
   className = '',
   ...rest
 }: AssemblyEditorProps) => {
@@ -32,18 +33,15 @@ const AssemblyEditor = ({
     onResetRegisters,
   });
 
-  if (manualMode) {
-    return null;
-  }
-
   return (
-    <div data-editor-macro-program-section="" {...rest} id="program" className={className}>
+    <div data-editor-macro-program-section="" {...rest} id="program" className={className} hidden={manualMode}>
       <CodeMirrorEditor
         modelValue={source}
         onUpdateModelValue={setSource}
         language="macroW"
         theme="macroTheme"
-        maxHeight="35.6rem"
+        maxHeight="none"
+        expandable={false}
         commandList={commandList}
         autocompleteEnabled={autocompleteEnabled}
         programCompiled={isCompiled}
@@ -51,12 +49,15 @@ const AssemblyEditor = ({
         onEdit={enableProgramEditing}
       />
 
-      <ProgramActions
-        isCompiled={isCompiled}
-        canCompile={Boolean(source.trim())}
-        onCompile={compileProgram}
-        onEdit={enableProgramEditing}
-      />
+      <div className="program-actions">
+        <ProgramActions
+          isCompiled={isCompiled}
+          canCompile={Boolean(source.trim())}
+          onCompile={compileProgram}
+          onEdit={enableProgramEditing}
+        />
+        {isCompiled && executionControls}
+      </div>
     </div>
   );
 };

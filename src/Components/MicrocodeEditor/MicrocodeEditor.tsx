@@ -1,10 +1,8 @@
 'use client';
 
 import CodeMirrorEditor from '@/Editor/CodeMirrorEditor/CodeMirrorEditor';
-import SegmentedToggle from '@/Shared/Ui/SegmentedToggle/SegmentedToggle';
 import { useI18n } from '@/I18n/Hooks/UseI18n';
 import type { MicrocodeEditorProps } from '@/Components/MicrocodeEditor/Types';
-import IOPanel from './Ui/IoPanel';
 import CompiledProgramView from './Ui/CompiledProgramView';
 
 const MicrocodeEditor = ({
@@ -16,16 +14,7 @@ const MicrocodeEditor = ({
   nextLine = new Set(),
   breakpoints = new Set(),
   breakpointsEnabled = true,
-  showIo = false,
-  devIn = 0,
-  devOut = 0,
-  devReady = 1,
-  wordBits,
-  formatNumber,
   onUpdateCode,
-  onSetManualMode,
-  onUpdateDevIn,
-  onUpdateDevReady,
   onToggleBreakpoint,
   chooseProgram,
   children,
@@ -39,28 +28,6 @@ const MicrocodeEditor = ({
 
   return (
     <div data-editor-program-editor="" {...rest} className={`programEditor ${className}`}>
-      <SegmentedToggle
-        data-editor-program-editor=""
-        options={[
-          { label: t('programEditor.modeToggle.manual'), value: true },
-          { label: t('programEditor.modeToggle.program'), value: false },
-        ]}
-        modelValue={manualMode}
-        onUpdateModelValue={onSetManualMode}
-        className="toggleButtonProgram"
-      />
-      {showIo && (
-        <IOPanel
-          devIn={devIn}
-          devOut={devOut}
-          devReady={devReady}
-          wordBits={wordBits}
-          formatNumber={formatNumber}
-          onUpdateDevIn={onUpdateDevIn}
-          onUpdateDevReady={onUpdateDevReady}
-          className="mb-2"
-        />
-      )}
       <div data-editor-program-editor="" className="chooseProgram">
         {chooseProgram ?? children}
       </div>
@@ -70,13 +37,7 @@ const MicrocodeEditor = ({
         </div>
       )}
       {showSourceEditor && (
-        <CodeMirrorEditor
-          modelValue={code}
-          onUpdateModelValue={onUpdateCode}
-          language="maszynaW"
-          theme="mwTheme"
-          maxHeight={showIo ? '18.3rem' : '32rem'}
-        />
+        <CodeMirrorEditor modelValue={code} onUpdateModelValue={onUpdateCode} language="maszynaW" theme="mwTheme" maxHeight="none" />
       )}
       {showCompiledProgram && (
         <CompiledProgramView

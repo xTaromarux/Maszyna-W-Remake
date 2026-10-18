@@ -50,27 +50,17 @@
 
 #wLayout {
   display: grid;
-  flex-wrap: wrap;
-  padding: 0 40px;
-  gap: 10px;
-  grid-template-areas:
-    'w i p'
-    'w i p'
-    'c c c';
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: 2fr 0.73fr auto;
+  width: 100%;
+  padding: 0 0 0 1.5rem;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+  align-items: start;
+  min-height: calc(100dvh - var(--topbar-height));
   position: relative;
 }
-#wLayout > .console-dock {
-  grid-area: c;
-  width: 100%;
-  margin-bottom: 20px;
-}
 #wLayout > #W {
-  grid-area: w;
-}
-#wLayout > #inputs {
-  grid-area: i;
+  padding-block: 1.5rem;
+  min-width: 0;
 }
 
 .register {
@@ -85,24 +75,11 @@
 }
 @media (max-width: 1195px) {
   #wLayout {
-    margin: 10px;
-    padding: 5px;
-    flex-wrap: nowrap;
-    gap: 0;
-    grid-template-areas:
-      'w w'
-      'i i'
-      'p p'
-      'c c';
-    grid-template-rows: auto auto auto auto;
-    grid-template-columns: 1fr auto;
+    padding: 0 0 0 0.75rem;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
   }
   #wLayout > * {
     width: 100%;
-  }
-  #wLayout > #inputs {
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
   }
 }

@@ -14,6 +14,7 @@
 @import '../Shared/Ui/SegmentedToggle/SegmentedToggle.css';
 @import '../Components/Labs/LabCatalogDialog.css';
 @import '../Components/Main/Main.css';
+@import '../Components/Main/Ui/EditorWorkspace.css';
 @import '../Components/ProcessorDiagram/MemorySection/MobileMemoryHeader.css';
 @import '../Components/Settings/About/PeopleSection.css';
 @import '../Components/ProcessorDiagram/Registers/RegisterComponent.css';

@@ -4,20 +4,11 @@
 .programEditor[data-editor-program-editor] {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  height: 35.8rem;
-  max-height: 35.8rem;
-  min-height: 35.8rem;
-}
-@media (min-width: 675px) and (max-width: 1195px) {
-  .programEditor[data-editor-program-editor] {
-    width: 40rem;
-  }
-}
-@media (max-width: 675px) {
-  .programEditor[data-editor-program-editor] {
-    width: 100%;
-  }
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 0.5rem;
+  overflow: auto;
 }
 .flexRow[data-editor-program-editor] {
   max-width: 230px;
@@ -40,6 +31,7 @@
   gap: 0.125rem;
   padding: 0.5rem;
   flex-grow: 1;
+  min-height: 0;
   margin-top: 10px;
   overflow-y: auto;
   border: 4px solid #003c7d;
@@ -101,7 +93,7 @@
 .nextLine[data-editor-program-editor] {
   flex-grow: 1;
   width: 100%;
-  min-height: 200px;
+  min-height: 0;
   margin-top: 10px;
   display: flex;
   flex-direction: column;
@@ -122,6 +114,7 @@
   gap: 0.5rem;
 }
 .manualModeInstruction[data-editor-program-editor] {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   width: 100%;

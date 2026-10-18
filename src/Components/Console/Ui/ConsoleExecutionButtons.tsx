@@ -11,7 +11,7 @@ type Props = {
 export const ConsoleExecutionButtons = ({ execution }: Props) => {
   const { manualMode, codeCompiled, code, isRunning, isFastRunning, fastProgress } = execution;
   const { t } = useI18n();
-  const compileDisabled = isRunning || !code.trim();
+  const compileDisabled = manualMode || isRunning || !code.trim();
   const stepDisabled = isRunning || (!manualMode && !codeCompiled);
   const runDisabled = manualMode || !codeCompiled;
 
@@ -29,6 +29,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           <ConsoleIcon scope="dock" size={18}>
             <CompileGlyph />
           </ConsoleIcon>
+          <span>{t('execution.compile')} (DEBUG)</span>
         </button>
       ) : (
         <button
@@ -42,6 +43,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           <ConsoleIcon scope="dock" size={18}>
             <EditGlyph />
           </ConsoleIcon>
+          <span>{t('execution.edit')}</span>
         </button>
       )}
       <button
@@ -64,7 +66,6 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           className="rail-btn"
           disabled={runDisabled}
           title={t('execution.runTitle')}
-          aria-label={t('execution.runTitle')}
           onClick={execution.onRun}
         >
           <ConsoleIcon scope="dock" size={18} fill="currentColor" stroke="none">
@@ -77,6 +78,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           <ConsoleIcon scope="dock" size={18} fill="currentColor" stroke="none">
             <StopGlyph />
           </ConsoleIcon>
+          <span>{t('execution.stop')}</span>
         </button>
       )}
       {!isRunning && (
@@ -91,6 +93,7 @@ export const ConsoleExecutionButtons = ({ execution }: Props) => {
           <ConsoleIcon scope="dock" size={18}>
             <FastRunGlyph />
           </ConsoleIcon>
+          <span>{t('execution.runFast')}</span>
         </button>
       )}
 

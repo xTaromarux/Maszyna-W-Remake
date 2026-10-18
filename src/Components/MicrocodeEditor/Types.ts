@@ -4,6 +4,7 @@ import type { FormatNumber } from '@/Shared/Types/Numbers';
 import type { ReactNode } from 'react';
 
 export interface ExecutionControlsProps extends DivProps {
+  showCompilation?: boolean;
   manualMode: boolean;
   codeCompiled: boolean;
   code: string;
@@ -39,16 +40,7 @@ export interface MicrocodeEditorProps extends DivProps {
   nextLine?: Set<string>;
   breakpoints?: Set<number>;
   breakpointsEnabled?: boolean;
-  showIo?: boolean;
-  devIn?: number;
-  devOut?: number;
-  devReady?: number;
-  wordBits: number;
-  formatNumber: FormatNumber;
   onUpdateCode?: Update<string>;
-  onSetManualMode?: Update<boolean>;
-  onUpdateDevIn?: Update<number>;
-  onUpdateDevReady?: Update<number>;
   onToggleBreakpoint?: Update<number>;
   chooseProgram?: ReactNode;
   children?: ReactNode;

@@ -50,14 +50,6 @@
   align-items: stretch;
 }
 
-@media (max-width: 1195px) {
-  #inputs {
-    flex-direction: column-reverse;
-    justify-content: center;
-    align-items: flex-start;
-  }
-}
-
 .no-horiz-resize {
   resize: vertical;
 

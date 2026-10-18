@@ -2,6 +2,7 @@ import type { Action, Update } from '../../Shared/Types/Common';
 import type { DivProps } from '../../Shared/Types/React';
 import type { RuntimeCommand } from '../../Assembler/Types/Registry';
 import type { CompiledPayload, LogEvent, MemoryAssignment } from '../../Machine/Types/Machine';
+import type { ReactNode } from 'react';
 
 export interface AssemblyEditorProps extends DivProps {
   manualMode: boolean;
@@ -15,5 +16,6 @@ export interface AssemblyEditorProps extends DivProps {
   onLog?: Update<LogEvent>;
   onInitMemory?: Update<MemoryAssignment[]>;
   onResetRegisters?: Action;
+  executionControls?: ReactNode;
   className?: string;
 }

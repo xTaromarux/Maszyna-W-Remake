@@ -1,15 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const compileInvalidProgram = async (page: Page, name: string) => {
+  await page.getByRole('tab', { name: 'Kod ASM', exact: true }).click();
   await page.locator('#program .cm-content').fill(`${name} 0`);
   await page.locator('#program .execution-btn--compile').click();
+  await page.getByRole('tab', { name: 'Konsola', exact: true }).click();
   await expect(page.locator('.console-entry .message').filter({ hasText: name }).first()).toBeVisible();
 };
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Program', exact: true }).click();
-  await page.locator('.console-indicator').click();
+  await page.getByRole('tab', { name: 'Konsola', exact: true }).click();
   await expect(page.locator('#console')).toBeVisible();
 });
 
@@ -46,8 +48,10 @@ test('newest-first logs follow the top and leave readers of older entries in pla
 
   await page.locator('#console .scroll-bottom-btn').click();
   await expect.poll(() => content.evaluate((element) => element.scrollTop + element.clientHeight >= element.scrollHeight - 10)).toBe(true);
+  await page.getByRole('tab', { name: 'Kod ASM', exact: true }).click();
   await page.locator('#program .cm-content').fill('OLDER_READING 0');
   await page.locator('#program .execution-btn--compile').click();
+  await page.getByRole('tab', { name: 'Konsola', exact: true }).click();
   await expect(page.locator('.console-entry .message').filter({ hasText: 'OLDER_READING' })).toHaveCount(1);
   await expect.poll(() => content.evaluate((element) => element.scrollTop)).toBeGreaterThan(10);
 
@@ -58,9 +62,9 @@ test('newest-first logs follow the top and leave readers of older entries in pla
   await expect(page.locator('.console-entry').first()).toContainText('FOLLOW_LATEST');
 });
 
-test('console indicators use native keyboard activation and manual rail keeps run disabled', async ({ page }) => {
+test('console tab supports keyboard activation and manual controls keep run disabled', async ({ page }) => {
   await page.locator('#console .close-btn').click();
-  const indicator = page.locator('.console-dock-indicator');
+  const indicator = page.getByRole('tab', { name: 'Konsola', exact: true });
   await expect(indicator).toHaveAttribute('type', 'button');
   await indicator.focus();
   await page.keyboard.press('Space');

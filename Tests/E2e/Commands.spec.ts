@@ -36,6 +36,7 @@ test('custom command editing, rename and JSON import/export retain the catalog',
 test('plain microcode stops at a breakpoint and resumes without repeating a step', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Program', exact: true }).click();
+  await page.getByRole('tab', { name: 'Mikrokod', exact: true }).click();
   await page.locator('#inputs .cm-content').fill('il;\nil;\nil;\nstop;');
   await page.getByRole('button', { name: 'Kompiluj (DEBUG)', exact: true }).click();
   await page.locator('[data-row="2"] .bp-dot').click();

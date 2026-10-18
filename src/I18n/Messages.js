@@ -282,6 +282,14 @@ export const messages = {
       },
       commandDescription: 'Rozkaz {name}',
     },
+    workspace: {
+      title: 'Panel programu',
+      views: 'Widok panelu programu',
+      asm: 'Kod ASM',
+      microcode: 'Mikrokod',
+      devices: 'External device(s)',
+      console: 'Konsola',
+    },
     console: {
       title: 'Konsola',
       clearAction: 'Wyczyść',
@@ -865,6 +873,14 @@ export const messages = {
         duplicatesFound: 'Cannot save - duplicate command names found: {names}',
       },
       commandDescription: 'Command {name}',
+    },
+    workspace: {
+      title: 'Program workspace',
+      views: 'Program workspace view',
+      asm: 'ASM source',
+      microcode: 'Microcode',
+      devices: 'External device(s)',
+      console: 'Console',
     },
     console: {
       title: 'Console',

@@ -20,6 +20,7 @@ const ExecutionControls = ({
   onRun,
   onRunFast,
   onStop,
+  showCompilation = true,
   className = '',
   ...rest
 }: ExecutionControlsProps) => {
@@ -33,20 +34,22 @@ const ExecutionControls = ({
 
   return (
     <div data-editor-execution-controls="" {...rest} className={`execution-controls ${className}`}>
-      <button
-        type="button"
-        data-editor-execution-controls=""
-        onClick={codeCompiled ? onEdit : onCompile}
-        disabled={codeCompiled ? isRunning : !canCompile}
-        className={`execution-btn execution-btn--${compileAction}`}
-        title={t(`execution.${compileAction}Title`)}
-      >
-        {codeCompiled ? <EditIcon /> : <CompileIcon />}
-        <span data-editor-execution-controls="">
-          {t(`execution.${compileAction}`)}
-          {!codeCompiled && ' (DEBUG)'}
-        </span>
-      </button>
+      {showCompilation && (
+        <button
+          type="button"
+          data-editor-execution-controls=""
+          onClick={codeCompiled ? onEdit : onCompile}
+          disabled={codeCompiled ? isRunning : !canCompile}
+          className={`execution-btn execution-btn--${compileAction}`}
+          title={t(`execution.${compileAction}Title`)}
+        >
+          {codeCompiled ? <EditIcon /> : <CompileIcon />}
+          <span data-editor-execution-controls="">
+            {t(`execution.${compileAction}`)}
+            {!codeCompiled && ' (DEBUG)'}
+          </span>
+        </button>
+      )}
       <button
         type="button"
         data-editor-execution-controls=""

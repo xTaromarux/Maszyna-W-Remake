@@ -14,13 +14,13 @@
 }
 .row[data-editor-io-panel] {
   display: grid;
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   margin: 6px 0;
 }
 .row.hint[data-editor-io-panel] {
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
 }
 .hint-label[data-editor-io-panel] {
   color: var(--fontColor);
@@ -34,6 +34,7 @@ label[data-editor-io-panel] {
   font-weight: 600;
 }
 input[data-editor-io-panel] {
+  color: var(--fontColor);
   height: 28px;
   padding: 2px 8px;
   width: 100%;
@@ -58,7 +59,7 @@ input[data-editor-io-panel]:focus {
 .status[data-editor-io-panel] {
   display: inline-block;
   text-align: center;
-  width: 120px;
+  width: min(120px, 100%);
   padding: 4px 10px;
   border-radius: 6px;
   color: #fff;

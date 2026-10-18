@@ -27,8 +27,9 @@ interface NumberField {
 const SettingsNumberField = ({ id, labelKey, helpKey, value, min, max, onChange }: NumberField) => {
   const { t } = useI18n();
   const updateNumber = (input: string) => {
-    const next = Number.parseInt(input, 10);
-    if (Number.isFinite(next) && next >= min && next <= max) {
+    if (input.trim() === '') return;
+    const next = Number(input);
+    if (Number.isInteger(next) && next >= min && next <= max) {
       onChange?.(next);
     }
   };

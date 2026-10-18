@@ -103,3 +103,54 @@ test('supervisor titles follow language changes while settings stay open', async
   await englishSettings.getByRole('tab', { name: 'Polish', exact: true }).click();
   await expect(polishSettings.getByText(/Dr .*Robert Tutajewicz/)).toBeVisible();
 });
+
+test('QA26: numeric settings parse the entire number and reject fractional values', async ({ page }) => {
+  await page.goto('/');
+  await openEnglishSettings(page);
+  for (const [id, exponent, expected, fraction] of [
+    ['commandBits', '1e1', '10', '3.9'],
+    ['addresBits', '1e1', '10', '3.9'],
+    ['oddDelay', '1e2', '100', '3.9'],
+    ['stepDelay', '1e2', '100', '5.9'],
+  ]) {
+    const input = page.locator(`#${id}`);
+    await input.fill(exponent);
+    await expect(input).toHaveValue(expected);
+    await input.fill(fraction);
+    await expect(input).toHaveValue(expected);
+  }
+});
+
+test('QA26: numeric settings retain integer bounds and do not turn empty input into zero', async ({ page }) => {
+  await page.goto('/');
+  await openEnglishSettings(page);
+  const code = page.locator('#commandBits');
+  const address = page.locator('#addresBits');
+  await code.fill('16');
+  await expect(code).toHaveValue('16');
+  for (const invalid of ['0', '17', '1e309']) {
+    await code.fill(invalid);
+    await expect(code).toHaveValue('16');
+  }
+  await address.fill('14');
+  await expect(address).toHaveValue('14');
+  await address.fill('15');
+  await expect(address).toHaveValue('14');
+  await code.fill('1');
+  await expect(code).toHaveValue('1');
+
+  const microDelay = page.locator('#oddDelay');
+  await microDelay.fill('100');
+  await microDelay.fill('');
+  await expect(microDelay).toHaveValue('100');
+  await microDelay.fill('0');
+  await expect(microDelay).toHaveValue('0');
+  await microDelay.fill('-1');
+  await expect(microDelay).toHaveValue('0');
+
+  const stepDelay = page.locator('#stepDelay');
+  await stepDelay.fill('5');
+  await expect(stepDelay).toHaveValue('5');
+  await stepDelay.fill('4');
+  await expect(stepDelay).toHaveValue('5');
+});
